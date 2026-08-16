@@ -1,0 +1,9 @@
+[submodule "repos/transcript-tts"]
+	path = repos/transcript-tts
+	url = https://github.com/ShevinuM/transcript-tts
+[submodule "repos/SafePass"]
+	path = repos/SafePass
+	url = https://github.com/ShevinuM/SafePass
+[submodule "repos/daily-tech-digest"]
+	path = repos/daily-tech-digest
+	url = https://github.com/ShevinuM/daily-tech-digest
