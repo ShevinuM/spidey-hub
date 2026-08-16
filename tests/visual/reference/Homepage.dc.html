@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- FONT PARITY PATCH (visual-regression harness): the original google fonts
+     <link> below was replaced with the exact same self-hosted
+     @fontsource/jetbrains-mono files the built site imports (400/500/700,
+     multi-subset, font-family unchanged), so goldens render from
+     byte-identical font files with no network dependency. See PLAN.md
+     "Font parity" + tests/visual/reference/README-PATCH.md. -->
+<!-- REACT VENDOR PATCH (visual-regression harness): support.js's
+     loadReactUmd() short-circuits when window.React/window.ReactDOM already
+     exist (it never calls window.__resources for this pair), so preloading
+     the exact pinned react@18.3.1 / react-dom@18.3.1 UMD builds here (hashes
+     verified against support.js's REACT_SRI/REACT_DOM_SRI) removes the
+     unpkg.com CDN dependency without touching any other code path — the
+     support.js same-origin re-fetch of this document (used when
+     window.__resources is unset) still runs exactly as in the original. -->
+<script src="./vendor/react.production.min.js"></script>
+<script src="./vendor/react-dom.production.min.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><link href="fonts/400.css" rel="stylesheet"><link href="fonts/500.css" rel="stylesheet"><link href="fonts/700.css" rel="stylesheet">
+<style>
+body{margin:0;background:#0b0f14}
+a{color:#e0453c;text-decoration:none}
+a:hover{color:#f4a374}
+@keyframes blk{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes swp{to{transform:rotate(360deg)}}
+@keyframes pls{0%,100%{opacity:.45}50%{opacity:1}}
+@keyframes png{0%{transform:scale(.3);opacity:0}12%{opacity:.85}100%{transform:scale(3.8);opacity:0}}
+</style></helmet>
+<div style="position:relative;min-height:100vh;overflow:hidden;background:#0b0f14;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;color:#c9d1d9">
+
+<div style="position:absolute;inset:0;pointer-events:none">
+<div style="position:absolute;inset:0;opacity:{{ wallOpacity }};filter:{{ wallFilter }}">
+<div style="position:absolute;inset:0;background-image:radial-gradient(rgba(196,216,232,.16) 1px,transparent 1px);background-size:26px 26px"></div>
+
+<div style="position:absolute;left:50%;top:48%;width:min(1100px,92vw);height:min(600px,calc(100vh - 340px));transform:translate(-50%,-50%);font-size:11px">
+<div style="position:absolute;left:2%;top:1%;color:rgba(224,69,60,.5);letter-spacing:.1em">── latveria.map · scale 1:250k ──</div>
+
+<div style="position:absolute;left:60%;top:62%;display:flex;align-items:center;gap:6px;color:#ff6b6f;letter-spacing:.06em;white-space:nowrap"><span style="width:13px;height:13px;background:#ff4a4a;mask:url(assets/pin-target.svg) center/contain no-repeat;display:block"></span>Doomstadt</div>
+
+<div style="position:absolute;left:33%;top:15%;display:flex;align-items:center;gap:5px;color:rgba(196,216,232,.62);white-space:nowrap"><span style="width:10px;height:13px;background:rgba(196,216,232,.62);mask:url(assets/pin.svg) center/contain no-repeat;display:block"></span>Csaba</div>
+<div style="position:absolute;left:50%;top:10%;display:flex;align-items:center;gap:5px;color:rgba(196,216,232,.62);white-space:nowrap"><span style="width:10px;height:13px;background:rgba(196,216,232,.62);mask:url(assets/pin.svg) center/contain no-repeat;display:block"></span>Zalantha</div>
+<div style="position:absolute;left:67%;top:15%;display:flex;align-items:center;gap:5px;color:rgba(196,216,232,.62);white-space:nowrap"><span style="width:10px;height:13px;background:rgba(196,216,232,.62);mask:url(assets/pin.svg) center/contain no-repeat;display:block"></span>Varadinum</div>
+<div style="position:absolute;left:84%;top:50%;display:flex;align-items:center;gap:5px;color:rgba(196,216,232,.62);white-space:nowrap"><span style="width:10px;height:13px;background:rgba(196,216,232,.62);mask:url(assets/pin.svg) center/contain no-repeat;display:block"></span>Binsh</div>
+<div style="position:absolute;left:10%;top:34%;display:flex;align-items:center;gap:5px;color:rgba(196,216,232,.62);white-space:nowrap"><span style="width:10px;height:13px;background:rgba(196,216,232,.62);mask:url(assets/pin.svg) center/contain no-repeat;display:block"></span>Aradinum</div>
+<div style="position:absolute;left:25%;top:78%;display:flex;align-items:center;gap:5px;color:rgba(196,216,232,.62);white-space:nowrap"><span style="width:10px;height:13px;background:rgba(196,216,232,.62);mask:url(assets/pin.svg) center/contain no-repeat;display:block"></span>Temesiensis</div>
+
+<div style="position:absolute;left:86%;top:22%;color:rgba(217,176,74,.8);white-space:nowrap">Mount Sorcista</div>
+<div style="position:absolute;left:79%;top:70%;color:rgba(217,176,74,.8);white-space:nowrap">Mount Victorum</div>
+<div style="position:absolute;left:40%;top:92%;color:rgba(217,176,74,.8);white-space:nowrap">The Carpathian Mountains</div>
+
+<div style="position:absolute;left:66%;top:92%;color:rgba(111,191,127,.8);white-space:nowrap">Doomwood</div>
+
+<div style="position:absolute;left:6%;top:58%;color:rgba(106,169,221,.8);white-space:nowrap">The Klyne River</div>
+<div style="position:absolute;left:78%;top:80%;color:rgba(106,169,221,.8);white-space:nowrap">The Draken River</div>
+</div>
+
+<div style="position:absolute;left:50%;top:48%;width:320px;height:320px;transform:translate(-50%,-50%);border:1px solid rgba(224,69,60,.24);border-radius:50%"></div>
+<div style="position:absolute;left:50%;top:48%;width:620px;height:620px;transform:translate(-50%,-50%);border:1px solid rgba(224,69,60,.18);border-radius:50%"></div>
+<div style="position:absolute;left:50%;top:48%;width:980px;height:980px;transform:translate(-50%,-50%);border:1px dashed rgba(224,69,60,.12);border-radius:50%"></div>
+<div style="position:absolute;left:50%;top:48%;width:1400px;height:1400px;transform:translate(-50%,-50%);border:1px solid rgba(224,69,60,.07);border-radius:50%"></div>
+
+<div style="position:absolute;left:0;right:0;top:48%;height:1px;background:rgba(224,69,60,.12)"></div>
+<div style="position:absolute;top:0;bottom:0;left:50%;width:1px;background:rgba(224,69,60,.12)"></div>
+
+<sc-if value="{{ sweep }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;left:50%;top:48%;width:1400px;height:1400px;margin:-700px 0 0 -700px;border-radius:50%;pointer-events:none;mix-blend-mode:screen;background:conic-gradient(from 90deg,rgba(224,69,60,.28) 0deg,rgba(224,69,60,.16) 6deg,rgba(224,69,60,.075) 22deg,rgba(224,69,60,.028) 48deg,rgba(224,69,60,0) 96deg,rgba(224,69,60,0) 360deg);mask:radial-gradient(circle at 50% 50%,#000 0,#000 12%,rgba(0,0,0,.72) 23%,rgba(0,0,0,.34) 34%,rgba(0,0,0,.14) 46%,rgba(0,0,0,.05) 62%,transparent 82%);-webkit-mask:radial-gradient(circle at 50% 50%,#000 0,#000 12%,rgba(0,0,0,.72) 23%,rgba(0,0,0,.34) 34%,rgba(0,0,0,.14) 46%,rgba(0,0,0,.05) 62%,transparent 82%);animation:swp 9s linear infinite"></div>
+<div style="position:absolute;left:50%;top:48%;width:700px;height:1px;transform-origin:0 50%;background:linear-gradient(90deg,rgba(255,150,140,.9),rgba(255,150,140,.55) 14%,rgba(224,69,60,.28) 32%,rgba(224,69,60,.08) 52%,rgba(224,69,60,0) 78%);box-shadow:0 0 6px rgba(224,69,60,.35);animation:swp 9s linear infinite"></div></sc-if>
+
+<div style="position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);font-size:15px;color:#e0453c">◎</div>
+<div style="position:absolute;left:50%;top:48%;transform:translate(-60px,60px);font-size:11px;letter-spacing:.14em;color:rgba(224,69,60,.75)">ORIGIN // TRK-0</div>
+
+
+
+<div style="position:absolute;left:calc(50% + 0.17 * min(1100px,92vw) - 32px);top:calc(48% - 0.35 * min(600px,calc(100vh - 340px)) - 66px);color:#8fd0f5;display:flex;align-items:center;gap:9px">
+<div style="position:relative;width:64px;height:52px;border:1px solid rgba(106,169,221,.75);border-radius:3px;display:flex;align-items:center;justify-content:center;background:rgba(106,169,221,.08)"><span style="position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border:1px solid rgba(106,169,221,.55);border-radius:50%;animation:png 3.6s cubic-bezier(.2,.6,.4,1) infinite;pointer-events:none"></span><span style="position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border:1px solid rgba(106,169,221,.55);border-radius:50%;animation:png 3.6s cubic-bezier(.2,.6,.4,1) infinite;animation-delay:1.8s;pointer-events:none"></span><span style="position:relative;width:22px;height:32px;background:#7cc0f0;mask:url(assets/spiderman.svg) center/contain no-repeat;display:block"></span></div>
+<div><div style="font-size:11px;letter-spacing:.12em;color:#8fd0f5">SPIDER-01</div>
+<div style="font-size:11px;color:rgba(140,200,240,.6)">Varadinum · sig 0.94</div></div>
+</div>
+
+<div style="position:absolute;left:calc(50% - 0.25 * min(1100px,92vw));transform:translate(-32px,calc(-100% - 14px));top:calc(48% + 0.28 * min(600px,calc(100vh - 340px)));color:#8fd0f5;display:flex;flex-direction:column-reverse;align-items:flex-start;gap:4px">
+<div style="position:relative;width:64px;height:52px;border:1px solid rgba(106,169,221,.75);border-radius:3px;display:flex;align-items:center;justify-content:center;background:rgba(106,169,221,.08)"><span style="position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border:1px solid rgba(106,169,221,.55);border-radius:50%;animation:png 3.6s cubic-bezier(.2,.6,.4,1) infinite;pointer-events:none"></span><span style="position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border:1px solid rgba(106,169,221,.55);border-radius:50%;animation:png 3.6s cubic-bezier(.2,.6,.4,1) infinite;animation-delay:1.8s;pointer-events:none"></span><span style="position:relative;width:22px;height:32px;background:#7cc0f0;mask:url(assets/spiderman.svg) center/contain no-repeat;display:block"></span></div>
+<div><div style="font-size:11px;letter-spacing:.12em;color:#8fd0f5">SPIDER-02</div>
+<div style="font-size:11px;color:rgba(140,200,240,.6)">Temesiensis · sig 0.91</div></div>
+</div>
+
+<div style="position:absolute;left:30px;top:24px;background:rgba(9,13,18,.78);border:1px solid rgba(224,69,60,.22);border-radius:4px;padding:8px 12px;display:flex;flex-direction:column;gap:4px">
+<div style="font-size:12px;color:rgba(224,69,60,.85)">$ spider-tracker --region latveria --live<span style="display:inline-block;width:7px;height:13px;margin-left:5px;vertical-align:-2px;background:rgba(224,69,60,.85);animation:blk 1.1s steps(1) infinite"></span></div>
+<div style="font-size:12px;color:rgba(196,216,232,.45)">scanning grid 44.71N / 19.24E ....... 3 signatures resolved</div></div>
+
+<pre style="position:absolute;left:30px;bottom:56px;margin:0;font:12px/1.5 inherit;color:rgba(224,69,60,.6);background:rgba(9,13,18,.78);border:1px solid rgba(224,69,60,.22);border-radius:4px;padding:8px 12px">┌─ spider-tracker ──────────────────┐
+│ scan ............ ACTIVE          │
+│ region .......... LATVERIA        │
+│ targets ......... 02 LOCKED       │
+│ signal .......... 0.94 / 0.91     │
+│ anomaly ......... FLERKEN [!]     │
+└───────────────────────────────────┘</pre>
+
+<pre style="position:absolute;right:30px;bottom:56px;margin:0;font:12px/1.5 inherit;color:rgba(196,216,232,.4);text-align:right;background:rgba(9,13,18,.78);border:1px solid rgba(224,69,60,.22);border-radius:4px;padding:8px 12px">TRK-01  varadinum    44.7128N  19.2411E  vel 62km/h
+TRK-02  temesiensis  44.6903N  19.1988E  vel  4km/h
+TRK-03  doomstadt    44.7011N  19.3120E  flerken [!]
+--- webbing signature match: 2/2 -------------
+--- doom perimeter: 3 sentries within 400m ----</pre>
+
+
+<div style="position:absolute;left:calc(50% + 0.10 * min(1100px,92vw) - 32px);top:calc(48% + 0.12 * min(600px,calc(100vh - 340px)) - 66px);color:#ff6b6f;display:flex;align-items:center;gap:9px">
+<div style="position:relative;width:64px;height:52px;border:1px dashed rgba(255,107,111,.85);border-radius:3px;display:flex;align-items:center;justify-content:center;background:rgba(255,107,111,.08)"><span style="position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border:1px solid rgba(255,90,95,.6);border-radius:50%;animation:png 3.6s cubic-bezier(.2,.6,.4,1) infinite;pointer-events:none"></span><span style="position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border:1px solid rgba(255,90,95,.6);border-radius:50%;animation:png 3.6s cubic-bezier(.2,.6,.4,1) infinite;animation-delay:1.8s;pointer-events:none"></span><span style="position:relative;width:30px;height:26px;background:#ff6b6f;mask:url(assets/flerken.svg) center/contain no-repeat;display:block"></span></div>
+<div><div style="font-size:11px;letter-spacing:.12em">FLERKEN [!]</div>
+<div style="font-size:11px;color:rgba(255,107,111,.65)">Doomstadt · threat high</div></div>
+</div>
+</div>
+</div>
+
+<div style="position:relative;z-index:2;height:100vh;overflow:hidden;display:flex;flex-direction:column">
+<sc-if value="{{ alertsVisible }}" hint-placeholder-val="{{ true }}">
+<div style="flex:none;display:flex;flex-direction:column;align-items:stretch;gap:14px;width:min(420px,calc(100% - 44px));margin:clamp(12px,2.5vh,22px) 22px 0 auto">
+
+<sc-if value="{{ showDanger }}" hint-placeholder-val="{{ true }}">
+<div style="position:relative;min-width:0;box-sizing:border-box;border:1.5px solid #e5484d;border-radius:9px;background:rgba(11,16,22,.92);padding:14px 34px 12px 20px">
+<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:#0b0f14;padding:0 10px;font-size:14px;color:#e5484d">
+<span style="width:16px;height:16px;border-radius:50%;background:#e5484d;color:#0b0f14;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700">!</span>Danger</div>
+<span onClick="{{ hideDanger }}" style="position:absolute;top:8px;right:10px;cursor:pointer;font-size:12px;line-height:1;color:rgba(232,224,220,.45)" style-hover="color:#ff6b6f">✕</span>
+<div style="font-size:14px;line-height:1.5;color:#e8e0dc">Flerken Detected. Threat Level <span style="color:#ff6b6f;font-weight:700">High</span>.</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showInfo }}" hint-placeholder-val="{{ true }}">
+<div style="position:relative;min-width:0;box-sizing:border-box;border:1.5px solid #4a9fe0;border-radius:9px;background:rgba(11,16,22,.92);padding:14px 34px 12px 20px">
+<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:#0b0f14;padding:0 10px;font-size:14px;color:#4a9fe0">
+<span style="width:16px;height:16px;border-radius:50%;background:#4a9fe0;color:#0b0f14;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700">i</span>Tracker</div>
+<span onClick="{{ hideInfo }}" style="position:absolute;top:8px;right:10px;cursor:pointer;font-size:12px;line-height:1;color:rgba(207,216,222,.45)" style-hover="color:#8fc7f0">✕</span>
+<div style="font-size:14px;line-height:1.5;color:#cfd8de">Location Identified : <span style="color:#8fc7f0">Latveria</span></div>
+</div>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ homeView }}" hint-placeholder-val="{{ true }}">
+<div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:20px 40px 20px 40px">
+<div style="width:min(940px,100%);background:rgba(9,13,18,.6);backdrop-filter:blur(3px);border:1px solid rgba(255,255,255,.05);border-radius:6px;box-sizing:border-box;padding:clamp(14px,4vh,54px) 46px clamp(10px,2.6vh,34px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,2.6vh,38px);max-height:100%;min-height:min(100%,560px);overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.45)">
+
+<div style="display:flex;align-items:stretch;gap:10px">
+<div style="border:1.5px solid #e0453c;border-radius:10px;background:rgba(9,13,18,.8);padding:clamp(8px,2vh,14px) 34px;text-align:center;display:flex;flex-direction:column;gap:6px">
+<div style="font-size:clamp(15px,3.2vh,21px);font-weight:700;letter-spacing:.42em;color:#e0453c">SHEVINUM.DEV</div>
+<div style="font-size:clamp(12px,2.4vh,15px);color:#e0453c">welcome back, shev! <span style="width:13px;height:19px;background:#ff4a4a;mask:url(assets/spiderman.svg) center/contain no-repeat;display:inline-block;vertical-align:-4px"></span></div>
+</div>
+<div style="display:flex;flex-direction:column;justify-content:space-between;padding:4px 0">
+<div style="width:2px;height:22px;background:rgba(224,69,60,.85)"></div>
+<div style="width:2px;height:22px;background:rgba(224,69,60,.55)"></div>
+</div>
+</div>
+
+<div onClick="{{ onPick }}" style="width:min(560px,100%);display:flex;flex-direction:column;gap:2px">
+<div data-item="projects" style="display:grid;grid-template-columns:26px 1fr auto;align-items:center;padding:clamp(1px,.55vh,7px) 12px;border-radius:4px;cursor:pointer;font-size:clamp(12px,2.5vh,17px);line-height:1.35;color:#e0453c" style-hover="background:rgba(224,69,60,.1)"><span style="opacity:.85">▤</span><span><span style="background:#e0453c;color:#0b0f14">B</span>uilds</span><span style="color:#5fc6b4">b</span></div>
+<div data-item="xp" style="display:grid;grid-template-columns:26px 1fr auto;align-items:center;padding:clamp(1px,.55vh,7px) 12px;border-radius:4px;cursor:pointer;font-size:clamp(12px,2.5vh,17px);line-height:1.35;color:#e0453c" style-hover="background:rgba(224,69,60,.1)"><span style="opacity:.85">◆</span><span>Personnel Files</span><span style="color:#5fc6b4">x</span></div>
+<div data-item="info" style="display:grid;grid-template-columns:26px 1fr auto;align-items:center;padding:clamp(1px,.55vh,7px) 12px;border-radius:4px;cursor:pointer;font-size:clamp(12px,2.5vh,17px);line-height:1.35;color:#e0453c" style-hover="background:rgba(224,69,60,.1)"><span style="opacity:.85">◉</span><span>Profile</span><span style="color:#5fc6b4">i</span></div>
+<div data-item="tracker" style="display:grid;grid-template-columns:26px 1fr auto;align-items:center;padding:clamp(1px,.55vh,7px) 12px;border-radius:4px;cursor:pointer;font-size:clamp(12px,2.5vh,17px);line-height:1.35;color:#e0453c" style-hover="background:rgba(224,69,60,.1)"><span style="width:14px;height:18px;background:#ff4a4a;-webkit-mask:url(assets/spiderman.svg) center/contain no-repeat;mask:url(assets/spiderman.svg) center/contain no-repeat;display:block"></span><span>E.D.I.T.H: Retina-V</span><span style="color:#5fc6b4">t</span></div>
+</div>
+
+<div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+<div style="font-size:clamp(11px,2.2vh,14px);color:rgba(224,69,60,.9)">⚡ tracker synced 8/8 panes in 48.23ms</div>
+<sc-if value="{{ hasMsg }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#5fc6b4">{{ msg }}</div></sc-if>
+</div>
+</div>
+</div>
+
+</sc-if>
+
+<sc-if value="{{ trackerView }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:flex-end;padding:22px 26px 16px">
+<sc-if value="{{ showBack }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;align-items:center;gap:10px;background:rgba(9,13,18,.72);border:1px solid rgba(255,255,255,.14);border-radius:6px;padding:8px 10px 8px 12px">
+<span onClick="{{ goHome }}" style="cursor:pointer;font-size:13px;color:rgba(207,216,222,.8)" style-hover="color:#e0453c">[q] back to dashboard</span>
+<span onClick="{{ hideBack }}" style="cursor:pointer;font-size:13px;line-height:1;color:rgba(207,216,222,.45);padding:0 2px" style-hover="color:#ff6b6f">✕</span>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ infoView }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;min-height:0;display:flex;padding:16px 22px 12px">
+<div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;background:rgba(9,13,18,.6);backdrop-filter:blur(3px);border:1px solid rgba(224,69,60,.4);border-radius:5px;padding:12px 14px;font-size:12px;box-shadow:0 24px 80px rgba(0,0,0,.5)">
+
+<div style="flex:none;display:flex;align-items:center;gap:12px">
+<div style="display:flex;align-items:center;gap:8px;background:rgba(224,69,60,.16);border:1px solid rgba(224,69,60,.5);padding:4px 10px;clip-path:polygon(0 0,100% 0,calc(100% - 10px) 100%,0 100%)">
+<span style="width:12px;height:17px;background:#ff4a4a;mask:url(assets/spiderman.svg) center/contain no-repeat;display:block"></span>
+<span style="color:#e0453c;font-weight:700;letter-spacing:.2em">AGENT PROFILE</span>
+</div>
+<div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(224,69,60,.5),rgba(224,69,60,.08))"></div>
+<span style="color:rgba(196,216,232,.45);letter-spacing:.14em">FILE SHEV-0001 · CLEARANCE 6</span>
+<span onClick="{{ goHome }}" style="cursor:pointer;color:rgba(196,216,232,.6);border:1px solid rgba(255,255,255,.14);border-radius:3px;padding:3px 8px" style-hover="color:#e0453c;border-color:rgba(224,69,60,.7)">[q] close</span>
+</div>
+
+<div style="flex:none;background:linear-gradient(90deg,rgba(224,69,60,.28),rgba(224,69,60,.05));border-left:3px solid #e0453c;padding:6px 18px;clip-path:polygon(0 0,100% 0,calc(100% - 22px) 100%,0 100%)">
+<div style="font-size:clamp(20px,4vh,34px);font-weight:700;letter-spacing:.16em;color:#f4ece9;line-height:1.05">SHEVINU</div>
+<div style="font-size:clamp(11px,1.8vh,14px);letter-spacing:.28em;color:#5fc6b4">SPIDER-VARIANT (EARTH-026) · BACKEND AND INFRASTRUCTURE DEVELOPER</div>
+</div>
+
+<div style="flex:1 1 auto;min-height:0;display:grid;grid-template-columns:196px minmax(0,1fr) 232px;gap:12px">
+
+<div style="min-height:0;display:flex;flex-direction:column;gap:10px">
+<div style="flex:1.6;min-height:0;position:relative;border:1px solid rgba(224,69,60,.5);overflow:hidden">
+<img src="assets/portrait.jpg" alt="Shevinum portrait" style="width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.85) contrast(1.05)" />
+<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(224,69,60,.1),rgba(11,16,22,.55))"></div>
+<div style="position:absolute;left:0;bottom:0;background:rgba(11,16,22,.85);color:#5fc6b4;padding:2px 7px;font-size:11px">ID-0001 · PRIMARY</div>
+</div>
+<div style="flex:1;min-height:0;position:relative;border:1px solid rgba(224,69,60,.35);overflow:hidden">
+<img src="assets/field.jpg" alt="Shevinum in the field" style="width:100%;height:100%;object-fit:cover;object-position:50% 30%;display:block;filter:grayscale(.55) contrast(1.05)" />
+<div style="position:absolute;left:0;bottom:0;background:rgba(11,16,22,.85);color:rgba(196,216,232,.7);padding:2px 7px;font-size:11px">FIELD · LATVERIA</div>
+</div>
+</div>
+
+<div style="min-height:0;display:flex;flex-direction:column;gap:10px">
+<div style="flex:none;border:1px solid rgba(224,69,60,.35);padding:7px 10px;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12px;line-height:1.3">
+<span style="color:#e0453c">Name:</span><span style="color:rgba(196,216,232,.85)">Shevinu M. C. Nawalage</span>
+<span style="color:#e0453c">Abilities:</span><span style="color:rgba(196,216,232,.85)">Spidey Sense · Blink-Shipping · Quantum Processing</span>
+<span style="color:#e0453c">Base:</span><span style="color:rgba(196,216,232,.85)">St. John's, NL</span>
+<span style="color:#e0453c">Status:</span><span style="color:#5fc6b4">EMPLOYED · <a href="https://ca.linkedin.com/company/enaimco" target="_blank" rel="noreferrer">enaimco</a></span>
+<span style="color:#e0453c">Education:</span><span style="color:rgba(196,216,232,.85)">Memorial University of Newfoundland</span>
+</div>
+<div style="flex:1 1 auto;min-height:64px;overflow-y:auto;border:1px solid rgba(224,69,60,.35);padding:6px 10px;display:flex;flex-direction:column;gap:3px;font-size:12px;line-height:1.32;color:rgba(196,216,232,.75)">
+<div style="color:rgba(217,176,74,.85);letter-spacing:.16em">─ SUMMARY</div>
+<div>Recruited into software in 2021 and never left the terminal. Builds platforms end to end — APIs, pipelines, and the tooling teams live in.</div>
+<div>Full time at Enaimco, where a 34-minute deploy became six. Off-hours: a signature tracker, an anomaly watcher, and this site.</div>
+</div>
+<div style="flex:0 1 auto;height:38.5%;max-height:38.5%;min-height:84px;box-sizing:border-box;position:relative;border:1px solid rgba(224,69,60,.35);overflow:hidden">
+<img src="assets/retina-v.png" alt="E.D.I.T.H Retina-V heads-up display over Latveria" style="width:100%;height:100%;object-fit:cover;object-position:50% 62%;display:block" />
+<div style="position:absolute;left:0;bottom:0;background:rgba(11,16,22,.85);color:#5fc6b4;padding:2px 7px;font-size:11px">E.D.I.T.H: RETINA-V · LATVERIA // SECTOR 7</div>
+</div>
+</div>
+
+<div style="min-height:0;display:flex;flex-direction:column;gap:10px">
+<div style="flex:none;border:1px solid rgba(95,198,180,.4);padding:6px 10px;display:flex;flex-direction:column;gap:3px;font-size:12px">
+<div style="color:#5fc6b4;letter-spacing:.14em;font-size:11px">RECORD DATABASE</div>
+<div style="display:flex;justify-content:space-between;color:rgba(196,216,232,.7)"><span>repos shipped</span><span style="color:#e0453c">10</span></div>
+<div style="display:flex;justify-content:space-between;color:rgba(196,216,232,.7)"><span>roles logged</span><span style="color:#e0453c">7</span></div>
+<div style="display:flex;justify-content:space-between;color:rgba(196,216,232,.7)"><span>years active</span><span style="color:#e0453c">5</span></div>
+</div>
+<div style="flex:none;border:1px solid rgba(217,176,74,.4);padding:6px 10px;display:flex;flex-direction:column;gap:3px;font-size:12px">
+<div style="color:rgba(217,176,74,.9);letter-spacing:.14em;font-size:11px">CV</div>
+<a href="assets/resume.pdf" download style="color:rgba(196,216,232,.7)" style-hover="color:#e0453c">▤ resume.pdf <span style="color:rgba(196,216,232,.35)">· 1 page</span></a>
+<div style="color:rgba(196,216,232,.35);font-size:11px">press <span style="color:rgba(217,176,74,.9)">r</span> to download</div>
+</div>
+<div style="flex:none;border:1px solid rgba(95,198,180,.4);padding:6px 10px;display:flex;flex-direction:column;gap:5px">
+<div style="color:#5fc6b4;letter-spacing:.14em;font-size:11px">CONTACT</div>
+<div style="display:flex;flex-direction:column;gap:3px;font-size:11.5px">
+<a href="https://github.com/shevinum" target="_blank" rel="noreferrer" style="display:flex;align-items:center;gap:9px;color:rgba(196,216,232,.78)" style-hover="color:#e0453c"><img src="assets/icon-github.svg" alt="GitHub" style="width:15px;height:15px;flex:none;display:block" />github.com/shevinum</a>
+<a href="https://ca.linkedin.com/in/shevinum" target="_blank" rel="noreferrer" style="display:flex;align-items:center;gap:9px;color:rgba(196,216,232,.78)" style-hover="color:#e0453c"><img src="assets/icon-linkedin.svg" alt="LinkedIn" style="width:15px;height:15px;flex:none;display:block" />ca.linkedin.com/in/shevinum</a>
+<a href="mailto:shev@shevinum.dev" style="display:flex;align-items:center;gap:9px;color:rgba(196,216,232,.78)" style-hover="color:#e0453c"><img src="assets/icon-mail.svg" alt="Email" style="width:15px;height:15px;flex:none;display:block" />shev@shevinum.dev</a>
+<span style="display:flex;align-items:center;gap:9px;color:rgba(196,216,232,.78)"><img src="assets/icon-discord.svg" alt="Discord" style="width:15px;height:15px;flex:none;display:block" />shevinum</span>
+</div>
+</div>
+</div>
+</div>
+
+<div style="flex:none;display:flex;align-items:center;gap:10px;border-top:1px solid rgba(224,69,60,.25);padding-top:8px;color:rgba(196,216,232,.4);font-size:11px">
+<span style="color:#e0453c">SIGNAL</span>
+<div ref="{{ meterRef }}" style="flex:1;min-width:0;height:26px;display:flex;align-items:flex-end;gap:2px;overflow:hidden">
+<sc-for list="{{ meterBars }}" as="b" hint-placeholder-count="60">
+<div style="flex:1;min-width:0;height:8%;border-radius:1px;background:#2a5f7a"></div>
+</sc-for>
+</div>
+<span style="flex:none;color:rgba(196,216,232,.62);font-variant-numeric:tabular-nums">{{ netReadout }}</span>
+<span>44°38'N 79°23'W</span>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ xpBrowser }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;min-height:0;display:flex;padding:18px 22px 14px">
+<div style="flex:1;min-height:0;display:flex;gap:16px;background:rgba(9,13,18,.6);backdrop-filter:blur(3px);border:1px solid rgba(224,69,60,.35);border-radius:6px;padding:16px;font-size:13px;box-shadow:0 24px 80px rgba(0,0,0,.5)">
+
+<div style="position:relative;flex:1;min-width:0;border:1px solid rgba(224,69,60,.35);border-radius:4px;padding:14px 12px 10px;display:flex;flex-direction:column">
+<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#0a0e13;padding:0 10px;font-size:12px;color:rgba(224,69,60,.9);white-space:nowrap">{{ xpPath }}</div>
+<div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:3px">
+<sc-for list="{{ xpEntries }}" as="e" hint-placeholder-count="5">
+<div onClick="{{ e.pick }}" style="{{ e.style }}" style-hover="background:rgba(224,69,60,.12)"><span style="width:14px;flex:none;color:rgba(196,216,232,.55)">{{ e.icon }}</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ e.name }}</span><span style="flex:none;white-space:nowrap;color:rgba(95,198,180,.75)">{{ e.meta }}</span></div>
+</sc-for>
+</div>
+<div style="position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:#0a0e13;padding:0 10px;font-size:12px;color:rgba(224,69,60,.9)">─ File Browser ─</div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;color:rgba(196,216,232,.5)">
+<span style="color:#5fc6b4">&gt; <span style="display:inline-block;width:7px;height:13px;vertical-align:-2px;background:#5fc6b4;animation:blk 1.1s steps(1) infinite"></span></span>
+<span>{{ xpPos }}</span>
+</div>
+</div>
+
+<div style="position:relative;flex:2;min-width:0;border:1px solid rgba(224,69,60,.35);border-radius:4px;padding:14px 14px 12px;display:flex;flex-direction:column">
+<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#0a0e13;padding:0 10px;font-size:12px;color:rgba(224,69,60,.9)">File Preview</div>
+<div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:4px">
+<sc-if value="{{ xpShowRoles }}" hint-placeholder-val="{{ true }}">
+<sc-for list="{{ xpRoles }}" as="r" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 44px 170px 100px;gap:8px;align-items:baseline">
+<span style="color:rgba(196,216,232,.85);text-wrap:pretty">{{ r.role }}</span>
+<span style="color:#5fc6b4;text-align:right">{{ r.months }}</span>
+<span style="color:rgba(217,176,74,.85);white-space:nowrap">{{ r.dates }}</span>
+<span style="color:rgba(196,216,232,.5)">{{ r.loc }}</span>
+</div>
+</sc-for>
+</sc-if>
+<sc-if value="{{ xpShowDoc }}" hint-placeholder-val="{{ false }}">
+<sc-for list="{{ xpDoc }}" as="l" hint-placeholder-count="10">
+<div style="{{ l.style }}">{{ l.t }}</div>
+</sc-for>
+</sc-if>
+</div>
+<div style="padding-top:8px;font-size:12px;color:rgba(196,216,232,.4)">{{ xpHint }}</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ xpEditorView }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;min-height:0;display:flex;flex-direction:column;background:rgba(8,11,15,.97);font-size:13px">
+<div style="flex:none;display:flex;justify-content:flex-end;padding:8px 12px 4px">
+<div style="display:flex;align-items:center;gap:7px;background:#e0453c;color:#0b0f14;padding:3px 12px;border-radius:3px;font-weight:700">▤ {{ editorFile }}</div>
+</div>
+<div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:1px;padding:2px 14px">
+<sc-for list="{{ editorLines }}" as="l" hint-placeholder-count="14">
+<div style="display:flex;gap:16px"><span style="flex:none;width:26px;text-align:right;color:rgba(224,69,60,.4)">{{ l.n }}</span><span style="{{ l.style }}">{{ l.t }}</span></div>
+</sc-for>
+</div>
+<div style="flex:none;display:flex;align-items:center;background:#0e1a20;font-size:12px">
+<span style="background:#e0453c;color:#0b0f14;font-weight:700;padding:3px 12px">NORMAL</span>
+<span style="background:rgba(224,69,60,.22);color:#f0d9d4;padding:3px 12px">⑂ main</span>
+<span style="color:rgba(196,216,232,.6);padding:3px 12px">{{ editorCompany }} › {{ editorFile }}</span>
+<span style="flex:1"></span>
+<span style="color:#5fc6b4;padding:3px 12px">Top 1:1</span>
+<span style="background:rgba(95,198,180,.2);color:#5fc6b4;padding:3px 12px">esc to close</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ projectsView }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;min-height:0;display:flex;padding:18px 22px 14px">
+<div style="flex:1;min-height:0;display:flex;gap:12px;background:rgba(9,13,18,.6);backdrop-filter:blur(3px);border:1px solid rgba(224,69,60,.35);border-radius:6px;padding:16px 16px 14px;font-size:13px;box-shadow:0 24px 80px rgba(0,0,0,.5)">
+
+<div style="width:38%;min-width:0;display:flex;flex-direction:column;gap:14px">
+<div style="position:relative;flex:none;border:1px solid rgba(224,69,60,.35);border-radius:4px;padding:10px 12px 9px">
+<div style="position:absolute;top:-8px;left:10px;background:#0a0e13;padding:0 6px;font-size:12px;color:rgba(224,69,60,.85)">─[1]─Status</div>
+<div style="color:#5fc6b4">shevinum.dev <span style="color:rgba(196,216,232,.5)">→</span> <span style="color:#e0453c">{{ repoCount }} repos</span> <span style="color:rgba(196,216,232,.5)">· {{ projectCount }} projects tracked</span></div>
+</div>
+
+<div style="position:relative;flex:1.1;min-height:0;border:1px solid #e0453c;border-radius:4px;padding:12px 12px 9px;display:flex;flex-direction:column">
+<div style="position:absolute;top:-8px;left:10px;background:#0a0e13;padding:0 6px;font-size:12px;color:#e0453c">─[2]─Files <span style="color:rgba(196,216,232,.4)">- projects/*.md</span></div>
+<div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:3px">
+<sc-for list="{{ files }}" as="f" hint-placeholder-count="4">
+<div onClick="{{ f.pick }}" style="{{ f.style }}" style-hover="background:rgba(224,69,60,.12)"><span style="color:#5fc6b4">M</span> <span style="color:rgba(196,216,232,.45)">{}</span> {{ f.name }}</div>
+</sc-for>
+<div style="margin-top:auto;text-align:right;font-size:11px;color:rgba(224,69,60,.6)">{{ filePos }}</div>
+</div>
+</div>
+
+<div style="position:relative;flex:1;min-height:0;border:1px solid rgba(224,69,60,.35);border-radius:4px;padding:12px 12px 9px;display:flex;flex-direction:column">
+<div style="position:absolute;top:-8px;left:10px;background:#0a0e13;padding:0 6px;font-size:12px;color:rgba(224,69,60,.85)">─[3]─Local Repositories</div>
+<div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:3px">
+<sc-for list="{{ repos }}" as="r" hint-placeholder-count="3">
+<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(196,216,232,.75)"><span style="color:#5fc6b4">{{ r.mark }}</span> {{ r.name }} <span style="color:rgba(217,176,74,.75)">{{ r.branch }}</span></div>
+</sc-for>
+</div>
+</div>
+
+<div style="position:relative;flex:1.3;min-height:0;border:1px solid rgba(224,69,60,.35);border-radius:4px;padding:12px 12px 9px;display:flex;flex-direction:column">
+<div style="position:absolute;top:-8px;left:10px;background:#0a0e13;padding:0 6px;font-size:12px;color:rgba(224,69,60,.85)">─[4]─Commits <span style="color:rgba(196,216,232,.4)">- main</span></div>
+<div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:3px">
+<sc-for list="{{ commits }}" as="c" hint-placeholder-count="6">
+<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="color:rgba(217,176,74,.85)">{{ c.sha }}</span> <span style="color:#9a7fd4">Sh</span> <span style="color:rgba(196,216,232,.7)">{{ c.msg }}</span></div>
+</sc-for>
+</div>
+</div>
+</div>
+
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:14px">
+<div style="position:relative;flex:2.4;min-height:0;border:1px solid rgba(224,69,60,.35);border-radius:4px;padding:12px 14px 10px;display:flex;flex-direction:column">
+<div style="position:absolute;top:-8px;left:10px;background:#0a0e13;padding:0 6px;font-size:12px;color:rgba(224,69,60,.85)">─[0]─Changes <span style="color:rgba(196,216,232,.4)">- {{ activeFile }}</span></div>
+<div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{ doc }}" as="l" hint-placeholder-count="12">
+<div style="{{ l.style }}">{{ l.t }}</div>
+</sc-for>
+</div>
+</div>
+
+<div style="position:relative;flex:1;min-height:0;border:1px solid rgba(224,69,60,.35);border-radius:4px;padding:12px 14px 10px;display:flex;flex-direction:column">
+<div style="position:absolute;top:-8px;left:10px;background:#0a0e13;padding:0 6px;font-size:12px;color:rgba(224,69,60,.85)">─Command log</div>
+<div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:6px">
+<div style="color:#5fc6b4">Select a project with <span style="color:rgba(217,176,74,.9)">j</span>/<span style="color:rgba(217,176,74,.9)">k</span> — panel [2] lists one .md per project.</div>
+<div style="color:rgba(196,216,232,.6)">Open the source on <a href="https://github.com/shevinum" target="_blank" rel="noreferrer">github.com/shevinum</a> · live build at <a href="https://shevinum.dev" target="_blank" rel="noreferrer">shevinum.dev</a></div>
+<div style="color:rgba(196,216,232,.45)">Press <span style="color:rgba(217,176,74,.9)">t</span> for E.D.I.T.H: Retina-V · <span style="color:rgba(217,176,74,.9)">q</span> returns to the dashboard.</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ grepOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:fixed;left:0;top:0;right:0;bottom:0;z-index:40;background:rgba(6,9,13,.5);backdrop-filter:blur(2.5px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:4vh 3vw">
+
+<div style="width:min(1480px,96vw);height:min(760px,80vh);display:flex;gap:12px;font-size:13px;line-height:1.62">
+
+<div style="position:relative;width:48%;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;border:1px solid rgba(224,69,60,.55);border-radius:4px;background:rgba(9,13,18,.9);padding:10px 2px 6px">
+<div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:7px;background:#0a0e13;padding:0 10px;color:#e0453c;letter-spacing:.16em">GREP <span style="color:#5fc6b4">〜</span></div>
+<div style="flex:none;display:flex;align-items:baseline;gap:8px;padding:2px 10px 6px;border-bottom:1px solid rgba(224,69,60,.28)">
+<span style="color:#5fc6b4">❯</span>
+<span style="flex:1;min-width:0;color:#f4ece9;white-space:pre;overflow:hidden">{{ grepQuery }}<span style="animation:blk 1.05s steps(1) infinite;color:#e0453c">▌</span></span>
+<span style="flex:none;color:rgba(217,176,74,.9)">{{ grepCount }}</span>
+</div>
+<div ref="{{ gListRef }}" style="flex:1;min-height:0;overflow:hidden;padding:0 2px">
+<sc-if value="{{ grepHasRows }}" hint-placeholder-val="{{ true }}">
+<sc-for list="{{ grepRows }}" as="r" hint-placeholder-count="14">
+<div onClick="{{ r.pick }}" style="{{ r.style }}"><span style="{{ r.iconStyle }}">{{ r.icon }}</span><span style="{{ r.pathStyle }}">{{ r.path }}</span><span style="flex:none;color:#5fc6b4">{{ r.pos }}</span><span style="min-width:0;overflow:hidden;text-overflow:ellipsis">{{ r.pre }}<span style="background:rgba(95,198,180,.35);color:#eafaf6">{{ r.mat }}</span>{{ r.post }}</span></div>
+</sc-for>
+</sc-if>
+<sc-if value="{{ grepEmpty }}" hint-placeholder-val="{{ false }}">
+<div style="padding:10px;color:rgba(196,216,232,.45)">no matches in 22 tracked files</div>
+</sc-if>
+</div>
+<div style="flex:none;padding:4px 10px 0;border-top:1px solid rgba(224,69,60,.18);color:rgba(196,216,232,.42);font-size:12px">{{ grepMode }}</div>
+</div>
+
+<div style="position:relative;flex:1;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;border:1px solid rgba(224,69,60,.4);border-radius:4px;background:rgba(9,13,18,.9);padding:12px 12px 8px;overflow:hidden">
+<div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);max-width:80%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#0a0e13;padding:0 10px;color:rgba(196,216,232,.85)">{{ grepFile }}</div>
+<div style="position:absolute;top:-9px;right:14px;background:#0a0e13;padding:0 8px;color:#5fc6b4;font-size:12px">{{ grepFilePos }}</div>
+<div ref="{{ gPreviewRef }}" style="flex:1;min-height:0;overflow:hidden">
+<sc-for list="{{ grepPreview }}" as="l" hint-placeholder-count="18">
+<div style="{{ l.style }}"><span style="{{ l.nStyle }}">{{ l.n }}</span><span style="min-width:0;overflow:hidden">{{ l.pre }}<span style="background:rgba(95,198,180,.38);color:#eafaf6">{{ l.mat }}</span>{{ l.post }}</span></div>
+</sc-for>
+</div>
+</div>
+</div>
+
+<div style="width:min(1480px,96vw);display:flex;justify-content:space-between;font-size:12px;color:rgba(196,216,232,.45)">
+<span>type to filter · ↑↓ or ctrl-n/p moves · enter opens the pane · esc closes</span>
+<span onClick="{{ closeGrep }}" style="cursor:pointer;color:rgba(224,69,60,.85)" style-hover="color:#ff6b6f">[esc] close</span>
+</div>
+</div>
+</sc-if>
+
+<div style="height:30px;flex:none;display:flex;align-items:center;background:#0d2a2f;font-size:14px">
+<div style="flex:none;padding:0 8px;color:#7fd8a8;letter-spacing:.02em;white-space:nowrap">Session: 10.42.7.13</div>
+<div style="color:rgba(127,216,200,.45)">·</div>
+<div style="display:flex;align-items:center;gap:8px;padding:0 8px;color:#5fc6b4;white-space:nowrap;flex:0 0 auto">
+<sc-if value="{{ hlProjects }}" hint-placeholder-val="{{ true }}"><span style="background:#e0453c;color:#0b0f14;padding:0 6px">1:builds*</span></sc-if>
+<sc-if value="{{ pProjects }}" hint-placeholder-val="{{ false }}"><span>1:builds</span></sc-if>
+<sc-if value="{{ hlXp }}" hint-placeholder-val="{{ false }}"><span style="background:#e0453c;color:#0b0f14;padding:0 6px">2:personnel*</span></sc-if>
+<sc-if value="{{ pXp }}" hint-placeholder-val="{{ true }}"><span>2:personnel</span></sc-if>
+<sc-if value="{{ pTracker }}" hint-placeholder-val="{{ true }}"><span>3:retina-v</span></sc-if>
+<sc-if value="{{ hlInfo }}" hint-placeholder-val="{{ false }}"><span style="background:#e0453c;color:#0b0f14;padding:0 6px">4:profile*</span></sc-if>
+<sc-if value="{{ pInfo }}" hint-placeholder-val="{{ true }}"><span>4:profile</span></sc-if>
+<sc-if value="{{ trackerView }}" hint-placeholder-val="{{ false }}"><span style="background:#e0453c;color:#0b0f14;padding:0 6px">3:retina-v*</span></sc-if>
+</div>
+<div style="flex:1"></div>
+<div style="flex:none;display:flex;gap:12px;padding:0 14px;white-space:nowrap">
+<span style="color:rgba(95,198,180,.75)">[/] grep</span>
+<span style="color:#d7a3e0">23:34</span>
+<span style="color:#c98fd0">15-Aug-26</span>
+</div>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;showAlerts&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Home&quot;},&quot;scanSweep&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Tracker&quot;},&quot;trackerBrightness&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.2,&quot;max&quot;:1.6,&quot;step&quot;:0.1,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Tracker&quot;}}">
+class Component extends DCLogic {
+  state = { msg: null, view: "home", project: 0, offDanger: false, offInfo: false, offBack: false };
+  data = [
+    { name: "shevinum-dev.md", title: "shevinum.dev",
+      repos: [{ mark: "*", name: "shevinum.dev", branch: "main ↑2" }, { mark: "•", name: "tmux-theme", branch: "main" }, { mark: "•", name: "dotfiles", branch: "main ↓4" }],
+      commits: [["2cb16c27", "tmux: fix prefix+w session filter"], ["475d16a4", "dashboard: 7 panes, ip in status line"], ["6a5fbeda", "theme: retune red accent ramp"], ["ecd7c959", "add spidey tracker view"], ["cdb801f3", "status: window list from menu items"], ["c005c719", "type: jetbrains mono everywhere"]],
+      doc: [["# shevinum.dev", "h"], ["", "p"], ["A terminal-native personal site: tmux status line, LazyVim dashboard,", "p"], ["and a radar that tracks things it should not.", "p"], ["", "p"], ["## Stack", "h"], ["- static HTML, zero framework", "b"], ["- CSS masks for every icon", "b"], ["- keyboard first: p x c r f g t", "b"], ["", "p"], ["## Status", "h"], ["shipped · iterating on the tracker", "c"]] },
+    { name: "spider-tracker.md", title: "spider-tracker",
+      repos: [{ mark: "*", name: "spider-tracker-core", branch: "main ↑1" }, { mark: "•", name: "tracker-ui", branch: "main" }, { mark: "•", name: "webbing-sigd", branch: "main ↑3" }],
+      commits: [["9f31ab02", "core: dual signature lock"], ["71d0c4ee", "ui: radar rings scale with viewport"], ["4ac9910b", "sigd: drop false webbing matches"], ["18ee73c1", "core: latveria grid calibration"], ["a0b71d55", "ui: reticle labels flip on collision"]],
+      doc: [["# spider-tracker", "h"], ["", "p"], ["Signature tracker for arachnid-class movers. Two locks at a time,", "p"], ["0.9+ confidence, sub-second refresh.", "p"], ["", "p"], ["## Feeds", "h"], ["- webbing signature daemon", "b"], ["- doom perimeter sentries (read-only)", "b"], ["", "p"], ["## Status", "h"], ["live · 2 targets in latveria", "c"]] },
+    { name: "flerken-watch.md", title: "flerken-watch",
+      repos: [{ mark: "*", name: "flerken-watch", branch: "main ↑5" }, { mark: "•", name: "threatfeed", branch: "main" }],
+      commits: [["6b21e0aa", "watch: raise threat level on purr"], ["d9c7481f", "feed: doomstadt sensor added"], ["3e50aa17", "watch: tentacle count heuristics"], ["bb1904cd", "feed: retry backoff"]],
+      doc: [["# flerken-watch", "h"], ["", "p"], ["Anomaly detector for non-feline entities that look feline.", "p"], ["Emits DANGER when threat level crosses high.", "p"], ["", "p"], ["## Signals", "h"], ["- mass anomaly vs housecat baseline", "b"], ["- pocket-dimension echo", "b"], ["", "p"], ["## Status", "h"], ["alerting · doomstadt", "c"]] },
+    { name: "latveria-atlas.md", title: "latveria-atlas",
+      repos: [{ mark: "*", name: "latveria-atlas", branch: "main" }, { mark: "•", name: "doomstadt-tiles", branch: "main ↑2" }],
+      commits: [["cc0a7e93", "atlas: capital + 6 major cities"], ["50fe1b24", "tiles: klyne river geometry"], ["7712bd08", "atlas: carpathian ring labels"]],
+      doc: [["# latveria-atlas", "h"], ["", "p"], ["Place data for the tracker overlay: capital, major cities,", "p"], ["mountains, forests, rivers.", "p"], ["", "p"], ["## Records", "h"], ["- 1 capital: doomstadt", "b"], ["- 6 major cities", "b"], ["- 3 ranges, 1 forest, 2 rivers", "b"], ["", "p"], ["## Status", "h"], ["stable", "c"]] }
+  ];
+  xp = [
+    { name: "Enaimco", roles: [
+      { file: "software-developer-full-time.md", role: "Software Developer, Full Time", months: "14 mo", dates: "Jul 2024 – Present", loc: "Toronto, ON", date: "Jul 15 09:00",
+        doc: [["# Software Developer — Full Time", "h"], ["Enaimco · Toronto, ON · Jul 2024 – Present", "m"], ["", "p"], ["Owning the delivery platform end to end: API, jobs, and the", "p"], ["internal tooling the team lives in.", "p"], ["", "p"], ["## Highlights", "h"], ["- cut deploy time 34m → 6m with a staged pipeline", "b"], ["- designed the event bus that replaced nightly batch syncs", "b"], ["- mentor for two co-op developers", "b"], ["", "p"], ["## Stack", "h"], ["`typescript` `node` `postgres` `terraform`", "c"]] },
+      { file: "software-developer-part-time.md", role: "Software Developer, Part Time", months: "6 mo", dates: "Jan 2024 – Jun 2024", loc: "Toronto, ON", date: "Jan 08 09:00",
+        doc: [["# Software Developer — Part Time", "h"], ["Enaimco · Toronto, ON · Jan 2024 – Jun 2024", "m"], ["", "p"], ["Kept shipping through final term at 20h/week.", "p"], ["", "p"], ["## Highlights", "h"], ["- built the reporting export used by every client", "b"], ["- moved the test suite to CI, 11m → 3m", "b"], ["", "p"], ["## Stack", "h"], ["`typescript` `react` `postgres`", "c"]] },
+      { file: "software-developer-co-op.md", role: "Software Developer, Co-op", months: "8 mo", dates: "May 2023 – Dec 2023", loc: "Toronto, ON", date: "May 01 09:00",
+        doc: [["# Software Developer — Co-op", "h"], ["Enaimco · Toronto, ON · May 2023 – Dec 2023", "m"], ["", "p"], ["First eight months: tickets, then features, then a service.", "p"], ["", "p"], ["## Highlights", "h"], ["- shipped the client onboarding wizard", "b"], ["- wrote the first integration test harness", "b"], ["", "p"], ["## Stack", "h"], ["`javascript` `node` `mysql`", "c"]] }
+    ] },
+    { name: "Vretta", roles: [
+      { file: "qa-automation-intern.md", role: "QA Automation Intern", months: "4 mo", dates: "Jan 2023 – Apr 2023", loc: "Mississauga, ON", date: "Jan 09 09:00",
+        doc: [["# QA Automation Intern", "h"], ["Vretta · Mississauga, ON · Jan 2023 – Apr 2023", "m"], ["", "p"], ["Automated the regression pass for a provincial assessment platform.", "p"], ["", "p"], ["## Highlights", "h"], ["- 180 manual cases → 140 automated specs", "b"], ["- nightly run reporting into Slack", "b"], ["", "p"], ["## Stack", "h"], ["`playwright` `typescript` `docker`", "c"]] }
+    ] },
+    { name: "Ontario-Tech", roles: [
+      { file: "teaching-assistant.md", role: "Teaching Assistant", months: "8 mo", dates: "Sep 2022 – Apr 2023", loc: "Oshawa, ON", date: "Sep 06 13:00",
+        doc: [["# Teaching Assistant", "h"], ["Ontario Tech · Oshawa, ON · Sep 2022 – Apr 2023", "m"], ["", "p"], ["Labs and grading for data structures — 120 students a term.", "p"], ["", "p"], ["## Highlights", "h"], ["- rewrote the lab handouts around failing tests", "b"], ["- office hours: 6h/week", "b"]] },
+      { file: "research-assistant.md", role: "Research Assistant", months: "4 mo", dates: "May 2022 – Aug 2022", loc: "Oshawa, ON", date: "May 02 10:00",
+        doc: [["# Research Assistant", "h"], ["Ontario Tech · Oshawa, ON · May 2022 – Aug 2022", "m"], ["", "p"], ["Tooling for a mobility-data study: ingestion, cleaning, plots.", "p"], ["", "p"], ["## Highlights", "h"], ["- pipeline over 4M GPS traces", "b"], ["- reproducible notebooks for the lab", "b"]] }
+    ] },
+    { name: "Freelance", roles: [
+      { file: "full-stack-contractor.md", role: "Full-Stack Contractor", months: "10 mo", dates: "Sep 2021 – Jun 2022", loc: "Remote", date: "Sep 01 11:00",
+        doc: [["# Full-Stack Contractor", "h"], ["Freelance · Remote · Sep 2021 – Jun 2022", "m"], ["", "p"], ["Small builds for small teams: sites, dashboards, integrations.", "p"], ["", "p"], ["## Highlights", "h"], ["- 6 client projects delivered solo", "b"], ["- one still runs untouched in production", "b"]] }
+    ] }
+  ];
+  xpColors = { h: "color:#e0453c;font-weight:700", m: "color:rgba(217,176,74,.85)", p: "color:rgba(196,216,232,.72)", b: "color:#5fc6b4", c: "color:rgba(154,127,212,.9)" };
+
+  docColors = { h: "color:#e0453c;font-weight:700", p: "color:rgba(196,216,232,.72)", b: "color:#5fc6b4", c: "color:rgba(217,176,74,.85)" };
+
+  labels = { projects: "builds", xp: "personnel", tracker: "retina-v", info: "profile" };
+  keys = { b: "projects", p: "projects", x: "xp", t: "tracker", i: "info" };
+
+  repoSrc = {
+"README.md": `# shevinum.dev
+A tmux-shaped portfolio. Every page is a pane.
+## Stack
+- Astro for routing and static output
+- Svelte islands for pane state and keymaps
+- Tailwind for panel, list and status-bar styling
+## Local
+pnpm install && pnpm dev
+Press / anywhere in the site to grep the source of the site itself.`,
+"package.json": `{
+  "name": "shevinum-dev",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --port 4321",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check && tsc --noEmit"
+  },
+  "dependencies": {
+    "astro": "^4.15.0",
+    "svelte": "^4.2.19",
+    "tailwindcss": "^3.4.10"
+  }
+}`,
+"astro.config.mjs": `import { defineConfig } from "astro/config";
+import svelte from "@astrojs/svelte";
+import tailwind from "@astrojs/tailwind";
+
+export default defineConfig({
+  site: "https://shevinum.dev",
+  output: "static",
+  integrations: [svelte(), tailwind({ applyBaseStyles: false })],
+  vite: { build: { assetsInlineLimit: 4096 } }
+});`,
+"tailwind.config.mjs": `export default {
+  content: ["./src/**/*.{astro,svelte,ts,md}"],
+  theme: {
+    extend: {
+      colors: {
+        pane: "rgb(9 13 18 / <alpha-value>)",
+        alert: "#e0453c",
+        signal: "#5fc6b4",
+        friendly: "#8fd0f5"
+      },
+      fontFamily: { mono: ["JetBrains Mono", "ui-monospace", "monospace"] }
+    }
+  }
+};`,
+"src/pages/index.astro": `---
+import Shell from "../layouts/Shell.astro";
+import Dashboard from "../components/Dashboard.svelte";
+const title = "shevinum.dev";
+---
+<Shell title={title}>
+  <Dashboard client:load />
+</Shell>`,
+"src/pages/projects.astro": `---
+import Shell from "../layouts/Shell.astro";
+import Lazygit from "../components/Lazygit.svelte";
+import { getCollection } from "astro:content";
+const projects = await getCollection("projects");
+---
+<Shell title="projects">
+  <Lazygit client:load projects={projects.map((p) => p.data)} />
+</Shell>`,
+"src/pages/xp.astro": `---
+import Shell from "../layouts/Shell.astro";
+import Yazi from "../components/Yazi.svelte";
+import { getCollection } from "astro:content";
+const roles = await getCollection("xp");
+---
+<Shell title="xp">
+  <Yazi client:load roles={roles} />
+</Shell>`,
+"src/layouts/Shell.astro": `---
+import StatusBar from "../components/StatusBar.svelte";
+import GrepOverlay from "../components/GrepOverlay.svelte";
+import Tracker from "../components/Tracker.svelte";
+import "../styles/tmux.css";
+const { title } = Astro.props;
+---
+<html lang="en">
+  <body class="h-screen overflow-hidden bg-[#090d12] font-mono">
+    <Tracker client:idle wallpaper />
+    <main class="relative z-10 flex h-screen flex-col"><slot /></main>
+    <GrepOverlay client:load />
+    <StatusBar client:load active={title} />
+  </body>
+</html>`,
+"src/components/Dashboard.svelte": `\x3cscript lang="ts">
+  import { menu } from "../lib/menu";
+  import { go } from "../lib/router";
+  let cursor = 0;
+  function onKey(e: KeyboardEvent) {
+    if (e.key === "j") cursor = (cursor + 1) % menu.length;
+    if (e.key === "k") cursor = (cursor + menu.length - 1) % menu.length;
+    if (e.key === "Enter") go(menu[cursor].id);
+  }
+\x3c/script>
+<svelte:window on:keydown={onKey} />
+<section class="m-auto w-[min(940px,100%)] border border-white/5 bg-pane/60 backdrop-blur-sm">
+  {#each menu as item, i}
+    <button class:bg-alert-10={i === cursor} on:click={() => go(item.id)}>
+      <span>{item.glyph}</span><span>{item.label}</span><span>{item.key}</span>
+    </button>
+  {/each}
+</section>`,
+"src/components/GrepOverlay.svelte": `\x3cscript lang="ts">
+  import { index } from "../lib/repo-index";
+  import { search } from "../lib/grep";
+  let open = false;
+  let query = "";
+  let selected = 0;
+  $: hits = search(index, query);
+  $: preview = hits[selected] ?? null;
+  function onKey(e: KeyboardEvent) {
+    if (!open && e.key === "/") { open = true; e.preventDefault(); return; }
+    if (!open) return;
+    if (e.key === "Escape") { open = false; query = ""; selected = 0; }
+    if (e.key === "ArrowDown") selected = (selected + 1) % hits.length;
+    if (e.key === "ArrowUp") selected = (selected - 1 + hits.length) % hits.length;
+  }
+\x3c/script>
+<svelte:window on:keydown={onKey} />
+{#if open}
+  <div class="fixed inset-0 z-40 bg-pane/55 backdrop-blur-[2px]">
+    <slot name="panes" />
+  </div>
+{/if}`,
+"src/components/Tracker.svelte": `\x3cscript lang="ts">
+  import Radar from "./Radar.svelte";
+  import { subjects } from "../lib/subjects";
+  export let wallpaper = false;
+  const opacity = wallpaper ? 0.72 : 1;
+\x3c/script>
+<div class="absolute inset-0" style:opacity>
+  <Radar {subjects} sweepSeconds={9} />
+</div>`,
+"src/components/Radar.svelte": `\x3cscript lang="ts">
+  export let subjects: Subject[] = [];
+  export let sweepSeconds = 9;
+  const rings = [0.22, 0.46, 0.7, 0.94];
+  // threat colour: spiders read friendly blue, flerken reads alert red
+  const tint = (s: Subject) => (s.threat === "high" ? "#ff5a5f" : "#7cc0f0");
+\x3c/script>
+<svg class="h-full w-full" viewBox="0 0 1000 1000" aria-hidden="true">
+  {#each rings as r}<circle cx="500" cy="500" r={r * 460} class="stroke-alert/20" fill="none" />{/each}
+  {#each subjects as s}
+    <g transform={"translate(" + s.x + " " + s.y + ")"}>
+      <circle r="6" fill={tint(s)} />
+      <circle r="6" fill="none" stroke={tint(s)} class="animate-ping-out" />
+    </g>
+  {/each}
+</svg>`,
+"src/components/StatusBar.svelte": `\x3cscript lang="ts">
+  export let active = "projects";
+  const windows = ["projects", "xp", "contact", "resume", "config", "tracker", "info"];
+  const clock = new Date();
+\x3c/script>
+<footer class="flex h-[30px] shrink-0 items-center bg-[#0d2a2f] text-sm text-signal">
+  <span class="px-2 text-[#7fd8a8]">Session: 10.42.7.13</span>
+  {#each windows as w, i}
+    <span class:reverse={w === active}>{i + 1}:{w}{w === active ? "*" : ""}</span>
+  {/each}
+  <span class="ml-auto px-3 text-[#d7a3e0]">{clock.toISOString().slice(11, 16)}</span>
+</footer>`,
+"src/lib/grep.ts": `import type { RepoFile, Hit } from "./types";
+
+const LIMIT = 400;
+
+export function search(files: RepoFile[], query: string): Hit[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return files.map((f) => ({ path: f.path, line: 0, col: 0, text: f.lines.length + " lines" }));
+  const hits: Hit[] = [];
+  for (const file of files) {
+    file.lines.forEach((text, i) => {
+      const col = text.toLowerCase().indexOf(q);
+      if (col === -1 || hits.length >= LIMIT) return;
+      hits.push({ path: file.path, line: i + 1, col: col + 1, text });
+    });
+  }
+  return hits;
+}`,
+"src/lib/keymap.ts": `export const keymap = {
+  p: "/projects",
+  x: "/xp",
+  c: "/contact",
+  r: "/resume",
+  g: "/config",
+  t: "/tracker",
+  i: "/info"
+} as const;
+
+// tmux parity, still pending: prefix C-b, pane splits, window rotate
+export const prefix = "C-b";
+export const motions = ["j", "k", "h", "l", "gg", "G"];`,
+"src/lib/repo-index.ts": `import { readdir, readFile } from "node:fs/promises";
+import { join, relative } from "node:path";
+
+const SKIP = new Set(["node_modules", "dist", ".git", ".astro"]);
+
+export async function buildIndex(root = process.cwd()) {
+  const out = [];
+  async function walk(dir: string) {
+    for (const entry of await readdir(dir, { withFileTypes: true })) {
+      if (SKIP.has(entry.name)) continue;
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) { await walk(full); continue; }
+      const src = await readFile(full, "utf8");
+      out.push({ path: relative(root, full), lines: src.split("\\n") });
+    }
+  }
+  await walk(root);
+  return out.sort((a, b) => a.path.localeCompare(b.path));
+}`,
+"src/lib/subjects.ts": `import type { Subject } from "./types";
+
+export const subjects: Subject[] = [
+  { id: "SPIDER-01", label: "Spider-Man", threat: "none", x: 690, y: 300 },
+  { id: "SPIDER-02", label: "Spider-Gwen", threat: "none", x: 360, y: 620 },
+  { id: "FLERKEN-01", label: "Flerken", threat: "high", x: 560, y: 760 }
+];`,
+"src/lib/types.ts": `export type Threat = "none" | "low" | "high";
+
+export interface Subject { id: string; label: string; threat: Threat; x: number; y: number }
+export interface RepoFile { path: string; lines: string[] }
+export interface Hit { path: string; line: number; col: number; text: string }`,
+"src/content/config.ts": `import { defineCollection, z } from "astro:content";
+
+const projects = defineCollection({
+  type: "content",
+  schema: z.object({
+    name: z.string(),
+    repos: z.array(z.string()),
+    stack: z.array(z.string()),
+    status: z.enum(["shipped", "building", "paused"])
+  })
+});
+
+const xp = defineCollection({ type: "content", schema: z.object({ company: z.string(), role: z.string() }) });
+
+export const collections = { projects, xp };`,
+"src/content/projects/spidey-tracker.md": `---
+name: Spidey Tracker
+repos: [spidey-tracker, tracker-radar]
+stack: [Svelte, Canvas, WebSockets]
+status: building
+---
+Live radar of every arachnid-adjacent subject in the city.
+The sweep runs on the compositor; positions arrive over a socket.
+Threat level drives colour: friendly blue, hostile red.`,
+"src/content/projects/reading-hub.md": `---
+name: Reading Hub
+repos: [reading-hub]
+stack: [Python, SQLite, Astro]
+status: shipped
+---
+A digest that ranks what I should read next.
+Sources drop into feeds/ and expose fetch(cutoff, **opts).
+Ranking is deterministic when the embedding model is cold.`,
+"src/content/xp/ontario-tech.md": `---
+company: Ontario Tech
+role: Research Assistant
+from: 2022-05
+to: 2022-08
+---
+Tooling for a mobility-data study: ingestion, cleaning, plots.
+- pipeline over 4M GPS traces
+- reproducible notebooks for the lab`,
+"src/styles/tmux.css": `@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .reverse { @apply bg-alert px-1.5 text-[#0b0f14]; }
+  .pane-title { @apply absolute -top-2.5 left-4 bg-[#090d12] px-2 text-alert; }
+}
+
+@keyframes ping-out { from { transform: scale(.3); opacity: .85 } to { transform: scale(3.8); opacity: 0 } }
+.animate-ping-out { animation: ping-out 3.6s cubic-bezier(.2,.6,.4,1) infinite; }`,
+".github/workflows/deploy.yml": `name: deploy
+on:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - uses: cloudflare/wrangler-action@v3`
+  };
+
+  fileKinds = {
+    md: ["▤", "#8fd0f5"], astro: ["▲", "#ff7a59"], svelte: ["◆", "#ff6a3d"], ts: ["⬢", "#4aa3e0"],
+    mjs: ["⬡", "#d9b04a"], js: ["⬡", "#d9b04a"], json: ["{}", "#d9b04a"], css: ["◈", "#6a9ad0"],
+    yml: ["⚙", "#9a7fd4"]
+  };
+
+  repoFiles() {
+    if (!this._repo) this._repo = Object.keys(this.repoSrc).map(p => ({ path: p, lines: this.repoSrc[p].split("\n") }));
+    return this._repo;
+  }
+  kindOf(path) { return this.fileKinds[path.split(".").pop()] || ["▫", "rgba(196,216,232,.7)"]; }
+
+  grepHits() {
+    const files = this.repoFiles();
+    const q = (this.state.gq || "").trim().toLowerCase();
+    if (!q) return files.map(f => ({ path: f.path, line: 0, col: 0, pre: f.lines.length + " lines", mat: "", post: "" }));
+    const out = [];
+    for (const f of files) {
+      const inPath = f.path.toLowerCase().indexOf(q);
+      if (inPath !== -1) out.push({ path: f.path, line: 0, col: 0, pre: f.lines.length + " lines", mat: "", post: "" });
+      for (let i = 0; i < f.lines.length; i++) {
+        if (out.length >= 400) return out;
+        const raw = f.lines[i];
+        const at = raw.toLowerCase().indexOf(q);
+        if (at === -1) continue;
+        const cut = Math.max(0, at - 24);
+        const text = (cut ? "…" : "") + raw.slice(cut).replace(/\s+$/, "");
+        const off = at - cut + (cut ? 1 : 0);
+        out.push({ path: f.path, line: i + 1, col: at + 1, pre: text.slice(0, off), mat: text.substr(off, q.length), post: text.slice(off + q.length) });
+      }
+    }
+    return out;
+  }
+  openGrep() { this.setState({ grep: true, gq: "", gsel: 0 }); }
+  gListRef = (el) => {
+    if (this._ro) { this._ro.disconnect(); this._ro = null; }
+    if (!el) return;
+    const measure = () => {
+      const rows = Math.max(4, Math.floor(el.clientHeight / 22));
+      if (rows !== this.state.gvis) this.setState({ gvis: rows });
+    };
+    measure();
+    if (window.ResizeObserver) { this._ro = new ResizeObserver(measure); this._ro.observe(el); }
+  };
+  gPreviewRef = (el) => {
+    if (this._ro2) { this._ro2.disconnect(); this._ro2 = null; }
+    if (!el) return;
+    const measure = () => {
+      const rows = Math.max(6, Math.floor(el.clientHeight / 21));
+      if (rows !== this.state.gpvis) this.setState({ gpvis: rows });
+    };
+    measure();
+    if (window.ResizeObserver) { this._ro2 = new ResizeObserver(measure); this._ro2.observe(el); }
+  };
+  grepOpenRow() {
+    const rows = this._rows || [];
+    const row = rows[Math.min(this.state.gsel || 0, rows.length - 1)];
+    if (!row) { this.setState({ grep: false }); return; }
+    const p = row.path;
+    const view = /projects|Lazygit/.test(p) ? "projects"
+      : /xp|Yazi/.test(p) ? "xp"
+      : /Tracker|Radar|subjects/.test(p) ? "tracker"
+      : /info/i.test(p) ? "info" : null;
+    this.setState(view ? { grep: false, view } : { grep: false });
+  }
+  grepKey(e) {
+    const rows = this._rows || [];
+    const k = e.key.toLowerCase();
+    const n = rows.length || 1;
+    if (e.key === "Escape" || (e.ctrlKey && k === "c")) { this.setState({ grep: false }); return; }
+    if (e.key === "ArrowDown" || (e.ctrlKey && (k === "n" || k === "j"))) { e.preventDefault(); this.setState(s => ({ gsel: ((s.gsel || 0) + 1) % n })); return; }
+    if (e.key === "ArrowUp" || (e.ctrlKey && (k === "p" || k === "k"))) { e.preventDefault(); this.setState(s => ({ gsel: ((s.gsel || 0) + n - 1) % n })); return; }
+    if (e.key === "Enter") { e.preventDefault(); this.grepOpenRow(); return; }
+    if (e.key === "Backspace") { e.preventDefault(); this.setState(s => ({ gq: (s.gq || "").slice(0, -1), gsel: 0 })); return; }
+    if (e.ctrlKey && (k === "u" || k === "w")) { e.preventDefault(); this.setState({ gq: "", gsel: 0 }); return; }
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key.length === 1) { e.preventDefault(); this.setState(s => ({ gq: (s.gq || "") + e.key, gsel: 0 })); }
+  }
+
+  open(id) {
+    if (!this.labels[id]) return;
+    if (id === "tracker") { clearTimeout(this._t); this.setState({ view: "tracker", msg: null, offBack: false }); return; }
+    if (id === "projects") { clearTimeout(this._t); this.setState({ view: "projects", msg: null }); return; }
+    if (id === "xp") { clearTimeout(this._t); this.setState({ view: "xp", msg: null, xpLevel: 0, xpCompany: 0, xpRole: 0, xpEditor: false }); return; }
+    if (id === "info") { clearTimeout(this._t); this.setState({ view: "info", msg: null }); return; }
+    this.setState({ msg: "-- switching to window " + this.labels[id] + " --" });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ msg: null }), 1800);
+  }
+  xpEnter() {
+    if (this.state.xpLevel === 0) this.setState({ xpLevel: 1, xpRole: 0 });
+    else this.setState({ xpEditor: true });
+  }
+  meterBars = Array.from({ length: 60 }, (_, i) => i);
+  meterRef = (el) => {
+    this._meter = el;
+    if (el) this.startMeter(); else this.stopMeter();
+  };
+  stopMeter() {
+    cancelAnimationFrame(this._raf); clearInterval(this._probe);
+    this._raf = null; this._probe = null;
+  };
+  linkSpeed() {
+    let bytes = 0, ms = 0;
+    const all = performance.getEntriesByType("resource").concat(performance.getEntriesByType("navigation"));
+    for (const e of all) if (e.transferSize > 2000 && e.duration > 1) { bytes += e.transferSize; ms += e.duration; }
+    return ms ? Math.max(0.2, (bytes * 8 / 1e6) / (ms / 1000)) : null;
+  };
+  netStats() {
+    const c = navigator.connection || {};
+    const down = typeof c.downlink === "number" ? c.downlink : (this._measured || this.linkSpeed() || 5);
+    const rtt = typeof c.rtt === "number" && c.rtt > 0 ? c.rtt : (this._rtt || 60);
+    return { down: down, rtt: rtt, type: (c.effectiveType || (down > 20 ? "fast" : "link")).toUpperCase() };
+  };
+  probe() {
+    const t0 = performance.now();
+    const img = new Image();
+    const done = () => {
+      const ms = performance.now() - t0;
+      this._rtt = Math.round(this._rtt ? this._rtt * 0.6 + ms * 0.4 : ms);
+      this._measured = this.linkSpeed();
+      this._burst = 1;
+      const n = this.netStats();
+      const readout = (navigator.onLine === false ? "offline" : n.down.toFixed(1) + " Mb/s") + " · " + n.rtt + " ms · " + n.type;
+      if (readout !== this.state.netReadout) this.setState({ netReadout: readout });
+    };
+    img.onload = done; img.onerror = done;
+    img.src = "assets/icon-mail.svg?t=" + Math.round(t0);
+  };
+  startMeter() {
+    if (this._raf) return;
+    this._samples = new Array(60).fill(0.06);
+    this._burst = 1;
+    this.probe();
+    this._probe = setInterval(() => this.probe(), 2500);
+    const tick = () => {
+      const el = this._meter;
+      if (!el) { this._raf = null; return; }
+      const n = this.netStats();
+      const q = Math.max(0, Math.min(1, Math.log10(1 + n.down) / Math.log10(51)));
+      const lag = Math.max(0, Math.min(1, (n.rtt - 30) / 500));
+      const env = 0.36 + 0.5 * q;
+      const cap = 1 - 0.18 * lag;
+      const t = performance.now() / 1000 * (1 - 0.35 * lag);
+      const bars = el.children;
+      this._burst *= 0.94;
+      for (let i = 0; i < bars.length; i++) {
+        const wob = Math.sin(t * (1.15 + i * 0.07) + i * 1.7) * 0.5
+                  + Math.sin(t * (0.55 + i * 0.031) + i * 0.9) * 0.32
+                  + Math.sin(t * 3.4 + i * 0.55) * 0.18;
+        const peak = this._burst * 0.4 * Math.exp(-Math.pow((i - bars.length * 0.62) / 9, 2));
+        let h = env * (0.5 + 0.8 * wob) + peak + (Math.random() - 0.5) * 0.05;
+        h = Math.max(0.07, Math.min(cap, h));
+        const hue = 212 - 212 * Math.pow(h, 0.85);
+        const b = bars[i];
+        b.style.height = (h * 100).toFixed(1) + "%";
+        b.style.background = "repeating-linear-gradient(to top, hsl(" + hue.toFixed(0) + " 92% 55%) 0 3px, rgba(9,13,18,.85) 3px 4px)";
+        b.style.boxShadow = h > .7 ? "0 0 6px hsl(" + hue.toFixed(0) + " 92% 55% / .5)" : "none";
+      }
+      this._raf = requestAnimationFrame(tick);
+    };
+    this._raf = requestAnimationFrame(tick);
+  };
+  componentDidMount() {
+    this._k = (e) => {
+      if (this.state.grep) { this.grepKey(e); return; }
+      if (e.key === "/") { e.preventDefault(); this.openGrep(); return; }
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const k = e.key.toLowerCase();
+      if (this.state.view === "xp") {
+        const s = this.state;
+        const list = s.xpLevel === 1 ? this.xp[s.xpCompany].roles : this.xp;
+        const key = s.xpLevel === 1 ? "xpRole" : "xpCompany";
+        const cur = s.xpLevel === 1 ? s.xpRole : s.xpCompany;
+        if (s.xpEditor) { if (k === "q" || e.key === "Escape") this.setState({ xpEditor: false }); return; }
+        if (k === "j" || e.key === "ArrowDown") { this.setState({ [key]: (cur + 1) % list.length }); return; }
+        if (k === "k" || e.key === "ArrowUp") { this.setState({ [key]: (cur + list.length - 1) % list.length }); return; }
+        if (e.key === "Enter" || k === "l" || e.key === "ArrowRight") { this.xpEnter(); return; }
+        if (k === "h" || e.key === "Backspace" || e.key === "ArrowLeft") { if (s.xpLevel === 1) this.setState({ xpLevel: 0 }); return; }
+        if (k === "q" || e.key === "Escape") { this.setState(st => st.xpLevel === 1 ? { xpLevel: 0 } : { view: "home" }); return; }
+        return;
+      }
+      if (this.state.view !== "home") {
+        if (k === "q" || e.key === "Escape") { this.setState({ view: "home" }); return; }
+        if (this.state.view === "info" && k === "r") { window.open("assets/resume.pdf", "_blank"); return; }
+        if (this.state.view === "projects") {
+          if (k === "j" || e.key === "ArrowDown") this.setState(s => ({ project: (s.project + 1) % this.data.length }));
+          if (k === "k" || e.key === "ArrowUp") this.setState(s => ({ project: (s.project + this.data.length - 1) % this.data.length }));
+          if (k === "t") this.setState({ view: "tracker", offBack: false });
+        }
+        return;
+      }
+      const id = this.keys[k];
+      if (id) this.open(id);
+    };
+    window.addEventListener("keydown", this._k);
+  }
+  componentWillUnmount() { window.removeEventListener("keydown", this._k); clearTimeout(this._t); this.stopMeter(); }
+
+  renderVals() {
+    const tracker = this.state.view === "tracker";
+    const projects = this.state.view === "projects";
+    const idx = this.state.project || 0;
+    const p = this.data[idx];
+    const xp = this.state.view === "xp";
+    const lvl = this.state.xpLevel || 0;
+    const ci = this.state.xpCompany || 0;
+    const ri = this.state.xpRole || 0;
+    const company = this.xp[ci];
+    const role = company.roles[Math.min(ri, company.roles.length - 1)];
+    const rowBase = "cursor:pointer;display:flex;align-items:baseline;gap:10px;padding:1px 6px;border-radius:2px;";
+    const entries = (lvl === 1 ? company.roles.map((r, i) => ({
+      icon: "▤", name: r.file, meta: r.months, date: r.date, sel: i === ri, go: () => this.setState({ xpRole: i })
+    })) : this.xp.map((c, i) => ({
+      icon: "▸", name: c.name + "/", meta: c.roles.length + (c.roles.length > 1 ? " roles" : " role"), date: c.roles[0].date, sel: i === ci, go: () => this.setState({ xpCompany: i })
+    }))).concat([{ icon: "▸", name: "../", meta: "", date: "", sel: false, go: () => this.setState(s => s.xpLevel === 1 ? { xpLevel: 0 } : { view: "home" }) }]);
+    const hits = this.grepHits();
+    this._rows = hits;
+    const gsel = Math.min(this.state.gsel || 0, Math.max(0, hits.length - 1));
+    const VIS = this.state.gvis || 14;
+    const start = Math.max(0, Math.min(Math.max(0, hits.length - VIS), Math.max(0, gsel - Math.floor(VIS / 2))));
+    const cur = hits[gsel];
+    const curFile = cur ? this.repoFiles().find(f => f.path === cur.path) : null;
+    const PVIS = this.state.gpvis || 20;
+    const pStart = cur && cur.line ? Math.max(0, Math.min(curFile.lines.length - PVIS, cur.line - Math.floor(PVIS / 2))) : 0;
+    const qLen = (this.state.gq || "").trim().length;
+    const previewLines = curFile ? curFile.lines.slice(Math.max(0, pStart), Math.max(0, pStart) + PVIS).map((t, i) => {
+      const n = Math.max(0, pStart) + i + 1;
+      const on = cur.line === n;
+      const at = qLen ? t.toLowerCase().indexOf((this.state.gq || "").trim().toLowerCase()) : -1;
+      return {
+        n: n, on: on && qLen > 0, off: !(on && qLen > 0),
+        pre: at === -1 ? (t === "" ? " " : t) : t.slice(0, at),
+        mat: at === -1 ? "" : t.substr(at, qLen),
+        post: at === -1 ? "" : t.slice(at + qLen),
+        style: "display:grid;grid-template-columns:44px 1fr;gap:10px;white-space:pre;height:21px;line-height:21px;overflow:hidden;" + (on ? "background:rgba(95,198,180,.12);color:#e6f2ef" : "color:rgba(196,216,232,.62)"),
+        nStyle: on ? "text-align:right;color:#e0453c" : "text-align:right;color:rgba(196,216,232,.28)"
+      };
+    }) : [];
+    return {
+      grepOpen: !!this.state.grep,
+      closeGrep: () => this.setState({ grep: false }),
+      grepQuery: this.state.gq || "",
+      grepCount: hits.length + "/" + (qLen ? this.repoFiles().reduce((n, f) => n + f.lines.length, 0) : this.repoFiles().length),
+      grepMode: qLen ? "live_grep · shevinum.dev@main" : "repo files · shevinum.dev@main",
+      grepHasRows: hits.length > 0,
+      grepEmpty: hits.length === 0,
+      grepFile: cur ? cur.path : "no results",
+      grepFilePos: cur && cur.line ? cur.line + ":" + cur.col : (curFile ? curFile.lines.length + " lines" : ""),
+      grepPreview: previewLines,
+      meterRef: this.meterRef,
+      meterBars: this.meterBars,
+      netReadout: this.state.netReadout || "measuring…",
+      gListRef: this.gListRef,
+      gPreviewRef: this.gPreviewRef,
+      grepRows: hits.slice(start, start + VIS).map((h, i) => {
+        const at = start + i;
+        const sel = at === gsel;
+        const kind = this.kindOf(h.path);
+        return {
+          icon: kind[0],
+          iconStyle: "color:" + kind[1] + ";font-size:11px;width:14px;flex:none;text-align:center",
+          path: h.path,
+          pathStyle: "flex:none;color:" + (sel ? "#f4ece9" : kind[1]),
+          pos: h.line ? ":" + h.line + ":" + h.col : "",
+          pre: h.pre, mat: h.mat, post: h.post,
+          pick: () => (sel ? this.grepOpenRow() : this.setState({ gsel: at })),
+          style: "cursor:pointer;display:flex;align-items:center;gap:6px;padding:0 8px;height:22px;line-height:22px;white-space:pre;overflow:hidden;" +
+            (sel ? "background:rgba(224,69,60,.22);color:#f4ece9" : "color:rgba(196,216,232,.66)")
+        };
+      }),
+      xpBrowser: xp && !this.state.xpEditor,
+      xpEditorView: xp && !!this.state.xpEditor,
+      xpPath: lvl === 1 ? "/Users/Shev/Experience/" + company.name + "/" : "/Users/Shev/Experience/",
+      xpPos: (lvl === 1 ? ri + 1 : ci + 1) + " / " + (lvl === 1 ? company.roles.length : this.xp.length),
+      xpEntries: entries.map(en => ({
+        icon: en.icon, name: en.name, meta: en.meta, date: en.date, pick: () => { if (en.sel) this.xpEnter(); else en.go(); },
+        style: rowBase + (en.sel ? "background:rgba(224,69,60,.2);color:#f4ece9" : "color:rgba(196,216,232,.7)")
+      })),
+      xpShowRoles: lvl === 0,
+      xpShowDoc: lvl === 1,
+      xpRoles: company.roles.map(r => ({ role: r.role, months: r.months, dates: r.dates, loc: r.loc })),
+      xpDoc: role.doc.map(l => ({ t: l[0] === "" ? " " : l[0], style: this.xpColors[l[1]] })),
+      xpHint: lvl === 1 ? "enter opens " + role.file + " in nvim · h goes back · q returns to the dashboard" : "enter opens " + company.name + "/ · j/k moves · q returns to the dashboard",
+      editorFile: role.file,
+      editorCompany: company.name,
+      editorLines: role.doc.map((l, i) => ({ n: i + 1, t: l[0] === "" ? " " : l[0], style: this.xpColors[l[1]] })),
+      hlProjects: this.state.view === "home" || this.state.view === "projects",
+      pProjects: !(this.state.view === "home" || this.state.view === "projects"),
+      hlXp: xp,
+      pXp: !xp,
+      infoView: this.state.view === "info",
+      hlInfo: this.state.view === "info",
+      pInfo: this.state.view !== "info",
+      projectsView: projects,
+      pTracker: !tracker,
+      projectCount: this.data.length,
+      repoCount: this.data.reduce((n, d) => n + d.repos.length, 0),
+      activeFile: p.name,
+      filePos: (idx + 1) + " of " + this.data.length,
+      files: this.data.map((d, i) => ({
+        name: d.name,
+        pick: () => this.setState({ project: i }),
+        style: "cursor:pointer;border-radius:2px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" +
+          (i === idx ? "background:rgba(224,69,60,.18);color:#f0e7e4" : "color:rgba(196,216,232,.7)")
+      })),
+      repos: p.repos,
+      commits: p.commits.map(c => ({ sha: c[0], msg: c[1] })),
+      doc: p.doc.map(l => ({ t: l[0] === "" ? " " : l[0], style: this.docColors[l[1]] })),
+      wallOpacity: tracker ? 1 : Math.min(1, 0.72 * (this.props.trackerBrightness ?? 1)),
+      wallFilter: "none",
+      sweep: this.props.scanSweep ?? true,
+      homeView: this.state.view === "home",
+      trackerView: tracker,
+      goHome: () => this.setState({ view: "home" }),
+      showBack: !this.state.offBack,
+      hideBack: () => this.setState({ offBack: true }),
+      showDanger: !this.state.offDanger,
+      hideDanger: () => this.setState({ offDanger: true }),
+      showInfo: !this.state.offInfo,
+      hideInfo: () => this.setState({ offInfo: true }),
+      alertsVisible: (this.props.showAlerts ?? true) && this.state.view === "home" && !(this.state.offDanger && this.state.offInfo),
+      hasMsg: !!this.state.msg,
+      msg: this.state.msg,
+      onPick: (e) => {
+        const el = e.target.closest("[data-item]");
+        if (el) this.open(el.getAttribute("data-item"));
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>
