@@ -14,8 +14,8 @@
     "check": "astro check && tsc --noEmit",
     "goldens": "node tests/visual/capture-goldens.mjs",
     "test:unit": "node --test tests/unit/*.test.ts",
-    "test:visual": "playwright test tests/visual/identical.spec.ts",
-    "test:e2e": "playwright test tests/e2e"
+    "test:visual": "pnpm build:fixtures && playwright test tests/visual/identical.spec.ts",
+    "test:e2e": "pnpm build && playwright test tests/e2e"
   },
   "dependencies": {
     "@astrojs/svelte": "9.0.1",

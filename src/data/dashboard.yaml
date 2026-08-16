@@ -41,12 +41,21 @@ footer:
   switchingTemplate: "-- switching to window {label} --"
 
 toasts:
+  # Shared "✕" dismiss glyph (design/Homepage.dc.html lines 127, 136) — one
+  # glyph, both toasts, kept in data alongside the badge icons above for
+  # the same reason (no toast iconography hardcoded in src/components).
+  closeIcon: "✕"
   danger:
+    # "!" glyph inside the round badge circle (design/Homepage.dc.html line
+    # 126) — kept in data (not hardcoded in the component) so no toast
+    # copy/iconography lives in src/components.
+    icon: "!"
     badge: "Danger"
     prefix: "Flerken Detected. Threat Level "
     emphasis: "High"
     suffix: "."
   tracker:
+    icon: "i"
     badge: "Tracker"
     prefix: "Location Identified : "
     emphasis: "Latveria"

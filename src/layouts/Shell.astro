@@ -1,8 +1,15 @@
 ---
-// Minimal shell: fonts + global.css wired through the real Astro/Vite/
-// Tailwind pipeline. Phase 3 replaces the body slot with Wallpaper +
-// StatusBar + Terminal island; this stub exists only so `pnpm build`
-// exercises the real pipeline in Phase 1.
+// Global shell: fonts (via global.css's @fontsource imports) + Tailwind
+// theme/utilities, wired through the real Astro/Vite pipeline. Every route
+// page wraps its Terminal.svelte island in this layout (PLAN.md "Routing
+// assumption") so the five static pages share one <head>/base-style setup.
+//
+// The mobile-block card (README "Mobile policy": <900px width or coarse
+// pointer) is a Phase 9 deliverable — its full copy/markup lands there.
+// Terminal.svelte already carries the JS half of the guard (no
+// listeners/timers attach outside the desktop+fine-pointer media query);
+// this comment marks where the card's CSS-only always-in-DOM markup will
+// go once Phase 9 adds it.
 import "../styles/global.css";
 
 interface Props {
@@ -21,5 +28,7 @@ const { title = "shevinum.dev" } = Astro.props;
   </head>
   <body>
     <slot />
+    <!-- Phase 9: mobile-block card slot (data/site.yaml `mobileBlock`), shown via
+         a `(max-width: 899px), (pointer: coarse)` media query, terminal hidden. -->
   </body>
 </html>

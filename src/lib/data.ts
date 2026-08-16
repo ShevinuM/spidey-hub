@@ -1,21 +1,48 @@
 // Build-time loader for src/data/*.yaml — every user-visible string that
 // isn't part of a content collection lives in one of these files (PLAN.md
 // "Architecture — content out of components"). Astro pages/layouts read
-// this module (Node-only, build time) and pass plain data down as props;
-// Svelte islands never read the filesystem themselves.
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+// this module and pass plain data down as props; Svelte islands never read
+// the filesystem themselves.
+//
+// Each file is a static `?raw` import (inlined as a string by Vite at
+// build time) rather than a runtime `node:fs` read relative to
+// `import.meta.url`: Astro's static build bundles this module into
+// `dist/.prerender/chunks/`, which moves it well away from `src/data/` on
+// disk, so a `readFileSync(dirname(import.meta.url) + "../data/...")` path
+// resolves under `dist/` and 404s (ENOENT) exactly once real pages start
+// calling these getters — `astro sync`/dev never bundles this file, so
+// Phase 2's `astro sync`-only verification didn't exercise this path).
+// `?raw` imports have no such problem: Vite resolves and inlines the file
+// content at the *import's* location during bundling, independent of
+// where the chunk ends up at runtime.
 import YAML from "yaml";
+import siteRaw from "../data/site.yaml?raw";
+import dashboardRaw from "../data/dashboard.yaml?raw";
+import trackerRaw from "../data/tracker.yaml?raw";
+import profileRaw from "../data/profile.yaml?raw";
+import buildsRaw from "../data/builds.yaml?raw";
+import grepRaw from "../data/grep.yaml?raw";
+import personnelRaw from "../data/personnel.yaml?raw";
+import companiesRaw from "../data/companies.yaml?raw";
 
-const DATA_DIR = join(dirname(fileURLToPath(import.meta.url)), "../data");
+const RAW: Record<string, string> = {
+  "site.yaml": siteRaw,
+  "dashboard.yaml": dashboardRaw,
+  "tracker.yaml": trackerRaw,
+  "profile.yaml": profileRaw,
+  "builds.yaml": buildsRaw,
+  "grep.yaml": grepRaw,
+  "personnel.yaml": personnelRaw,
+  "companies.yaml": companiesRaw,
+};
 
 const cache = new Map<string, unknown>();
 
 function loadYaml<T>(file: string): T {
   const cached = cache.get(file);
   if (cached !== undefined) return cached as T;
-  const raw = readFileSync(join(DATA_DIR, file), "utf8");
+  const raw = RAW[file];
+  if (raw === undefined) throw new Error(`src/lib/data.ts: no ?raw import registered for "${file}"`);
   const parsed = YAML.parse(raw) as T;
   cache.set(file, parsed);
   return parsed;
@@ -61,6 +88,7 @@ export interface MenuEntry {
 }
 
 export interface ToastCopy {
+  icon: string;
   badge: string;
   prefix: string;
   emphasis: string;
@@ -71,7 +99,7 @@ export interface DashboardData {
   plate: { title: string; welcomePrefix: string };
   menu: MenuEntry[];
   footer: { syncLine: string; switchingTemplate: string };
-  toasts: { danger: ToastCopy; tracker: ToastCopy };
+  toasts: { closeIcon: string; danger: ToastCopy; tracker: ToastCopy };
 }
 
 export const getDashboard = (): DashboardData => loadYaml<DashboardData>("dashboard.yaml");

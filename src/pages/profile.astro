@@ -1,9 +1,5 @@
 ---
-// Route: "/" — dashboard (home) view. All five route pages share this same
-// shape (PLAN.md "Routing assumption"): load every data source + content
-// collection in frontmatter, then SSR the single Terminal.svelte island
-// with `initialView` so the matching view is in the static HTML with no
-// client-side flash. Later view switches are client-side only (pushState).
+// Route: "/profile" — see src/pages/index.astro for the shared shape notes.
 import Shell from "../layouts/Shell.astro";
 import Terminal from "../components/Terminal.svelte";
 import { getCollection } from "astro:content";
@@ -20,10 +16,10 @@ const projects = await getCollection("projects");
 const personnelEntries = await getCollection("personnel");
 ---
 
-<Shell title="shevinum.dev">
+<Shell title="Profile — shevinum.dev">
   <Terminal
     client:load
-    initialView="home"
+    initialView="profile"
     {site}
     {dashboard}
     {tracker}
