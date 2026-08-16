@@ -42,12 +42,48 @@ import { CLOCK_TIME, RUN_FOR_MS } from "./recipes.ts";
  * attributes (e.g. "font-variant-numeric:tabular-nums" in the source
  * becomes "font-variant-numeric: tabular-nums" in the live DOM), so the
  * substring match must target the normalized form, not the HTML source.
+ *
+ * No longer used as a mask target (see SIGNAL_ROW_SELECTOR below) — kept
+ * only as a structural canary so a selector regression fails the capture
+ * loudly instead of silently masking nothing.
  */
 export const NET_READOUT_SELECTOR =
   'span[style*="font-variant-numeric: tabular-nums"]';
-/** CSS selector for the 60-bar SIGNAL meter container (Profile view). */
+/**
+ * CSS selector for the 60-bar SIGNAL meter container (Profile view).
+ * No longer used as a mask target (see SIGNAL_ROW_SELECTOR below) — kept
+ * only as a structural canary, same reasoning as NET_READOUT_SELECTOR.
+ */
 export const METER_BARS_SELECTOR =
   'div[style*="align-items: flex-end"][style*="overflow: hidden"]';
+/**
+ * CSS selector for the SIGNAL footer ROW (Profile view) — the flex row
+ * ancestor holding the "SIGNAL" label, the meter-bars container, the
+ * net-readout span, and the coordinates label.
+ *
+ * This, not the readout span or the meter-bars container individually, is
+ * the mask target. Root-caused churn (verifier evidence, consecutive
+ * `pnpm goldens` runs): the readout's pixel width depends on real Resource
+ * Timing text ("X.X Mb/s · NNN ms · TYPE") and the bars' heights depend on
+ * real load measurements — neither is frozen by the faked clock, so a mask
+ * built from those elements' own geometry shifts by a few px run-to-run,
+ * exposing/hiding real content at its boundary (observed: ~280px churn in
+ * 07-profile at both viewports, always inside this row's own box —
+ * 1512x945 churn y=[864,889] versus this row's y=[855,890]; 1920x1080
+ * churn y=[999,1024] versus this row's y=[990,1025]).
+ *
+ * The row's own bounding box, in contrast, is fixed by static CSS alone:
+ * its width comes from the parent panel (flex layout, not the readout
+ * text), its height from the meter's fixed 26px-tall bars container plus
+ * fixed padding and line-height — none of which vary with live
+ * measurements. Masking the row is therefore deterministic across runs
+ * while still only covering the footer strip (not blanketing the view);
+ * it incidentally also covers the static "SIGNAL" label and the
+ * coordinates label, which is harmless (their content never changes) and
+ * simpler than carving a mask that excludes them.
+ */
+export const SIGNAL_ROW_SELECTOR =
+  'div[style*="border-top: 1px solid rgba(224, 69, 60, 0.25)"]';
 
 /**
  * @param {import('@playwright/test').Page} page
@@ -77,16 +113,20 @@ export async function captureState(page, url, recipe) {
   const isProfile = recipe.name === "07-profile";
   const readout = page.locator(NET_READOUT_SELECTOR);
   const meterBars = page.locator(METER_BARS_SELECTOR);
+  const signalRow = page.locator(SIGNAL_ROW_SELECTOR);
   if (isProfile) {
     // Fail loudly if these selectors stop matching instead of silently
-    // masking nothing (PLAN.md: net-readout + meter-strip masks are
-    // pre-authorized because the meter measures real load timing even
-    // under a faked Date).
+    // masking nothing, or masking the wrong (non-deterministic) box
+    // (PLAN.md: net-readout + meter-strip masking is pre-authorized
+    // because the meter measures real load timing even under a faked
+    // Date; readout/meterBars are canaries only, signalRow is the actual
+    // mask target — see SIGNAL_ROW_SELECTOR's comment for why).
     const readoutCount = await readout.count();
     const meterCount = await meterBars.count();
-    if (readoutCount !== 1 || meterCount !== 1) {
+    const rowCount = await signalRow.count();
+    if (readoutCount !== 1 || meterCount !== 1 || rowCount !== 1) {
       throw new Error(
-        `07-profile mask selectors matched readout=${readoutCount} meterBars=${meterCount}, expected 1 each`,
+        `07-profile mask selectors matched readout=${readoutCount} meterBars=${meterCount} signalRow=${rowCount}, expected 1 each`,
       );
     }
   }
@@ -94,6 +134,6 @@ export async function captureState(page, url, recipe) {
   return page.screenshot({
     animations: "disabled",
     caret: "hide",
-    mask: [readout, meterBars],
+    mask: [signalRow],
   });
 }
