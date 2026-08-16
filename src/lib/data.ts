@@ -136,7 +136,7 @@ export interface TrackerData {
   commandBox: { commandLine: string; statusLine: string };
   hud: { left: string[]; right: string[] };
   subjects: Subject[];
-  backPill: { label: string };
+  backPill: { label: string; dismissGlyph: string };
 }
 
 export const getTracker = (): TrackerData => loadYaml<TrackerData>("tracker.yaml");

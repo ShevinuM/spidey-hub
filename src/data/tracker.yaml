@@ -112,3 +112,4 @@ subjects:
 
 backPill:
   label: "[q] back to dashboard"
+  dismissGlyph: "✕"

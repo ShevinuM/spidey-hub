@@ -25,6 +25,7 @@
   import StatusBar from "./StatusBar.svelte";
   import Dashboard from "./Dashboard.svelte";
   import Toasts from "./Toasts.svelte";
+  import TrackerView from "./TrackerView.svelte";
 
   interface Props {
     initialView: ViewId;
@@ -150,8 +151,8 @@
       <Dashboard {dashboard} onSelect={setView} />
     {:else if view === "retina-v"}
       <!-- Full-opacity wallpaper (handled by Wallpaper's `view` prop) plus
-           the dismissible back pill; the pill itself is Phase 4 scope. -->
-      <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:flex-end;padding:22px 26px 16px"></div>
+           the dismissible back pill. -->
+      <TrackerView {tracker} onGoHome={() => setView("home")} />
     {:else}
       <!-- Builds / Personnel / Profile: Phases 5-7. -->
       <div style="flex:1;min-height:0"></div>

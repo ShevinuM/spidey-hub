@@ -97,9 +97,10 @@ Real Builds content differs from the prototype's fabricated sample data, so pixe
 - **Verify**: visual `01-dashboard` passes both viewports; e2e: `b/p/x/i/t` switch views (status bar text asserted for each — including `3:retina-v*` rendered **between** 2:personnel and 4:profile), `q`/`Esc` return, URL updates on switch and back/forward work, toasts ✕ removes toast, `cmd+l`-style modifier combos not intercepted (assert no preventDefault on a modifier keydown), clock: `page.clock` advance 1 min → status-bar text changes accordingly.
 
 ### Phase 4 — Retina-V (tracker) view
-- [ ] Tracker view = wallpaper at full opacity + back pill (dismissible ✕, `[q] back to dashboard`); wallpaper opacity 0.72 elsewhere per prototype (`wallOpacity` logic).
-- [ ] Commit.
+- [x] Tracker view = wallpaper at full opacity + back pill (dismissible ✕, `[q] back to dashboard`); wallpaper opacity 0.72 elsewhere per prototype (`wallOpacity` logic).
+- [x] Commit.
 - **Verify**: visual `08-tracker` passes both viewports; e2e: `t` from dashboard/builds, `q`/`Esc` back, pill ✕ hides pill until view re-entered (matches prototype `offBack` reset on entry).
+  - Deviation: `t` from inside Builds is prototype-gated on `view === "projects"` state that doesn't exist until Phase 5 (Builds is still an empty placeholder); per executor brief this entry path is deferred to Phase 5, not added here. `t` from dashboard is covered.
 
 ### Phase 5 — Builds view (lazygit) + submodule browsing + commits
 - [ ] `Builds.svelte`: five panels exactly (inset titles, counts from data: `{repoCount} repos · {projectCount} projects tracked`), project selection j/k + click, doc rendering via docline, repos panel, commits panel from snapshot, command-log panel (copy from data).

@@ -86,6 +86,40 @@ export const SIGNAL_ROW_SELECTOR =
   'div[style*="border-top: 1px solid rgba(224, 69, 60, 0.25)"]';
 
 /**
+ * Selector for the status-bar windows-list container (`1:builds
+ * 2:personnel 3:retina-v 4:profile`), masked only for the "08-tracker"
+ * recipe.
+ *
+ * PLAN.md bug fix 1 (approved deviation): the unpatched prototype renders
+ * the active Retina-V window appended *after* profile
+ * ("…4:profile 3:retina-v*" — Homepage.dc.html lines 451/454) instead of in
+ * numeric order. The vendored reference is intentionally NOT patched for
+ * this (README-PATCH.md's contract is exactly two edits, both required
+ * only by the no-network constraint — this bug has no such requirement),
+ * so the committed 08-tracker goldens faithfully reproduce the prototype's
+ * buggy order while the real implementation renders the fixed order
+ * ("1:builds 2:personnel 3:retina-v* 4:profile" — StatusBar.svelte). That
+ * is a structural, not antialiasing, pixel difference (~2370px, over the
+ * plan's 0.0005 maxDiffPixelRatio relaxation ceiling), so it cannot be
+ * reconciled by threshold relaxation — masking this one row is the only
+ * option, mirroring the SIGNAL_ROW_SELECTOR precedent above. No coverage
+ * is lost: tests/e2e/nav.spec.ts asserts the exact windows text
+ * ("1:builds 2:personnel 3:retina-v* 4:profile") for the tracker view via
+ * a real DOM read, independent of any screenshot.
+ *
+ * Matched two ways because the two sides serialize the same authored
+ * inline style differently: the prototype is React-rendered, so its style
+ * attribute is normalized to `color: rgb(95, 198, 180)` (space after each
+ * colon, rgb() functional notation); the real implementation is Astro-SSR'd
+ * static markup, so it keeps the authored `color:#5fc6b4` verbatim (but
+ * carries `data-testid="status-bar-windows"`, which the prototype has no
+ * equivalent of). A comma-list matches whichever branch applies per side
+ * and de-duplicates automatically if a page somehow matched both.
+ */
+export const STATUS_BAR_WINDOWS_SELECTOR =
+  '[data-testid="status-bar-windows"], div[style*="color: rgb(95, 198, 180)"]';
+
+/**
  * @param {import('@playwright/test').Page} page
  * @param {string} url
  * @param {import('./recipes.ts').Recipe} recipe
@@ -131,9 +165,24 @@ export async function captureState(page, url, recipe) {
     }
   }
 
+  const isTracker = recipe.name === "08-tracker";
+  const statusBarWindows = page.locator(STATUS_BAR_WINDOWS_SELECTOR);
+  if (isTracker) {
+    // See STATUS_BAR_WINDOWS_SELECTOR's comment: bug fix 1 makes this row
+    // structurally differ between the (deliberately unpatched) prototype
+    // golden and the fixed implementation, in every tracker-state capture.
+    const windowsCount = await statusBarWindows.count();
+    if (windowsCount !== 1) {
+      throw new Error(`08-tracker mask selector matched windows=${windowsCount}, expected 1`);
+    }
+  }
+
+  const mask = [signalRow];
+  if (isTracker) mask.push(statusBarWindows);
+
   return page.screenshot({
     animations: "disabled",
     caret: "hide",
-    mask: [signalRow],
+    mask,
   });
 }

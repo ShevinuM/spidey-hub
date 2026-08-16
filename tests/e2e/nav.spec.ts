@@ -166,6 +166,62 @@ test.describe("toast dismissal", () => {
   });
 });
 
+test.describe("tracker (Retina-V) back pill (Phase 4)", () => {
+  const PILL = '[data-testid="tracker-back-pill"]';
+  const LABEL = '[data-testid="tracker-back-label"]';
+  const DISMISS = '[data-testid="tracker-back-dismiss"]';
+
+  test("t from dashboard enters tracker with the pill visible", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press("t");
+    await expect(page).toHaveURL(/\/retina-v$/);
+    await expect(page.locator(PILL)).toBeVisible();
+    await expect(page.locator(LABEL)).toHaveText("[q] back to dashboard");
+  });
+
+  // Note: the prototype also allows `t` to enter the tracker from inside
+  // Builds (Homepage.dc.html line 1004, gated on `view === "projects"`).
+  // The real Builds view doesn't exist until Phase 5 (it's still an empty
+  // placeholder here), so that entry path is out of scope for this phase —
+  // do not add it here; it lands alongside Phase 5's Builds keymap.
+
+  test("clicking the pill label returns to dashboard", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press("t");
+    await expect(page).toHaveURL(/\/retina-v$/);
+    await page.locator(LABEL).click();
+    await expect(page).toHaveURL(/\/$/);
+  });
+
+  test("q and Esc still return to dashboard from tracker", async ({ page }) => {
+    for (const key of ["q", "Escape"] as const) {
+      await gotoReady(page, "/");
+      await page.keyboard.press("t");
+      await expect(page).toHaveURL(/\/retina-v$/);
+      await page.keyboard.press(key);
+      await expect(page).toHaveURL(/\/$/);
+    }
+  });
+
+  test("clicking the dismiss glyph hides the pill until the next tracker entry", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press("t");
+    await expect(page.locator(PILL)).toBeVisible();
+
+    await page.locator(DISMISS).click();
+    await expect(page.locator(PILL)).toHaveCount(0);
+
+    // Leaving and re-entering the tracker view resets the dismissal
+    // (prototype's `offBack` is reset to false on every tracker entry —
+    // Homepage.dc.html lines 469/897/1004).
+    await page.keyboard.press("q");
+    await expect(page).toHaveURL(/\/$/);
+    await page.keyboard.press("t");
+    await expect(page).toHaveURL(/\/retina-v$/);
+    await expect(page.locator(PILL)).toBeVisible();
+  });
+});
+
 test.describe("modifier fall-through", () => {
   test("a held-modifier keydown is never preventDefault-ed", async ({ page }) => {
     await gotoReady(page, "/");

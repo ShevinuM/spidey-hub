@@ -5,18 +5,18 @@
 // (tests/visual/pipeline.mjs) used to produce tests/visual/goldens/, so the
 // two sides can never structurally drift apart.
 //
-// Phase 3 only wires the "01-dashboard" recipe (dashboard/wallpaper/status
-// bar/toasts — the pieces this phase built pixel-exact). Later phases add
-// their own recipe name to RECIPE_NAMES as their views land; the recipes
-// list itself (tests/visual/recipes.ts) already has all 10 entries so no
-// renumbering is needed later.
+// Phase 3 wired "01-dashboard" (dashboard/wallpaper/status bar/toasts).
+// Phase 4 adds "08-tracker" (tracker view chrome: full-opacity wallpaper +
+// back pill). Later phases add their own recipe name to RECIPE_NAMES as
+// their views land; the recipes list itself (tests/visual/recipes.ts)
+// already has all 10 entries so no renumbering is needed later.
 import { expect, test } from "@playwright/test";
 import { recipes } from "./recipes.ts";
 import { captureState } from "./pipeline.mjs";
 
 // Recipes wired up so far. Append to this list, in order, as later phases
 // complete their views — do not reorder tests/visual/recipes.ts itself.
-const RECIPE_NAMES = ["01-dashboard"];
+const RECIPE_NAMES = ["01-dashboard", "08-tracker"];
 
 const activeRecipes = recipes.filter((r) => RECIPE_NAMES.includes(r.name));
 
