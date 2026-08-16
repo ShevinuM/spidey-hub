@@ -82,12 +82,12 @@ Real Builds content differs from the prototype's fabricated sample data, so pixe
 - **Verify**: `pnpm build` succeeds on the empty-shell site; `ls tests/visual/goldens/1512x945 | wc -l` = 10 and `1920x1080` = 10; goldens visually match my earlier prototype screenshots (spot-check 01, 07, 08); reference server script exits cleanly; resume.pdf opens as a valid PDF (`file` says PDF, non-zero pages).
 
 ### Phase 2 — Data layer (content, fixtures, submodules, generators)
-- [ ] `src/content.config.ts` (projects + personnel collections, zod schemas, glob loaders with env-switched `base` for fixtures); write all content files: 3 real project .md, 7 personnel .md (prototype text verbatim), `src/data/*.yaml` for every remaining string (audit the prototype HTML top-to-bottom so no copy is left hardcoded anywhere).
-- [ ] Extract fixtures from `Homepage.dc.html` verbatim: `fixtures/projects/*.md` (4 sample projects incl. commits+repos as frontmatter/JSON), `fixtures/grep-index.json` (24-file `repoSrc` — note: the prototype's own "22 tracked files" copy is a miscount; the data has 24 entries and the visible counter renders 24/24), `fixtures/commits/*.json`.
-- [ ] `git submodule add` transcript-tts, SafePass, daily-tech-digest under `repos/`; init/update.
-- [ ] `scripts/generate.mjs` (+ `predev`/`prebuild`/`pnpm generate`): repo indexes, grep index, commits snapshots (offline-safe); commit generated snapshots.
-- [ ] `src/lib/docline.ts` + unit tests (node:test): classifier reproduces the prototype kind arrays for all 11 fixture docs exactly; grep `search()` port with the prototype's exact ordering/cap/ellipsis semantics + unit tests.
-- [ ] Commit.
+- [x] `src/content.config.ts` (projects + personnel collections, zod schemas, glob loaders with env-switched `base` for fixtures); write all content files: 3 real project .md, 7 personnel .md (prototype text verbatim), `src/data/*.yaml` for every remaining string (audit the prototype HTML top-to-bottom so no copy is left hardcoded anywhere).
+- [x] Extract fixtures from `Homepage.dc.html` verbatim: `fixtures/projects/*.md` (4 sample projects incl. commits+repos as frontmatter/JSON), `fixtures/grep-index.json` (24-file `repoSrc` — note: the prototype's own "22 tracked files" copy is a miscount; the data has 24 entries and the visible counter renders 24/24), `fixtures/commits/*.json`.
+- [x] `git submodule add` transcript-tts, SafePass, daily-tech-digest under `repos/`; init/update.
+- [x] `scripts/generate.mjs` (+ `predev`/`prebuild`/`pnpm generate`): repo indexes, grep index, commits snapshots (offline-safe); commit generated snapshots.
+- [x] `src/lib/docline.ts` + unit tests (node:test): classifier reproduces the prototype kind arrays for all 11 fixture docs exactly; grep `search()` port with the prototype's exact ordering/cap/ellipsis semantics + unit tests.
+- [x] Commit.
 - **Verify**: `node --test` green; `pnpm generate` produces all JSONs with expected schema/counts (3 repo indexes with >0 text files each; grep index contains `src/` paths; 3 commit snapshots with sha8+html_url matching `github.com/ShevinuM/`); `git submodule status` shows 3 initialized; collections actually load in both normal and `PORTFOLIO_FIXTURES=1` modes, probed explicitly (`astro sync` in each mode plus a throwaway page or loader log that proves entry counts: 3 real / 4 fixture projects, 7 personnel); grep of `src/components src/layouts src/pages` for copy strings ("Flerken", "welcome back", "SPIDER-VARIANT", "Recruited into software") returns nothing (dirs may not exist yet → trivially pass).
 
 ### Phase 3 — Shell, wallpaper, status bar, dashboard, toasts, core keymap/router
@@ -103,6 +103,7 @@ Real Builds content differs from the prototype's fabricated sample data, so pixe
 
 ### Phase 5 — Builds view (lazygit) + submodule browsing + commits
 - [ ] `Builds.svelte`: five panels exactly (inset titles, counts from data: `{repoCount} repos · {projectCount} projects tracked`), project selection j/k + click, doc rendering via docline, repos panel, commits panel from snapshot, command-log panel (copy from data).
+- [ ] Editor note (from Phase 2 verify): the status-line words `Top`/`Bot` must come from data files (builds.yaml/personnel.yaml), not be hardcoded in the component.
 - [ ] Panel focus via `0–4` (bright-border indicator, default [2]); repo tree browsing in pane [0] (lazy-fetch `public/generated/repos/<name>.json`); editor view for repo files (line numbers, live `line:col` + Top/%/Bot, j/k/Ctrl-d/Ctrl-u/gg/G scrolling); commits: j/k + Enter → `html_url` new tab; rows are real `<a>` links.
 - [ ] Client-side commit refresh island logic (sessionStorage TTL, silent fallback).
 - [ ] Svelte autofixer pass. Commit.
