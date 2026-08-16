@@ -1,0 +1,53 @@
+# Builds (lazygit clone) view copy. Source: design/Homepage.dc.html
+# lines 322-382. Panel numbers/titles match the prototype's inset labels;
+# panel [0] "Changes" and the command-log panel are unnumbered there too.
+
+panels:
+  status:
+    title: "─[1]─Status"
+  files:
+    title: "─[2]─Files"
+    subtitle: "- projects/*.md"
+    # Literal decorative text between the "M" (git status letter, always
+    # shown regardless of real status) and the filename — verbatim from the
+    # prototype markup, not a template variable.
+    statusLetter: "M"
+    filler: "{}"
+  repos:
+    title: "─[3]─Local Repositories"
+  commits:
+    title: "─[4]─Commits"
+    subtitle: "- main"
+    # Author initials shown next to every commit sha — hardcoded in the
+    # prototype markup (not derived from commit data); fixtures/real commit
+    # snapshots both carry "Sh" per-commit too so either source works if this
+    # literal is ever swapped for `commit.initials`.
+    authorInitials: "Sh"
+  changes:
+    title: "─[0]─Changes"
+  commandLog:
+    title: "─Command log"
+
+# "{repoCount} repos · {projectCount} projects tracked" — status line inside
+# the Status panel (line 329).
+statusLine:
+  prefix: "shevinum.dev"
+  arrow: "→"
+  reposSuffix: "repos"
+  separator: "·"
+  projectsSuffix: "projects tracked"
+
+# "{n} of {total}" position indicator under the Files list (line 338).
+filePosTemplate: "{n} of {total}"
+
+commandLog:
+  - text: "Select a project with j/k — panel [2] lists one .md per project."
+    emphasize: ["j", "k"]
+  - text: "Open the source on github.com/shevinum · live build at shevinum.dev"
+    links:
+      - text: "github.com/shevinum"
+        href: "https://github.com/shevinum"
+      - text: "shevinum.dev"
+        href: "https://shevinum.dev"
+  - text: "Press t for E.D.I.T.H: Retina-V · q returns to the dashboard."
+    emphasize: ["t", "q"]

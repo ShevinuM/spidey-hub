@@ -1,0 +1,13 @@
+# Personnel company display order. `name` must match both the
+# src/content/personnel/<name>/ directory and each role's `company`
+# frontmatter field exactly (Component.xp order, Homepage.dc.html
+# lines 472-495). The "N roles / 1 role" pluralization stays in code,
+# derived from the personnel collection at render time.
+- name: Enaimco
+  order: 0
+- name: Vretta
+  order: 1
+- name: Ontario-Tech
+  order: 2
+- name: Freelance
+  order: 3

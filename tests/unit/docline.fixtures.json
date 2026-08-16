@@ -1,0 +1,199 @@
+{
+  "docColors": {
+    "h": "color:#e0453c;font-weight:700",
+    "p": "color:rgba(196,216,232,.72)",
+    "b": "color:#5fc6b4",
+    "c": "color:rgba(217,176,74,.85)"
+  },
+  "xpColors": {
+    "h": "color:#e0453c;font-weight:700",
+    "m": "color:rgba(217,176,74,.85)",
+    "p": "color:rgba(196,216,232,.72)",
+    "b": "color:#5fc6b4",
+    "c": "color:rgba(154,127,212,.9)"
+  },
+  "docs": [
+    {
+      "kind": "project",
+      "path": "fixtures/projects/shevinum-dev.md",
+      "kinds": [
+        "h",
+        "p",
+        "p",
+        "p",
+        "p",
+        "h",
+        "b",
+        "b",
+        "b",
+        "p",
+        "h",
+        "c"
+      ]
+    },
+    {
+      "kind": "project",
+      "path": "fixtures/projects/spider-tracker.md",
+      "kinds": [
+        "h",
+        "p",
+        "p",
+        "p",
+        "p",
+        "h",
+        "b",
+        "b",
+        "p",
+        "h",
+        "c"
+      ]
+    },
+    {
+      "kind": "project",
+      "path": "fixtures/projects/flerken-watch.md",
+      "kinds": [
+        "h",
+        "p",
+        "p",
+        "p",
+        "p",
+        "h",
+        "b",
+        "b",
+        "p",
+        "h",
+        "c"
+      ]
+    },
+    {
+      "kind": "project",
+      "path": "fixtures/projects/latveria-atlas.md",
+      "kinds": [
+        "h",
+        "p",
+        "p",
+        "p",
+        "p",
+        "h",
+        "b",
+        "b",
+        "b",
+        "p",
+        "h",
+        "c"
+      ]
+    },
+    {
+      "kind": "personnel",
+      "path": "src/content/personnel/Enaimco/software-developer-full-time.md",
+      "kinds": [
+        "h",
+        "m",
+        "p",
+        "p",
+        "p",
+        "p",
+        "h",
+        "b",
+        "b",
+        "b",
+        "p",
+        "h",
+        "c"
+      ]
+    },
+    {
+      "kind": "personnel",
+      "path": "src/content/personnel/Enaimco/software-developer-part-time.md",
+      "kinds": [
+        "h",
+        "m",
+        "p",
+        "p",
+        "p",
+        "h",
+        "b",
+        "b",
+        "p",
+        "h",
+        "c"
+      ]
+    },
+    {
+      "kind": "personnel",
+      "path": "src/content/personnel/Enaimco/software-developer-co-op.md",
+      "kinds": [
+        "h",
+        "m",
+        "p",
+        "p",
+        "p",
+        "h",
+        "b",
+        "b",
+        "p",
+        "h",
+        "c"
+      ]
+    },
+    {
+      "kind": "personnel",
+      "path": "src/content/personnel/Vretta/qa-automation-intern.md",
+      "kinds": [
+        "h",
+        "m",
+        "p",
+        "p",
+        "p",
+        "h",
+        "b",
+        "b",
+        "p",
+        "h",
+        "c"
+      ]
+    },
+    {
+      "kind": "personnel",
+      "path": "src/content/personnel/Ontario-Tech/teaching-assistant.md",
+      "kinds": [
+        "h",
+        "m",
+        "p",
+        "p",
+        "p",
+        "h",
+        "b",
+        "b"
+      ]
+    },
+    {
+      "kind": "personnel",
+      "path": "src/content/personnel/Ontario-Tech/research-assistant.md",
+      "kinds": [
+        "h",
+        "m",
+        "p",
+        "p",
+        "p",
+        "h",
+        "b",
+        "b"
+      ]
+    },
+    {
+      "kind": "personnel",
+      "path": "src/content/personnel/Freelance/full-stack-contractor.md",
+      "kinds": [
+        "h",
+        "m",
+        "p",
+        "p",
+        "p",
+        "h",
+        "b",
+        "b"
+      ]
+    }
+  ]
+}

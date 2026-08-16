@@ -1,0 +1,33 @@
+# Shared, cross-view copy: the tmux status bar and global keymap hints.
+# Source: design/Homepage.dc.html lines 427-446 (status bar), README.md
+# "Mobile policy" (mobile-block card), "Keymap (global)".
+
+statusBar:
+  session: "Session: 10.42.7.13"
+  separator: "·"
+  # Window list, always rendered in this numeric order 1-4 (bug fix 1: the
+  # prototype's Retina-V view renders "...4:profile 3:retina-v*" — out of
+  # order — because the tracker window is appended after profile instead of
+  # rendered in place; we always render 1-4 with the active one highlighted
+  # in place instead of reordered).
+  windows:
+    - number: 1
+      id: builds
+      name: builds
+    - number: 2
+      id: personnel
+      name: personnel
+    - number: 3
+      id: retina-v
+      name: retina-v
+    - number: 4
+      id: profile
+      name: profile
+  grepHint: "[/] grep"
+
+mobileBlock:
+  # README.md "Mobile policy" example copy, quoted verbatim.
+  heading: "E.D.I.T.H: RETINA-V"
+  body: "viewport too small — this session requires a desktop terminal (≥900px)."
+  escapeHatchText: "github.com/shevinum"
+  escapeHatchHref: "https://github.com/shevinum"

@@ -1,0 +1,40 @@
+# Grep overlay copy. Source: design/Homepage.dc.html lines 384-425 and the
+# Component class's grepHits()/renderVals() (lines 812-832, 1039-1070).
+
+leftPane:
+  titlePrefix: "GREP "
+  titleTilde: "〜"
+  promptIcon: "❯"
+
+modeLine:
+  # qLen ? liveGrep : repoFiles — Component.renderVals() line 1044.
+  liveGrep: "live_grep · shevinum.dev@main"
+  repoFiles: "repo files · shevinum.dev@main"
+
+# "no matches in {n} tracked files" — the prototype hardcodes n=22 (line
+# 403), which is a miscount: repoSrc has 24 entries and the visible counter
+# (grepCount) renders 24/24 against its own index. Our version is
+# data-driven: {n} is interpolated from the real index length at render
+# time, not hardcoded.
+emptyStateTemplate: "no matches in {n} tracked files"
+
+noResultsFile: "no results"
+
+footer:
+  hintsLeft: "type to filter · ↑↓ or ctrl-n/p moves · enter opens the pane · esc closes"
+  closeHint: "[esc] close"
+
+# kindOf() glyph+color per file extension, used for the leading icon on
+# every grep result row (Component.fileKinds, line 800-804). Fallback for
+# any extension not listed here: ["▫", "rgba(196,216,232,.7)"].
+fileKinds:
+  md: ["▤", "#8fd0f5"]
+  astro: ["▲", "#ff7a59"]
+  svelte: ["◆", "#ff6a3d"]
+  ts: ["⬢", "#4aa3e0"]
+  mjs: ["⬡", "#d9b04a"]
+  js: ["⬡", "#d9b04a"]
+  json: ["{}", "#d9b04a"]
+  css: ["◈", "#6a9ad0"]
+  yml: ["⚙", "#9a7fd4"]
+fileKindFallback: ["▫", "rgba(196,216,232,.7)"]

@@ -1,0 +1,89 @@
+# Profile view copy. Source: design/Homepage.dc.html lines 168-254.
+
+header:
+  badge: "AGENT PROFILE"
+  fileClearance: "FILE SHEV-0001 · CLEARANCE 6"
+  closeHint: "[q] close"
+
+title:
+  name: "SHEVINU"
+  subtitle: "SPIDER-VARIANT (EARTH-026) · BACKEND AND INFRASTRUCTURE DEVELOPER"
+
+images:
+  portrait:
+    alt: "Shevinum portrait"
+    caption: "ID-0001 · PRIMARY"
+  field:
+    alt: "Shevinum in the field"
+    caption: "FIELD · LATVERIA"
+  retinaV:
+    alt: "E.D.I.T.H Retina-V heads-up display over Latveria"
+    caption: "E.D.I.T.H: RETINA-V · LATVERIA // SECTOR 7"
+
+fields:
+  - label: "Name:"
+    value: "Shevinu M. C. Nawalage"
+  - label: "Abilities:"
+    value: "Spidey Sense · Blink-Shipping · Quantum Processing"
+  - label: "Base:"
+    value: "St. John's, NL"
+  - label: "Status:"
+    # Rendered as "EMPLOYED · {link}" — the link text/href are separate so
+    # the component can emit a real <a>.
+    valuePrefix: "EMPLOYED · "
+    linkText: "enaimco"
+    linkHref: "https://ca.linkedin.com/company/enaimco"
+  - label: "Education:"
+    value: "Memorial University of Newfoundland"
+
+summary:
+  heading: "─ SUMMARY"
+  paragraphs:
+    - "Recruited into software in 2021 and never left the terminal. Builds platforms end to end — APIs, pipelines, and the tooling teams live in."
+    - "Full time at Enaimco, where a 34-minute deploy became six. Off-hours: a signature tracker, an anomaly watcher, and this site."
+
+# Static narrative stats (not derived from the projects/personnel
+# collections — "roles logged: 7" coincidentally matches the real personnel
+# count today, but the prototype hardcodes it as copy, not a computation).
+recordDatabase:
+  title: "RECORD DATABASE"
+  stats:
+    - label: "repos shipped"
+      value: 10
+    - label: "roles logged"
+      value: 7
+    - label: "years active"
+      value: 5
+
+cv:
+  title: "CV"
+  fileLabel: "▤ resume.pdf"
+  meta: "· 1 page"
+  hintPrefix: "press "
+  hintKey: "r"
+  hintSuffix: " to download"
+  href: "assets/resume.pdf"
+
+contact:
+  title: "CONTACT"
+  rows:
+    - icon: "assets/icon-github.svg"
+      alt: "GitHub"
+      text: "github.com/shevinum"
+      href: "https://github.com/shevinum"
+    - icon: "assets/icon-linkedin.svg"
+      alt: "LinkedIn"
+      text: "ca.linkedin.com/in/shevinum"
+      href: "https://ca.linkedin.com/in/shevinum"
+    - icon: "assets/icon-mail.svg"
+      alt: "Email"
+      text: "shev@shevinum.dev"
+      href: "mailto:shev@shevinum.dev"
+    - icon: "assets/icon-discord.svg"
+      alt: "Discord"
+      text: "shevinum"
+      href: null
+
+signal:
+  label: "SIGNAL"
+  coords: "44°38'N 79°23'W"

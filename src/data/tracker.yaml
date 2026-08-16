@@ -1,0 +1,114 @@
+# Wallpaper / E.D.I.T.H: Retina-V (tracker) copy + map data.
+# Source: design/Homepage.dc.html lines 20-100 (wallpaper, shared with the
+# full-screen tracker view) and line 161 (tracker view back pill).
+# left/top are literal percentages of the map container exactly as authored
+# (design/Homepage.dc.html lines 29-45); this is the same wallpaper markup
+# behind every view (at wallOpacity) and the full-screen Retina-V view (at
+# opacity 1) per README "Global shell" / "5. E.D.I.T.H: Retina-V".
+
+map:
+  title: "── latveria.map · scale 1:250k ──"
+  # The capital: a "target" pin style (red, pin-target.svg), distinct from
+  # the 6 plain city pins (grey, pin.svg).
+  capital:
+    label: "Doomstadt"
+    left: 60
+    top: 62
+  cities:
+    - label: "Csaba"
+      left: 33
+      top: 15
+    - label: "Zalantha"
+      left: 50
+      top: 10
+    - label: "Varadinum"
+      left: 67
+      top: 15
+    - label: "Binsh"
+      left: 84
+      top: 50
+    - label: "Aradinum"
+      left: 10
+      top: 34
+    - label: "Temesiensis"
+      left: 25
+      top: 78
+  mountains:
+    - label: "Mount Sorcista"
+      left: 86
+      top: 22
+    - label: "Mount Victorum"
+      left: 79
+      top: 70
+    - label: "The Carpathian Mountains"
+      left: 40
+      top: 92
+  forests:
+    - label: "Doomwood"
+      left: 66
+      top: 92
+  rivers:
+    - label: "The Klyne River"
+      left: 6
+      top: 58
+    - label: "The Draken River"
+      left: 78
+      top: 80
+  origin:
+    glyph: "◎"
+    label: "ORIGIN // TRK-0"
+
+# Command box, top-left corner of the map (line 76-78).
+commandBox:
+  commandLine: "$ spider-tracker --region latveria --live"
+  statusLine: "scanning grid 44.71N / 19.24E ....... 3 signatures resolved"
+
+# Two ASCII HUD panels flanking the bottom of the map (lines 80-92). Stored
+# as line arrays (not one block-scalar string) so the exact column spacing
+# is unambiguous per line; render each array joined with "\n" inside a <pre>.
+hud:
+  left:
+    - "┌─ spider-tracker ──────────────────┐"
+    - "│ scan ............ ACTIVE          │"
+    - "│ region .......... LATVERIA        │"
+    - "│ targets ......... 02 LOCKED       │"
+    - "│ signal .......... 0.94 / 0.91     │"
+    - "│ anomaly ......... FLERKEN [!]     │"
+    - "└───────────────────────────────────┘"
+  right:
+    - "TRK-01  varadinum    44.7128N  19.2411E  vel 62km/h"
+    - "TRK-02  temesiensis  44.6903N  19.1988E  vel  4km/h"
+    - "TRK-03  doomstadt    44.7011N  19.3120E  flerken [!]"
+    - "--- webbing signature match: 2/2 -------------"
+    - "--- doom perimeter: 3 sentries within 400m ----"
+
+# Subject markers (lines 64-99). threat "none" = friendly blue (#8fd0f5
+# family); threat "high" = alert red (#ff6b6f family), dashed box.
+# Position is expressed the same way the prototype computes it: a fraction
+# of the map's width/height added to the 50%/48% center, e.g. for SPIDER-01
+# `left: calc(50% + <leftFrac> * mapWidth - 32px)`,
+# `top: calc(48% + <topFrac> * mapHeight - 66px)` (SPIDER-02 additionally
+# flips its card above-left of the marker via transform, see README "5.
+# E.D.I.T.H: Retina-V" and the vendored reference for the exact calc()).
+subjects:
+  - id: SPIDER-01
+    threat: none
+    label: "SPIDER-01"
+    sig: "Varadinum · sig 0.94"
+    leftFrac: 0.17
+    topFrac: -0.35
+  - id: SPIDER-02
+    threat: none
+    label: "SPIDER-02"
+    sig: "Temesiensis · sig 0.91"
+    leftFrac: -0.25
+    topFrac: 0.28
+  - id: FLERKEN-01
+    threat: high
+    label: "FLERKEN [!]"
+    sig: "Doomstadt · threat high"
+    leftFrac: 0.10
+    topFrac: 0.12
+
+backPill:
+  label: "[q] back to dashboard"

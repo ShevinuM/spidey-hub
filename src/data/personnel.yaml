@@ -1,0 +1,34 @@
+# Personnel Files (yazi clone) view copy.
+# Source: design/Homepage.dc.html lines 258-320 and Component.renderVals()
+# (xpPath/xpHint templates, lines 1073, 1083).
+
+# "/Users/Shev/Experience/" (+ "{company}/" when inside a company folder) —
+# Component.renderVals() line 1073.
+pathPrefix: "/Users/Shev/Experience/"
+
+insetTitles:
+  fileBrowser: "─ File Browser ─"
+  filePreview: "File Preview"
+
+promptIcon: ">"
+
+# Hint line under the role table / doc pane (Component.renderVals() line
+# 1083). {file} / {company} are interpolated; the literal wording is
+# unchanged by bug fix 3 (q/Esc always return to the dashboard — only the
+# *behavior* changes, not this copy, per PLAN.md "Approved bug fixes" #3).
+hints:
+  atRoleLevel: "enter opens {file} in nvim · h goes back · q returns to the dashboard"
+  atCompanyLevel: "enter opens {company}/ · j/k moves · q returns to the dashboard"
+
+upEntry:
+  icon: "▸"
+  name: "../"
+
+companyRowIcon: "▸"
+roleRowIcon: "▤"
+
+editor:
+  modeLabel: "NORMAL"
+  branch: "⑂ main"
+  breadcrumbSeparator: "›"
+  closeHint: "esc to close"

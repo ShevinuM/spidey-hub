@@ -1,0 +1,416 @@
+[
+  {
+    "path": "README.md",
+    "lines": [
+      "# shevinum.dev",
+      "A tmux-shaped portfolio. Every page is a pane.",
+      "## Stack",
+      "- Astro for routing and static output",
+      "- Svelte islands for pane state and keymaps",
+      "- Tailwind for panel, list and status-bar styling",
+      "## Local",
+      "pnpm install && pnpm dev",
+      "Press / anywhere in the site to grep the source of the site itself."
+    ]
+  },
+  {
+    "path": "package.json",
+    "lines": [
+      "{",
+      "  \"name\": \"shevinum-dev\",",
+      "  \"private\": true,",
+      "  \"type\": \"module\",",
+      "  \"scripts\": {",
+      "    \"dev\": \"astro dev --port 4321\",",
+      "    \"build\": \"astro build\",",
+      "    \"preview\": \"astro preview\",",
+      "    \"check\": \"astro check && tsc --noEmit\"",
+      "  },",
+      "  \"dependencies\": {",
+      "    \"astro\": \"^4.15.0\",",
+      "    \"svelte\": \"^4.2.19\",",
+      "    \"tailwindcss\": \"^3.4.10\"",
+      "  }",
+      "}"
+    ]
+  },
+  {
+    "path": "astro.config.mjs",
+    "lines": [
+      "import { defineConfig } from \"astro/config\";",
+      "import svelte from \"@astrojs/svelte\";",
+      "import tailwind from \"@astrojs/tailwind\";",
+      "",
+      "export default defineConfig({",
+      "  site: \"https://shevinum.dev\",",
+      "  output: \"static\",",
+      "  integrations: [svelte(), tailwind({ applyBaseStyles: false })],",
+      "  vite: { build: { assetsInlineLimit: 4096 } }",
+      "});"
+    ]
+  },
+  {
+    "path": "tailwind.config.mjs",
+    "lines": [
+      "export default {",
+      "  content: [\"./src/**/*.{astro,svelte,ts,md}\"],",
+      "  theme: {",
+      "    extend: {",
+      "      colors: {",
+      "        pane: \"rgb(9 13 18 / <alpha-value>)\",",
+      "        alert: \"#e0453c\",",
+      "        signal: \"#5fc6b4\",",
+      "        friendly: \"#8fd0f5\"",
+      "      },",
+      "      fontFamily: { mono: [\"JetBrains Mono\", \"ui-monospace\", \"monospace\"] }",
+      "    }",
+      "  }",
+      "};"
+    ]
+  },
+  {
+    "path": "src/pages/index.astro",
+    "lines": [
+      "---",
+      "import Shell from \"../layouts/Shell.astro\";",
+      "import Dashboard from \"../components/Dashboard.svelte\";",
+      "const title = \"shevinum.dev\";",
+      "---",
+      "<Shell title={title}>",
+      "  <Dashboard client:load />",
+      "</Shell>"
+    ]
+  },
+  {
+    "path": "src/pages/projects.astro",
+    "lines": [
+      "---",
+      "import Shell from \"../layouts/Shell.astro\";",
+      "import Lazygit from \"../components/Lazygit.svelte\";",
+      "import { getCollection } from \"astro:content\";",
+      "const projects = await getCollection(\"projects\");",
+      "---",
+      "<Shell title=\"projects\">",
+      "  <Lazygit client:load projects={projects.map((p) => p.data)} />",
+      "</Shell>"
+    ]
+  },
+  {
+    "path": "src/pages/xp.astro",
+    "lines": [
+      "---",
+      "import Shell from \"../layouts/Shell.astro\";",
+      "import Yazi from \"../components/Yazi.svelte\";",
+      "import { getCollection } from \"astro:content\";",
+      "const roles = await getCollection(\"xp\");",
+      "---",
+      "<Shell title=\"xp\">",
+      "  <Yazi client:load roles={roles} />",
+      "</Shell>"
+    ]
+  },
+  {
+    "path": "src/layouts/Shell.astro",
+    "lines": [
+      "---",
+      "import StatusBar from \"../components/StatusBar.svelte\";",
+      "import GrepOverlay from \"../components/GrepOverlay.svelte\";",
+      "import Tracker from \"../components/Tracker.svelte\";",
+      "import \"../styles/tmux.css\";",
+      "const { title } = Astro.props;",
+      "---",
+      "<html lang=\"en\">",
+      "  <body class=\"h-screen overflow-hidden bg-[#090d12] font-mono\">",
+      "    <Tracker client:idle wallpaper />",
+      "    <main class=\"relative z-10 flex h-screen flex-col\"><slot /></main>",
+      "    <GrepOverlay client:load />",
+      "    <StatusBar client:load active={title} />",
+      "  </body>",
+      "</html>"
+    ]
+  },
+  {
+    "path": "src/components/Dashboard.svelte",
+    "lines": [
+      "<script lang=\"ts\">",
+      "  import { menu } from \"../lib/menu\";",
+      "  import { go } from \"../lib/router\";",
+      "  let cursor = 0;",
+      "  function onKey(e: KeyboardEvent) {",
+      "    if (e.key === \"j\") cursor = (cursor + 1) % menu.length;",
+      "    if (e.key === \"k\") cursor = (cursor + menu.length - 1) % menu.length;",
+      "    if (e.key === \"Enter\") go(menu[cursor].id);",
+      "  }",
+      "</script>",
+      "<svelte:window on:keydown={onKey} />",
+      "<section class=\"m-auto w-[min(940px,100%)] border border-white/5 bg-pane/60 backdrop-blur-sm\">",
+      "  {#each menu as item, i}",
+      "    <button class:bg-alert-10={i === cursor} on:click={() => go(item.id)}>",
+      "      <span>{item.glyph}</span><span>{item.label}</span><span>{item.key}</span>",
+      "    </button>",
+      "  {/each}",
+      "</section>"
+    ]
+  },
+  {
+    "path": "src/components/GrepOverlay.svelte",
+    "lines": [
+      "<script lang=\"ts\">",
+      "  import { index } from \"../lib/repo-index\";",
+      "  import { search } from \"../lib/grep\";",
+      "  let open = false;",
+      "  let query = \"\";",
+      "  let selected = 0;",
+      "  $: hits = search(index, query);",
+      "  $: preview = hits[selected] ?? null;",
+      "  function onKey(e: KeyboardEvent) {",
+      "    if (!open && e.key === \"/\") { open = true; e.preventDefault(); return; }",
+      "    if (!open) return;",
+      "    if (e.key === \"Escape\") { open = false; query = \"\"; selected = 0; }",
+      "    if (e.key === \"ArrowDown\") selected = (selected + 1) % hits.length;",
+      "    if (e.key === \"ArrowUp\") selected = (selected - 1 + hits.length) % hits.length;",
+      "  }",
+      "</script>",
+      "<svelte:window on:keydown={onKey} />",
+      "{#if open}",
+      "  <div class=\"fixed inset-0 z-40 bg-pane/55 backdrop-blur-[2px]\">",
+      "    <slot name=\"panes\" />",
+      "  </div>",
+      "{/if}"
+    ]
+  },
+  {
+    "path": "src/components/Tracker.svelte",
+    "lines": [
+      "<script lang=\"ts\">",
+      "  import Radar from \"./Radar.svelte\";",
+      "  import { subjects } from \"../lib/subjects\";",
+      "  export let wallpaper = false;",
+      "  const opacity = wallpaper ? 0.72 : 1;",
+      "</script>",
+      "<div class=\"absolute inset-0\" style:opacity>",
+      "  <Radar {subjects} sweepSeconds={9} />",
+      "</div>"
+    ]
+  },
+  {
+    "path": "src/components/Radar.svelte",
+    "lines": [
+      "<script lang=\"ts\">",
+      "  export let subjects: Subject[] = [];",
+      "  export let sweepSeconds = 9;",
+      "  const rings = [0.22, 0.46, 0.7, 0.94];",
+      "  // threat colour: spiders read friendly blue, flerken reads alert red",
+      "  const tint = (s: Subject) => (s.threat === \"high\" ? \"#ff5a5f\" : \"#7cc0f0\");",
+      "</script>",
+      "<svg class=\"h-full w-full\" viewBox=\"0 0 1000 1000\" aria-hidden=\"true\">",
+      "  {#each rings as r}<circle cx=\"500\" cy=\"500\" r={r * 460} class=\"stroke-alert/20\" fill=\"none\" />{/each}",
+      "  {#each subjects as s}",
+      "    <g transform={\"translate(\" + s.x + \" \" + s.y + \")\"}>",
+      "      <circle r=\"6\" fill={tint(s)} />",
+      "      <circle r=\"6\" fill=\"none\" stroke={tint(s)} class=\"animate-ping-out\" />",
+      "    </g>",
+      "  {/each}",
+      "</svg>"
+    ]
+  },
+  {
+    "path": "src/components/StatusBar.svelte",
+    "lines": [
+      "<script lang=\"ts\">",
+      "  export let active = \"projects\";",
+      "  const windows = [\"projects\", \"xp\", \"contact\", \"resume\", \"config\", \"tracker\", \"info\"];",
+      "  const clock = new Date();",
+      "</script>",
+      "<footer class=\"flex h-[30px] shrink-0 items-center bg-[#0d2a2f] text-sm text-signal\">",
+      "  <span class=\"px-2 text-[#7fd8a8]\">Session: 10.42.7.13</span>",
+      "  {#each windows as w, i}",
+      "    <span class:reverse={w === active}>{i + 1}:{w}{w === active ? \"*\" : \"\"}</span>",
+      "  {/each}",
+      "  <span class=\"ml-auto px-3 text-[#d7a3e0]\">{clock.toISOString().slice(11, 16)}</span>",
+      "</footer>"
+    ]
+  },
+  {
+    "path": "src/lib/grep.ts",
+    "lines": [
+      "import type { RepoFile, Hit } from \"./types\";",
+      "",
+      "const LIMIT = 400;",
+      "",
+      "export function search(files: RepoFile[], query: string): Hit[] {",
+      "  const q = query.trim().toLowerCase();",
+      "  if (!q) return files.map((f) => ({ path: f.path, line: 0, col: 0, text: f.lines.length + \" lines\" }));",
+      "  const hits: Hit[] = [];",
+      "  for (const file of files) {",
+      "    file.lines.forEach((text, i) => {",
+      "      const col = text.toLowerCase().indexOf(q);",
+      "      if (col === -1 || hits.length >= LIMIT) return;",
+      "      hits.push({ path: file.path, line: i + 1, col: col + 1, text });",
+      "    });",
+      "  }",
+      "  return hits;",
+      "}"
+    ]
+  },
+  {
+    "path": "src/lib/keymap.ts",
+    "lines": [
+      "export const keymap = {",
+      "  p: \"/projects\",",
+      "  x: \"/xp\",",
+      "  c: \"/contact\",",
+      "  r: \"/resume\",",
+      "  g: \"/config\",",
+      "  t: \"/tracker\",",
+      "  i: \"/info\"",
+      "} as const;",
+      "",
+      "// tmux parity, still pending: prefix C-b, pane splits, window rotate",
+      "export const prefix = \"C-b\";",
+      "export const motions = [\"j\", \"k\", \"h\", \"l\", \"gg\", \"G\"];"
+    ]
+  },
+  {
+    "path": "src/lib/repo-index.ts",
+    "lines": [
+      "import { readdir, readFile } from \"node:fs/promises\";",
+      "import { join, relative } from \"node:path\";",
+      "",
+      "const SKIP = new Set([\"node_modules\", \"dist\", \".git\", \".astro\"]);",
+      "",
+      "export async function buildIndex(root = process.cwd()) {",
+      "  const out = [];",
+      "  async function walk(dir: string) {",
+      "    for (const entry of await readdir(dir, { withFileTypes: true })) {",
+      "      if (SKIP.has(entry.name)) continue;",
+      "      const full = join(dir, entry.name);",
+      "      if (entry.isDirectory()) { await walk(full); continue; }",
+      "      const src = await readFile(full, \"utf8\");",
+      "      out.push({ path: relative(root, full), lines: src.split(\"\\n\") });",
+      "    }",
+      "  }",
+      "  await walk(root);",
+      "  return out.sort((a, b) => a.path.localeCompare(b.path));",
+      "}"
+    ]
+  },
+  {
+    "path": "src/lib/subjects.ts",
+    "lines": [
+      "import type { Subject } from \"./types\";",
+      "",
+      "export const subjects: Subject[] = [",
+      "  { id: \"SPIDER-01\", label: \"Spider-Man\", threat: \"none\", x: 690, y: 300 },",
+      "  { id: \"SPIDER-02\", label: \"Spider-Gwen\", threat: \"none\", x: 360, y: 620 },",
+      "  { id: \"FLERKEN-01\", label: \"Flerken\", threat: \"high\", x: 560, y: 760 }",
+      "];"
+    ]
+  },
+  {
+    "path": "src/lib/types.ts",
+    "lines": [
+      "export type Threat = \"none\" | \"low\" | \"high\";",
+      "",
+      "export interface Subject { id: string; label: string; threat: Threat; x: number; y: number }",
+      "export interface RepoFile { path: string; lines: string[] }",
+      "export interface Hit { path: string; line: number; col: number; text: string }"
+    ]
+  },
+  {
+    "path": "src/content/config.ts",
+    "lines": [
+      "import { defineCollection, z } from \"astro:content\";",
+      "",
+      "const projects = defineCollection({",
+      "  type: \"content\",",
+      "  schema: z.object({",
+      "    name: z.string(),",
+      "    repos: z.array(z.string()),",
+      "    stack: z.array(z.string()),",
+      "    status: z.enum([\"shipped\", \"building\", \"paused\"])",
+      "  })",
+      "});",
+      "",
+      "const xp = defineCollection({ type: \"content\", schema: z.object({ company: z.string(), role: z.string() }) });",
+      "",
+      "export const collections = { projects, xp };"
+    ]
+  },
+  {
+    "path": "src/content/projects/spidey-tracker.md",
+    "lines": [
+      "---",
+      "name: Spidey Tracker",
+      "repos: [spidey-tracker, tracker-radar]",
+      "stack: [Svelte, Canvas, WebSockets]",
+      "status: building",
+      "---",
+      "Live radar of every arachnid-adjacent subject in the city.",
+      "The sweep runs on the compositor; positions arrive over a socket.",
+      "Threat level drives colour: friendly blue, hostile red."
+    ]
+  },
+  {
+    "path": "src/content/projects/reading-hub.md",
+    "lines": [
+      "---",
+      "name: Reading Hub",
+      "repos: [reading-hub]",
+      "stack: [Python, SQLite, Astro]",
+      "status: shipped",
+      "---",
+      "A digest that ranks what I should read next.",
+      "Sources drop into feeds/ and expose fetch(cutoff, **opts).",
+      "Ranking is deterministic when the embedding model is cold."
+    ]
+  },
+  {
+    "path": "src/content/xp/ontario-tech.md",
+    "lines": [
+      "---",
+      "company: Ontario Tech",
+      "role: Research Assistant",
+      "from: 2022-05",
+      "to: 2022-08",
+      "---",
+      "Tooling for a mobility-data study: ingestion, cleaning, plots.",
+      "- pipeline over 4M GPS traces",
+      "- reproducible notebooks for the lab"
+    ]
+  },
+  {
+    "path": "src/styles/tmux.css",
+    "lines": [
+      "@tailwind base;",
+      "@tailwind components;",
+      "@tailwind utilities;",
+      "",
+      "@layer components {",
+      "  .reverse { @apply bg-alert px-1.5 text-[#0b0f14]; }",
+      "  .pane-title { @apply absolute -top-2.5 left-4 bg-[#090d12] px-2 text-alert; }",
+      "}",
+      "",
+      "@keyframes ping-out { from { transform: scale(.3); opacity: .85 } to { transform: scale(3.8); opacity: 0 } }",
+      ".animate-ping-out { animation: ping-out 3.6s cubic-bezier(.2,.6,.4,1) infinite; }"
+    ]
+  },
+  {
+    "path": ".github/workflows/deploy.yml",
+    "lines": [
+      "name: deploy",
+      "on:",
+      "  push:",
+      "    branches: [main]",
+      "jobs:",
+      "  build:",
+      "    runs-on: ubuntu-latest",
+      "    steps:",
+      "      - uses: actions/checkout@v4",
+      "      - uses: pnpm/action-setup@v4",
+      "      - run: pnpm install --frozen-lockfile",
+      "      - run: pnpm build",
+      "      - uses: cloudflare/wrangler-action@v3"
+    ]
+  }
+]
