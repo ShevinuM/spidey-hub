@@ -26,6 +26,7 @@ const RECIPE_NAMES = [
   "04-personnel-l0",
   "05-personnel-l1",
   "06-editor",
+  "07-profile",
   "08-tracker",
 ];
 

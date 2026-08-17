@@ -181,7 +181,7 @@ export interface ProfileData {
     href: string;
   };
   contact: { title: string; rows: ContactRow[] };
-  signal: { label: string; coords: string };
+  signal: { label: string; coords: string; initialReadout: string };
 }
 
 export const getProfile = (): ProfileData => loadYaml<ProfileData>("profile.yaml");

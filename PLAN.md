@@ -116,8 +116,8 @@ Real Builds content differs from the prototype's fabricated sample data, so pixe
 - **Verify**: visual `04/05/06` pass both viewports; e2e: full nav matrix (j/k wrap, Enter descends/opens editor, h/../ up, q from roles level → **dashboard**, q in editor → browser), filter: `f` then "co" filters to matching entries (`software-developer-co-op.md`), position indicator updates, Esc restores full list, typed chars while NOT in filter mode still act as nav keys.
 
 ### Phase 7 — Profile view + live meter + resume
-- [ ] `Profile.svelte`: header row (clipped AGENT PROFILE tab, FILE/CLEARANCE, [q] close), title block, 3-col grid `196px minmax(0,1fr) 232px`, images (exact object-fit/position/filters/captions), fields grid, scrollable SUMMARY, Retina-V capture (max-height 38.5% alignment), RECORD DATABASE / CV / CONTACT panels (icon `<img>`s), SIGNAL footer + `Meter.svelte` (exact README math), `r` opens `/assets/resume.pdf`, coords label.
-- [ ] Svelte autofixer pass. Commit.
+- [x] `Profile.svelte`: header row (clipped AGENT PROFILE tab, FILE/CLEARANCE, [q] close), title block, 3-col grid `196px minmax(0,1fr) 232px`, images (exact object-fit/position/filters/captions), fields grid, scrollable SUMMARY, Retina-V capture (max-height 38.5% alignment), RECORD DATABASE / CV / CONTACT panels (icon `<img>`s), SIGNAL footer + `Meter.svelte` (exact README math), `r` opens `/assets/resume.pdf`, coords label.
+- [x] Svelte autofixer pass. Commit.
 - **Verify**: visual `07-profile` passes both viewports (readout masked); e2e: `r` opens the pdf (popup/download asserted), CV link downloads, contact hrefs exact (github/linkedin/mailto; discord row is NOT a link), meter: with real clock, two rAF frames apart bar heights differ and `repeating-linear-gradient` background set (style attr asserted), readout matches `/^(offline|\d+(\.\d)? Mb\/s · \d+ ms · [A-Z0-9]+)$/`, offline emulation → `offline`; summary panel scrolls (`overflow-y:auto` + scrollHeight > clientHeight at 945px? — if content fits, assert the overflow style only).
 
 ### Phase 8 — Grep overlay

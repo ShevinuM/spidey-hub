@@ -29,6 +29,7 @@
   import TrackerView from "./TrackerView.svelte";
   import Builds from "./Builds.svelte";
   import Personnel from "./Personnel.svelte";
+  import Profile from "./Profile.svelte";
 
   interface Props {
     initialView: ViewId;
@@ -44,8 +45,19 @@
     commitsByRepo: Record<string, Commit[]>;
   }
 
-  const { initialView, site, dashboard, tracker, builds, personnel, companies, projects, personnelEntries, commitsByRepo }: Props =
-    $props();
+  const {
+    initialView,
+    site,
+    dashboard,
+    tracker,
+    profile,
+    builds,
+    personnel,
+    companies,
+    projects,
+    personnelEntries,
+    commitsByRepo,
+  }: Props = $props();
 
   /** Set by Builds.svelte's `bind:this` while `view === "builds"` — see
    * handleKey() below for the delegation contract (PLAN.md Phase 5). */
@@ -53,6 +65,10 @@
   /** Same `bind:this` + `handleKey(): boolean` contract, one level down —
    * Personnel.svelte's own embedded Editor (PLAN.md Phase 6). */
   let personnelRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
+  /** Same contract again — Profile.svelte only ever claims `r` (resume
+   * download); everything else (including q/Esc) falls through to the
+   * generic handling below (PLAN.md Phase 7). */
+  let profileRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
 
   // Deliberately an "uncontrolled" seed, not a tracked binding: each route
   // page SSRs Terminal exactly once with the view matching its own URL, and
@@ -150,6 +166,13 @@
       }
     }
 
+    if (view === "profile" && profileRef && !(e.metaKey || e.ctrlKey || e.altKey)) {
+      if (profileRef.handleKey(e)) {
+        e.preventDefault();
+        return;
+      }
+    }
+
     // Modifier combos fall through untouched — never preventDefault them,
     // regardless of which view is active (PLAN.md keymap: "modifier-held
     // keys fall through untouched").
@@ -204,8 +227,7 @@
         onDashboard={() => setView("home")}
       />
     {:else}
-      <!-- Profile: Phase 7. -->
-      <div style="flex:1;min-height:0"></div>
+      <Profile bind:this={profileRef} {profile} onGoHome={() => setView("home")} />
     {/if}
 
     <StatusBar {site} {view} />

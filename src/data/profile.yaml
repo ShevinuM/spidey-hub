@@ -87,3 +87,8 @@ contact:
 signal:
   label: "SIGNAL"
   coords: "44°38'N 79°23'W"
+  # Initial readout text before the first probe resolves (Meter.svelte /
+  # reference `this.state.netReadout || "measuring…"`, Homepage.dc.html
+  # line 1052) — lives here, not hardcoded in the component, per the "no
+  # copy in components" rule.
+  initialReadout: "measuring…"
