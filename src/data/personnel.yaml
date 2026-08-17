@@ -27,6 +27,17 @@ upEntry:
 companyRowIcon: "▸"
 roleRowIcon: "▤"
 
+# Company row meta, e.g. "3 roles" / "1 role" (Component.renderVals() line
+# 1030: `c.roles.length + (c.roles.length > 1 ? " roles" : " role")`).
+roleCountTemplate: "{n} {word}"
+roleWordSingular: "role"
+roleWordPlural: "roles"
+
+# File Browser footer position indicator, e.g. "2 / 4" (Component.renderVals()
+# line 1090: `(lvl===1?ri+1:ci+1) + " / " + (...)`) — same templating
+# convention as builds.yaml's `filePosTemplate`, defined independently here.
+posTemplate: "{n} / {total}"
+
 # Mirrors builds.yaml's `editor:` section values (Homepage.dc.html lines
 # 317-336: "NORMAL", "⑂ main", "esc to close", "▤", "Top"/"Bot", position
 # templates) — defined independently here, not imported from builds.yaml,

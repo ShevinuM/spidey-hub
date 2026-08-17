@@ -121,7 +121,9 @@
     sortedCompanies.map(
       (c): CompanyRow => ({
         name: `${c.name}/`,
-        meta: `${c.roles.length} ${c.roles.length > 1 ? "roles" : "role"}`,
+        meta: personnel.roleCountTemplate
+          .replace("{n}", String(c.roles.length))
+          .replace("{word}", c.roles.length > 1 ? personnel.roleWordPlural : personnel.roleWordSingular),
         company: c,
       }),
     ),
@@ -158,7 +160,9 @@
   const selIdx = $derived(level === 1 ? roleSel : companySel);
 
   const posN = $derived(currentRows.length === 0 ? 0 : Math.min(selIdx, currentRows.length - 1) + 1);
-  const posText = $derived(`${posN} / ${currentRows.length}`);
+  const posText = $derived(
+    personnel.posTemplate.replace("{n}", String(posN)).replace("{total}", String(currentRows.length)),
+  );
 
   const pathText = $derived(
     level === 1 && activeCompanyGroup ? `${personnel.pathPrefix}${activeCompanyGroup.name}/` : personnel.pathPrefix,

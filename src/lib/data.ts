@@ -275,6 +275,10 @@ export interface PersonnelData {
   upEntry: { icon: string; name: string };
   companyRowIcon: string;
   roleRowIcon: string;
+  roleCountTemplate: string;
+  roleWordSingular: string;
+  roleWordPlural: string;
+  posTemplate: string;
   editor: EditorLabels;
 }
 

@@ -50,18 +50,22 @@ const activeRecipes = recipes.filter((r) => RECIPE_NAMES.includes(r.name));
 // not a structural or content difference. 1 px is ~7e-7 of the
 // 1512x945/1920x1080 frame, far under the 0.0005 ceiling.
 // "06-editor" (Phase 6) is the first capture to actually open Editor.svelte
-// (02-builds/03-builds-j never open a file). At both viewports it has
-// exactly 6 pixelmatch-significant diffs, all clustered at two glyph
-// boundaries: the file tab's "▤" icon (top-right) and the status line's
-// breadcrumb text ("Enaimco › software-developer-full-time.md"). Pixel-by-
-// pixel inspection (see crops taken during Phase 6 executor work) shows the
-// differing pixels are all dim near-background antialiasing shades a few
-// RGB steps apart (e.g. rgb(224,69,60) vs rgb(122,43,40) on the same red
-// glyph edge) — visually indistinguishable at either viewport when the
-// crops are placed side by side — not a structural or content difference,
-// consistent with the same Chromium text-rendering/hinting jitter already
-// documented for 02-builds/03-builds-j above. 6px is ~4e-6 of the
-// 1512x945/1920x1080 frame, far under the 0.0005 ceiling.
+// (02-builds/03-builds-j never open a file). At both viewports pixelmatch
+// counts exactly 6 diff pixels, all at ONE glyph boundary — the file tab's
+// "▤" icon (top-right) — at the same right-edge column offset in both
+// viewports: x=1238, y=18-23 at 1512x945; x=1646, y=18-23 at 1920x1080 (a
+// vertical run of 6px on one edge column of the glyph). The breadcrumb text
+// ("Enaimco › software-developer-full-time.md") is never flagged by
+// pixelmatch at either viewport. Expected (golden) pixels at that column are
+// near-black background tones (e.g. rgb(30,19,23) through rgb(39,22,25));
+// actual (impl) pixels are a uniform rgb(152,51,46) — a lighter red
+// antialiasing shade one step further into the glyph's edge falloff, with 8
+// immediately adjacent pixels classified as anti-aliasing by pixelmatch and
+// excluded from the count. This is single-glyph AA jitter at one sub-pixel
+// boundary, not a structural or content difference, consistent with the
+// Chromium text-rendering/hinting jitter already documented for
+// 02-builds/03-builds-j above. 6px is ~4.2e-6 of the 1512x945/1920x1080
+// frame, far under the 0.0005 ceiling.
 const RATIO_RELAXED = new Set(["02-builds", "03-builds-j", "06-editor"]);
 
 test.describe("visual: implementation vs goldens", () => {
