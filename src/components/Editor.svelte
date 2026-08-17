@@ -17,15 +17,22 @@
   // line-only cursor with a real vim-lite NORMAL/VISUAL/VISUAL-LINE modal
   // engine: a column cursor, word/line motions with numeric counts,
   // charwise/linewise visual selection with yank-to-paste-buffer, in-buffer
-  // `/` search with `n`/`N`, and a minimal `:` ex-command line (`:q`/`:q!`
-  // close, `:w`/`:wq` show a readonly error, `:<number>` jumps, anything
-  // else is an E492-style error) — all of it vim-faithful, none of it able
-  // to actually mutate the buffer (every insert/change/delete-family key
-  // just flashes a readonly bell). The actual motion/word/search/range math
-  // lives in `../lib/vim.ts`, a pure (no-DOM) module so it's unit-testable
-  // on its own (tests/unit/vim.test.ts); this component owns only the
-  // stateful parts (mode, cursor, pending key sequences, scroll sync,
-  // rendering).
+  // `/` search with `n`/`N`, and a minimal `:` ex-command machine (`:q`/
+  // `:q!` close, `:w`/`:wq` show a readonly error, `:<number>` jumps,
+  // anything else is an E492-style error) — all of it vim-faithful, none of
+  // it able to actually mutate the buffer (every insert/change/delete-
+  // family key just flashes a readonly bell). PLAN.md Phase 5C LIFTS the
+  // ex-command machine's PARSING out to `../lib/cmdline.ts`'s
+  // `parseExCommand` (pure, shared with that module's own unit tests) and
+  // moves its PRESENTATION (the `:` keystroke, the typed text, the
+  // resulting error message) to the site-wide floating Cmdline box
+  // (`Cmdline.svelte`, driven by Terminal.svelte) — this component now only
+  // exposes `runExCommand()` to APPLY an already-typed command's effect
+  // (see that function's own doc comment). The rest of the engine — the
+  // actual motion/word/search/range math — lives in `../lib/vim.ts`, a pure
+  // (no-DOM) module so it's unit-testable on its own (tests/unit/
+  // vim.test.ts); this component owns only the stateful parts (mode,
+  // cursor, pending key sequences, scroll sync, rendering).
   //
   // Scrolling is a PLAN.md "Builds interactivity extension" the prototype
   // has no precedent for (its role docs are short enough to never scroll):
@@ -68,6 +75,7 @@
   } from "../lib/vim";
   import { setPasteBuffer, writeToSystemClipboard, type PasteBufferKind } from "../lib/pasteBuffer";
   import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
+  import { parseExCommand } from "../lib/cmdline";
 
   export interface EditorLine {
     n: number;
@@ -126,10 +134,9 @@
   let mode = $state<"normal" | "visual" | "visualLine">("normal");
   let visualAnchor = $state<CursorPos | null>(null);
 
-  let pending = $state<"none" | "search" | "cmdline">("none");
+  let pending = $state<"none" | "search">("none");
   let searchQuery = $state("");
   let lastSearchQuery = $state("");
-  let cmdlineText = $state("");
   let message = $state<string | null>(null);
   let pasteBufferText = $state("");
 
@@ -306,11 +313,6 @@
       searchQuery = "";
       return true;
     }
-    if (pending === "cmdline") {
-      pending = "none";
-      cmdlineText = "";
-      return true;
-    }
     if (mode !== "normal") {
       mode = "normal";
       visualAnchor = null;
@@ -318,7 +320,8 @@
     }
     // Bare Esc in NORMAL mode is a vim-faithful no-op — PLAN.md items 15/16
     // ban q/Esc from ever switching views, and this editor's own close path
-    // is `:q`/`:q!` only (see executeCmdline below), never Esc.
+    // is `:q`/`:q!` only (see runExCommand below, invoked through the
+    // site-wide Cmdline box — PLAN.md Phase 5C), never Esc.
     return true;
   }
 
@@ -344,41 +347,34 @@
     return true;
   }
 
-  function executeCmdline(cmd: string) {
-    if (cmd === "") return;
-    if (cmd === "q" || cmd === "q!") {
+  /** Phase 3's own ex-command state machine — LIFTED for PLAN.md Phase 5C:
+   * the `:` keystroke itself, the text entry, and the resulting
+   * error/message PRESENTATION all now belong to the site-wide floating
+   * Cmdline box (src/components/Cmdline.svelte, driven by Terminal.svelte);
+   * this function is what's left once that's stripped out — apply the
+   * already-typed command's EFFECT and report back whether it was
+   * recognized at all (so Terminal.svelte knows whether to fall through to
+   * the site-wide command set — "editor context wins" only for commands
+   * this machine actually recognizes) and, if so, any resulting error
+   * string (using this editor instance's OWN labels, exactly as before —
+   * `w`/`wq`'s readonly error never moves to a generic site-wide copy).
+   * The PARSING itself is `src/lib/cmdline.ts`'s `parseExCommand`, pure and
+   * unit-tested on its own — never rebuilt here. */
+  export function runExCommand(cmd: string): { recognized: boolean; error?: string } {
+    const ex = parseExCommand(cmd);
+    if (ex.kind === "close") {
       onClose();
-      return;
+      return { recognized: true };
     }
-    if (cmd === "w" || cmd === "wq") {
-      message = labels.writeReadonlyMessage;
-      return;
+    if (ex.kind === "writeError") {
+      return { recognized: true, error: labels.writeReadonlyMessage };
     }
-    if (/^\d+$/.test(cmd)) {
-      const target = clamp(Number.parseInt(cmd, 10), 1, Math.max(1, rawLines.length));
+    if (ex.kind === "jump") {
+      const target = clamp(ex.line, 1, Math.max(1, rawLines.length));
       setCursor({ line: target, col: firstNonBlankCol(rawLines, target) });
-      return;
+      return { recognized: true };
     }
-    message = labels.notAnEditorCommandTemplate.replace("{cmd}", cmd);
-  }
-
-  function handleCmdlineInput(e: KeyboardEvent): boolean {
-    if (e.ctrlKey || e.metaKey || e.altKey) return true;
-    if (e.key === "Enter") {
-      executeCmdline(cmdlineText.trim());
-      cmdlineText = "";
-      pending = "none";
-      return true;
-    }
-    if (e.key === "Backspace") {
-      cmdlineText = cmdlineText.slice(0, -1);
-      return true;
-    }
-    if (e.key.length === 1) {
-      cmdlineText += e.key;
-      return true;
-    }
-    return true;
+    return { recognized: false };
   }
 
   /** Ctrl-d/u/f/b half/full page scroll. Ctrl-b is included for engine
@@ -542,7 +538,7 @@
       return true;
     }
 
-    // `/` and `:` are handled from EVERY mode (not just NORMAL), including
+    // `/` is handled from EVERY mode (not just NORMAL), including
     // VISUAL/VISUAL-LINE — dropping the selection back to NORMAL first.
     // This must never fall through to `return false` from visual mode: if
     // it did, Terminal.svelte would hand the key to GrepOverlay next (its
@@ -557,13 +553,16 @@
       searchQuery = "";
       return true;
     }
-    if (key === ":") {
-      mode = "normal";
-      visualAnchor = null;
-      pending = "cmdline";
-      cmdlineText = "";
-      return true;
-    }
+    // `:` is deliberately left UNHANDLED here (PLAN.md Phase 5C): it's the
+    // site-wide floating Cmdline box now, not this component's own pending
+    // state (see runExCommand above). Falling all the way through to
+    // `return false` at the bottom of this function is exactly what's
+    // wanted — Terminal.svelte's delegation chain keeps offering the key to
+    // everything else (grep, which ignores a non-"/" key while closed) and
+    // finally reaches its own fallback opener, which opens the box in "ex"
+    // mode. The `pending === "search"` branch above still runs FIRST on
+    // every keydown, so a literal `:` typed mid-`/search` lands in the
+    // query, never opening the box.
     if (mode === "normal" && lower === "n" && lastSearchQuery) {
       const m = nextMatch(searchMatches, cursor, key === "N" ? -1 : 1);
       if (m) setCursor({ line: m.line, col: m.col });
@@ -585,10 +584,14 @@
   /**
    * Handles one keydown for this view. Returns true when consumed (caller
    * — Builds.svelte / Personnel.svelte — must not also treat the key as
-   * its own panel key). Esc only ever cancels a modal input (search,
-   * cmdline) or a visual selection — PLAN.md Phase 3 removes the old bare
-   * q/Esc close entirely; `:q`/`:q!` (via executeCmdline above) is the only
-   * way out now, plus the mouse `[:q]` pill in the footer below.
+   * its own panel key; Terminal.svelte's delegation chain also keeps
+   * offering an unconsumed key to whatever comes next, which is exactly
+   * how a bare `:` reaches the site-wide Cmdline box's fallback opener —
+   * see the `:` comment above). Esc only ever cancels a modal input
+   * (search) or a visual selection — PLAN.md Phase 3 removes the old bare
+   * q/Esc close entirely; `:q`/`:q!` (via runExCommand above, invoked
+   * through the Cmdline box — PLAN.md Phase 5C) is the only way out now,
+   * plus the mouse `[:q]` pill in the footer below.
    */
   export function handleKey(e: KeyboardEvent): boolean {
     message = null;
@@ -598,9 +601,6 @@
     }
     if (pending === "search") {
       return handleSearchInput(e);
-    }
-    if (pending === "cmdline") {
-      return handleCmdlineInput(e);
     }
     if (e.ctrlKey && !e.metaKey && !e.altKey) {
       return handleCtrlChord(e);
@@ -623,7 +623,6 @@
 
   const modeOrPromptText = $derived.by(() => {
     if (pending === "search") return `${labels.searchPromptGlyph}${searchQuery}`;
-    if (pending === "cmdline") return `${labels.cmdlinePromptGlyph}${cmdlineText}`;
     if (mode === "visual") return labels.modeVisualLabel;
     if (mode === "visualLine") return labels.modeVisualLineLabel;
     return labels.modeLabel;

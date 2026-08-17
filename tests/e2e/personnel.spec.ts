@@ -322,26 +322,33 @@ test.describe("Personnel: editor", () => {
     await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/Full-Time/");
   });
 
-  test(":w and :wq show a readonly error and do not close the editor", async ({ page }) => {
+  test(":w and :wq show a readonly error IN THE CMDLINE BOX and do not close the editor", async ({ page }) => {
+    // PLAN.md Phase 5C: the `:` ex-command line's presentation (typed
+    // text, resulting error) moved from Editor.svelte's own footer to the
+    // site-wide floating Cmdline box (src/components/Cmdline.svelte) —
+    // see tests/e2e/cmdline.spec.ts for that box's own dedicated coverage.
     await openEditor(page);
     await page.keyboard.press(":");
     await page.keyboard.type("w");
     await page.keyboard.press("Enter");
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
-    await expect(page.locator('[data-testid="editor-message"]')).toContainText("readonly");
+    await expect(page.locator('[data-testid="cmdline-error"]')).toContainText("readonly");
+    await expect(page.locator('[data-testid="editor-message"]')).not.toBeVisible();
 
+    await page.keyboard.press("Escape"); // dismiss the error and close the box
     await page.keyboard.press(":");
     await page.keyboard.type("wq");
     await page.keyboard.press("Enter");
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
+    await expect(page.locator('[data-testid="cmdline-error"]')).toContainText("readonly");
   });
 
-  test("an unknown ex command shows an E492-style error", async ({ page }) => {
+  test("an unknown ex command shows an E492-style error IN THE CMDLINE BOX", async ({ page }) => {
     await openEditor(page);
     await page.keyboard.press(":");
     await page.keyboard.type("bogus");
     await page.keyboard.press("Enter");
-    await expect(page.locator('[data-testid="editor-message"]')).toContainText("E492");
+    await expect(page.locator('[data-testid="cmdline-error"]')).toContainText("E492");
   });
 
   test("i and x show a readonly bell and change nothing", async ({ page }) => {

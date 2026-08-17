@@ -83,6 +83,26 @@ export const bootRecipes: BootRecipe[] = [
   { name: "14-boot-ready", clockOffsetMs: 4600 + 60 + 760 + 200 },
 ];
 
+/**
+ * Cmdline box recipe (PLAN.md Phase 5C item 5C's visual recipe / Phase 6
+ * item 6.1's "add ... 5C's 15-cmdline"). DEFINED here but deliberately kept
+ * OUT of the `recipes` array above, same reasoning as `bootRecipes` just
+ * above: `capture-goldens.mjs` runs `recipes` unconditionally against the
+ * vendored prototype reference, which predates this feature entirely and
+ * has no golden for it, and `identical.spec.ts` would fail `toMatchSnapshot`
+ * for a name with no committed golden. Phase 6 moves/merges this into
+ * `recipes` once it captures the real self-baseline.
+ *
+ * The key sequence opens the box (`:` from the dashboard — no editor open,
+ * no other text input active, so this is context (b), "site mode") and
+ * types a short, deterministic partial query ("bui", a prefix of the
+ * `builds` command) so the golden captures the suggestion list mid-filter
+ * — box open, partial query, suggestions visible, per PLAN.md 5C's own
+ * description of what this recipe should show. Never presses Enter (no
+ * navigation side effect baked into the capture).
+ */
+export const cmdlineRecipes: Recipe[] = [{ name: "15-cmdline", actions: [{ key: ":" }, { type: "bui" }] }];
+
 export const viewports = [
   { name: "1512x945", width: 1512, height: 945 },
   { name: "1920x1080", width: 1920, height: 1080 },

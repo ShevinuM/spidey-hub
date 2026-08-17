@@ -21,6 +21,7 @@
     GrepData,
     HelpData,
     BootData,
+    CmdlineData,
     WindowEntry,
   } from "../lib/data";
   import type { Commit } from "../lib/commits";
@@ -28,6 +29,8 @@
   import { VIEW_ROUTES, activeWindowId, hotkeyToView, pathToView, windowIdToView } from "../lib/views";
   import { getPasteBuffer } from "../lib/pasteBuffer";
   import { getActivePasteTarget } from "../lib/pasteTargets";
+  import { parseInput, parseTmuxCommand, resolveCommand } from "../lib/cmdline";
+  import { downloadResume } from "../lib/resume";
   import Wallpaper from "./Wallpaper.svelte";
   import StatusBar from "./StatusBar.svelte";
   import Dashboard from "./Dashboard.svelte";
@@ -39,6 +42,7 @@
   import GrepOverlay from "./GrepOverlay.svelte";
   import CopyMode from "./CopyMode.svelte";
   import BootSequence from "./BootSequence.svelte";
+  import Cmdline, { type CmdlineMode } from "./Cmdline.svelte";
 
   interface Props {
     initialView: ViewId;
@@ -52,6 +56,7 @@
     grep: GrepData;
     help: HelpData;
     boot: BootData;
+    cmdline: CmdlineData;
     projects: CollectionEntry<"projects">[];
     personnelEntries: CollectionEntry<"personnel">[];
     commitsByRepo: Record<string, Commit[]>;
@@ -69,6 +74,7 @@
     grep,
     help,
     boot,
+    cmdline,
     projects,
     personnelEntries,
     commitsByRepo,
@@ -91,11 +97,19 @@
     canKillPane?: () => boolean;
     focusedPanelTitle?: () => string;
     killFocusedPane?: () => void;
+    /** PLAN.md Phase 5C — forwards to the embedded Editor's own
+     * `runExCommand` (the lifted Phase-3 ex-command state machine) while
+     * one is open; `{ recognized: false }` otherwise. */
+    runEditorExCommand?: (cmd: string) => { recognized: boolean; error?: string };
   } | null>(null);
-  /** Same `bind:this` + `handleKey(): boolean` + `isEditorOpen()` contract,
-   * one level down — Personnel.svelte's own embedded Editor (PLAN.md Phase
-   * 6, vim engine PLAN.md Phase 3). */
-  let personnelRef = $state<{ handleKey: (e: KeyboardEvent) => boolean; isEditorOpen?: () => boolean } | null>(null);
+  /** Same `bind:this` + `handleKey(): boolean` + `isEditorOpen()` +
+   * `runEditorExCommand()` contract, one level down — Personnel.svelte's
+   * own embedded Editor (PLAN.md Phase 6, vim engine PLAN.md Phase 3). */
+  let personnelRef = $state<{
+    handleKey: (e: KeyboardEvent) => boolean;
+    isEditorOpen?: () => boolean;
+    runEditorExCommand?: (cmd: string) => { recognized: boolean; error?: string };
+  } | null>(null);
   /** Same contract again — Profile.svelte only ever claims `r` (resume
    * download); everything else (including q/Esc) falls through to the
    * generic handling below (PLAN.md Phase 7). */
@@ -110,7 +124,14 @@
    * the overlay from inside Builds/Personnel when no editor is open, and
    * what keeps the overlay's own keys (typing, nav, Enter/Esc) from ever
    * reaching the view underneath while it's open. */
-  let grepRef = $state<{ handleKey: (e: KeyboardEvent) => boolean; close?: () => void } | null>(null);
+  let grepRef = $state<{
+    handleKey: (e: KeyboardEvent) => boolean;
+    close?: () => void;
+    /** PLAN.md Phase 5C `:grep <query>` — see GrepOverlay.svelte's own
+     * doc comments on these two exports. */
+    isOpen?: () => boolean;
+    openWithQuery?: (query: string) => void;
+  } | null>(null);
 
   /** StatusBar's status-line prompt state machine (PLAN.md Phase 5 item
    * 5.1) — consulted in handleKey() below AFTER the prefix system (arm +
@@ -143,6 +164,23 @@
    * even copy-mode); `replay()` is invoked by the dashboard's `r` hotkey
    * and the status-bar ↻ reboot control. */
   let bootRef = $state<{ replay: () => void; isActive: () => boolean } | null>(null);
+
+  /** Cmdline.svelte (PLAN.md Phase 5C) — always mounted, same contract as
+   * GrepOverlay/CopyMode above. `isOpen()` is consulted by the tmux prefix
+   * system (handlePrefixedKey below) so an open box is gated exactly like
+   * an open status-bar prompt (only the bare Ctrl-b arm and a prefixed `]`
+   * paste get through); `handleKey()` is checked right alongside
+   * `statusBarRef`'s own (same relative position — after the prefix system
+   * has had its turn, before every view ref); `openSite`/`openEx`/
+   * `openTmux` are called from the three different entry-context checks
+   * further down. */
+  let cmdlineRef = $state<{
+    isOpen: () => boolean;
+    openSite: () => void;
+    openEx: () => void;
+    openTmux: () => void;
+    handleKey: (e: KeyboardEvent) => boolean;
+  } | null>(null);
 
   /** Plays the mock's `bDashIn` entrance animation on the site chrome the
    * moment a real boot hands off to the ready dashboard (BootSequence's
@@ -381,6 +419,21 @@
     statusBarRef?.startConfirm(text, () => killWindow(id));
   }
 
+  /** The actual "kill the focused pane, or the window if it's the only
+   * one" ACTION (as opposed to the interactive confirm-then-do flow below)
+   * — factored out so PLAN.md Phase 5C's `Ctrl-b :` "kill-pane" tmux
+   * command can call the exact same underlying behavior `Ctrl-b x`'s
+   * confirm dialog eventually calls, without a second copy of the "which
+   * pane, or fall back to kill-window" decision (PLAN.md 5C.1(c) "single
+   * source of behavior; no duplicated kill/rename logic"). */
+  function killPaneOrWindow() {
+    if (view === "builds" && buildsRef?.canKillPane?.()) {
+      buildsRef.killFocusedPane?.();
+    } else {
+      killWindow(activeWindowId(view));
+    }
+  }
+
   /** Ctrl-b x — PLAN.md Phase 5 item 5.2: inside Builds with more than one
    * panel visible, confirms removing the FOCUSED panel only; everywhere
    * else (including Builds reduced to its last panel), "the only pane = the
@@ -389,7 +442,7 @@
     if (view === "builds" && buildsRef?.canKillPane?.()) {
       const pane = buildsRef.focusedPanelTitle?.() ?? "";
       const text = site.statusBar.prompts.killPaneTemplate.replace("{pane}", pane);
-      statusBarRef?.startConfirm(text, () => buildsRef?.killFocusedPane?.());
+      statusBarRef?.startConfirm(text, killPaneOrWindow);
       return;
     }
     startKillWindowConfirm();
@@ -408,6 +461,145 @@
       return;
     }
     statusBarRef?.showMessage(site.statusBar.prompts.pasteEmptyMessage);
+  }
+
+  // ---------------------------------------------------------------------
+  // Site-wide floating Cmdline (PLAN.md Phase 5C) — Cmdline.svelte itself
+  // is dumb about execution (see that component's own header comment);
+  // every side effect a `:`/`Ctrl-b :` command implies lives here, reusing
+  // the exact same functions the rest of this file already uses for the
+  // equivalent bound key (setView, killWindow, killPaneOrWindow,
+  // renameWindow, reboot, grepRef, downloadResume) — "single source of
+  // behavior, no duplicated kill/rename logic" (PLAN.md 5C.1(c)).
+  // ---------------------------------------------------------------------
+
+  /** Forwards to whichever view's embedded Editor is actually open (if
+   * any) — the ex-mode entry context (PLAN.md 5C.1(a)) always tries this
+   * FIRST; only a command it doesn't recognize falls through to the
+   * site-wide `commands` list below ("editor context wins"). */
+  function runEditorExCommand(cmd: string): { recognized: boolean; error?: string } {
+    if (view === "builds") return buildsRef?.runEditorExCommand?.(cmd) ?? { recognized: false };
+    if (view === "personnel") return personnelRef?.runEditorExCommand?.(cmd) ?? { recognized: false };
+    return { recognized: false };
+  }
+
+  function formatUnknownCommand(cmd: string): string {
+    return cmdline.errors.unknownCommandTemplate.replace("{cmd}", cmd);
+  }
+
+  /** Executes a resolved `cmdline.yaml` `commands[]` entry by its `action`
+   * id (PLAN.md 5C.2) — shared by both the "site" and "ex" entry contexts.
+   * Returns an error string on failure, `undefined` on success (the box
+   * closes itself whenever this returns nothing, same convention as the
+   * `onSubmit` prop it's called from). */
+  function executeSiteAction(action: string | undefined, args: string): string | undefined {
+    switch (action) {
+      case "view:home":
+        setView("home");
+        return undefined;
+      case "view:builds":
+        setView("builds");
+        return undefined;
+      case "view:personnel":
+        setView("personnel");
+        return undefined;
+      case "view:profile":
+        setView("profile");
+        return undefined;
+      case "view:retina-v":
+        setView("retina-v");
+        return undefined;
+      case "view:help":
+        setView("help");
+        return undefined;
+      case "grep":
+        grepRef?.openWithQuery?.(args);
+        return undefined;
+      case "reboot":
+        reboot();
+        return undefined;
+      case "resume":
+        downloadResume();
+        return undefined;
+      case "kill-window":
+        // Last-window refusal surfaces as the usual status-bar message via
+        // killWindow() itself — never intercepted into the box (PLAN.md
+        // 5C.2 "last-window refusal applies").
+        killWindow(activeWindowId(view));
+        return undefined;
+      default:
+        return undefined;
+    }
+  }
+
+  /** Resolves `trimmed` against the site-wide `commands` list and runs it,
+   * or reports E492 if nothing matches — the shared tail of both "site"
+   * mode and ex mode's own fallback (PLAN.md 5C.2 "unknown -> the Phase-3
+   * E492 template", reused verbatim for every context, not just an open
+   * editor's — see cmdline.yaml's own `errors.unknownCommandTemplate`
+   * comment). */
+  function executeSiteOrUnknown(trimmed: string): string | undefined {
+    const { name, args } = parseInput(trimmed);
+    const def = resolveCommand(cmdline.commands, name);
+    if (def) return executeSiteAction(def.action, args);
+    return formatUnknownCommand(trimmed);
+  }
+
+  /** `Ctrl-b :` tmux command-prompt mode (PLAN.md 5C.1(c)) — parses and
+   * dispatches `rename-window <name>` / `kill-window` / `kill-pane` /
+   * `select-window <0-5>` through the exact functions the bound keys
+   * (`,` / `&` / `x` / digit targets) already use, minus their interactive
+   * confirm step: a typed command is already deliberate, exactly like
+   * `:q` bypassing the bare-key q/Esc ban (PLAN.md items 15/16) — real
+   * tmux's own command-prompt doesn't re-confirm `:kill-window` either
+   * (only the `&` KEY binding is wrapped in `confirm-before`). */
+  function executeTmuxCommand(trimmed: string): string | undefined {
+    const parsed = parseTmuxCommand(trimmed);
+    if (parsed.kind === "rename-window") {
+      renameWindow(activeWindowId(view), parsed.name);
+      return undefined;
+    }
+    if (parsed.kind === "kill-window") {
+      killWindow(activeWindowId(view));
+      return undefined;
+    }
+    if (parsed.kind === "kill-pane") {
+      killPaneOrWindow();
+      return undefined;
+    }
+    if (parsed.kind === "select-window") {
+      if (parsed.index === 0) {
+        setView("home");
+        return undefined;
+      }
+      const target = prefixTargets[String(parsed.index)];
+      if (!target) return cmdline.errors.noSuchWindowTemplate.replace("{arg}", String(parsed.index));
+      setView(target);
+      return undefined;
+    }
+    if (parsed.kind === "usage") {
+      return parsed.command === "rename-window" ? cmdline.errors.usageRenameWindow : cmdline.errors.usageSelectWindow;
+    }
+    return formatUnknownCommand(trimmed);
+  }
+
+  /** Cmdline.svelte's `onSubmit` prop — the single entry point for every
+   * `:`/`Ctrl-b :` command's actual side effect (see this section's own
+   * header comment). */
+  function onCmdlineSubmit(mode: CmdlineMode, raw: string): string | undefined {
+    const trimmed = raw.trim();
+    if (trimmed === "") return undefined;
+
+    if (mode === "tmux") return executeTmuxCommand(trimmed);
+
+    if (mode === "ex") {
+      const result = runEditorExCommand(trimmed);
+      if (result.recognized) return result.error;
+      // Not a Phase-3 ex command — fall through to the site-wide set
+      // (PLAN.md 5C.1(a) "PLUS the site-wide set below").
+    }
+
+    return executeSiteOrUnknown(trimmed);
   }
 
   /** The single key following an armed Ctrl-b. Always disarms. A held
@@ -438,7 +630,15 @@
     // with a kill-window confirm — exactly what an independent verifier
     // reproduced after the previous fix's reordering. This check must come
     // before every other branch below, `]` excepted.
-    if (statusBarRef?.isPromptActive()) {
+    //
+    // PLAN.md Phase 5C extends the exact same gate to an open Cmdline box:
+    // "while it's open the prefix system should treat it like the status
+    // prompts (only Ctrl-b arm + ] allowed through)" — this also means a
+    // prompt already open blocks `Ctrl-b :` from opening the box at all
+    // (checked below, after this combined gate), which is the "pick one
+    // and test it" precedence PLAN.md 5C.1 calls for between the two modal
+    // systems: prompts win over opening the box.
+    if (statusBarRef?.isPromptActive() || cmdlineRef?.isOpen?.()) {
       if (e.key === "]") {
         e.preventDefault();
         pasteFromBuffer();
@@ -494,6 +694,17 @@
     if (e.key === "]") {
       e.preventDefault();
       pasteFromBuffer();
+      return true;
+    }
+    if (e.key === ":") {
+      // Ctrl-b : — PLAN.md 5C.1(c), real tmux's own "command-prompt"
+      // binding: opens the SAME floating box in its third mode
+      // (tmuxCommands only — rename-window/kill-window/kill-pane/
+      // select-window). The combined isPromptActive/cmdline-isOpen gate
+      // above already stops this from firing while either modal system is
+      // already up.
+      e.preventDefault();
+      cmdlineRef?.openTmux();
       return true;
     }
 
@@ -554,7 +765,14 @@
     // other observable effect).
     let sendPrefixLiteral = false;
     if (prefixArmed) {
-      if (!statusBarRef?.isPromptActive() && e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "b") {
+      if (
+        !statusBarRef?.isPromptActive() &&
+        !cmdlineRef?.isOpen?.() &&
+        e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey &&
+        e.key.toLowerCase() === "b"
+      ) {
         disarmPrefix();
         sendPrefixLiteral = true;
       } else if (handlePrefixedKey(e)) {
@@ -595,6 +813,17 @@
     // it). Every OTHER key — plain typing, Enter, Backspace, Escape — never
     // matches the prefix system above (it only reacts to an armed prefix or
     // a bare Ctrl-b) and so still reaches the prompt exactly as before.
+    // PLAN.md Phase 5C item 5C.4: the Cmdline box, once open, is "checked
+    // at the top alongside boot/copy-mode/status prompts" — same relative
+    // position as `statusBarRef.handleKey` immediately below (after the
+    // prefix system has had its turn, for the same "Ctrl-b ] must still
+    // reach it" reason spelled out in that check's own comment), and
+    // mutually exclusive with it in practice: opening the box requires no
+    // prompt to be active (see the fallback opener further down), and
+    // opening a prompt while the box is open is impossible today (nothing
+    // currently starts a rename/kill confirm from inside an open Cmdline).
+    if (cmdlineRef?.handleKey(e)) return;
+
     if (statusBarRef?.handleKey(e)) return;
 
     // Ctrl-d/Ctrl-u/Ctrl-f/Ctrl-b are reserved for the Builds/Personnel file
@@ -674,6 +903,27 @@
         e.preventDefault();
         return;
       }
+    }
+
+    // PLAN.md Phase 5C item 5C.1(b) fallback opener: a bare `:` that
+    // NOTHING above already consumed opens the site-wide Cmdline box.
+    // Placed here — after every text-input-owning consumer above has had
+    // its turn (grep's own query, an open editor's `/` search, Personnel's
+    // filter mode, the status-bar rename prompt) — for free: each of those
+    // already swallows every key (including `:`) while it's active, so
+    // this line is simply never reached while any of them own the
+    // keyboard, which is exactly "`:` stays literal inside grep query/
+    // personnel filter/rename prompt" (5C.1(b)) with no extra state probes
+    // needed. `editorIsOpen` (computed above) picks context (a) vs (b):
+    // ex mode when a file editor is open (even though it no longer
+    // intercepts `:` itself — see Editor.svelte's own comment on that),
+    // site mode everywhere else. Shift+":" (US-layout Shift+;) must still
+    // open the box, so only meta/ctrl/alt are excluded here.
+    if (!e.metaKey && !e.ctrlKey && !e.altKey && e.key === ":") {
+      e.preventDefault();
+      if (editorIsOpen) cmdlineRef?.openEx();
+      else cmdlineRef?.openSite();
+      return;
     }
 
     // Modifier combos fall through untouched — never preventDefault them,
@@ -765,4 +1015,5 @@
   <GrepOverlay bind:this={grepRef} {grep} onNavigate={setView} />
   <CopyMode bind:this={copyModeRef} copyMode={site.copyMode} />
   <BootSequence bind:this={bootRef} {boot} {desktopMode} onReady={onBootReady} />
+  <Cmdline bind:this={cmdlineRef} {cmdline} onSubmit={onCmdlineSubmit} />
 </div>

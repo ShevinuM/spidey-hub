@@ -29,6 +29,15 @@ const pasteBuffer = (page: Page) => page.locator('[data-testid="paste-buffer"]')
 const closePill = (page: Page) => page.locator('[data-testid="editor-close-pill"]');
 const overlay = (page: Page) => page.locator('[data-testid="grep-overlay"]');
 const lineText = (page: Page, n: number) => page.locator(`[data-line="${n}"] [data-testid="editor-line-text"]`);
+// PLAN.md Phase 5C: the `:` ex-command line's PRESENTATION (the typed text,
+// the resulting readonly/E492 error) moved from Editor.svelte's own footer
+// to the site-wide floating Cmdline box — see Cmdline.svelte /
+// tests/e2e/cmdline.spec.ts for that box's own dedicated coverage; the
+// handful of assertions below that used to read `modeText`/`message` for
+// ex-command-specific output now read these instead.
+const cmdlineOverlay = (page: Page) => page.locator('[data-testid="cmdline-overlay"]');
+const cmdlineInput = (page: Page) => page.locator('[data-testid="cmdline-input"]');
+const cmdlineError = (page: Page) => page.locator('[data-testid="cmdline-error"]');
 
 async function typeCmdline(page: Page, cmd: string) {
   await page.keyboard.press(":");
@@ -241,12 +250,23 @@ for (const entry of entryPoints) {
       await expect(scroller(page)).toBeVisible();
     });
 
-    test("Esc cancels the : cmdline without executing it or closing the editor", async ({ page }) => {
+    test("Esc cancels the : cmdline (now the Cmdline box) without executing it or closing the editor", async ({
+      page,
+    }) => {
       await entry.open(page);
+      // The footer mode indicator no longer shows the typed ex-command
+      // text (PLAN.md Phase 5C: that presentation moved to the box) — it
+      // stays "NORMAL" throughout, since the editor's own mode never
+      // actually changes for `:` anymore (see Editor.svelte's own comment
+      // on that key).
+      await expect(modeText(page)).toHaveText("NORMAL");
       await page.keyboard.press(":");
+      await expect(cmdlineOverlay(page)).toBeVisible();
       await page.keyboard.type("q");
-      await expect(modeText(page)).toHaveText(":q");
+      await expect(cmdlineInput(page)).toContainText("q");
+      await expect(modeText(page)).toHaveText("NORMAL");
       await page.keyboard.press("Escape");
+      await expect(cmdlineOverlay(page)).not.toBeVisible();
       await expect(modeText(page)).toHaveText("NORMAL");
       await expect(scroller(page)).toBeVisible();
     });
@@ -254,25 +274,32 @@ for (const entry of entryPoints) {
     test(":q closes the editor back to the exact parent view", async ({ page }) => {
       await entry.open(page);
       await typeCmdline(page, "q");
+      await expect(cmdlineOverlay(page)).not.toBeVisible();
       await expect(scroller(page)).not.toBeVisible();
       await entry.assertParentVisible(page);
     });
 
-    test(":w and :wq show a readonly error and never close the editor", async ({ page }) => {
+    test(":w and :wq show a readonly error IN THE BOX and never close the editor", async ({ page }) => {
       await entry.open(page);
       await typeCmdline(page, "w");
       await expect(scroller(page)).toBeVisible();
-      await expect(message(page)).toContainText("readonly");
+      await expect(cmdlineError(page)).toContainText("readonly");
+      // Editor.svelte's own footer message is unaffected by ex-command
+      // output now (PLAN.md Phase 5C) — only NORMAL-mode mutating-key
+      // bells (i/x/etc, tested below) still use it.
+      await expect(message(page)).not.toBeVisible();
 
+      await page.keyboard.press("Escape"); // dismiss the box's error and close it
       await typeCmdline(page, "wq");
+      await expect(cmdlineError(page)).toContainText("readonly");
       await expect(scroller(page)).toBeVisible();
     });
 
-    test("an unknown ex command shows an E492-style message", async ({ page }) => {
+    test("an unknown ex command shows an E492-style message IN THE BOX", async ({ page }) => {
       await entry.open(page);
       await typeCmdline(page, "bogus");
-      await expect(message(page)).toContainText("E492");
-      await expect(message(page)).toContainText("bogus");
+      await expect(cmdlineError(page)).toContainText("E492");
+      await expect(cmdlineError(page)).toContainText("bogus");
     });
 
     test(":<number> jumps to that line", async ({ page }) => {

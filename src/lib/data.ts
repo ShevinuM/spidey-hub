@@ -26,6 +26,7 @@ import personnelRaw from "../data/personnel.yaml?raw";
 import companiesRaw from "../data/companies.yaml?raw";
 import helpRaw from "../data/help.yaml?raw";
 import bootRaw from "../data/boot.yaml?raw";
+import cmdlineRaw from "../data/cmdline.yaml?raw";
 
 const RAW: Record<string, string> = {
   "site.yaml": siteRaw,
@@ -38,6 +39,7 @@ const RAW: Record<string, string> = {
   "companies.yaml": companiesRaw,
   "help.yaml": helpRaw,
   "boot.yaml": bootRaw,
+  "cmdline.yaml": cmdlineRaw,
 };
 
 const cache = new Map<string, unknown>();
@@ -467,3 +469,36 @@ export interface BootData {
 }
 
 export const getBoot = (): BootData => loadYaml<BootData>("boot.yaml");
+
+// ---------------------------------------------------------------------------
+// cmdline.yaml
+// ---------------------------------------------------------------------------
+
+/** Shape matches src/lib/cmdline.ts's own `CommandDef` structurally (kept as
+ * a separate declaration rather than importing it here so that pure,
+ * DOM-free module has zero dependency on this build-time YAML loader). */
+export interface CmdlineCommandDef {
+  name: string;
+  aliases?: string[];
+  description: string;
+  action?: string;
+  takesArgs?: boolean;
+}
+
+export interface CmdlineErrors {
+  unknownCommandTemplate: string;
+  usageRenameWindow: string;
+  usageSelectWindow: string;
+  noSuchWindowTemplate: string;
+}
+
+export interface CmdlineData {
+  title: string;
+  prompt: { glyph: string; cursorGlyph: string };
+  exCommands: CmdlineCommandDef[];
+  commands: CmdlineCommandDef[];
+  tmuxCommands: CmdlineCommandDef[];
+  errors: CmdlineErrors;
+}
+
+export const getCmdline = (): CmdlineData => loadYaml<CmdlineData>("cmdline.yaml");

@@ -1,0 +1,116 @@
+# Site-wide floating Cmdline (PLAN.md Phase 5C). One noice.nvim-style
+# floating box (src/components/Cmdline.svelte) — same visual family as
+# GrepOverlay (bordered box, box-drawing inset title, `>` prompt + block
+# cursor, existing palette) — shared by THREE entry contexts:
+#
+#   (a) editor ex mode (`:` while a Builds/Personnel file editor is open):
+#       Phase-3's own q/q!/w/wq/:<n> ex-command state machine (PARSED by
+#       src/lib/cmdline.ts's parseExCommand, EXECUTED by Editor.svelte's own
+#       runExCommand — unchanged behavior from Phase 3, only its
+#       PRESENTATION moves into this box) tried first, falling through to
+#       `commands` below on anything it doesn't recognize — "editor context
+#       wins": `:q` while an editor is open always closes the editor, never
+#       kills the window, even though `commands` below also defines a
+#       site-wide `q`.
+#   (b) site mode (`:` everywhere else, no other text input active — `:`
+#       stays a literal character inside the grep query / personnel filter /
+#       rename prompt, which all already own the keyboard while active):
+#       `commands` below only.
+#   (c) tmux command-prompt mode (`Ctrl-b :`, real tmux's own
+#       "command-prompt" binding): `tmuxCommands` below only, executed
+#       through Phase 5's existing rename/kill/select-window implementations
+#       in Terminal.svelte — never duplicated here.
+#
+# `commands[].action`/`exCommands` entries with no `action` are internal
+# identifiers Terminal.svelte/Cmdline.svelte switch on — never rendered —
+# same convention as src/lib/views.ts's menu/window ids.
+
+title: "─ Cmdline ─"
+
+prompt:
+  glyph: ">"
+  cursorGlyph: "▌"
+
+# Ex-mode-only display entries (context (a) — see file header). Real
+# execution is Phase 3's own parseExCommand/Editor.svelte, unchanged; these
+# exist only so the box's suggestion list has a name+description to show,
+# and so `q`/`w` shadow the site-wide `commands` entries of the same name
+# while an editor is open (src/lib/cmdline.ts's mergeCommandLists).
+exCommands:
+  - name: "q"
+    aliases: ["q!"]
+    description: "close the file editor (back to the browser view underneath)"
+  - name: "w"
+    aliases: ["wq"]
+    description: "write — readonly, always errors (this viewer never writes)"
+
+# Site-wide command set (PLAN.md 5C.2). Every one of these also works while
+# an editor is open (context (a): "Phase-3 commands PLUS the site-wide set
+# below"), falling through only after the ex-command machine above has had
+# first refusal.
+commands:
+  - name: "dashboard"
+    aliases: ["home"]
+    description: "jump to the dashboard"
+    action: "view:home"
+  - name: "builds"
+    description: "jump to Builds"
+    action: "view:builds"
+  - name: "personnel"
+    description: "jump to Personnel Files"
+    action: "view:personnel"
+  - name: "profile"
+    description: "jump to Profile"
+    action: "view:profile"
+  - name: "retina-v"
+    description: "jump to E.D.I.T.H: Retina-V"
+    action: "view:retina-v"
+  - name: "help"
+    description: "jump to Help"
+    action: "view:help"
+  - name: "grep"
+    description: "open the grep overlay, pre-filled and searching <query>"
+    action: "grep"
+    takesArgs: true
+  - name: "reboot"
+    description: "replay the E.D.I.T.H boot sequence"
+    action: "reboot"
+  - name: "resume"
+    aliases: ["cv"]
+    description: "download resume.pdf in a new tab"
+    action: "resume"
+  - name: "q"
+    description: "kill the current window (refuses to kill the last one)"
+    action: "kill-window"
+
+# tmux command-prompt mode (Ctrl-b :) — PLAN.md 5C.1(c). A distinct, smaller
+# vocabulary matching real tmux's own command-prompt commands; EXECUTED
+# through Phase 5's existing rename/kill/select-window implementations
+# (Terminal.svelte's renameWindow/killWindow/killPaneOrWindow/setView) —
+# never duplicated here, per the plan's "single source of behavior".
+tmuxCommands:
+  - name: "rename-window"
+    description: "rename-window <name> — rename the current window"
+    takesArgs: true
+  - name: "kill-window"
+    description: "kill the current window (refuses to kill the last one)"
+  - name: "kill-pane"
+    description: "kill the focused Builds panel (or the window, if it's the only pane)"
+  - name: "select-window"
+    description: "select-window <0-5> — jump straight to that window"
+    takesArgs: true
+
+# Error/usage strings the box itself renders (as opposed to the editor's own
+# E21/E45 bell messages, which stay in src/data/builds.yaml /
+# src/data/personnel.yaml — those only ever fire from inside an already-open
+# editor, so they keep using that editor instance's own labels).
+errors:
+  # PLAN.md 5C.2 "unknown → the Phase-3 E492 template" — reused verbatim
+  # (same wording as builds.yaml/personnel.yaml's own
+  # notAnEditorCommandTemplate) so a gibberish `:` command reads exactly
+  # like vim's own ex-command error, in EVERY context, not just inside an
+  # open editor — this whole box is, in spirit, one big vim command-line.
+  unknownCommandTemplate: "E492: Not an editor command: {cmd}"
+  usageRenameWindow: "usage: rename-window <name>"
+  usageSelectWindow: "usage: select-window <0-5>"
+  noSuchWindowTemplate: "no such window: {arg}"

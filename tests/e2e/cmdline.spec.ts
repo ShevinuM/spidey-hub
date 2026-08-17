@@ -1,0 +1,648 @@
+// Behavioral e2e suite for the site-wide floating Cmdline (PLAN.md Phase
+// 5C) — src/components/Cmdline.svelte, driven by Terminal.svelte. Covers
+// all THREE entry contexts (site `:`, editor ex-mode `:`, tmux
+// command-prompt `Ctrl-b :`), the palette feel (suggestions/Tab
+// completion), and a DATA-DRIVEN sweep over src/data/cmdline.yaml's own
+// `commands` list so a future addition to that file is asserted
+// automatically rather than silently untested (PLAN.md 5C.5 "the e2e sweep
+// is generated FROM the yaml so the list can't drift").
+import { expect, test, type Page } from "./fixtures.ts";
+// PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported from
+// ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
+// sessionStorage flag before every navigation, so BootSequence.svelte's
+// ~4.6s unskippable sequence never runs for these tests — see that file's
+// header comment for why this is a context-fixture override rather than a
+// per-goto-helper change. The `:reboot` test below still works under this
+// flag: BootSequence's `replay()` is a manual trigger independent of the
+// sessionStorage auto-skip (see boot.spec.ts's own "r on the ready
+// dashboard replays boot, independent of the session flag" test).
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import YAML from "yaml";
+import { search, formatCount, type RepoFile } from "../../src/lib/grep.ts";
+
+const ROOT = join(import.meta.dirname, "../..");
+
+interface CmdlineCommandDef {
+  name: string;
+  aliases?: string[];
+  description: string;
+  action?: string;
+  takesArgs?: boolean;
+}
+interface CmdlineYaml {
+  title: string;
+  commands: CmdlineCommandDef[];
+  tmuxCommands: CmdlineCommandDef[];
+  errors: { unknownCommandTemplate: string };
+}
+
+function loadCmdlineYaml(): CmdlineYaml {
+  return YAML.parse(readFileSync(join(ROOT, "src/data/cmdline.yaml"), "utf8")) as CmdlineYaml;
+}
+
+async function gotoReady(page: Page, path: string) {
+  await page.goto(path);
+  await page.locator('[data-terminal-ready="true"]').waitFor({ state: "attached" });
+}
+
+async function ctrlB(page: Page) {
+  await page.keyboard.down("Control");
+  await page.keyboard.press("b");
+  await page.keyboard.up("Control");
+}
+
+const overlay = (page: Page) => page.locator('[data-testid="cmdline-overlay"]');
+const input = (page: Page) => page.locator('[data-testid="cmdline-input"]');
+const errorText = (page: Page) => page.locator('[data-testid="cmdline-error"]');
+const suggestions = (page: Page) => page.locator('[data-testid="cmdline-suggestion"]');
+const suggestionByName = (page: Page, name: string) =>
+  page.locator(`[data-testid="cmdline-suggestion"][data-name="${name}"]`);
+
+async function typeAndEnter(page: Page, text: string) {
+  await page.keyboard.type(text);
+  await page.keyboard.press("Enter");
+}
+
+async function mockOpen(page: Page) {
+  await page.evaluate(() => {
+    (window as unknown as { __opened: unknown[] }).__opened = [];
+    window.open = ((url?: string | URL, target?: string) => {
+      (window as unknown as { __opened: unknown[] }).__opened.push({ url, target });
+      return null;
+    }) as typeof window.open;
+  });
+}
+async function openedCalls(page: Page) {
+  return page.evaluate(() => (window as unknown as { __opened: unknown[] }).__opened);
+}
+
+test.describe("Cmdline: opening (PLAN.md 5C.1)", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  const views: { path: string; key?: string }[] = [
+    { path: "/" },
+    { path: "/builds" },
+    { path: "/personnel" },
+    { path: "/retina-v" },
+    { path: "/profile" },
+    { path: "/help" },
+  ];
+
+  for (const v of views) {
+    test(`: opens the box in site mode from ${v.path}`, async ({ page }) => {
+      await gotoReady(page, v.path);
+      await page.keyboard.press(":");
+      await expect(overlay(page)).toBeVisible();
+      await expect(input(page)).toHaveText("▌");
+      await expect(suggestionByName(page, "dashboard")).toBeVisible();
+    });
+  }
+
+  test("Ctrl-b : opens the box in tmux mode (rename-window/kill-window/kill-pane/select-window only)", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press(":");
+    await expect(overlay(page)).toBeVisible();
+    await expect(suggestionByName(page, "rename-window")).toBeVisible();
+    await expect(suggestionByName(page, "select-window")).toBeVisible();
+    // Site-wide-only commands must NOT appear in tmux mode.
+    await expect(suggestionByName(page, "dashboard")).toHaveCount(0);
+    await expect(suggestionByName(page, "reboot")).toHaveCount(0);
+  });
+
+  test("Esc closes the box with no side effects", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press(":");
+    await expect(overlay(page)).toBeVisible();
+    await page.keyboard.type("builds");
+    await page.keyboard.press("Escape");
+    await expect(overlay(page)).not.toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
+  });
+
+  test("a status-bar prompt already open blocks Ctrl-b : from opening the box", async ({ page }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press(","); // rename-window prompt
+    await expect(page.locator('[data-testid="status-prompt"]')).toBeVisible();
+
+    await ctrlB(page);
+    await page.keyboard.press(":");
+    await expect(overlay(page)).not.toBeVisible();
+    await expect(page.locator('[data-testid="status-prompt"]')).toBeVisible();
+  });
+
+  test("while the box is open, the prefix is inert except the bare Ctrl-b arm and ]: no digit switch, no & confirm", async ({
+    page,
+  }) => {
+    // Same "prompt owns the keyboard" gate as an open status-bar prompt
+    // (PLAN.md 5C.1: "reuse/extend the isPromptActive gating pattern") —
+    // mirrors tmux.spec.ts's own "Ctrl-b <digit>/&/x/,/n are all inert
+    // while the rename prompt is open" regression test.
+    await gotoReady(page, "/");
+    await page.keyboard.press(":");
+    await expect(overlay(page)).toBeVisible();
+
+    await ctrlB(page);
+    await page.keyboard.press("2");
+    await expect(page).toHaveURL(/\/$/);
+    await expect(overlay(page)).toBeVisible();
+
+    await ctrlB(page);
+    await page.keyboard.press("&");
+    await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
+    await expect(overlay(page)).toBeVisible();
+  });
+
+  test("the box never covers the status bar — it stays hit-testable at its own center", async ({ page }) => {
+    // Same elementFromPoint hit-test tmux.spec.ts's own "grep is window
+    // chrome, the status bar is session chrome" suite uses for the grep
+    // overlay's backdrop (PLAN.md Phase 5 item 5.5, extended by 5C.4).
+    await gotoReady(page, "/");
+    await page.keyboard.press(":");
+    await expect(overlay(page)).toBeVisible();
+
+    const box = await page.locator('[data-testid="status-bar-windows"]').boundingBox();
+    if (!box) throw new Error("status bar not laid out");
+    const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    const testid = await page.evaluate(
+      ({ x, y }) => document.elementFromPoint(x, y)?.getAttribute("data-testid") ?? null,
+      point,
+    );
+    expect(testid).not.toBe("cmdline-overlay");
+    expect(["status-bar-windows", "status-bar-window"]).toContain(testid);
+  });
+});
+
+test.describe("Cmdline: `:` stays literal inside other text inputs (PLAN.md 5C.1(b))", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  test(": types literally into an open grep query, never opening the box", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press("/");
+    await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
+    await page.keyboard.press(":");
+    await expect(page.locator('[data-testid="grep-query"]')).toContainText(":");
+    await expect(overlay(page)).not.toBeVisible();
+  });
+
+  test(": types literally into the Personnel filter, never opening the box", async ({ page }) => {
+    await gotoReady(page, "/personnel");
+    await page.keyboard.press("f");
+    await page.keyboard.press(":");
+    await expect(page.locator('[data-testid="personnel-prompt"]')).toContainText(":");
+    await expect(overlay(page)).not.toBeVisible();
+  });
+
+  test(": types literally into the rename-window prompt, never opening the box", async ({ page }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press(",");
+    await expect(page.locator('[data-testid="status-prompt"]')).toBeVisible();
+    await page.keyboard.press(":");
+    await expect(page.locator('[data-testid="status-prompt"]')).toContainText(":");
+    await expect(overlay(page)).not.toBeVisible();
+  });
+});
+
+test.describe("Cmdline: palette feel — suggestions + Tab completion (PLAN.md 5C.3)", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  test("suggestions prefix-filter as you type", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press(":");
+    const totalCommands = loadCmdlineYaml().commands.length;
+    await expect(suggestions(page)).toHaveCount(totalCommands);
+
+    await page.keyboard.type("bu");
+    await expect(suggestions(page)).toHaveCount(1);
+    await expect(suggestionByName(page, "builds")).toBeVisible();
+  });
+
+  test("Tab completes the unique match", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press(":");
+    await page.keyboard.type("reb");
+    await page.keyboard.press("Tab");
+    await expect(input(page)).toContainText("reboot");
+  });
+
+  test("j/k stay typeable inside the input (do not navigate suggestions)", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press(":");
+    await page.keyboard.type("j");
+    await expect(input(page)).toContainText("j");
+    await page.keyboard.press("Backspace");
+    await page.keyboard.type("k");
+    await expect(input(page)).toContainText("k");
+  });
+
+  test("ArrowDown/ArrowUp navigate suggestions and copy the highlighted name into the input", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press(":");
+    await page.keyboard.press("ArrowDown");
+    const firstName = await suggestions(page).first().getAttribute("data-name");
+    await expect(input(page)).toContainText(firstName ?? "");
+    await expect(page.locator('[data-testid="cmdline-suggestion"][data-selected="true"]')).toHaveAttribute(
+      "data-name",
+      firstName ?? "",
+    );
+  });
+});
+
+test.describe("Cmdline: unknown command (PLAN.md 5C.2 E492)", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  test("a gibberish command shows an E492-style error in the box and does not navigate", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press(":");
+    await typeAndEnter(page, "zzzbogus");
+    await expect(overlay(page)).toBeVisible();
+    await expect(errorText(page)).toContainText("E492");
+    await expect(errorText(page)).toContainText("zzzbogus");
+    await expect(page).toHaveURL(/\/$/);
+  });
+
+  test("Esc after an error closes the box cleanly", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press(":");
+    await typeAndEnter(page, "zzzbogus");
+    await expect(errorText(page)).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(overlay(page)).not.toBeVisible();
+  });
+
+  test("the next keystroke after an error clears it", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press(":");
+    await typeAndEnter(page, "zzzbogus");
+    await expect(errorText(page)).toBeVisible();
+    await page.keyboard.press("Backspace");
+    await expect(errorText(page)).not.toBeVisible();
+  });
+});
+
+test.describe("Cmdline: Ctrl-b ] pastes into the box (PLAN.md 5C.1(c) paste-target registration)", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  });
+
+  test("a copy-mode yank pastes into the open box", async ({ page }) => {
+    await gotoReady(page, "/profile");
+    // Yank the profile summary text via copy-mode (data-copy-source),
+    // exactly like tmux.spec.ts's own "copy-mode yank -> paste into grep
+    // query round-trips" test.
+    await ctrlB(page);
+    await page.keyboard.press("[");
+    await page.keyboard.press("y"); // yank the cursor's current line (no selection)
+    await expect(page.locator('[data-testid="copy-mode-overlay"]')).not.toBeVisible();
+
+    await page.keyboard.press(":");
+    await expect(overlay(page)).toBeVisible();
+    await ctrlB(page);
+    await page.keyboard.press("]");
+    const text = (await input(page).textContent()) ?? "";
+    expect(text.replace("▌", "").length).toBeGreaterThan(0);
+  });
+});
+
+test.describe("Cmdline: editor ex-mode still works through the box (PLAN.md 5C.1(a))", () => {
+  interface EntryPoint {
+    name: string;
+    open: (page: Page) => Promise<void>;
+    assertParentVisible: (page: Page) => Promise<void>;
+  }
+
+  const entryPoints: EntryPoint[] = [
+    {
+      name: "Builds",
+      async open(page) {
+        await gotoReady(page, "/builds");
+        await page.keyboard.press("3");
+        await page.keyboard.press("Enter");
+        await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
+        await page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]').click();
+        await page.keyboard.press("2");
+        await page.keyboard.press("Enter");
+        await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
+      },
+      async assertParentVisible(page) {
+        await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
+      },
+    },
+    {
+      name: "Personnel",
+      async open(page) {
+        await gotoReady(page, "/personnel");
+        await page.keyboard.press("Enter");
+        await page.keyboard.press("Enter");
+        await page.keyboard.press("Enter");
+        await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
+      },
+      async assertParentVisible(page) {
+        await expect(page.locator('[data-testid="personnel-path"]')).toHaveText(
+          "/Users/Shev/Experience/Enaimco/Full-Time/",
+        );
+      },
+    },
+  ];
+
+  for (const entry of entryPoints) {
+    test.describe(entry.name, () => {
+      test.beforeEach(async ({ context }) => {
+        await context.route("**/api.github.com/**", (route) => route.abort());
+      });
+
+      test(": opens the box in ex mode, showing the exCommands + site-wide suggestions", async ({ page }) => {
+        await entry.open(page);
+        await page.keyboard.press(":");
+        await expect(overlay(page)).toBeVisible();
+        await expect(suggestionByName(page, "q")).toBeVisible();
+        await expect(suggestionByName(page, "dashboard")).toBeVisible(); // site-wide set also offered
+      });
+
+      test(":q closes the editor back to the exact parent view (editor context wins over the site-wide q)", async ({
+        page,
+      }) => {
+        await entry.open(page);
+        await page.keyboard.press(":");
+        await typeAndEnter(page, "q");
+        await expect(overlay(page)).not.toBeVisible();
+        await expect(page.locator('[data-testid="editor-scroller"]')).not.toBeVisible();
+        await entry.assertParentVisible(page);
+      });
+
+      test(":w shows a readonly error in the box and never closes the editor", async ({ page }) => {
+        await entry.open(page);
+        await page.keyboard.press(":");
+        await typeAndEnter(page, "w");
+        await expect(errorText(page)).toContainText("readonly");
+        await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
+      });
+
+      test(":<number> jumps to that line", async ({ page }) => {
+        await entry.open(page);
+        const totalLines = await page.locator("[data-line]").count();
+        test.skip(totalLines < 3, "fixture file too short");
+        await page.keyboard.press(":");
+        await typeAndEnter(page, "3");
+        await expect(overlay(page)).not.toBeVisible();
+        await expect(page.locator('[data-testid="editor-position"]')).toContainText("3:");
+      });
+
+      test("an unrecognized ex command falls through to the site-wide set (:dashboard navigates away)", async ({
+        page,
+      }) => {
+        await entry.open(page);
+        await page.keyboard.press(":");
+        await typeAndEnter(page, "dashboard");
+        await expect(overlay(page)).not.toBeVisible();
+        await expect(page).toHaveURL(/\/$/);
+      });
+    });
+  }
+});
+
+test.describe("Cmdline: tmux command-prompt mode (PLAN.md 5C.1(c) — executes through Phase 5's own flows)", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  test("rename-window <name> renames the current window immediately, matching Ctrl-b ,'s underlying rename", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press(":");
+    await typeAndEnter(page, "rename-window scratch");
+    await expect(overlay(page)).not.toBeVisible();
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="dashboard"]')).toHaveText(
+      "0:scratch*",
+    );
+  });
+
+  test("rename-window with no argument shows a usage error", async ({ page }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press(":");
+    await typeAndEnter(page, "rename-window");
+    await expect(errorText(page)).toContainText("usage");
+  });
+
+  test("kill-window removes the current window, matching Ctrl-b &'s underlying kill (no confirm prompt)", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/builds");
+    await ctrlB(page);
+    await page.keyboard.press(":");
+    await typeAndEnter(page, "kill-window");
+    await expect(overlay(page)).not.toBeVisible();
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(0);
+  });
+
+  test("kill-window refuses to kill the last remaining window (same status message as Ctrl-b &)", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/");
+    for (let i = 0; i < 5; i++) {
+      await ctrlB(page);
+      await page.keyboard.press("&");
+      await page.keyboard.press("y");
+    }
+    await expect(page.locator('[data-testid="status-bar-window"]')).toHaveCount(1);
+
+    await ctrlB(page);
+    await page.keyboard.press(":");
+    await typeAndEnter(page, "kill-window");
+    await expect(page.locator('[data-testid="status-message"]')).toContainText("only window");
+    await expect(page.locator('[data-testid="status-bar-window"]')).toHaveCount(1);
+  });
+
+  test("kill-pane inside Builds with multiple panels removes only the focused panel, matching Ctrl-b x", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/builds");
+    await page.keyboard.press("2");
+    await expect(page.locator('[data-testid="builds-panel-2"]')).toBeVisible();
+
+    await ctrlB(page);
+    await page.keyboard.press(":");
+    await typeAndEnter(page, "kill-pane");
+    await expect(overlay(page)).not.toBeVisible();
+    await expect(page.locator('[data-testid="builds-panel-2"]')).toHaveCount(0);
+  });
+
+  test("select-window <n> jumps straight to that window, matching the Ctrl-b <digit> targets", async ({ page }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press(":");
+    await typeAndEnter(page, "select-window 2");
+    await expect(overlay(page)).not.toBeVisible();
+    await expect(page).toHaveURL(/\/personnel$/);
+  });
+
+  test("select-window 0 jumps to the dashboard", async ({ page }) => {
+    await gotoReady(page, "/builds");
+    await ctrlB(page);
+    await page.keyboard.press(":");
+    await typeAndEnter(page, "select-window 0");
+    await expect(page).toHaveURL(/\/$/);
+  });
+
+  test("select-window with a non-numeric argument shows a usage error", async ({ page }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press(":");
+    await typeAndEnter(page, "select-window abc");
+    await expect(errorText(page)).toContainText("usage");
+  });
+
+  test("select-window with an out-of-range numeric index shows 'no such window'", async ({ page }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press(":");
+    await typeAndEnter(page, "select-window 9");
+    await expect(errorText(page)).toContainText("no such window");
+  });
+});
+
+// ---------------------------------------------------------------------
+// Data-driven sweep over src/data/cmdline.yaml's own `commands` list
+// (PLAN.md 5C.5) — every entry there is executed here by its `action` id,
+// so a future addition to that file fails loudly (an unhandled `action`)
+// rather than silently shipping untested.
+// ---------------------------------------------------------------------
+
+const VIEW_ROUTE_BY_ACTION: Record<string, RegExp> = {
+  "view:home": /\/$/,
+  "view:builds": /\/builds$/,
+  "view:personnel": /\/personnel$/,
+  "view:profile": /\/profile$/,
+  "view:retina-v": /\/retina-v$/,
+  "view:help": /\/help$/,
+};
+
+test.describe("Cmdline: data-driven sweep of every src/data/cmdline.yaml command", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  const commands = loadCmdlineYaml().commands;
+
+  for (const def of commands) {
+    const action = def.action;
+
+    if (action && action in VIEW_ROUTE_BY_ACTION) {
+      test(`:${def.name} jumps to the route matching ${action}`, async ({ page }) => {
+        await gotoReady(page, "/");
+        await page.keyboard.press(":");
+        await typeAndEnter(page, def.name);
+        await expect(overlay(page)).not.toBeVisible();
+        await expect(page).toHaveURL(VIEW_ROUTE_BY_ACTION[action]);
+      });
+      continue;
+    }
+
+    if (action === "grep") {
+      test(`:${def.name} <query> opens the grep overlay pre-filled and already searching`, async ({ page }) => {
+        await gotoReady(page, "/");
+        await page.keyboard.press(":");
+        await typeAndEnter(page, `${def.name} svelte`);
+        await expect(overlay(page)).not.toBeVisible();
+        await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
+        await expect(page.locator('[data-testid="grep-query"]')).toContainText("svelte");
+
+        // The overlay is already SEARCHING, not just open with the query
+        // text sitting there unused — asserted against the real index via
+        // the same `search()` port the component itself uses (grep.spec.ts
+        // does the same), rather than a hardcoded row count: the number of
+        // rows actually RENDERED also depends on the list pane's own
+        // ResizeObserver-measured height (GrepOverlay.svelte's `listVis`),
+        // not just the hit count, so only a lower bound is asserted here.
+        const files = JSON.parse(
+          readFileSync(join(ROOT, "public/generated/grep-index.json"), "utf8"),
+        ) as RepoFile[];
+        const hits = search(files, "svelte");
+        test.skip(hits.length === 0, "fixture/real index has no 'svelte' hits to assert against");
+        await expect(page.locator('[data-testid="grep-row"]')).not.toHaveCount(0);
+        await expect(page.locator('[data-testid="grep-counter"]')).toHaveText(formatCount(hits, files, "svelte"));
+      });
+      continue;
+    }
+
+    if (action === "reboot") {
+      test(`:${def.name} replays the E.D.I.T.H boot sequence`, async ({ page }) => {
+        await gotoReady(page, "/builds");
+        await page.keyboard.press(":");
+        await typeAndEnter(page, def.name);
+        await expect(overlay(page)).not.toBeVisible();
+        await expect(page.locator('[data-testid="boot-sequence"]')).toBeVisible();
+        await expect(page).toHaveURL(/\/$/);
+      });
+      continue;
+    }
+
+    if (action === "resume") {
+      test(`:${def.name} downloads the resume via window.open, same as Profile's r`, async ({ page }) => {
+        await gotoReady(page, "/");
+        await mockOpen(page);
+        await page.keyboard.press(":");
+        await typeAndEnter(page, def.name);
+        await expect(overlay(page)).not.toBeVisible();
+        expect(await openedCalls(page)).toEqual([{ url: "/assets/resume.pdf", target: "_blank" }]);
+      });
+      continue;
+    }
+
+    if (action === "kill-window") {
+      // Kills the current window: asserted here. Last-window refusal (PLAN.md
+      // 5C.2 "last-window refusal applies") is its own dedicated test below
+      // ("kill-window (:q) refuses to kill the last remaining window...").
+      test(`:${def.name} kills the current window`, async ({ page }) => {
+        await gotoReady(page, "/builds");
+        await page.keyboard.press(":");
+        await typeAndEnter(page, def.name);
+        await expect(overlay(page)).not.toBeVisible();
+        await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(0);
+      });
+      continue;
+    }
+
+    // Any future cmdline.yaml command with an `action` this sweep doesn't
+    // yet know how to exercise fails loudly here, by design (PLAN.md 5C.5
+    // "the e2e sweep is generated FROM the yaml so the list can't drift") —
+    // rather than being silently skipped.
+    test(`:${def.name} has sweep coverage for its action "${action}"`, () => {
+      throw new Error(
+        `cmdline.spec.ts's data-driven sweep doesn't know how to exercise action "${action}" (command "${def.name}") — add a case above.`,
+      );
+    });
+  }
+
+  test("kill-window (:q) refuses to kill the last remaining window, exactly like Ctrl-b &", async ({ page }) => {
+    await gotoReady(page, "/");
+    for (let i = 0; i < 5; i++) {
+      await ctrlB(page);
+      await page.keyboard.press("&");
+      await page.keyboard.press("y");
+    }
+    await expect(page.locator('[data-testid="status-bar-window"]')).toHaveCount(1);
+
+    await page.keyboard.press(":");
+    await typeAndEnter(page, "q");
+    await expect(page.locator('[data-testid="status-message"]')).toContainText("only window");
+    await expect(page.locator('[data-testid="status-bar-window"]')).toHaveCount(1);
+  });
+});

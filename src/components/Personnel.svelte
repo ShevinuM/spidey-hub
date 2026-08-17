@@ -141,7 +141,10 @@
   let roleSel = $state(0);
 
   let editorOpen = $state(false);
-  let editorRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
+  let editorRef = $state<{
+    handleKey: (e: KeyboardEvent) => boolean;
+    runExCommand: (cmd: string) => { recognized: boolean; error?: string };
+  } | null>(null);
 
   let filterMode = $state(false);
   let filterQuery = $state("");
@@ -441,6 +444,13 @@
    * item 10) — same contract as Builds.svelte's `isEditorOpen()`. */
   export function isEditorOpen(): boolean {
     return editorOpen;
+  }
+
+  /** Same forwarding contract as Builds.svelte's own `runEditorExCommand`
+   * (PLAN.md Phase 5C) — see that file's doc comment. */
+  export function runEditorExCommand(cmd: string): { recognized: boolean; error?: string } {
+    if (!editorOpen || !editorRef) return { recognized: false };
+    return editorRef.runExCommand(cmd);
   }
 
   export function handleKey(e: KeyboardEvent): boolean {

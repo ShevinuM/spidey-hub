@@ -1,0 +1,143 @@
+// Pure parser/completion logic for the site-wide floating Cmdline (PLAN.md
+// Phase 5C, item 5C.4: "pure parser/completion logic in NEW src/lib/
+// cmdline.ts (unit-testable: parse, match/filter, complete)"). No DOM, no
+// Svelte state, no side effects — src/components/Cmdline.svelte and
+// Terminal.svelte own the stateful/effectful parts (open/close, text state,
+// dispatching a resolved command to a view switch / grep open / window
+// mutation / etc.), exactly the same split Editor.svelte already uses for
+// src/lib/vim.ts.
+
+/** One entry in src/data/cmdline.yaml's `commands`/`exCommands`/
+ * `tmuxCommands` arrays. `action` is an internal identifier the caller
+ * switches on (never rendered) for the site-wide list; ex/tmux commands are
+ * matched by `name` itself (parseExCommand/parseTmuxCommand below) rather
+ * than an `action` id, so it's optional here. */
+export interface CommandDef {
+  name: string;
+  aliases?: string[];
+  description: string;
+  action?: string;
+  takesArgs?: boolean;
+}
+
+export interface ParsedInput {
+  /** The first whitespace-delimited token, lowercased-comparison-ready but
+   * NOT itself lowercased (callers that need case-insensitive matching do
+   * that themselves, e.g. resolveCommand below) — kept verbatim so a
+   * command that legitimately cares about case in its own name (none do
+   * today) isn't silently mangled. */
+  name: string;
+  /** Everything after the first run of whitespace, trimmed. Empty string
+   * when there's no argument. */
+  args: string;
+}
+
+/** Splits raw cmdline text into a command name + its argument string. A
+ * leading ":" is tolerated and stripped (callers may pass either the raw
+ * text after the box's own prompt glyph, which never includes it, or a
+ * full ex-command-style string that does) so this is safe to reuse from
+ * either direction. */
+export function parseInput(input: string): ParsedInput {
+  const trimmed = input.trim().replace(/^:+/, "").trim();
+  const spaceIdx = trimmed.search(/\s/);
+  if (spaceIdx === -1) return { name: trimmed, args: "" };
+  return { name: trimmed.slice(0, spaceIdx), args: trimmed.slice(spaceIdx + 1).trim() };
+}
+
+/** Case-insensitive name/alias lookup. */
+export function resolveCommand(commands: CommandDef[], name: string): CommandDef | undefined {
+  if (!name) return undefined;
+  const lower = name.toLowerCase();
+  return commands.find(
+    (c) => c.name.toLowerCase() === lower || (c.aliases ?? []).some((a) => a.toLowerCase() === lower),
+  );
+}
+
+/** Prefix-filters `commands` against `prefix` (matched against the name OR
+ * any alias, case-insensitively) — the live suggestion list under the
+ * input (PLAN.md 5C.3). An empty prefix returns every command, unfiltered
+ * (the box's own resting state: nothing typed yet). */
+export function filterSuggestions(commands: CommandDef[], prefix: string): CommandDef[] {
+  const p = prefix.toLowerCase();
+  if (!p) return commands;
+  return commands.filter(
+    (c) => c.name.toLowerCase().startsWith(p) || (c.aliases ?? []).some((a) => a.toLowerCase().startsWith(p)),
+  );
+}
+
+/** Tab completion (PLAN.md 5C.3 "Tab completes the unique/first match").
+ * Completes only the COMMAND NAME token, leaving any already-typed
+ * argument text untouched; returns `null` when there's nothing to complete
+ * (empty input, or no command matches the typed prefix). An exact
+ * case-insensitive match short-circuits to itself (so completing an
+ * already-complete name is a no-op rather than jumping to some other
+ * matching entry earlier in the list). */
+export function completeInput(commands: CommandDef[], input: string): string | null {
+  const { name, args } = parseInput(input);
+  if (!name) return null;
+  const matches = filterSuggestions(commands, name);
+  if (matches.length === 0) return null;
+  const exact = matches.find((c) => c.name.toLowerCase() === name.toLowerCase());
+  const target = exact ?? matches[0];
+  return args ? `${target.name} ${args}` : target.name;
+}
+
+/** Merges two command lists for DISPLAY (suggestions), preferring `primary`
+ * on a name collision — used to build the editor ex-mode suggestion list
+ * (PLAN.md 5C.1(a)/5C.2 "editor context wins"): `exCommands`' own `q`/`w`
+ * entries shadow `commands`' site-wide `q` (kill-window) so the box shows
+ * the EDITOR meaning while one is open. Execution order is independent of
+ * this — parseExCommand always gets first refusal regardless of what the
+ * suggestion list displays — this only prevents the same name from
+ * appearing twice with two different descriptions. */
+export function mergeCommandLists(primary: CommandDef[], secondary: CommandDef[]): CommandDef[] {
+  const primaryNames = new Set(primary.map((c) => c.name.toLowerCase()));
+  return [...primary, ...secondary.filter((c) => !primaryNames.has(c.name.toLowerCase()))];
+}
+
+// ---------------------------------------------------------------------
+// Ex-command parsing (PLAN.md Phase 3's own state machine, LIFTED here as a
+// pure function so it's shared between Editor.svelte's execution and this
+// file's own unit tests — the parsing itself is byte-for-byte identical to
+// Phase 3's original inline executeCmdline(), never rebuilt).
+// ---------------------------------------------------------------------
+
+export type ExCommand =
+  | { kind: "close" }
+  | { kind: "writeError" }
+  | { kind: "jump"; line: number }
+  | { kind: "unknown" };
+
+export function parseExCommand(cmd: string): ExCommand {
+  if (cmd === "q" || cmd === "q!") return { kind: "close" };
+  if (cmd === "w" || cmd === "wq") return { kind: "writeError" };
+  if (/^\d+$/.test(cmd)) return { kind: "jump", line: Number.parseInt(cmd, 10) };
+  return { kind: "unknown" };
+}
+
+// ---------------------------------------------------------------------
+// tmux command-prompt parsing (PLAN.md 5C.1(c) — `Ctrl-b :`).
+// ---------------------------------------------------------------------
+
+export type TmuxCommand =
+  | { kind: "rename-window"; name: string }
+  | { kind: "kill-window" }
+  | { kind: "kill-pane" }
+  | { kind: "select-window"; index: number }
+  | { kind: "usage"; command: "rename-window" | "select-window" }
+  | { kind: "unknown" };
+
+export function parseTmuxCommand(input: string): TmuxCommand {
+  const { name, args } = parseInput(input);
+  const lower = name.toLowerCase();
+  if (lower === "rename-window") {
+    return args ? { kind: "rename-window", name: args } : { kind: "usage", command: "rename-window" };
+  }
+  if (lower === "kill-window") return { kind: "kill-window" };
+  if (lower === "kill-pane") return { kind: "kill-pane" };
+  if (lower === "select-window") {
+    if (!/^\d+$/.test(args)) return { kind: "usage", command: "select-window" };
+    return { kind: "select-window", index: Number.parseInt(args, 10) };
+  }
+  return { kind: "unknown" };
+}

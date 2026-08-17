@@ -251,6 +251,27 @@
     closeOverlay();
   }
 
+  /** PLAN.md Phase 5C — the site-wide Cmdline box's `:grep <query>`
+   * command (`cmdline.yaml` "grep" action) reads this to decide whether
+   * `:` should fall through to it at all: while grep is already open it
+   * already owns every key itself (see handleKey() below), so Terminal's
+   * own bare-`:`-opens-the-box fallback naturally never fires — this
+   * export exists only so Terminal.svelte's tmux-prefix gating (mirroring
+   * `statusBarRef.isPromptActive()`) can treat an open overlay the same
+   * way, without needing a duplicate open/closed flag of its own. */
+  export function isOpen(): boolean {
+    return open;
+  }
+
+  /** PLAN.md Phase 5C `:grep <query>` — opens the overlay pre-filled AND
+   * already searching (the live `hits`/`countText` derivations react to
+   * `query` the instant it's set, same as normal typing). An empty
+   * `query` behaves exactly like the bare `/` open path. */
+  export function openWithQuery(query_: string): void {
+    openOverlay();
+    query = query_;
+  }
+
   const PASTE_TARGET_ID = "grep-query";
 
   /** Ctrl-b ] paste-target registration (PLAN.md Phase 5 item 5.3) — active

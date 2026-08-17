@@ -21,6 +21,7 @@
   // (the meter's bar heights and readout text depend on real load timing,
   // never frozen by the faked clock).
   import type { ProfileData } from "../lib/data";
+  import { downloadResume } from "../lib/resume";
   import Meter from "./Meter.svelte";
 
   interface Props {
@@ -39,7 +40,7 @@
    * Profile has nothing else to claim, only `r`). */
   export function handleKey(e: KeyboardEvent): boolean {
     if (e.key.toLowerCase() === "r") {
-      window.open("/assets/resume.pdf", "_blank");
+      downloadResume();
       return true;
     }
     return false;

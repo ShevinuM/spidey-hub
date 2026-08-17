@@ -297,6 +297,27 @@ same tab (sessionStorage flag) goes straight to the requested view.
 | `r` (on the ready dashboard only) | replays the boot sequence |
 | `↻ reboot` (status-bar right cluster, any view) | switches to the dashboard and replays the boot sequence |
 
+### Cmdline (`:`)
+
+> Full keymap reference rewrite from `src/data/help.yaml` is Phase 6 — this
+> section only documents the PLAN.md Phase 5C addition ahead of that; see
+> `help.yaml`'s own "Cmdline" section for the complete row-by-row reference.
+
+`:` floats a noice.nvim-style command box (`src/components/Cmdline.svelte`,
+command set in `src/data/cmdline.yaml`) from any view — window jumps
+(`:dashboard`/`:home`, `:builds`, `:personnel`, `:profile`, `:retina-v`,
+`:help`), `:grep <query>`, `:reboot`, `:resume`/`:cv`, and `:q` (kills the
+current window). While a Builds/Personnel file editor is open, the same `:`
+opens it in ex mode instead — Phase 3's own `:q`/`:q!`/`:w`/`:wq`/`:<number>`
+state machine (unchanged, just re-presented in the box) tried first, falling
+through to the site-wide set above on anything it doesn't recognize.
+`Ctrl-b :` opens the same box in tmux's own command-prompt mode
+(`rename-window <name>`, `kill-window`, `kill-pane`, `select-window <0-5>`),
+executed through the exact same rename/kill/select-window code the `,`/`&`/
+`x`/digit bindings already use. Suggestions filter as you type, Tab
+completes, arrows navigate them, Esc closes with no side effects, and an
+unrecognized command shows vim's own E492-style error inside the box.
+
 ## Architecture
 
 - **Routes**: five static pages, `src/pages/{index,builds,personnel,profile,retina-v}.astro`.

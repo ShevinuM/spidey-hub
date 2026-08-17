@@ -407,7 +407,10 @@
     lines: string[];
   }
   let editorFile = $state<EditorFileState | null>(null);
-  let editorRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
+  let editorRef = $state<{
+    handleKey: (e: KeyboardEvent) => boolean;
+    runExCommand: (cmd: string) => { recognized: boolean; error?: string };
+  } | null>(null);
 
   async function openFileInEditor(entry: TreeRow) {
     if (!repoTree || entry.type !== "file") return;
@@ -633,6 +636,19 @@
    * opening grep. */
   export function isEditorOpen(): boolean {
     return !!editorFile;
+  }
+
+  /** Forwards to the embedded Editor's own `runExCommand` (PLAN.md Phase 5C
+   * "lift the Phase-3 command state machine from Editor.svelte, do NOT
+   * rebuild parsing") — Terminal.svelte's site-wide Cmdline box calls this
+   * when its ex-mode Enter fires, and only falls through to the site-wide
+   * command set when the result comes back `recognized: false`. A no-op
+   * (unrecognized) when the editor isn't actually open — shouldn't happen
+   * in practice since Terminal only opens ex mode while `isEditorOpen()` is
+   * true, but keeps this safe to call unconditionally regardless. */
+  export function runEditorExCommand(cmd: string): { recognized: boolean; error?: string } {
+    if (!editorFile || !editorRef) return { recognized: false };
+    return editorRef.runExCommand(cmd);
   }
 
   let gPending = false;
