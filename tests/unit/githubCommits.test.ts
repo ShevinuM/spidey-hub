@@ -19,6 +19,7 @@ test("maps a GitHub commits API response to {sha8, msg, html_url, initials}", ()
   ];
   assert.deepEqual(mapGithubCommits(api), [
     {
+      sha: "ab88cac7eb2fba7cccc6915055a5983c4a6b77f4",
       sha8: "ab88cac7",
       msg: "Add transcript-tts MCP server",
       html_url: "https://github.com/ShevinuM/transcript-tts/commit/ab88cac7eb2fba7cccc6915055a5983c4a6b77f4",
@@ -37,6 +38,18 @@ test("falls back to commit.author.name when the GitHub `author` (login) is null"
     },
   ];
   assert.equal(mapGithubCommits(api)[0].initials, "Ja");
+});
+
+test("a commit missing `sha` maps to sha: undefined (never an empty string)", () => {
+  const api = [
+    {
+      commit: { message: "no sha on this one", author: { name: "jane" } },
+      author: null,
+      html_url: "https://github.com/ShevinuM/x/commit/unknown",
+    },
+  ];
+  assert.equal(mapGithubCommits(api)[0].sha, undefined);
+  assert.equal(mapGithubCommits(api)[0].sha8, "");
 });
 
 test("non-array input returns an empty list instead of throwing", () => {

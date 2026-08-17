@@ -208,6 +208,36 @@ export interface RepoBrowserData {
   fileIcon: string;
   loadingText: string;
   errorText: string;
+  /** Panel [2] before any repo has been opened (PLAN.md Phase 4: panel [2]
+   * is the tree browser now, with no default content of its own — the old
+   * always-visible project list is gone). */
+  emptyText: string;
+}
+
+/** Panel [3]'s virtual "all-projects" row (PLAN.md Phase 4 item 2/4) — every
+ * project's .md doc in one browsable tree, backed by
+ * public/generated/repos/all-projects.json (fixtures/repos/all-projects.json
+ * in a fixture build). Not a real repo: no branch to track, no commits. */
+export interface AllProjectsData {
+  name: string;
+  branch: string;
+  description: string;
+}
+
+export interface SpinnerData {
+  label: string;
+  frames: string[];
+  ariaLabel: string;
+}
+
+export interface CommitBrowserData {
+  errorText: string;
+}
+
+export interface FilePreviewData {
+  loadingText: string;
+  errorText: string;
+  binaryText: string;
 }
 
 export interface EditorLabels {
@@ -232,9 +262,12 @@ export interface EditorLabels {
 export interface BuildsData {
   panels: {
     status: { title: string };
-    files: { title: string; subtitle: string; statusLetter: string; filler: string };
+    // PLAN.md Phase 4: panel [2] is the tree browser now (no more static
+    // "- projects/*.md" subtitle / git-status-letter row prefix) — its
+    // subtitle is "<repo>" or "<repo> @<sha8>" once a repo/commit is open.
+    files: { title: string; subtitleTemplate: string };
     repos: { title: string };
-    commits: { title: string; subtitle: string; authorInitials: string };
+    commits: { title: string; subtitle: string; authorInitials: string; localOnlyText: string };
     changes: { title: string; subtitleTemplate: string };
     commandLog: { title: string };
   };
@@ -245,9 +278,12 @@ export interface BuildsData {
     separator: string;
     projectsSuffix: string;
   };
-  filePosTemplate: string;
   commandLog: CommandLogLine[];
   repoBrowser: RepoBrowserData;
+  allProjects: AllProjectsData;
+  spinner: SpinnerData;
+  commitBrowser: CommitBrowserData;
+  filePreview: FilePreviewData;
   editor: EditorLabels;
 }
 

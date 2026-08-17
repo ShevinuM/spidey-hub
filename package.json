@@ -8,7 +8,7 @@
     "dev": "astro dev",
     "prebuild": "node scripts/generate.mjs",
     "build": "astro build",
-    "build:fixtures": "PORTFOLIO_FIXTURES=1 astro build && cp fixtures/grep-index.json dist/generated/grep-index.json",
+    "build:fixtures": "PORTFOLIO_FIXTURES=1 astro build && cp fixtures/grep-index.json dist/generated/grep-index.json && cp fixtures/repos/all-projects.json dist/generated/repos/all-projects.json",
     "preview": "astro preview",
     "generate": "node scripts/generate.mjs",
     "check": "astro check && tsc --noEmit && svelte-check --threshold error",

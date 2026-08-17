@@ -31,7 +31,8 @@ function initialsFrom(name: string): string {
   return s[0].toUpperCase() + s[1].toLowerCase();
 }
 
-/** Exported for unit testing — mirrors scripts/generate.mjs's mapper exactly. */
+/** Exported for unit testing — mirrors scripts/generate.mjs's mapper exactly
+ * (PLAN.md Phase 4 item 1: both now carry the full `sha`, not just `sha8`). */
 export function mapGithubCommits(data: unknown): Commit[] {
   if (!Array.isArray(data)) return [];
   return data.map((c) => {
@@ -39,6 +40,7 @@ export function mapGithubCommits(data: unknown): Commit[] {
     const message = typeof c?.commit?.message === "string" ? c.commit.message : "";
     const authorName = c?.author?.login || c?.commit?.author?.name || "Sh";
     return {
+      sha: sha || undefined,
       sha8: sha.slice(0, 8),
       msg: message.split("\n")[0],
       html_url: typeof c?.html_url === "string" ? c.html_url : "",
@@ -53,6 +55,11 @@ function readCache(repoName: string): Commit[] | null {
     if (!raw) return null;
     const entry = JSON.parse(raw) as CacheEntry;
     if (Date.now() - entry.ts > TTL_MS) return null;
+    // PLAN.md Phase 4 item 1: a cache entry written before this change never
+    // carries `sha` (only `sha8`) — stale shape. Treat it as a miss so the
+    // page re-fetches instead of silently handing githubTrees.ts commits it
+    // can't resolve a tree ref for.
+    if (!entry.commits.every((c) => typeof c.sha === "string" && c.sha.length > 0)) return null;
     return entry.commits;
   } catch {
     return null;

@@ -1,17 +1,30 @@
 #!/usr/bin/env node
 // Build-time data generation (PLAN.md Phase 2).
 //
-// Produces three kinds of artifacts:
+// Produces four kinds of artifacts:
 //  1. public/generated/repos/<name>.json   — file tree + text contents for
 //     each of the three submodules under repos/ (lazy-fetched by the Builds
 //     island when a repo is opened).
+//  1b. public/generated/repos/all-projects.json — same {name, files} shape,
+//     but built from src/content/projects/*.md (one entry per project doc,
+//     path "<id>.md", lines = the raw file text) instead of a submodule
+//     checkout — backs Builds' virtual "all-projects" repo (PLAN.md Phase 4
+//     item 2, "Builds rework"). Deliberately reads straight from
+//     src/content/projects regardless of PORTFOLIO_FIXTURES (this script has
+//     no fixture awareness at all — see generateRepoIndexes() above it,
+//     which has always read the real repos/ submodules unconditionally);
+//     `pnpm build:fixtures` overwrites this one file post-build from
+//     fixtures/repos/all-projects.json; see that script's cp step.
 //  2. public/generated/grep-index.json     — walks the site's own source so
 //     the grep overlay (`/`) can search real content instead of the
 //     prototype's hand-written repoSrc snapshot.
 //  3. src/generated/commits/<repo>.json    — a snapshot of the 15 most
 //     recent commits per repo via the GitHub REST API, imported statically
 //     so Builds renders identically offline; on any API failure the existing
-//     committed snapshot is kept untouched and a warning is printed.
+//     committed snapshot is kept untouched and a warning is printed. Each
+//     entry also carries the full 40-char `sha` (PLAN.md Phase 4 item 1)
+//     alongside the pre-existing `sha8`, needed to fetch a commit's tree via
+//     GitHub's Git Trees API (src/lib/githubTrees.ts).
 //
 // Run via `pnpm generate` (also wired to predev/prebuild).
 
@@ -163,6 +176,37 @@ function generateRepoIndexes() {
   }
 }
 
+/**
+ * public/generated/repos/all-projects.json — one entry per project doc under
+ * src/content/projects/, path "<id>.md" (id = the filename verbatim, same
+ * case-preserving rule content.config.ts's generateId uses), lines = the raw
+ * file text (frontmatter included — this is a literal file snapshot, not a
+ * parsed content-collection entry) split on "\n". Same {name, files} shape
+ * as generateRepoIndexes() so src/lib/repoTree.ts's listDir/findFile and the
+ * Builds component's existing fetch-and-browse flow work on it unmodified.
+ */
+function generateAllProjectsIndex() {
+  const srcDir = join(ROOT, "src/content/projects");
+  const outDir = join(ROOT, "public/generated/repos");
+  mkdirSync(outDir, { recursive: true });
+  const files = [];
+  if (existsSync(srcDir)) {
+    for (const entry of readdirSync(srcDir)) {
+      if (!entry.endsWith(".md")) continue;
+      const full = join(srcDir, entry);
+      if (!statSync(full).isFile()) continue;
+      const content = readFileSync(full, "utf8");
+      files.push({ path: entry, lines: content.split("\n") });
+    }
+  } else {
+    console.warn("[generate] src/content/projects not found — skipping all-projects.json.");
+  }
+  files.sort((a, b) => a.path.localeCompare(b.path));
+  const index = { name: "all-projects", files };
+  writeFileSync(join(outDir, "all-projects.json"), JSON.stringify(index) + "\n");
+  console.log(`[generate] public/generated/repos/all-projects.json — ${files.length} project docs`);
+}
+
 // ---------------------------------------------------------------------------
 // 2. Grep index (public/generated/grep-index.json)
 // ---------------------------------------------------------------------------
@@ -254,6 +298,7 @@ async function fetchCommits(repo) {
     const message = c.commit?.message || "";
     const authorName = c.author?.login || c.commit?.author?.name || "Sh";
     return {
+      sha,
       sha8: sha.slice(0, 8),
       msg: message.split("\n")[0],
       html_url: c.html_url,
@@ -286,6 +331,7 @@ async function generateCommitSnapshots() {
 
 async function main() {
   generateRepoIndexes();
+  generateAllProjectsIndex();
   // Commit snapshots must complete before the grep index is generated: the
   // grep indexer walks src/generated/commits/*.json as part of the site's
   // own source, so generating it first would embed the pre-fetch snapshot

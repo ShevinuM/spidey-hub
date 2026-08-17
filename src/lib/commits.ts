@@ -40,6 +40,14 @@ const FIXTURE_GLOB = import.meta.glob("../../fixtures/commits/*.json", {
 const USE_FIXTURES = process.env.PORTFOLIO_FIXTURES === "1";
 
 export interface Commit {
+  /** Full 40-char commit sha — added PLAN.md Phase 4 item 1 (needed by
+   * src/lib/githubTrees.ts to fetch a commit's tree/file contents).
+   * Optional: fixture snapshots (fixtures/commits/*.json, extracted verbatim
+   * from Homepage.dc.html and never re-fetched — see PLAN.md "Fixture
+   * prototype sample data ... stays verbatim") only ever carry `sha8`.
+   * Callers needing a tree ref fall back to `sha8` when this is absent (see
+   * githubTrees.ts's ref-candidate list). */
+  sha?: string;
   sha8: string;
   msg: string;
   html_url: string;

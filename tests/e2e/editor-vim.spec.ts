@@ -45,8 +45,14 @@ const entryPoints: EntryPoint[] = [
     async open(page) {
       await gotoReady(page, "/builds");
       await page.keyboard.press("3"); // focus panel [3], Local Repositories
-      await page.keyboard.press("Enter"); // list the active repo's tree at root
+      await page.keyboard.press("Enter"); // load the active repo's tree at root into panel [2]
+      await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
+      // Clicking a file previews it in panel [0] but does NOT open the
+      // editor (PLAN.md Phase 4 item 3 — click-selects/Enter-opens split);
+      // focus panel [2] and press Enter to actually open it.
       await page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]').click();
+      await page.keyboard.press("2");
+      await page.keyboard.press("Enter");
       await expect(scroller(page)).toBeVisible();
     },
     async assertParentVisible(page) {

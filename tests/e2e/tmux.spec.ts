@@ -206,21 +206,30 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
   });
 
-  test("a prefixed j does not move the Builds project selection", async ({ page }) => {
+  // PLAN.md Phase 4 rework: panel [2] is the tree browser now (empty until a
+  // repo is opened, so it has no default j/k-navigable content), so this
+  // exercises the same "prefix swallows the key" invariant against panel
+  // [3]'s repo selection instead — panel [3] still has default content
+  // (the flat repo list) to move a highlight across.
+  test("a prefixed j does not move the Builds repo selection (panel [3])", async ({ page }) => {
     await gotoReady(page, "/builds");
-    const doc = page.locator('[data-testid="builds-changes-body"]');
-    await expect(doc).toContainText("transcript-tts");
+    await page.keyboard.press("3"); // focus panel [3], Local Repositories
+    const firstRow = page.locator('[data-testid="builds-repo-row"]').first();
+    await expect(firstRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.22\)/);
 
     await ctrlB(page);
     await page.keyboard.press("j");
-    // Still transcript-tts — the prefixed "j" was swallowed, never reached
-    // Builds.svelte's own j/k handler.
-    await expect(doc).toContainText("transcript-tts");
+    // Still on the first repo — the prefixed "j" was swallowed, never
+    // reached Builds.svelte's own j/k handler.
+    await expect(firstRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.22\)/);
     await expect(page).toHaveURL(/\/builds$/);
 
     // An un-prefixed "j" right after still works normally.
     await page.keyboard.press("j");
-    await expect(doc).toContainText("SafePass");
+    await expect(page.locator('[data-testid="builds-repo-row"]').nth(1)).toHaveAttribute(
+      "style",
+      /rgba\(224, 69, 60, 0\.22\)/,
+    );
   });
 
   test("a held-modifier chord immediately after Ctrl-b still falls through untouched", async ({ page }) => {
