@@ -71,6 +71,17 @@ test("a hypothetical future real path containing the legacy bare words does NOT 
   assert.equal(grepPathToView("src/components/RadarBlip.svelte"), null);
 });
 
+test("3-segment personnel content paths (company/employmentType/file, PLAN.md Phase 2 item 7 restructure) route to personnel", () => {
+  // grepPathToView's real-index rule is a depth-agnostic prefix match
+  // (`(^|\/)content\/personnel\/`), so the Phase 2 restructure to
+  // src/content/personnel/<company>/<employmentType>/<file>.md needs no
+  // code change here — this test locks that in explicitly rather than
+  // relying solely on the generated-index comparison above.
+  assert.equal(grepPathToView("src/content/personnel/Enaimco/Full-Time/software-developer.md"), "personnel");
+  assert.equal(grepPathToView("src/content/personnel/Enaimco/Part-Time/software-developer.md"), "personnel");
+  assert.equal(grepPathToView("src/content/personnel/Enaimco/Co-op/software-developer.md"), "personnel");
+});
+
 test("fixture-only legacy paths (all under src/) never route via the bare-word fallback", () => {
   // fixtures/grep-index.json's own paths, gated out because they live
   // under src/ — the real rules above own that prefix unconditionally, so

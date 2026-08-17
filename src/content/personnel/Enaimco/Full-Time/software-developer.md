@@ -1,5 +1,6 @@
 ---
 company: Enaimco
+employmentType: Full-Time
 role: Software Developer, Full Time
 months: 14 mo
 dates: Jul 2024 – Present

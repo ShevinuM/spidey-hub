@@ -2,47 +2,70 @@
   // Personnel Files (yazi clone) view — design/Homepage.dc.html lines
   // 274-336 (two-pane file browser: File Browser bottom-aligned entry list +
   // File Preview roles-table/doc pane) and the `xp*` state machine (lines
-  // 899-907, 985-996, 1015-1102). PLAN.md Phase 6.
+  // 899-907, 985-996, 1015-1102). PLAN.md Phase 6 (initial 2-level build),
+  // reworked to 3 levels in Phase 2 of Iteration 2 (PLAN.md items 7/8/9).
   //
-  // Level model mirrors the prototype's `xpLevel` exactly: 0 = companies
-  // (left pane lists companies, right pane PREVIEWS the currently selected
-  // company's roles table — the prototype's own preview-pane behavior, not
-  // an addition), 1 = roles (left pane lists the active company's role
-  // files, right pane renders that role's doc via docline's "personnel"
-  // mode / xpColors). Entering a role (Enter/l/ArrowRight at level 1) opens
-  // the shared Editor.svelte (same bind:this + handleKey():boolean chain
-  // Builds.svelte established for Phase 5 — see that file's header comment).
+  // Level model: 0 = companies (left pane lists companies — now just
+  // Enaimco — right pane PREVIEWS the currently selected company's full
+  // roles table, flattened across all its employment types), 1 =
+  // employment types (left pane lists the active company's types —
+  // Full-Time/Part-Time/Co-op — right pane previews that type's roles
+  // table, the same "preview what you'd enter" semantic one level up), 2 =
+  // role files (left pane lists the active type's role files, right pane
+  // renders that role's doc via docline's "personnel" mode / xpColors).
+  // Entering a role (Enter/l/ArrowRight at level 2) opens the shared
+  // Editor.svelte (same bind:this + handleKey():boolean chain Builds.svelte
+  // established for Phase 5 — see that file's header comment).
+  //
+  // Grouping stays frontmatter-driven (`data.company` matched against
+  // companies.yaml, `data.employmentType` grouped within a company), never
+  // path-driven — content.config.ts's personnel schema requires
+  // `employmentType` on every role precisely so this works regardless of
+  // directory layout.
   //
   // `../` fidelity: the prototype appends a synthetic `../` entry to the
   // rendered list but — crucially — EXCLUDES it from the j/k selection
-  // cycle (`list = xpLevel===1 ? company.roles : this.xp`, never the
-  // concatenated array with `../`), and hardcodes its `sel` to `false`. Its
-  // click handler (`go`) is what actually performs "up one level, or
+  // cycle (`list` never includes it), and hardcodes its `sel` to `false`.
+  // Its click handler (`go`) is what actually performs "up one level, or
   // dashboard at the top" — clicking it always fires immediately (never a
   // "select first" step) precisely because `sel` can never be true for it.
   // This component reproduces that: `../` is rendered but never part of
-  // companySel/roleSel's range, reachable only by mouse (its own onclick)
-  // or by the equivalent keyboard actions (h/Backspace/ArrowLeft = up one
-  // level only, never dashboard — dashboard is mouse-only via `../`'s click
-  // or the global chrome, see the q/Esc note below).
+  // companySel/typeSel/roleSel's range, reachable only by mouse (its own
+  // onclick) or by the equivalent keyboard actions (h/Backspace/ArrowLeft =
+  // up one level only, never dashboard — dashboard is mouse-only via `../`'s
+  // click or the global chrome, see the q/Esc note below). PLAN.md Phase 2
+  // item 7 explicitly asks for a mouse-navigable `../` at every level,
+  // including one that reaches the dashboard from the companies root —
+  // items 15/16 ban the `q`/Esc KEYS for navigation, not click affordances.
   //
   // q/Esc: PLAN.md Phase 1 items 15/16 ban bare q/Esc as navigation
-  // sitewide — neither key does anything at either level of the browser
-  // (only the editor's own q/Esc, special-cased below, still closes
-  // something: the editor overlay, back to the browser, never the
-  // dashboard). Implemented here by simply not handling q/Esc in
-  // handleKey() while the browser (not the editor) is showing: returning
-  // `false` lets the key fall through Terminal.svelte's handleKey with no
-  // matching branch left to catch it, for both levels, for free.
+  // sitewide — neither key does anything at any level of the browser (only
+  // the editor's own q/Esc, special-cased below, still closes something:
+  // the editor overlay, back to the browser, never the dashboard).
+  // Implemented here by simply not handling q/Esc in handleKey() while the
+  // browser (not the editor) is showing: returning `false` lets the key
+  // fall through Terminal.svelte's handleKey with no matching branch left
+  // to catch it, at every level, for free.
   //
-  // `f` filter mode is a PLAN.md "Stated assumption" (Personnel search) —
-  // no prototype precedent. It overlays a live case-insensitive substring
-  // filter on the current level's entry names; `../` is always kept
-  // regardless of the query. While typing, letter/nav-mnemonic keys
-  // (j/k/h/l/f/q/...) all type into the query instead of navigating — only
-  // Escape (clear+exit), Enter (confirm+exit typing, filter stays applied),
-  // Backspace (edit), and the arrow keys (which aren't text input) retain
-  // their acting meaning even while typing.
+  // `f` / click-to-filter: PLAN.md Phase 2 item 9 fixes the "search doesn't
+  // type" report — clicking the `>` prompt row now enters filter mode
+  // exactly like pressing `f` does (both call the same `enterFilterMode()`).
+  // It overlays a live case-insensitive substring filter on the current
+  // level's entry names; `../` is always kept regardless of the query.
+  // While typing, letter/nav-mnemonic keys (j/k/h/l/f/q/...) all type into
+  // the query instead of navigating — only Escape (clear+exit), Enter
+  // (confirm+exit typing, filter stays applied), Backspace (edit), and the
+  // arrow keys (which aren't text input) retain their acting meaning even
+  // while typing.
+  //
+  // Single-click activation: PLAN.md Phase 2 item 9 replaces the old
+  // select-then-activate double-click pattern at every level — clicking ANY
+  // row (a company, a type, a role file, or `../`) activates it
+  // immediately, same as pressing Enter on the already-selected row would.
+  // `activateSelected()` (keyboard Enter/l/ArrowRight) and the click
+  // handlers below both funnel through the same three `activate*Row(i)`
+  // functions — mouse and keyboard are identical by construction, not two
+  // parallel implementations that could drift.
   import type { CollectionEntry } from "astro:content";
   import type { PersonnelData, CompanyEntry } from "../lib/data";
   import { classifyBody, colorFor } from "../lib/docline";
@@ -71,33 +94,49 @@
     return base ?? `${entry.id.split("/").pop()}.md`;
   }
 
-  interface CompanyGroup {
+  interface TypeGroup {
     name: string;
     roles: RoleEntry[];
   }
 
+  interface CompanyGroup {
+    name: string;
+    /** Flattened across all employment types, sorted by `order` — used for
+     * the level-0 preview table (unchanged behavior from the 2-level
+     * model) and for the company row's role-count meta. */
+    roles: RoleEntry[];
+    /** Employment types, ordered by the `order` of their first (lowest-
+     * order) role — derived from the existing role frontmatter, nothing
+     * invented. */
+    types: TypeGroup[];
+  }
+
   const sortedCompanies = $derived(
-    [...companies]
-      .sort((a, b) => a.order - b.order)
-      .map(
-        (c): CompanyGroup => ({
-          name: c.name,
-          roles: personnelEntries.filter((e) => e.data.company === c.name).sort((a, b) => a.data.order - b.data.order),
-        }),
-      ),
+    [...companies].sort((a, b) => a.order - b.order).map((c): CompanyGroup => {
+      const roles = personnelEntries.filter((e) => e.data.company === c.name).sort((a, b) => a.data.order - b.data.order);
+      // `roles` is already order-sorted, so a first-seen dedupe preserves
+      // type order without needing a separate "type order" field.
+      const typeNames = [...new Set(roles.map((r) => r.data.employmentType))];
+      const types: TypeGroup[] = typeNames.map((name) => ({
+        name,
+        roles: roles.filter((r) => r.data.employmentType === name),
+      }));
+      return { name: c.name, roles, types };
+    }),
   );
 
   // ---------------------------------------------------------------------
   // Level / selection state
   // ---------------------------------------------------------------------
 
-  let level = $state<0 | 1>(0);
-  /** Index into `filteredCompanyRows` — NOT `sortedCompanies` directly, so
-   * selection stays correct regardless of any active filter (see the
-   * `selectedCompanyRow`/`activeCompanyGroup` derivation below, which reads
-   * back through the filtered row's own `.company` reference rather than
-   * re-indexing the unfiltered array). */
+  let level = $state<0 | 1 | 2>(0);
+  /** Indices into the respective `filtered*Rows` arrays — NOT the
+   * unfiltered row arrays directly, so selection stays correct regardless
+   * of any active filter (see `selectedCompanyRow`/`activeCompanyGroup`
+   * etc. below, which read back through the filtered row's own group/type
+   * reference rather than re-indexing the unfiltered array). */
   let companySel = $state(0);
+  let typeSel = $state(0);
   let roleSel = $state(0);
 
   let editorOpen = $state(false);
@@ -118,6 +157,9 @@
   interface CompanyRow extends Row {
     company: CompanyGroup;
   }
+  interface TypeRow extends Row {
+    type: TypeGroup;
+  }
   interface RoleRow extends Row {
     entry: RoleEntry;
   }
@@ -134,12 +176,10 @@
     ),
   );
   // The filter query only ever applies to the CURRENT level's rows (gated
-  // by `level === 0` / `level === 1` below) — without that gate, typing a
-  // roles-level query like "time" would also filter `filteredCompanyRows`
-  // down to zero matches (no company name contains "time"), which would
-  // then cascade through `selectedCompanyRow` -> `activeCompanyGroup` ->
-  // `roleRows` and empty the roles list too, even though the query was
-  // never meant to apply to companies at all.
+  // by `level === 0/1/2` below) — without that gate, typing a roles-level
+  // query would also filter the companies/types rows down, cascading
+  // through the derivations below and emptying levels the query was never
+  // meant to apply to.
   const filteredCompanyRows = $derived(
     level === 0 && filterQuery
       ? companyRows.filter((r) => r.name.toLowerCase().includes(filterQuery.toLowerCase()))
@@ -148,21 +188,40 @@
   const selectedCompanyRow = $derived(filteredCompanyRows[companySel] ?? null);
   const activeCompanyGroup = $derived(selectedCompanyRow?.company ?? null);
 
-  const roleRows = $derived(
-    (activeCompanyGroup?.roles ?? []).map(
-      (r): RoleRow => ({ name: fileNameOf(r), meta: r.data.months, entry: r }),
+  const typeRows = $derived(
+    (activeCompanyGroup?.types ?? []).map(
+      (t): TypeRow => ({
+        name: `${t.name}/`,
+        meta: personnel.typeRoleCountTemplate
+          .replace("{n}", String(t.roles.length))
+          .replace("{word}", t.roles.length > 1 ? personnel.roleWordPlural : personnel.roleWordSingular),
+        type: t,
+      }),
     ),
   );
-  const filteredRoleRows = $derived(
+  const filteredTypeRows = $derived(
     level === 1 && filterQuery
+      ? typeRows.filter((r) => r.name.toLowerCase().includes(filterQuery.toLowerCase()))
+      : typeRows,
+  );
+  const selectedTypeRow = $derived(filteredTypeRows[typeSel] ?? null);
+  const activeTypeGroup = $derived(selectedTypeRow?.type ?? null);
+
+  const roleRows = $derived(
+    (activeTypeGroup?.roles ?? []).map((r): RoleRow => ({ name: fileNameOf(r), meta: r.data.months, entry: r })),
+  );
+  const filteredRoleRows = $derived(
+    level === 2 && filterQuery
       ? roleRows.filter((r) => r.name.toLowerCase().includes(filterQuery.toLowerCase()))
       : roleRows,
   );
   const selectedRoleRow = $derived(filteredRoleRows[roleSel] ?? null);
   const activeRoleEntry = $derived(selectedRoleRow?.entry ?? null);
 
-  const currentRows = $derived((level === 1 ? filteredRoleRows : filteredCompanyRows) as Row[]);
-  const selIdx = $derived(level === 1 ? roleSel : companySel);
+  const currentRows = $derived(
+    (level === 2 ? filteredRoleRows : level === 1 ? filteredTypeRows : filteredCompanyRows) as Row[],
+  );
+  const selIdx = $derived(level === 2 ? roleSel : level === 1 ? typeSel : companySel);
 
   const posN = $derived(currentRows.length === 0 ? 0 : Math.min(selIdx, currentRows.length - 1) + 1);
   const posText = $derived(
@@ -170,14 +229,26 @@
   );
 
   const pathText = $derived(
-    level === 1 && activeCompanyGroup ? `${personnel.pathPrefix}${activeCompanyGroup.name}/` : personnel.pathPrefix,
+    level === 2 && activeCompanyGroup && activeTypeGroup
+      ? `${personnel.pathPrefix}${activeCompanyGroup.name}/${activeTypeGroup.name}/`
+      : level === 1 && activeCompanyGroup
+        ? `${personnel.pathPrefix}${activeCompanyGroup.name}/`
+        : personnel.pathPrefix,
   );
 
   const hintText = $derived(
-    level === 1
+    level === 2
       ? personnel.hints.atRoleLevel.replace("{file}", activeRoleEntry ? fileNameOf(activeRoleEntry) : "")
-      : personnel.hints.atCompanyLevel.replace("{company}", activeCompanyGroup?.name ?? ""),
+      : level === 1
+        ? personnel.hints.atTypeLevel.replace("{type}", activeTypeGroup?.name ?? "")
+        : personnel.hints.atCompanyLevel.replace("{company}", activeCompanyGroup?.name ?? ""),
   );
+
+  /** Level-0/1 preview table shows "what you'd enter" — the company's full
+   * roles table at level 0, narrowed to the selected type's roles at level
+   * 1 (same table markup, just a smaller slice). Level 2 shows the actual
+   * doc. */
+  const previewRoles = $derived(level === 1 ? (activeTypeGroup?.roles ?? []) : (activeCompanyGroup?.roles ?? []));
 
   const docLines = $derived(activeRoleEntry ? classifyBody(activeRoleEntry.body ?? "", "personnel") : []);
   const previewDoc = $derived(docLines.map((l) => ({ t: l.t, style: colorFor(l.kind, "personnel") })));
@@ -185,6 +256,9 @@
     docLines.map((l, i) => ({ n: i + 1, t: l.t, style: colorFor(l.kind, "personnel") })),
   );
   const editorFileName = $derived(activeRoleEntry ? fileNameOf(activeRoleEntry) : "");
+  const editorBreadcrumbLeft = $derived(
+    activeCompanyGroup && activeTypeGroup ? `${activeCompanyGroup.name}/${activeTypeGroup.name}` : "",
+  );
 
   // ---------------------------------------------------------------------
   // Row styling (Homepage.dc.html line 1026: `rowBase` + sel/unsel colors)
@@ -200,7 +274,8 @@
   // ---------------------------------------------------------------------
 
   function resetSelection() {
-    if (level === 1) roleSel = 0;
+    if (level === 2) roleSel = 0;
+    else if (level === 1) typeSel = 0;
     else companySel = 0;
   }
 
@@ -209,11 +284,17 @@
     filterMode = false;
   }
 
+  function enterFilterMode() {
+    filterMode = true;
+    gPending = false;
+  }
+
   function moveSelection(dir: number) {
     const n = currentRows.length;
     if (n === 0) return;
-    if (level === 1) roleSel = ((roleSel + dir) % n + n) % n;
-    else companySel = ((companySel + dir) % n + n) % n;
+    if (level === 2) roleSel = (((roleSel + dir) % n) + n) % n;
+    else if (level === 1) typeSel = (((typeSel + dir) % n) + n) % n;
+    else companySel = (((companySel + dir) % n) + n) % n;
   }
 
   /** gg/G — jump to the first/last row of `currentRows` (PLAN.md Phase 9
@@ -225,57 +306,95 @@
    * instead, same as every other letter). */
   function jumpFirst() {
     if (currentRows.length === 0) return;
-    if (level === 1) roleSel = 0;
+    if (level === 2) roleSel = 0;
+    else if (level === 1) typeSel = 0;
     else companySel = 0;
   }
   function jumpLast() {
     const n = currentRows.length;
     if (n === 0) return;
-    if (level === 1) roleSel = n - 1;
+    if (level === 2) roleSel = n - 1;
+    else if (level === 1) typeSel = n - 1;
     else companySel = n - 1;
   }
 
-  /** Enter/l/ArrowRight — `xpEnter()` (Homepage.dc.html line 905). */
+  /** Descend into a company (level 0 -> 1). Reads the row directly off
+   * `filteredCompanyRows[i]` rather than relying on `companySel` having
+   * already been set and re-derived — this is what lets a single click on
+   * ANY row (not just the currently-selected one) activate immediately,
+   * for both mouse and keyboard callers, without any same-tick derived-read
+   * subtlety. */
+  function activateCompanyRow(i: number) {
+    const row = filteredCompanyRows[i];
+    if (!row) return;
+    // Remap by name (not raw index) before clearing the filter: `i` indexes
+    // the FILTERED list, which may not equal the unfiltered `companyRows`
+    // list post-clear (e.g. filtering "fre" -> a filtered company is row 0
+    // but might not be unfiltered row 0).
+    companySel = Math.max(
+      0,
+      companyRows.findIndex((r) => r.company.name === row.company.name),
+    );
+    level = 1;
+    typeSel = 0;
+    clearFilter();
+  }
+
+  /** Descend into an employment type (level 1 -> 2). Same remap-by-name
+   * treatment as activateCompanyRow above. */
+  function activateTypeRow(i: number) {
+    const row = filteredTypeRows[i];
+    if (!row) return;
+    typeSel = Math.max(
+      0,
+      typeRows.findIndex((r) => r.type.name === row.type.name),
+    );
+    level = 2;
+    roleSel = 0;
+    clearFilter();
+  }
+
+  /** Open a role file in the editor (level 2, terminal — no further
+   * descent, so no remap-and-clear-filter dance is needed here). */
+  function activateRoleRow(i: number) {
+    const row = filteredRoleRows[i];
+    if (!row) return;
+    roleSel = i;
+    editorOpen = true;
+  }
+
+  /** Enter/l/ArrowRight — `xpEnter()` (Homepage.dc.html line 905) — and the
+   * shared target every click handler below funnels through too, so
+   * keyboard and mouse activation are identical by construction. */
   function activateSelected() {
-    if (level === 0) {
-      const group = activeCompanyGroup;
-      if (!group) return;
-      // `companySel` currently indexes `filteredCompanyRows`. Once we clear
-      // the filter below, that same numeric index would point at a
-      // different row in the (now restored) unfiltered `companyRows` list
-      // — remap by name first so descending into a filtered selection
-      // (e.g. filter "fre" -> Freelance is row 0 of 1) doesn't silently
-      // land on whichever company happens to sit at that index in the
-      // full list (e.g. Enaimco, the real row 0).
-      companySel = Math.max(
-        0,
-        companyRows.findIndex((r) => r.company.name === group.name),
-      );
-      level = 1;
-      roleSel = 0;
-      clearFilter();
-    } else {
-      if (!activeRoleEntry) return;
-      editorOpen = true;
-    }
+    if (level === 0) activateCompanyRow(companySel);
+    else if (level === 1) activateTypeRow(typeSel);
+    else activateRoleRow(roleSel);
   }
 
   /** h/Backspace/ArrowLeft — up one level only, never the dashboard
    * (distinct from the `../` row's click action below). */
   function upOneLevel() {
-    if (level === 1) {
+    if (level === 2) {
+      level = 1;
+      clearFilter();
+    } else if (level === 1) {
       level = 0;
       clearFilter();
     }
   }
 
   /** The `../` row's own click action (Homepage.dc.html line 1031's `go`):
-   * up one level at the roles view, or the dashboard at the companies
-   * view. Only reachable by clicking `../` (or the keyboard actions above
-   * for the "up one level" half) — never via keyboard selection, since
-   * `../` is never part of the j/k cycle (see file header comment). */
+   * up one level at the types/roles views, or the dashboard at the
+   * companies view. Only reachable by clicking `../` (or the keyboard
+   * actions above for the "up one level" half) — never via keyboard
+   * selection, since `../` is never part of the j/k cycle (see file header
+   * comment). */
   function upOrDashboard() {
-    if (level === 1) {
+    if (level === 2) {
+      level = 1;
+      clearFilter();
+    } else if (level === 1) {
       level = 0;
       clearFilter();
     } else {
@@ -288,17 +407,13 @@
     editorRef = null;
   }
 
-  function clickCompanyRow(i: number) {
-    if (i === companySel) activateSelected();
-    else companySel = i;
-  }
-  function clickRoleRow(i: number) {
-    if (i === roleSel) activateSelected();
-    else roleSel = i;
-  }
+  /** Single click on any row (PLAN.md Phase 2 item 9) activates it
+   * immediately — no more select-then-activate. `i` is always an index
+   * into the CURRENT level's filtered rows, matching what's rendered. */
   function clickRow(i: number) {
-    if (level === 1) clickRoleRow(i);
-    else clickCompanyRow(i);
+    if (level === 2) activateRoleRow(i);
+    else if (level === 1) activateTypeRow(i);
+    else activateCompanyRow(i);
   }
 
   // ---------------------------------------------------------------------
@@ -358,8 +473,7 @@
     const k = e.key.toLowerCase();
 
     if (k === "f") {
-      filterMode = true;
-      gPending = false;
+      enterFilterMode();
       return true;
     }
     if (k === "j" || e.key === "ArrowDown") {
@@ -400,8 +514,9 @@
     }
 
     // q/Escape intentionally unhandled here: falls through to
-    // Terminal.svelte's generic q/Esc-to-dashboard fallback (PLAN.md bug
-    // fix 3 — always dashboard from the browser, at both levels).
+    // Terminal.svelte with no matching branch left to catch it — bare
+    // q/Esc never navigates anywhere (PLAN.md Phase 1 items 15/16), at any
+    // of the 3 levels.
     gPending = false;
     return false;
   }
@@ -413,7 +528,7 @@
     fileName={editorFileName}
     lines={editorLines}
     labels={personnel.editor}
-    breadcrumbLeft={activeCompanyGroup?.name ?? ""}
+    breadcrumbLeft={editorBreadcrumbLeft}
     breadcrumbRight={editorFileName}
     onClose={closeEditor}
   />
@@ -447,7 +562,7 @@
               style={rowStyle(i === selIdx)}
             >
               <span style="width:14px;flex:none;color:rgba(196,216,232,.55)"
-                >{level === 1 ? personnel.roleRowIcon : personnel.companyRowIcon}</span
+                >{level === 2 ? personnel.roleRowIcon : personnel.companyRowIcon}</span
               >
               <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{row.name}</span>
               <span style="flex:none;white-space:nowrap;color:rgba(95,198,180,.75)">{row.meta}</span>
@@ -475,9 +590,19 @@
           {personnel.insetTitles.fileBrowser}
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;color:rgba(196,216,232,.5)">
-          <span data-testid="personnel-prompt" style="color:#5fc6b4">{personnel.promptIcon} {filterQuery}<span
+          <span
+            role="button"
+            tabindex="0"
+            data-testid="personnel-prompt"
+            onclick={enterFilterMode}
+            onkeydown={(ev) => {
+              if (ev.key === "Enter" || ev.key === " ") enterFilterMode();
+            }}
+            style="cursor:pointer;color:#5fc6b4"
+            >{personnel.promptIcon} {filterQuery}<span
               style="display:inline-block;width:7px;height:13px;vertical-align:-2px;background:#5fc6b4;animation:blk 1.1s steps(1) infinite"
-            ></span></span>
+            ></span></span
+          >
           <span data-testid="personnel-pos">{posText}</span>
         </div>
       </div>
@@ -492,8 +617,8 @@
           {personnel.insetTitles.filePreview}
         </div>
         <div data-testid="personnel-preview" style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:4px">
-          {#if level === 0}
-            {#each activeCompanyGroup?.roles ?? [] as r (r.id)}
+          {#if level < 2}
+            {#each previewRoles as r (r.id)}
               <div
                 data-testid="personnel-role-table-row"
                 style="display:grid;grid-template-columns:minmax(0,1fr) 44px 170px 100px;gap:8px;align-items:baseline"

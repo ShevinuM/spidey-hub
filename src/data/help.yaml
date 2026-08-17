@@ -115,7 +115,7 @@ sections:
       - key: "j / k"
         description: "move the line cursor down/up (also works in Builds/Personnel lists)"
       - key: "h"
-        description: "up one level (Builds repo tree, Personnel roles level)"
+        description: "up one level (Builds repo tree, Personnel employment-types/role-files levels)"
       - key: "gg"
         description: "jump to the first entry / top of file (double-tap within ~500ms; a single g does nothing)"
       - key: "G"
@@ -167,7 +167,6 @@ sections:
         description: "enter filter mode on the > prompt"
       - key: "click the > prompt"
         description: "also enters filter mode"
-        status: planned
       - key: "any printable character"
         description: "appended to the filter query; the entry list live-filters (case-insensitive substring on names)"
       - key: "Backspace"
@@ -180,9 +179,9 @@ sections:
   - title: "Personnel navigation (mouse)"
     rows:
       - key: "click a row"
-        description: "select it (click again, or click the already-selected row, to activate)"
+        description: "activates it immediately — a company, an employment type, or a role file"
       - key: "click ../"
-        description: "up one level — or the dashboard, at the companies root"
+        description: "up one level (role files -> employment types -> companies) — or the dashboard, at the companies root"
 
   - title: "Profile"
     rows:

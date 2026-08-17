@@ -85,7 +85,7 @@
     },
     {
       "kind": "personnel",
-      "path": "src/content/personnel/Enaimco/software-developer-full-time.md",
+      "path": "src/content/personnel/Enaimco/Full-Time/software-developer.md",
       "kinds": [
         "h",
         "m",
@@ -104,7 +104,7 @@
     },
     {
       "kind": "personnel",
-      "path": "src/content/personnel/Enaimco/software-developer-part-time.md",
+      "path": "src/content/personnel/Enaimco/Part-Time/software-developer.md",
       "kinds": [
         "h",
         "m",
@@ -121,7 +121,7 @@
     },
     {
       "kind": "personnel",
-      "path": "src/content/personnel/Enaimco/software-developer-co-op.md",
+      "path": "src/content/personnel/Enaimco/Co-op/software-developer.md",
       "kinds": [
         "h",
         "m",
@@ -134,65 +134,6 @@
         "p",
         "h",
         "c"
-      ]
-    },
-    {
-      "kind": "personnel",
-      "path": "src/content/personnel/Vretta/qa-automation-intern.md",
-      "kinds": [
-        "h",
-        "m",
-        "p",
-        "p",
-        "p",
-        "h",
-        "b",
-        "b",
-        "p",
-        "h",
-        "c"
-      ]
-    },
-    {
-      "kind": "personnel",
-      "path": "src/content/personnel/Ontario-Tech/teaching-assistant.md",
-      "kinds": [
-        "h",
-        "m",
-        "p",
-        "p",
-        "p",
-        "h",
-        "b",
-        "b"
-      ]
-    },
-    {
-      "kind": "personnel",
-      "path": "src/content/personnel/Ontario-Tech/research-assistant.md",
-      "kinds": [
-        "h",
-        "m",
-        "p",
-        "p",
-        "p",
-        "h",
-        "b",
-        "b"
-      ]
-    },
-    {
-      "kind": "personnel",
-      "path": "src/content/personnel/Freelance/full-stack-contractor.md",
-      "kinds": [
-        "h",
-        "m",
-        "p",
-        "p",
-        "p",
-        "h",
-        "b",
-        "b"
       ]
     }
   ]

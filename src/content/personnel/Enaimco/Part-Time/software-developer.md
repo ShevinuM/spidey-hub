@@ -1,5 +1,6 @@
 ---
 company: Enaimco
+employmentType: Part-Time
 role: Software Developer, Part Time
 months: 6 mo
 dates: Jan 2024 – Jun 2024

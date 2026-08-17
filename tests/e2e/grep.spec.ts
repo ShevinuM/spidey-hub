@@ -93,14 +93,16 @@ test.describe("Grep overlay", () => {
   test("Enter on a personnel content hit lands in the personnel view", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
-    // "software-developer-co-op" is a path-only substring (the term never
-    // appears as body text elsewhere in the real index — verified against
+    // "Co-op/software-developer.md" is a path-only substring (PLAN.md
+    // Phase 2 item 7 restructured personnel content to
+    // Enaimco/<employmentType>/software-developer.md — the term never
+    // appears as body text elsewhere in the real index, verified against
     // the committed index), so its one path-hit row is deterministically
     // the first (sel resets to 0 on every query edit).
-    await page.keyboard.type("software-developer-co-op");
+    await page.keyboard.type("Co-op/software-developer.md");
     await expect(rows(page).first()).toHaveAttribute(
       "data-path",
-      "src/content/personnel/Enaimco/software-developer-co-op.md",
+      "src/content/personnel/Enaimco/Co-op/software-developer.md",
     );
     await page.keyboard.press("Enter");
     await expect(overlay(page)).not.toBeVisible();
@@ -207,7 +209,8 @@ test.describe("Grep overlay", () => {
 
   test("/ works from inside the personnel editor", async ({ page }) => {
     await gotoReady(page, "/personnel");
-    await page.keyboard.press("Enter"); // -> roles level
+    await page.keyboard.press("Enter"); // -> Enaimco's employment types level
+    await page.keyboard.press("Enter"); // -> that type's role files level
     await page.keyboard.press("Enter"); // -> editor
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
 
@@ -223,7 +226,7 @@ test.describe("Grep overlay", () => {
 
   test("/ preventDefaults and wins over personnel filter-mode typing", async ({ page }) => {
     await gotoReady(page, "/personnel");
-    await page.keyboard.press("Enter"); // -> roles level
+    await page.keyboard.press("Enter"); // -> Enaimco's employment types level
     await page.keyboard.press("f"); // -> filter mode
     await expect(page.locator('[data-testid="personnel-prompt"]')).toBeVisible();
 

@@ -3,11 +3,9 @@
 # frontmatter field exactly (Component.xp order, Homepage.dc.html
 # lines 472-495). The "N roles / 1 role" pluralization stays in code,
 # derived from the personnel collection at render time.
+#
+# PLAN.md Phase 2 (Iteration 2) item 7/2.1: personnel is Enaimco-only now
+# — Vretta/Ontario-Tech/Freelance and their role content were deleted, not
+# just hidden.
 - name: Enaimco
   order: 0
-- name: Vretta
-  order: 1
-- name: Ontario-Tech
-  order: 2
-- name: Freelance
-  order: 3

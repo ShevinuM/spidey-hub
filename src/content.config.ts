@@ -8,10 +8,16 @@
 // matching per-repo commit snapshots are resolved the same way.
 //
 // `personnel` does NOT fixture-switch: the prototype's `xp` sample data
-// *is* the real content (Enaimco/Vretta/Ontario-Tech/Freelance, extracted
-// verbatim into src/content/personnel/**), so both modes read the same
-// directory. `fixtures/personnel` deliberately does not exist — see
-// PLAN.md Phase 2 item 3.
+// *is* the real content, so both modes read the same directory.
+// `fixtures/personnel` deliberately does not exist — see PLAN.md Phase 2
+// item 3.
+//
+// PLAN.md Phase 2 (Iteration 2) item 7/2.1: personnel content is
+// Enaimco-only now (Vretta/Ontario-Tech/Freelance deleted along with their
+// companies.yaml entries) and is 3 levels deep on disk —
+// Enaimco/{Full-Time,Part-Time,Co-op}/software-developer.md — grouped by
+// the frontmatter `company` + new required `employmentType` field, not by
+// directory structure (glob()'s flat entry list doesn't care about depth).
 import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
 
@@ -57,6 +63,12 @@ const personnel = defineCollection({
     dates: z.string(),
     loc: z.string(),
     order: z.number(),
+    // PLAN.md Phase 2 item 7: required, drives the new level-2 grouping
+    // (companies -> employment types -> role files) in Personnel.svelte.
+    // Matches the role's containing directory name exactly (Full-Time /
+    // Part-Time / Co-op) — derived from the existing role titles, not
+    // invented.
+    employmentType: z.string(),
   }),
 });
 

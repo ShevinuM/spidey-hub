@@ -277,13 +277,19 @@ export interface PersonnelData {
   pathPrefix: string;
   insetTitles: { fileBrowser: string; filePreview: string };
   promptIcon: string;
-  hints: { atRoleLevel: string; atCompanyLevel: string };
+  hints: { atRoleLevel: string; atCompanyLevel: string; atTypeLevel: string };
   upEntry: { icon: string; name: string };
   companyRowIcon: string;
   roleRowIcon: string;
   roleCountTemplate: string;
   roleWordSingular: string;
   roleWordPlural: string;
+  // PLAN.md Phase 2 item 8: level-2 (employment type) row count wording —
+  // a new template key following roleCountTemplate's own `{n} {word}`
+  // pattern, reusing roleWordSingular/roleWordPlural (the words "role" /
+  // "roles" mean the same thing at this level, so no need to duplicate them
+  // under new keys too).
+  typeRoleCountTemplate: string;
   posTemplate: string;
   editor: EditorLabels;
 }

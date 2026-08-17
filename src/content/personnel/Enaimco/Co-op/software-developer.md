@@ -1,5 +1,6 @@
 ---
 company: Enaimco
+employmentType: Co-op
 role: Software Developer, Co-op
 months: 8 mo
 dates: May 2023 – Dec 2023

@@ -1,7 +1,9 @@
 // Pins classifyDoc() (src/lib/docline.ts) to the prototype's hand-authored
-// kind arrays for all 11 fixture/personnel docs, reading the *actual files
-// on disk* (not re-typed literals) so this test fails the moment a content
-// file's body stops matching Homepage.dc.html's doc arrays.
+// kind arrays for all fixture/personnel docs (4 fixture projects + the 3
+// Enaimco-only personnel roles — PLAN.md Phase 2 item 7 deleted the
+// Vretta/Ontario-Tech/Freelance roles), reading the *actual files on disk*
+// (not re-typed literals) so this test fails the moment a content file's
+// body stops matching Homepage.dc.html's doc arrays.
 //
 // tests/unit/docline.fixtures.json holds the expected kind arrays and color
 // maps, extracted verbatim from the prototype's Component class (see
