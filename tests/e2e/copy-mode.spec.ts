@@ -72,6 +72,12 @@ test.describe("Copy mode (Ctrl-b [)", () => {
         await gotoReady(page, "/help");
       },
     },
+    {
+      name: "tracker HUD",
+      async open(page) {
+        await gotoReady(page, "/retina-v");
+      },
+    },
   ];
 
   for (const entry of entryPoints) {
@@ -87,7 +93,22 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     });
   }
 
-  test("captures the vim editor buffer as its active pane", async ({ page }) => {
+  // A verifier caught that the editor's visible scroller renders each line's
+  // gutter number and text as SIBLING flex items, and `innerText` inserts a
+  // line break between flex siblings the same way it does between block
+  // boxes — scraping that DOM interleaved every gutter digit as its own
+  // "line", so copy-mode line N was never the buffer's real line N (yanking
+  // line 1 actually yanked the gutter digit "1"). Editor.svelte now exposes
+  // a text-only, hidden `data-copy-source` mirror built from `rawLines`
+  // directly — asserted here by yanking copy-mode's own line 1 and checking
+  // it EQUALS the real buffer's line 1 text exactly (not merely contained
+  // somewhere in the overlay, which is how the interleaving bug slipped
+  // through the original test).
+  test("captures the vim editor buffer as its active pane, one real buffer line per copy-mode line", async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await gotoReady(page, "/builds");
     await page.keyboard.press("3");
     await page.keyboard.press("Enter");
@@ -101,7 +122,15 @@ test.describe("Copy mode (Ctrl-b [)", () => {
 
     await openCopyMode(page);
     await expect(overlay(page)).toBeVisible();
-    await expect(linesEl(page)).toContainText(firstLine);
+    expect(await cursorLine(page)).toBe("1");
+
+    // Enter with no selection yanks the cursor's current line (copy-mode
+    // line 1) and exits — the yanked text must be EXACTLY the real buffer's
+    // first line, gutter digit included nowhere.
+    await page.keyboard.press("Enter");
+    await expect(overlay(page)).not.toBeVisible();
+    const clip = await page.evaluate(() => navigator.clipboard.readText());
+    expect(clip).toBe(firstLine);
   });
 
   test("j/k/gg/G move the cursor across the captured lines", async ({ page }) => {
@@ -234,5 +263,39 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     await ctrlB(page);
     await page.keyboard.press("]");
     await expect(page.locator('[data-testid="grep-query"]')).toContainText(yanked);
+  });
+
+  // FAIL #1 regression coverage (independent verifier, post-Phase-5 review):
+  // Ctrl-b ] must be able to paste into the status-bar rename prompt too —
+  // previously StatusBar's own handleKey() was consulted before Terminal's
+  // prefix system ever got a turn, so a Ctrl-b keydown while the prompt was
+  // open was swallowed as "just another modifier combo" and never armed the
+  // prefix, making `Ctrl-b ]` unreachable (a literal "]" got typed into the
+  // window name instead).
+  test("round trip: a copy-mode yank pastes into the Ctrl-b , rename prompt via Ctrl-b ]", async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await gotoReady(page, "/builds");
+    await openCopyMode(page);
+    await page.keyboard.press("v");
+    await page.keyboard.press("l");
+    await page.keyboard.press("l");
+    await page.keyboard.press("y");
+    await expect(overlay(page)).not.toBeVisible();
+    const yanked = await page.evaluate(() => navigator.clipboard.readText());
+    expect(yanked.length).toBeGreaterThan(0);
+
+    await ctrlB(page);
+    await page.keyboard.press(",");
+    const prompt = page.locator('[data-testid="status-prompt"]');
+    await expect(prompt).toContainText("(rename-window) builds");
+
+    await ctrlB(page);
+    await page.keyboard.press("]");
+    await expect(prompt).toContainText(yanked);
+
+    await page.keyboard.press("Escape");
   });
 });

@@ -109,9 +109,12 @@
   let grepRef = $state<{ handleKey: (e: KeyboardEvent) => boolean; close?: () => void } | null>(null);
 
   /** StatusBar's status-line prompt state machine (PLAN.md Phase 5 item
-   * 5.1) — consulted at the very top of handleKey() below, ahead of even
-   * the prefix-arm check, so a rename/confirm prompt truly owns the
-   * keyboard the instant it opens. */
+   * 5.1) — consulted in handleKey() below AFTER the prefix system (arm +
+   * dispatch) has had a turn, so a prompt owns every key EXCEPT the ones
+   * the prefix system itself claims (a bare Ctrl-b to arm, and the single
+   * key immediately following an armed prefix, e.g. `]` to paste into the
+   * prompt via its own registered paste target) — see handleKey()'s own
+   * comment for why this ordering is load-bearing. */
   let statusBarRef = $state<{
     handleKey: (e: KeyboardEvent) => boolean;
     isPromptActive: () => boolean;
@@ -423,13 +426,9 @@
   }
 
   function handleKey(e: KeyboardEvent) {
-    // PLAN.md Phase 5 item 5.1: a status-line prompt (rename/confirm) OWNS
-    // the keyboard the instant it's open — checked ahead of literally
-    // everything else, including the prefix-arm check, so e.g. typing "j"
-    // into a rename can never leak through to a list behind it. Item 5.3's
-    // copy-mode overlay gets the same always-mounted / consulted-early
-    // treatment as GrepOverlay, one step below the prompt.
-    if (statusBarRef?.handleKey(e)) return;
+    // Item 5.3's copy-mode overlay is always-mounted / consulted-early,
+    // same as GrepOverlay's own contract — checked before the prefix system
+    // below, same relative position it has always had.
     if (copyModeRef?.handleKey(e)) return;
 
     // A bare modifier keydown (Control/Shift/Alt/Meta pressed on its own,
@@ -480,6 +479,24 @@
       armPrefix();
       return;
     }
+
+    // PLAN.md Phase 5 item 5.1: a status-line prompt (rename/confirm) OWNS
+    // the keyboard once it's open — but ONLY AFTER the prefix system above
+    // has had its turn. This is "prefix precedence" extended to prompts
+    // (mirroring the Phase 1 "prefix precedence over grep" rule this file
+    // already applies to GrepOverlay): a prompt-open Ctrl-b must still be
+    // able to ARM (the two checks above), and the very next prefixed key
+    // (e.g. `]`, which pasteFromBuffer() below routes into the prompt's own
+    // registered paste target) must still be able to DISPATCH — neither of
+    // which could ever happen if this check ran first and swallowed both
+    // keydowns before the prefix system ever saw them (the bug an
+    // independent verifier caught: `Ctrl-b ]` silently typed a literal `]`
+    // into the rename box instead of pasting, because the old top-of-
+    // function placement here consumed the Ctrl-b that was supposed to arm
+    // it). Every OTHER key — plain typing, Enter, Backspace, Escape — never
+    // matches the prefix system above (it only reacts to an armed prefix or
+    // a bare Ctrl-b) and so still reaches the prompt exactly as before.
+    if (statusBarRef?.handleKey(e)) return;
 
     // Ctrl-d/Ctrl-u/Ctrl-f/Ctrl-b are reserved for the Builds/Personnel file
     // editors' half/full-page scroll (PLAN.md Phase 5 "Editor scrolling",

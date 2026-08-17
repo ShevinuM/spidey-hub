@@ -353,6 +353,18 @@ test.describe("Ctrl-b , rename-window (PLAN.md Phase 5 item 5.2)", () => {
 
     await page.keyboard.press("Escape");
   });
+
+  // FAIL #1 regression coverage: fixing "Ctrl-b arms even while a prompt is
+  // open" must not turn every OTHER key into a prefix command — a literal
+  // "]" typed with no preceding Ctrl-b is still just a character.
+  test("a literal ] keypress with no preceding Ctrl-b still types normally into the prompt", async ({ page }) => {
+    await gotoReady(page, "/builds");
+    await ctrlB(page);
+    await page.keyboard.press(",");
+    await page.keyboard.press("]");
+    await expect(page.locator('[data-testid="status-prompt"]')).toContainText("builds]");
+    await page.keyboard.press("Escape");
+  });
 });
 
 test.describe("Ctrl-b & kill-window (PLAN.md Phase 5 item 5.2)", () => {

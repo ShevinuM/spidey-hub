@@ -769,7 +769,6 @@
     onscroll={syncScroll}
     class="editor-scroller"
     data-testid="editor-scroller"
-    data-copy-source
     style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:1px;padding:2px 14px"
   >
     {#each lines as l (l.n)}
@@ -789,6 +788,26 @@
       </div>
     {/each}
   </div>
+  <!-- PLAN.md Phase 5 item 5.3 copy-mode source, text-only. NOT the visible
+       scroller above: a verifier caught that the scroller's per-line gutter
+       number and text live as SIBLING flex items in the same row, and
+       `innerText` inserts a line break between flex/grid siblings the same
+       way it does between block boxes — so scraping the scroller interleaved
+       every gutter digit as its own "line" ("1\n<line>\n2\n<line>…"), which
+       silently doubled every copy-mode line number and yanked "1" instead of
+       the real first line. This hidden `<pre>` mirrors Wallpaper.svelte's own
+       HUD `data-copy-source` mirror (`white-space: pre` is required —
+       without it the browser collapses the literal "\n" characters in this
+       text node into spaces when computing rendered/innerText content) and
+       renders `rawLines` directly, so copy-mode's captured line N is always
+       exactly the buffer's real line N. Same off-screen-clip technique the
+       `paste-buffer` span below already uses — visually inert, still
+       "rendered" for innerText purposes. -->
+  <pre
+    data-copy-source
+    style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:pre;margin:0">{rawLines.join(
+      "\n",
+    )}</pre>
   <div style="flex:none;display:flex;align-items:center;background:#0e1a20;font-size:12px">
     <span data-testid="editor-mode" style="background:#e0453c;color:#0b0f14;font-weight:700;padding:3px 12px"
       >{modeOrPromptText}</span
