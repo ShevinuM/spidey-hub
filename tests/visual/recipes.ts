@@ -181,13 +181,13 @@ export const bootRecipes: BootRecipe[] = [
 
 /**
  * Cmdline box recipe (PLAN.md Phase 5C item 5C's visual recipe / Phase 6
- * item 6.1's "add ... 5C's 15-cmdline"). DEFINED here but deliberately kept
- * OUT of the `recipes` array above, same reasoning as `bootRecipes` just
- * above: `capture-goldens.mjs` runs `recipes` unconditionally against the
- * vendored prototype reference, which predates this feature entirely and
- * has no golden for it, and `identical.spec.ts` would fail `toMatchSnapshot`
- * for a name with no committed golden. Phase 6 moves/merges this into
- * `recipes` once it captures the real self-baseline.
+ * item 6.1's "add ... 5C's 15-cmdline"). Kept in its OWN array rather than
+ * merged into `recipes` above — same reasoning as `extraRecipes`/
+ * `bootRecipes`: the vendored prototype predates this feature entirely (no
+ * code path, no golden), so `capture-goldens.mjs`'s guarded prototype-parity
+ * run must never be asked to attempt it. `identical.spec.ts` is the only
+ * consumer, via the standard `captureState()` (its action shape is the
+ * ordinary key/type `Recipe`, unlike `bootRecipes`).
  *
  * The key sequence opens the box (`:` from the dashboard — no editor open,
  * no other text input active, so this is context (b), "site mode") and
