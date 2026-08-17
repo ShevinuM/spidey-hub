@@ -103,11 +103,11 @@ Real Builds content differs from the prototype's fabricated sample data, so pixe
   - Deviation: `t` from inside Builds is prototype-gated on `view === "projects"` state that doesn't exist until Phase 5 (Builds is still an empty placeholder); per executor brief this entry path is deferred to Phase 5, not added here. `t` from dashboard is covered.
 
 ### Phase 5 — Builds view (lazygit) + submodule browsing + commits
-- [ ] `Builds.svelte`: five panels exactly (inset titles, counts from data: `{repoCount} repos · {projectCount} projects tracked`), project selection j/k + click, doc rendering via docline, repos panel, commits panel from snapshot, command-log panel (copy from data).
-- [ ] Editor note (from Phase 2 verify): the status-line words `Top`/`Bot` must come from data files (builds.yaml/personnel.yaml), not be hardcoded in the component.
-- [ ] Panel focus via `0–4` (bright-border indicator, default [2]); repo tree browsing in pane [0] (lazy-fetch `public/generated/repos/<name>.json`); editor view for repo files (line numbers, live `line:col` + Top/%/Bot, j/k/Ctrl-d/Ctrl-u/gg/G scrolling); commits: j/k + Enter → `html_url` new tab; rows are real `<a>` links.
-- [ ] Client-side commit refresh island logic (sessionStorage TTL, silent fallback).
-- [ ] Svelte autofixer pass. Commit.
+- [x] `Builds.svelte`: five panels exactly (inset titles, counts from data: `{repoCount} repos · {projectCount} projects tracked`), project selection j/k + click, doc rendering via docline, repos panel, commits panel from snapshot, command-log panel (copy from data).
+- [x] Editor note (from Phase 2 verify): the status-line words `Top`/`Bot` must come from data files (builds.yaml/personnel.yaml), not be hardcoded in the component.
+- [x] Panel focus via `0–4` (bright-border indicator, default [2]); repo tree browsing in pane [0] (lazy-fetch `public/generated/repos/<name>.json`); editor view for repo files (line numbers, live `line:col` + Top/%/Bot, j/k/Ctrl-d/Ctrl-u/gg/G scrolling); commits: j/k + Enter → `html_url` new tab; rows are real `<a>` links.
+- [x] Client-side commit refresh island logic (sessionStorage TTL, silent fallback).
+- [x] Svelte autofixer pass. Commit.
 - **Verify**: visual `02-builds` + `03-builds-j` pass (fixture mode) both viewports; e2e (real content build): 3 projects listed, j/k moves selection + doc changes, `4` focuses commits (border color asserted) and Enter opens correct `html_url` (popup intercepted), commit rows have `href` matching `github.com/ShevinuM/<repo>/commit/<sha>`, `3` focuses repos → Enter lists real files from the submodule index (assert a known file e.g. `README.md` present), descend into a dir and open a file → editor shows its first line verbatim vs the file on disk, `h` walks back up, `q` exits editor; commit refresh: intercept API route with a fake commit → list updates; API 403 → snapshot list unchanged.
 
 ### Phase 6 — Personnel Files (yazi) + editor + filter + `../`

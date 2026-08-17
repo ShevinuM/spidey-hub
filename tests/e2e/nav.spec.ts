@@ -251,6 +251,21 @@ test.describe("modifier fall-through", () => {
     // No view switch: grep is a no-op placeholder until Phase 8.
     await expect(page).toHaveURL(/\/$/);
   });
+
+  // Regression guard (Phase 5): Terminal.svelte's handleKey briefly claimed
+  // *any* keydown with e.key === "/" as the grep reservation before checking
+  // modifiers — `e.key` is "/" regardless of which modifiers are held, so
+  // Cmd+/ (a real browser/OS shortcut) was getting preventDefault-ed too.
+  test("a held-modifier `/` keydown (Cmd+/) is NOT preventDefault-ed", async ({ page }) => {
+    await gotoReady(page, "/");
+    const prevented = await page.evaluate(() => {
+      const ev = new KeyboardEvent("keydown", { key: "/", metaKey: true, bubbles: true, cancelable: true });
+      window.dispatchEvent(ev);
+      return ev.defaultPrevented;
+    });
+    expect(prevented).toBe(false);
+    await expect(page).toHaveURL(/\/$/);
+  });
 });
 
 test.describe("live clock (bug fix 2)", () => {

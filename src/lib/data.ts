@@ -196,13 +196,38 @@ export interface CommandLogLine {
   links?: { text: string; href: string }[];
 }
 
+export interface RepoBrowserEntry {
+  icon: string;
+  name: string;
+}
+
+export interface RepoBrowserData {
+  upEntry: RepoBrowserEntry;
+  dirIcon: string;
+  fileIcon: string;
+  loadingText: string;
+  errorText: string;
+}
+
+export interface EditorLabels {
+  modeLabel: string;
+  branch: string;
+  breadcrumbSeparator: string;
+  closeHint: string;
+  tabIcon: string;
+  topLabel: string;
+  bottomLabel: string;
+  percentTemplate: string;
+  positionTemplate: string;
+}
+
 export interface BuildsData {
   panels: {
     status: { title: string };
     files: { title: string; subtitle: string; statusLetter: string; filler: string };
     repos: { title: string };
     commits: { title: string; subtitle: string; authorInitials: string };
-    changes: { title: string };
+    changes: { title: string; subtitleTemplate: string };
     commandLog: { title: string };
   };
   statusLine: {
@@ -214,6 +239,8 @@ export interface BuildsData {
   };
   filePosTemplate: string;
   commandLog: CommandLogLine[];
+  repoBrowser: RepoBrowserData;
+  editor: EditorLabels;
 }
 
 export const getBuilds = (): BuildsData => loadYaml<BuildsData>("builds.yaml");

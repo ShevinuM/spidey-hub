@@ -19,6 +19,7 @@
     PersonnelData,
     CompanyEntry,
   } from "../lib/data";
+  import type { Commit } from "../lib/commits";
   import type { ViewId } from "../lib/views";
   import { VIEW_ROUTES, hotkeyToView, pathToView } from "../lib/views";
   import Wallpaper from "./Wallpaper.svelte";
@@ -26,6 +27,7 @@
   import Dashboard from "./Dashboard.svelte";
   import Toasts from "./Toasts.svelte";
   import TrackerView from "./TrackerView.svelte";
+  import Builds from "./Builds.svelte";
 
   interface Props {
     initialView: ViewId;
@@ -38,9 +40,14 @@
     companies: CompanyEntry[];
     projects: CollectionEntry<"projects">[];
     personnelEntries: CollectionEntry<"personnel">[];
+    commitsByRepo: Record<string, Commit[]>;
   }
 
-  const { initialView, site, dashboard, tracker }: Props = $props();
+  const { initialView, site, dashboard, tracker, builds, projects, commitsByRepo }: Props = $props();
+
+  /** Set by Builds.svelte's `bind:this` while `view === "builds"` — see
+   * handleKey() below for the delegation contract (PLAN.md Phase 5). */
+  let buildsRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
 
   // Deliberately an "uncontrolled" seed, not a tracked binding: each route
   // page SSRs Terminal exactly once with the view matching its own URL, and
@@ -103,17 +110,37 @@
   }
 
   function handleKey(e: KeyboardEvent) {
+    // `/` is reserved for the grep overlay (Phase 8). Until then it must
+    // not type or scroll, but it is also not a view switch. Checked before
+    // the modifier-fall-through below so it can run before Ctrl-d/Ctrl-u are
+    // carved out — but only a plain, unmodified "/" is claimed here; Cmd+/,
+    // Ctrl+/ etc. must still fall through untouched (`e.key` is "/"
+    // regardless of which modifiers are held, so this needs its own guard
+    // rather than relying on the later blanket modifier check).
+    if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      e.preventDefault();
+      return;
+    }
+
+    // Ctrl-d/Ctrl-u are reserved for the Builds file editor's half-page
+    // scroll (PLAN.md Phase 5 "Editor scrolling") — the one deliberate
+    // exception to "modifier combos fall through untouched" so far (Phase 9
+    // adds Ctrl-b/tmux-prefix and Phase 8 adds grep's own Ctrl chords the
+    // same way: carved out here, everything else still falls through).
+    const isEditorScrollChord =
+      e.ctrlKey && !e.metaKey && !e.altKey && (e.key === "d" || e.key === "D" || e.key === "u" || e.key === "U");
+
+    if (view === "builds" && buildsRef && (isEditorScrollChord || !(e.metaKey || e.ctrlKey || e.altKey))) {
+      if (buildsRef.handleKey(e)) {
+        e.preventDefault();
+        return;
+      }
+    }
+
     // Modifier combos fall through untouched — never preventDefault them,
     // regardless of which view is active (PLAN.md keymap: "modifier-held
     // keys fall through untouched").
     if (e.metaKey || e.ctrlKey || e.altKey) return;
-
-    // `/` is reserved for the grep overlay (Phase 8). Until then it must
-    // not type or scroll, but it is also not a view switch.
-    if (e.key === "/") {
-      e.preventDefault();
-      return;
-    }
 
     const k = e.key.toLowerCase();
 
@@ -153,8 +180,10 @@
       <!-- Full-opacity wallpaper (handled by Wallpaper's `view` prop) plus
            the dismissible back pill. -->
       <TrackerView {tracker} onGoHome={() => setView("home")} />
+    {:else if view === "builds"}
+      <Builds bind:this={buildsRef} {builds} {projects} {commitsByRepo} onTracker={() => setView("retina-v")} />
     {:else}
-      <!-- Builds / Personnel / Profile: Phases 5-7. -->
+      <!-- Personnel / Profile: Phases 6-7. -->
       <div style="flex:1;min-height:0"></div>
     {/if}
 

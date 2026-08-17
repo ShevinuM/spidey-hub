@@ -4,6 +4,7 @@ import Shell from "../layouts/Shell.astro";
 import Terminal from "../components/Terminal.svelte";
 import { getCollection } from "astro:content";
 import { getSite, getDashboard, getTracker, getProfile, getBuilds, getPersonnel, getCompanies } from "../lib/data";
+import { getCommitsByRepo } from "../lib/commits";
 
 const site = getSite();
 const dashboard = getDashboard();
@@ -14,6 +15,7 @@ const personnel = getPersonnel();
 const companies = getCompanies();
 const projects = await getCollection("projects");
 const personnelEntries = await getCollection("personnel");
+const commitsByRepo = getCommitsByRepo(projects);
 ---
 
 <Shell title="Retina-V — shevinum.dev">
@@ -29,5 +31,6 @@ const personnelEntries = await getCollection("personnel");
     {companies}
     {projects}
     {personnelEntries}
+    {commitsByRepo}
   />
 </Shell>

@@ -25,6 +25,11 @@ panels:
     authorInitials: "Sh"
   changes:
     title: "─[0]─Changes"
+    # "- {activeFile}" (prototype line 379). Reused verbatim for the repo
+    # file-tree browsing extension (panel [3] focused, no prototype
+    # precedent) with {value} = "{repoName}/{path}" instead of the active
+    # project's filename.
+    subtitleTemplate: "- {value}"
   commandLog:
     title: "─Command log"
 
@@ -51,3 +56,36 @@ commandLog:
         href: "https://shevinum.dev"
   - text: "Press t for E.D.I.T.H: Retina-V · q returns to the dashboard."
     emphasize: ["t", "q"]
+
+# Repo file-tree browsing (panel [3] focused -> pane [0]) and the full-screen
+# nvim-style file editor it opens into. Both are a PLAN.md "Builds
+# interactivity extension" beyond the prototype's visuals (no prototype
+# markup exists for either), but every user-visible string they render still
+# lives here, not inlined in Builds.svelte / Editor.svelte.
+repoBrowser:
+  upEntry:
+    icon: "▸"
+    name: "../"
+  dirIcon: "▸"
+  fileIcon: "▤"
+  loadingText: "Loading repo index…"
+  errorText: "Failed to load repo index."
+
+# Editor.svelte is generic (Phase 5 builds it standalone so Phase 6 can reuse
+# it for personnel role docs — see PLAN.md Phase 5 scope item 3); every
+# caller passes its own labels object sourced from its own data file. This is
+# the Builds caller's copy of those literal strings — identical wording to
+# personnel.yaml's `editor:` section (src/data/personnel.yaml) because both
+# reproduce the same prototype markup (Homepage.dc.html lines 317-336:
+# "NORMAL", "⑂ main", "esc to close"), not because the two data files share
+# storage.
+editor:
+  modeLabel: "NORMAL"
+  branch: "⑂ main"
+  breadcrumbSeparator: "›"
+  closeHint: "esc to close"
+  tabIcon: "▤"
+  topLabel: "Top"
+  bottomLabel: "Bot"
+  percentTemplate: "{n}%"
+  positionTemplate: "{line}:{col}"

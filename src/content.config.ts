@@ -27,6 +27,16 @@ const projects = defineCollection({
   loader: glob({
     pattern: "**/*.md",
     base: useFixtures ? "fixtures/projects" : "src/content/projects",
+    // Astro's default `generateId` lowercases the slug (getContentEntryIdAndSlug's
+    // slugify step), which silently turns "SafePass.md" into entry id
+    // "safepass" — invisible until Phase 5's Builds Files panel started
+    // rendering `${project.id}.md` as that file's displayed name (PLAN.md
+    // Phase 5 scope item 1: "one row per project .md"), where it renders as
+    // the wrong filename ("safepass.md" instead of "SafePass.md"). All of
+    // our project filenames are already the exact string we want to display
+    // (see fixtures/projects/*.md and src/content/projects/*.md), so this
+    // just uses the entry's own basename verbatim, case and all.
+    generateId: ({ entry }) => entry.replace(/\.md$/, ""),
   }),
   schema: z.object({
     title: z.string(),
