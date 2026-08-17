@@ -286,26 +286,33 @@
     return windows.find((w) => w.id === id)?.name ?? "";
   }
 
-  /** Ctrl-b , — PLAN.md Phase 5 item 5.2. */
-  function renameWindow(name: string) {
-    const id = activeWindowId(view);
+  /** Ctrl-b , — PLAN.md Phase 5 item 5.2. Takes the target window's id as an
+   * explicit argument (captured by `startRenamePrompt` at PROMPT-OPEN time)
+   * rather than re-deriving it from `view` here at commit time — defense in
+   * depth (verifier round 2) so this can never rename the wrong window even
+   * if some future delegation change let `view` drift while the prompt was
+   * still open; today's `handlePrefixedKey` prompt-active gate already
+   * makes that drift impossible, but this closure doesn't depend on that
+   * invariant holding elsewhere. */
+  function renameWindow(id: string, name: string) {
     windows = windows.map((w) => (w.id === id ? { ...w, name } : w));
   }
 
   /** Ctrl-b & (and the Builds single-pane Ctrl-b x fallback, and a
    * kill-pane that emptied the last Builds panel) — PLAN.md Phase 5 item
-   * 5.2. Refuses (a status message, no removal) when only one window is
-   * left; otherwise removes the active window and, if it WAS the active
-   * one, switches to whatever now sits at its old index (i.e. the window
-   * that used to be right after it — `remaining[idx]` — or wraps to the
-   * first remaining window if it was last). Single source of behavior:
-   * every "kill this window" path in the app funnels through here. */
-  function killWindow() {
+   * 5.2. Same "id captured at prompt-open time" hardening as `renameWindow`
+   * above. Refuses (a status message, no removal) when only one window is
+   * left; otherwise removes the target window and, if it was the one on
+   * screen when the confirm opened, switches to whatever now sits at its
+   * old index (i.e. the window that used to be right after it —
+   * `remaining[idx]` — or wraps to the first remaining window if it was
+   * last). Single source of behavior: every "kill this window" path in the
+   * app funnels through here. */
+  function killWindow(id: string) {
     if (windows.length <= 1) {
       statusBarRef?.showMessage(site.statusBar.prompts.killLastWindowMessage);
       return;
     }
-    const id = activeWindowId(view);
     const idx = windows.findIndex((w) => w.id === id);
     const wasActive = idx !== -1;
     const remaining = windows.filter((w) => w.id !== id);
@@ -317,12 +324,14 @@
   }
 
   function startRenamePrompt() {
-    statusBarRef?.startRename(currentWindowName(), renameWindow);
+    const id = activeWindowId(view);
+    statusBarRef?.startRename(currentWindowName(), (name) => renameWindow(id, name));
   }
 
   function startKillWindowConfirm() {
+    const id = activeWindowId(view);
     const text = site.statusBar.prompts.killWindowTemplate.replace("{name}", currentWindowName());
-    statusBarRef?.startConfirm(text, killWindow);
+    statusBarRef?.startConfirm(text, () => killWindow(id));
   }
 
   /** Ctrl-b x — PLAN.md Phase 5 item 5.2: inside Builds with more than one
@@ -368,6 +377,29 @@
     if (e.metaKey || e.ctrlKey || e.altKey) return false;
 
     if (e.key === "Escape") return true; // cancel — swallowed, no action
+
+    // PLAN.md Phase 5 item 5.1 / verifier round 2 regression fix: while a
+    // status-bar prompt (rename/confirm) is open, it OWNS the keyboard —
+    // the only prefixed key allowed through is `]` (paste into the
+    // prompt's own registered paste target). Every other prefixed command
+    // (digit targets, n/p, d/w/0, ,/&/x/[, ?) is inert here: swallowed with
+    // zero side effects, leaving the prompt bound to whatever window it was
+    // opened for. Without this gate, `Ctrl-b <anything>` while a prompt was
+    // open ran the FULL prefix system out from under it — switching the
+    // view while a stale rename prompt for the OLD window stayed open (and
+    // committed onto the NEW one), or silently replacing a rename prompt
+    // with a kill-window confirm — exactly what an independent verifier
+    // reproduced after the previous fix's reordering. This check must come
+    // before every other branch below, `]` excepted.
+    if (statusBarRef?.isPromptActive()) {
+      if (e.key === "]") {
+        e.preventDefault();
+        pasteFromBuffer();
+        return true;
+      }
+      if (e.key.length === 1) e.preventDefault();
+      return true;
+    }
 
     const target = prefixTargets[e.key];
     if (target) {
@@ -453,9 +485,20 @@
     // replaces the old "pressing Ctrl-b again while armed just re-arms"
     // behavior — re-arming is still what happens for every OTHER prefixed
     // key (see `armPrefix()`'s own re-entrant reset), just not this one.
+    //
+    // Gated behind `!isPromptActive()` (verifier round 2): dispatching a
+    // literal Ctrl-b down the view chain while a status-bar prompt is open
+    // could still reach e.g. an open editor's own Ctrl-b page-back sitting
+    // behind the prompt — a side effect the prompt-owns-the-keyboard
+    // invariant forbids just as much as a view switch. When a prompt is
+    // active this falls into the `else` branch instead, which
+    // `handlePrefixedKey`'s own prompt-active gate (above) already makes
+    // fully inert (it disarms, returns false since Ctrl-b carries
+    // `ctrlKey: true`, and the plain re-arm check below re-arms with no
+    // other observable effect).
     let sendPrefixLiteral = false;
     if (prefixArmed) {
-      if (e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "b") {
+      if (!statusBarRef?.isPromptActive() && e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "b") {
         disarmPrefix();
         sendPrefixLiteral = true;
       } else if (handlePrefixedKey(e)) {

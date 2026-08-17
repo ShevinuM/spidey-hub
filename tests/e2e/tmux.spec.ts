@@ -471,6 +471,138 @@ test.describe("Ctrl-b x kill-pane (PLAN.md Phase 5 item 5.2)", () => {
   });
 });
 
+// Verifier round 2 regression: fixing "Ctrl-b ] can paste into a status-bar
+// prompt" by moving the prompt's own handleKey() consultation to run AFTER
+// the prefix system (see Terminal.svelte's handleKey() comment) had an
+// unintended side effect — EVERY prefixed key, not just `]`, ran the full
+// prefix-dispatch system while a prompt was open, so `Ctrl-b 2` could switch
+// the view out from under a still-open rename prompt (which then committed
+// onto the NEW window instead of the one it was opened for), and `Ctrl-b &`
+// could silently replace a rename prompt with a kill-window confirm. The fix
+// gates every branch of `handlePrefixedKey` except `]` behind
+// `statusBarRef.isPromptActive()`, and hardens the rename/kill-window commit
+// closures to close over the target window's id captured at prompt-OPEN
+// time rather than re-reading `view` at commit time (defense in depth).
+test.describe("prompt keyboard ownership vs. the prefix system (verifier round 2 regression)", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  test("Ctrl-b <digit>/&/x/,/n are all inert while the rename prompt is open; committing renames the ORIGINAL window", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press(",");
+    const prompt = page.locator('[data-testid="status-prompt"]');
+    await expect(prompt).toContainText("(rename-window) dashboard");
+
+    // A digit target — would normally jump straight to personnel.
+    await ctrlB(page);
+    await page.keyboard.press("2");
+    await expect(page).toHaveURL(/\/$/);
+    await expect(prompt).toContainText("(rename-window) dashboard");
+
+    // & — would normally replace this very prompt with a kill-window confirm.
+    await ctrlB(page);
+    await page.keyboard.press("&");
+    await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
+    await expect(prompt).toContainText("(rename-window) dashboard");
+
+    // x — would normally do the same (single-pane kill-window fallback).
+    await ctrlB(page);
+    await page.keyboard.press("x");
+    await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
+    await expect(prompt).toContainText("(rename-window) dashboard");
+
+    // , — would normally re-open a fresh rename prompt on top of this one.
+    await ctrlB(page);
+    await page.keyboard.press(",");
+    await expect(prompt).toContainText("(rename-window) dashboard");
+
+    // n — would normally cycle to the next window.
+    await ctrlB(page);
+    await page.keyboard.press("n");
+    await expect(page).toHaveURL(/\/$/);
+    await expect(prompt).toContainText("(rename-window) dashboard");
+
+    // Commit — renames the window the prompt was ACTUALLY opened for
+    // (dashboard), never wherever `view` might otherwise have drifted to.
+    await page.keyboard.type("ZZZ");
+    await page.keyboard.press("Enter");
+    await expect(prompt).not.toBeVisible();
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="dashboard"]')).toHaveText(
+      "0:dashboardZZZ*",
+    );
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="personnel"]')).toHaveText(
+      "2:personnel",
+    );
+  });
+
+  test("Ctrl-b <digit>/,/n are all inert while a kill-window confirm is open; y kills the ORIGINAL window", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/builds");
+    await ctrlB(page);
+    await page.keyboard.press("&");
+    const confirm = page.locator('[data-testid="status-confirm"]');
+    await expect(confirm).toHaveText("kill-window builds? (y/n)");
+
+    // A digit target — would normally jump straight to personnel.
+    await ctrlB(page);
+    await page.keyboard.press("2");
+    await expect(page).toHaveURL(/\/builds$/);
+    await expect(confirm).toHaveText("kill-window builds? (y/n)");
+
+    // , — would normally replace this confirm with a rename prompt.
+    await ctrlB(page);
+    await page.keyboard.press(",");
+    await expect(page.locator('[data-testid="status-prompt"]')).not.toBeVisible();
+    await expect(confirm).toHaveText("kill-window builds? (y/n)");
+
+    // n — prefixed, so it's the "cycle windows" command, not the confirm's
+    // own bare-key "no" — either way it must be a no-op here.
+    await ctrlB(page);
+    await page.keyboard.press("n");
+    await expect(page).toHaveURL(/\/builds$/);
+    await expect(confirm).toHaveText("kill-window builds? (y/n)");
+
+    // Commit — kills the window the confirm was ACTUALLY opened for
+    // (builds), never wherever `view` might otherwise have drifted to.
+    await page.keyboard.press("y");
+    await expect(confirm).not.toBeVisible();
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(0);
+    await expect(page).toHaveURL(/\/personnel$/);
+  });
+
+  test("Ctrl-b ] still pastes into the rename prompt (regression guard: the prompt-active gate must not swallow ])", async ({
+    page,
+    context,
+  }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await gotoReady(page, "/builds");
+    await ctrlB(page);
+    await page.keyboard.press("[");
+    await page.keyboard.press("v");
+    await page.keyboard.press("l");
+    await page.keyboard.press("l");
+    await page.keyboard.press("y");
+    const yanked = await page.evaluate(() => navigator.clipboard.readText());
+    expect(yanked.length).toBeGreaterThan(0);
+
+    await ctrlB(page);
+    await page.keyboard.press(",");
+    const prompt = page.locator('[data-testid="status-prompt"]');
+    await expect(prompt).toContainText("(rename-window) builds");
+
+    await ctrlB(page);
+    await page.keyboard.press("]");
+    await expect(prompt).toContainText(yanked);
+
+    await page.keyboard.press("Escape");
+  });
+});
+
 // PLAN.md Phase 5 item 5.5: "Status bar is SESSION chrome, grep is WINDOW
 // chrome" — the dim/blur backdrop must never cover the bar, and any window
 // switch while grep is open (click OR prefix) closes the overlay.
