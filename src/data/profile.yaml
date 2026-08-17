@@ -41,6 +41,18 @@ summary:
     - "Recruited into software in 2021 and never left the terminal. Builds platforms end to end — APIs, pipelines, and the tooling teams live in."
     - "Full time at Enaimco, where a 15-minute deploy became under one. Off-hours: a signature tracker, an anomaly watcher, and this site."
 
+# PLAN.md Iteration 3 Phase 1 item 1.4: the "Agent Profile → Summary" bio
+# from the user's data file, surfaced near-verbatim (light punctuation-only
+# trims, no rewriting of voice — this is the authoritative first-person
+# bio, distinct from the shorter narrative blurb above).
+dossier:
+  heading: "─ DOSSIER"
+  paragraphs:
+    - "I'm a software developer with a mild-to-severe vim and tmux obsession. I like building things, mostly tools that help me do something better, which is why most of my projects look suspiciously like solutions to my own problems."
+    - "I run in cycles. I'll spend three years in hibernate mode coding all day, then disappear for a year of solo travel and having fun with complete strangers. I spent a huge chunk of 2026 solo travelling through Mexico, and the memories from those trips still get me emotional. Right now I'm back to grinding and tbh building things make me very happy."
+    - "Outside of coding, I love hiking and the outdoors, and I read a lot — technical books, psychology, and fantasy. I'm particularly fascinated by cognitive psychology — Jung's and Briggs's work never gets old for me. I'm a huge movies and TV person too. I fell off the MCU after Phase 4, but Brand New Day and Doomsday leading into Hickman's Secret Wars have pulled me right back in. I also love board games, though spoiler-alert: I get aggressively competitive, and everyone ends up hating me for it."
+    - "What I love most about software is the problem-solving — finding the solution and architecting it. My goal is to work in system design and architecture. Ambitious? Maybe. But at least I'm open about it."
+
 # Static narrative stats (not derived from the projects/personnel
 # collections — "roles logged: 7" coincidentally matches the real personnel
 # count today, but the prototype hardcodes it as copy, not a computation).
@@ -90,11 +102,13 @@ contact:
 education:
   title: "EDUCATION"
   rows:
-    - degree: "Bachelor of Science, Computer Science"
+    # Display titles shortened 2026-08-18 (user feedback) to avoid wrapping
+    # in the narrow panel — schools/locations/dates unchanged.
+    - degree: "BSc. Computer Science"
       school: "Memorial University of Newfoundland"
       loc: "St. John's, NL"
       dates: "Sep 2021 – Jun 2026"
-    - degree: "International Visiting Student, Computer Science"
+    - degree: "International Visiting Student"
       school: "Tecnológico de Monterrey"
       loc: "Guadalajara, Mexico"
       dates: "Feb 2026 – Jun 2026"

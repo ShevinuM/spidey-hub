@@ -84,19 +84,32 @@
 
   const { personnel, companies, personnelEntries, onDashboard }: Props = $props();
 
-  /** Path segments straight off disk, relative to `src/content/personnel/`,
-   * case-preserved — `entry.id` would normally be github-slugger-lowercased
-   * by Astro's default glob() generateId (see content.config.ts), but the
-   * personnel collection now overrides `generateId` the same way `projects`
-   * already does, so `entry.id` IS the exact relative path (minus `.md`)
-   * here. Falls back to splitting `filePath` for safety. */
-  function segmentsOf(entry: RoleEntry): string[] {
-    if (entry.id) return entry.id.split("/");
+  /** Directory segments straight off disk, relative to
+   * `src/content/personnel/`, case-preserved — `entry.id` would normally be
+   * github-slugger-lowercased by Astro's default glob() generateId (see
+   * content.config.ts), but the personnel collection now overrides
+   * `generateId` the same way `projects` already does, so `entry.id` IS the
+   * exact relative path MINUS the `.md` extension. That extension-stripping
+   * is exactly why the file's own basename must NOT be read off the last
+   * segment of `entry.id` here (it would silently render as "role" instead
+   * of "role.md") — see `fileNameOf` below, which reads the real on-disk
+   * basename (extension included) from `filePath` instead. */
+  function dirSegmentsOf(entry: RoleEntry): string[] {
+    if (entry.id) return entry.id.split("/").slice(0, -1);
     const fp = entry.filePath ?? "";
     const marker = "personnel/";
     const idx = fp.lastIndexOf(marker);
     const rel = idx >= 0 ? fp.slice(idx + marker.length) : fp;
-    return rel.replace(/\.md$/, "").split("/");
+    return rel.replace(/\.md$/, "").split("/").slice(0, -1);
+  }
+
+  /** The file's own basename, case-preserved, WITH its `.md` extension —
+   * every leaf in this tree is literally named `role.md` (PLAN.md Locked
+   * #9's "lowercase dirs" tree), so this is what actually renders as the
+   * row name and what `data-row-name`/click-to-open assertions match on. */
+  function fileNameOf(entry: RoleEntry): string {
+    const base = entry.filePath?.split("/").pop();
+    return base ?? `${entry.id.split("/").pop()}.md`;
   }
 
   interface DirNode {
@@ -150,13 +163,12 @@
   const root: DirNode = $derived.by(() => {
     const r: DirNode = { kind: "dir", name: "", order: 0, children: [] };
     for (const entry of personnelEntries) {
-      const segments = segmentsOf(entry);
+      const dirSegments = dirSegmentsOf(entry);
       let dir = r;
-      for (let i = 0; i < segments.length - 1; i++) {
-        dir = findOrCreateDir(dir.children, segments[i]);
+      for (const seg of dirSegments) {
+        dir = findOrCreateDir(dir.children, seg);
       }
-      const fileName = segments[segments.length - 1];
-      dir.children.push({ kind: "file", name: fileName, order: entry.data.order, entry });
+      dir.children.push({ kind: "file", name: fileNameOf(entry), order: entry.data.order, entry });
     }
     computeDirOrders(r);
     // Root-level directories are ordered by companies.yaml, not by any
@@ -182,11 +194,15 @@
 
   // ---------------------------------------------------------------------
   // Navigation state: a path of directory names from the root, plus a
-  // selection-index stack (one entry per level ever descended into,
-  // popped on ascend) so going up and back down without leaving restores
-  // exactly where you were — the natural file-browser expectation the old
-  // fixed per-level state variables (companySel/typeSel/roleSel) gave for
-  // free at exactly 3 levels; this generalizes it to any depth.
+  // selection-index stack (one entry per level ever descended into, popped
+  // on ascend) so going UP restores exactly the ancestor directory's own
+  // previous selection — the same behavior the old fixed per-level state
+  // variables (companySel/typeSel/roleSel) gave for free at exactly 3
+  // levels, generalized here to any depth. Descending is always a fresh
+  // start at row 0 in the entered directory (also matching the old fixed
+  // model's own `activateCompanyRow`/`activateTypeRow`, which reset the
+  // next level's selection unconditionally on every descend) — only the
+  // "go back up" direction remembers anything.
   // ---------------------------------------------------------------------
 
   let pathSegments = $state<string[]>([]);

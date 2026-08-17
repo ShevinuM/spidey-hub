@@ -202,6 +202,10 @@ export interface ProfileData {
   };
   fields: ProfileField[];
   summary: { heading: string; paragraphs: string[] };
+  // PLAN.md Iteration 3 Phase 1 item 1.4: the data file's own "Agent
+  // Profile → Summary" bio, its own titled dossier block (distinct from
+  // `summary` above).
+  dossier: { heading: string; paragraphs: string[] };
   recordDatabase: { title: string; stats: { label: string; value: number }[] };
   cv: {
     title: string;

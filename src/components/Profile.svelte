@@ -126,6 +126,16 @@
           {/each}
         </div>
         <div
+          data-testid="profile-dossier"
+          data-copy-source
+          style="flex:1.4 1 auto;min-height:84px;overflow-y:auto;border:1px solid rgba(224,69,60,.35);padding:6px 10px;display:flex;flex-direction:column;gap:5px;font-size:11.5px;line-height:1.34;color:rgba(196,216,232,.75)"
+        >
+          <div style="color:rgba(217,176,74,.85);letter-spacing:.16em">{profile.dossier.heading}</div>
+          {#each profile.dossier.paragraphs as p (p)}
+            <div>{p}</div>
+          {/each}
+        </div>
+        <div
           style="flex:0 1 auto;height:38.5%;max-height:38.5%;min-height:84px;box-sizing:border-box;position:relative;border:1px solid rgba(224,69,60,.35);overflow:hidden"
         >
           <img

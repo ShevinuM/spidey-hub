@@ -1,12 +1,24 @@
 // Behavioral e2e suite for the Personnel Files (yazi clone) view, against
-// the real-content build — PLAN.md Phase 2 (Iteration 2), items 7/8/9.
+// the real-content build — PLAN.md Iteration 3 Phase 1 item 1.3.
 //
-// Real content: Enaimco-only (Vretta/Ontario-Tech/Freelance and their role
-// content were DELETED, not hidden — PLAN.md "User decisions (locked)" #1),
-// 3 levels deep: companies -> employment types -> role files. Enaimco has
-// 3 employment types (Full-Time, Part-Time, Co-op — src/data/companies.yaml
-// order + src/content/personnel/Enaimco/**/*.md `order` frontmatter), each
-// with exactly 1 role file named `software-developer.md`.
+// Real content is now a variable-depth, path-derived tree (no more
+// frontmatter `company`/`employmentType` grouping):
+//   enaimco/
+//     software-developer/
+//       role.md                (overview — a FILE sitting alongside 3 dirs)
+//       full-time/role.md
+//       part-time/role.md
+//       co-op/role.md
+//   memorial-university/
+//     software-developer/role.md
+//     computer-science-tutor/role.md
+//     research-assistant/role.md
+//     design-and-development-assistant/role.md
+//     communications-assistant/role.md
+//
+// `enaimco/software-developer/` is the key depth-generic case: its listing
+// mixes a role FILE (role.md, listed first) with 3 role DIRECTORIES
+// (full-time/, part-time/, co-op/) at the very same level.
 import { expect, test, type Page } from "./fixtures.ts";
 // PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
@@ -56,35 +68,44 @@ const pathText = (page: Page) => page.locator('[data-testid="personnel-path"]');
 const upRow = (page: Page) => page.locator('[data-testid="personnel-up-row"]');
 const promptRow = (page: Page) => page.locator('[data-testid="personnel-prompt"]');
 
-test.describe("Personnel: companies level (level 0)", () => {
-  test("lists Enaimco only, position indicator and hint reflect selection", async ({ page }) => {
+test.describe("Personnel: root directory listing", () => {
+  test("lists enaimco/ and memorial-university/, position indicator and hint reflect selection", async ({ page }) => {
     await openPersonnel(page);
-    await expect(rowLocator(page, "Enaimco/")).toBeVisible();
+    await expect(rowLocator(page, "enaimco/")).toBeVisible();
+    await expect(rowLocator(page, "memorial-university/")).toBeVisible();
     await expect(upRow(page)).toBeVisible();
 
-    await expect(posText(page)).toHaveText("1 / 1");
-    await expect(rowLocator(page, "Enaimco/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
-    await expect(hintText(page)).toHaveText("enter opens Enaimco/ · j/k moves · Ctrl-b ? for help");
+    await expect(posText(page)).toHaveText("1 / 2");
+    await expect(rowLocator(page, "enaimco/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
+    await expect(hintText(page)).toHaveText("enter opens enaimco/ · j/k moves · Ctrl-b ? for help");
     await expect(pathText(page)).toHaveText("/Users/Shev/Experience/");
   });
 
-  test("selecting the company previews its full roles table (all 3 employment types) in the right pane", async ({
-    page,
-  }) => {
+  test("enaimco/ shows 4 nested roles, memorial-university/ shows 5", async ({ page }) => {
     await openPersonnel(page);
-    const preview = page.locator('[data-testid="personnel-preview"]');
-    await expect(preview).toContainText("Software Developer, Full Time");
-    await expect(preview).toContainText("Software Developer, Part Time");
-    await expect(preview).toContainText("Software Developer, Co-op");
+    await expect(rowLocator(page, "enaimco/")).toContainText("4 roles");
+    await page.keyboard.press("j");
+    await expect(rowLocator(page, "memorial-university/")).toContainText("5 roles");
   });
 
-  test("q does nothing from the companies level (PLAN.md Phase 1 items 15/16)", async ({ page }) => {
+  test("selecting enaimco/ previews all 4 of its nested roles in the right pane", async ({ page }) => {
+    await openPersonnel(page);
+    const preview = page.locator('[data-testid="personnel-preview"]');
+    await expect(preview).toContainText("Software Developer, Full-Time");
+    await expect(preview).toContainText("Software Developer, Part-Time");
+    await expect(preview).toContainText("Software Developer, Co-op");
+    // The overview role (enaimco/software-developer/role.md) is also nested
+    // beneath enaimco/, so its bare "Software Developer" title shows too.
+    await expect(page.locator('[data-testid="personnel-role-table-row"]')).toHaveCount(4);
+  });
+
+  test("q does nothing from the root (bare q/Esc never navigate)", async ({ page }) => {
     await openPersonnel(page);
     await page.keyboard.press("q");
     await expect(page.locator('[data-testid="personnel-path"]')).toBeVisible();
   });
 
-  test("Esc also does nothing from the companies level", async ({ page }) => {
+  test("Esc also does nothing from the root", async ({ page }) => {
     await openPersonnel(page);
     await page.keyboard.press("Escape");
     await expect(page.locator('[data-testid="personnel-path"]')).toBeVisible();
@@ -96,197 +117,231 @@ test.describe("Personnel: companies level (level 0)", () => {
     await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
   });
 
-  test("Enter, l, and ArrowRight all descend into Enaimco's employment types", async ({ page }) => {
+  test("Enter, l, and ArrowRight all descend into enaimco/", async ({ page }) => {
     for (const key of ["Enter", "l", "ArrowRight"]) {
       await openPersonnel(page);
       await page.keyboard.press(key);
-      await expect(rowLocator(page, "Full-Time/")).toBeVisible();
-      await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/");
+      await expect(rowLocator(page, "software-developer/")).toBeVisible();
+      await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/");
     }
   });
 
-  test("single click on the Enaimco row descends immediately (no select-then-activate)", async ({ page }) => {
+  test("single click on the enaimco/ row descends immediately (no select-then-activate)", async ({ page }) => {
     await openPersonnel(page);
-    await rowLocator(page, "Enaimco/").click();
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/");
-    await expect(rowLocator(page, "Full-Time/")).toBeVisible();
+    await rowLocator(page, "enaimco/").click();
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/");
+    await expect(rowLocator(page, "software-developer/")).toBeVisible();
   });
 });
 
-test.describe("Personnel: employment types level (level 1)", () => {
-  async function openEnaimcoTypes(page: Page) {
+test.describe("Personnel: enaimco/software-developer/ — mixed file + directory listing", () => {
+  async function openEnaimcoSoftwareDeveloper(page: Page) {
     await openPersonnel(page);
-    await page.keyboard.press("Enter");
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/");
+    await page.keyboard.press("Enter"); // -> enaimco/
+    await page.keyboard.press("Enter"); // -> enaimco/software-developer/
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/software-developer/");
   }
 
-  test("lists the 3 employment types in role order, each showing a role count", async ({ page }) => {
-    await openEnaimcoTypes(page);
-    await expect(posText(page)).toHaveText("1 / 3");
-    await expect(rowLocator(page, "Full-Time/")).toBeVisible();
-    await expect(rowLocator(page, "Part-Time/")).toBeVisible();
-    await expect(rowLocator(page, "Co-op/")).toBeVisible();
-    await expect(rowLocator(page, "Full-Time/")).toContainText("1 role");
-    await expect(hintText(page)).toHaveText("enter opens Full-Time/ · h goes back · Ctrl-b ? for help");
+  test("lists role.md FIRST, then the 3 employment-type directories", async ({ page }) => {
+    await openEnaimcoSoftwareDeveloper(page);
+    await expect(posText(page)).toHaveText("1 / 4");
+    const rows = page.locator('[data-testid="personnel-row"]');
+    await expect(rows).toHaveCount(4);
+    const names = await rows.evaluateAll((els) => els.map((el) => el.getAttribute("data-row-name")));
+    expect(names).toEqual(["role.md", "full-time/", "part-time/", "co-op/"]);
+    await expect(rowLocator(page, "full-time/")).toContainText("1 role");
   });
 
-  test("j/k moves selection and updates the hint", async ({ page }) => {
-    await openEnaimcoTypes(page);
+  test("role.md is selected first — hint and preview reflect a FILE selection", async ({ page }) => {
+    await openEnaimcoSoftwareDeveloper(page);
+    await expect(hintText(page)).toHaveText("enter opens role.md in nvim · h goes back · Ctrl-b ? for help");
+    await expect(page.locator('[data-testid="personnel-preview"]')).toContainText("Software Developer");
+    // A file is selected, so no roles table renders.
+    await expect(page.locator('[data-testid="personnel-role-table-row"]')).toHaveCount(0);
+  });
+
+  test("j moves onto full-time/ — hint and preview switch to a DIRECTORY selection", async ({ page }) => {
+    await openEnaimcoSoftwareDeveloper(page);
     await page.keyboard.press("j");
-    await expect(posText(page)).toHaveText("2 / 3");
-    await expect(rowLocator(page, "Part-Time/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
-    await expect(hintText(page)).toHaveText("enter opens Part-Time/ · h goes back · Ctrl-b ? for help");
-
-    await page.keyboard.press("k");
-    await expect(posText(page)).toHaveText("1 / 3");
+    await expect(posText(page)).toHaveText("2 / 4");
+    await expect(rowLocator(page, "full-time/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
+    await expect(hintText(page)).toHaveText("enter opens full-time/ · h goes back · Ctrl-b ? for help");
+    await expect(page.locator('[data-testid="personnel-role-table-row"]')).toHaveCount(1);
+    await expect(page.locator('[data-testid="personnel-preview"]')).toContainText("Software Developer, Full-Time");
   });
 
-  test("selecting a type previews only that type's role(s) in the right pane", async ({ page }) => {
-    await openEnaimcoTypes(page);
-    const preview = page.locator('[data-testid="personnel-preview"]');
-    await expect(preview).toContainText("Software Developer, Full Time");
-    await expect(preview).not.toContainText("Part Time");
-    await expect(preview).not.toContainText("Co-op");
-
-    await page.keyboard.press("j"); // -> Part-Time
-    await expect(preview).toContainText("Software Developer, Part Time");
-    await expect(preview).not.toContainText("Full Time");
+  test("Enter on role.md opens the editor directly from this mixed listing", async ({ page }) => {
+    await openEnaimcoSoftwareDeveloper(page);
+    await page.keyboard.press("Enter");
+    await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
   });
 
-  test("Enter, l, and ArrowRight all descend into the type's role files", async ({ page }) => {
-    for (const key of ["Enter", "l", "ArrowRight"]) {
-      await openEnaimcoTypes(page);
-      await page.keyboard.press(key); // -> Full-Time roles
-      await expect(rowLocator(page, "software-developer.md")).toBeVisible();
-      await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/Full-Time/");
-    }
+  test("Enter on full-time/ descends into that directory (single-file listing)", async ({ page }) => {
+    await openEnaimcoSoftwareDeveloper(page);
+    await page.keyboard.press("j"); // -> full-time/
+    await page.keyboard.press("Enter");
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/software-developer/full-time/");
+    await expect(rowLocator(page, "role.md")).toBeVisible();
+    await expect(posText(page)).toHaveText("1 / 1");
   });
 
-  test("single click on a type row descends immediately", async ({ page }) => {
-    await openEnaimcoTypes(page);
-    await rowLocator(page, "Co-op/").click();
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/Co-op/");
-    await expect(rowLocator(page, "software-developer.md")).toBeVisible();
-  });
-
-  test("h and clicking ../ both walk up to the companies level (not the dashboard)", async ({ page }) => {
-    await openEnaimcoTypes(page);
+  test("h and clicking ../ both walk up to enaimco/ (not the root, not the dashboard)", async ({ page }) => {
+    await openEnaimcoSoftwareDeveloper(page);
     await page.keyboard.press("h");
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/");
-    await expect(rowLocator(page, "Enaimco/")).toBeVisible();
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/");
+    await expect(rowLocator(page, "software-developer/")).toBeVisible();
 
-    await openEnaimcoTypes(page);
+    await openEnaimcoSoftwareDeveloper(page);
     await upRow(page).click();
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/");
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/");
   });
 
-  test("Backspace and ArrowLeft also walk up one level only", async ({ page }) => {
-    for (const key of ["Backspace", "ArrowLeft"]) {
-      await openEnaimcoTypes(page);
-      await page.keyboard.press(key);
-      await expect(pathText(page)).toHaveText("/Users/Shev/Experience/");
-    }
+  test("descending always starts fresh at the first row (role.md), even after a deeper visit", async ({ page }) => {
+    await openEnaimcoSoftwareDeveloper(page);
+    await page.keyboard.press("j"); // -> full-time/ (idx 1)
+    await page.keyboard.press("h"); // -> enaimco/
+    await page.keyboard.press("l"); // -> back into software-developer/, fresh selection
+    await expect(posText(page)).toHaveText("1 / 4");
+    await expect(rowLocator(page, "role.md")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
   });
 
-  test("q and Esc do nothing at the types level (PLAN.md Phase 1 items 15/16)", async ({ page }) => {
-    await openEnaimcoTypes(page);
+  test("going up restores the ANCESTOR's own previous selection (memorial-university/ stays selected at root)", async ({
+    page,
+  }) => {
+    await openPersonnel(page);
+    await page.keyboard.press("j"); // root: select memorial-university/ (idx 1)
+    await page.keyboard.press("Enter"); // descend into it
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/memorial-university/");
+    await page.keyboard.press("h"); // back up to root
+    await expect(posText(page)).toHaveText("2 / 2");
+    await expect(rowLocator(page, "memorial-university/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
+  });
+
+  test("q and Esc do nothing at this level", async ({ page }) => {
+    await openEnaimcoSoftwareDeveloper(page);
     await page.keyboard.press("q");
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/");
-
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/software-developer/");
     await page.keyboard.press("Escape");
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/");
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/software-developer/");
   });
 
-  test("gg/G jump to the first/last type", async ({ page }) => {
-    await openEnaimcoTypes(page);
-    await expect(posText(page)).toHaveText("1 / 3");
-
+  test("gg/G jump to the first/last row", async ({ page }) => {
+    await openEnaimcoSoftwareDeveloper(page);
     await page.keyboard.press("G");
-    await expect(posText(page)).toHaveText("3 / 3");
-    await expect(rowLocator(page, "Co-op/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
+    await expect(posText(page)).toHaveText("4 / 4");
+    await expect(rowLocator(page, "co-op/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
 
     await page.keyboard.press("g");
     await page.keyboard.press("g");
-    await expect(posText(page)).toHaveText("1 / 3");
-    await expect(rowLocator(page, "Full-Time/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
+    await expect(posText(page)).toHaveText("1 / 4");
+    await expect(rowLocator(page, "role.md")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
   });
 });
 
-test.describe("Personnel: role files level (level 2)", () => {
-  async function openFullTimeRoles(page: Page) {
+test.describe("Personnel: role file leaves + editor", () => {
+  async function openFullTimeRole(page: Page) {
     await openPersonnel(page);
-    await page.keyboard.press("Enter"); // -> types
-    await page.keyboard.press("Enter"); // -> Full-Time's role files
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/Full-Time/");
+    await page.keyboard.press("Enter"); // -> enaimco/
+    await page.keyboard.press("Enter"); // -> enaimco/software-developer/
+    await page.keyboard.press("j"); // -> full-time/
+    await page.keyboard.press("Enter"); // -> enaimco/software-developer/full-time/
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/software-developer/full-time/");
   }
 
-  test("lists the type's role file(s), doc pane shows the role", async ({ page }) => {
-    await openFullTimeRoles(page);
+  test("lists the single role.md, doc pane shows the role", async ({ page }) => {
+    await openFullTimeRole(page);
     await expect(posText(page)).toHaveText("1 / 1");
-    await expect(rowLocator(page, "software-developer.md")).toBeVisible();
-    await expect(hintText(page)).toHaveText(
-      "enter opens software-developer.md in nvim · h goes back · Ctrl-b ? for help",
-    );
-    await expect(page.locator('[data-testid="personnel-preview"]')).toContainText("Software Developer — Full Time");
+    await expect(rowLocator(page, "role.md")).toBeVisible();
+    await expect(hintText(page)).toHaveText("enter opens role.md in nvim · h goes back · Ctrl-b ? for help");
+    await expect(page.locator('[data-testid="personnel-preview"]')).toContainText("Software Developer — Full-Time");
   });
 
   test("Enter opens the editor; first line matches the role .md body first line on disk", async ({ page }) => {
-    await openFullTimeRoles(page);
+    await openFullTimeRole(page);
     await page.keyboard.press("Enter");
     const firstLine = page.locator('[data-line="1"] [data-testid="editor-line-text"]');
-    await expect(firstLine).toHaveText(firstBodyLineOf("Enaimco/Full-Time/software-developer.md"));
+    await expect(firstLine).toHaveText(firstBodyLineOf("enaimco/software-developer/full-time/role.md"));
   });
 
   test("l and ArrowRight also open the editor (descend parity with Enter)", async ({ page }) => {
     for (const key of ["l", "ArrowRight"]) {
-      await openFullTimeRoles(page);
+      await openFullTimeRole(page);
       await page.keyboard.press(key);
       await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
     }
   });
 
   test("single click on the role row opens the editor immediately", async ({ page }) => {
-    await openFullTimeRoles(page);
-    await rowLocator(page, "software-developer.md").click();
+    await openFullTimeRole(page);
+    await rowLocator(page, "role.md").click();
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
   });
 
-  test("h and clicking ../ both walk up to the types level (not companies, not the dashboard)", async ({ page }) => {
-    await openFullTimeRoles(page);
+  test("h and clicking ../ both walk up one level (not further)", async ({ page }) => {
+    await openFullTimeRole(page);
     await page.keyboard.press("h");
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/");
-    await expect(rowLocator(page, "Full-Time/")).toBeVisible();
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/software-developer/");
 
-    await openFullTimeRoles(page);
+    await openFullTimeRole(page);
     await upRow(page).click();
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/");
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/software-developer/");
   });
 
-  test("q from the role files level does nothing (PLAN.md Phase 1 items 15/16)", async ({ page }) => {
-    await openFullTimeRoles(page);
+  test("q from the role file level does nothing", async ({ page }) => {
+    await openFullTimeRole(page);
     await page.keyboard.press("q");
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/Full-Time/");
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/software-developer/full-time/");
   });
 
-  test("Esc from the role files level also does nothing", async ({ page }) => {
-    await openFullTimeRoles(page);
+  test("Esc from the role file level also does nothing", async ({ page }) => {
+    await openFullTimeRole(page);
     await page.keyboard.press("Escape");
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/Full-Time/");
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/software-developer/full-time/");
   });
 });
 
-test.describe("Personnel: editor", () => {
+test.describe("Personnel: memorial-university/ — 5 sibling directories, each one file deep", () => {
+  async function openMemorial(page: Page) {
+    await openPersonnel(page);
+    await page.keyboard.press("j"); // -> memorial-university/
+    await page.keyboard.press("Enter");
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/memorial-university/");
+  }
+
+  test("lists all 5 roles in order, each a single-file directory", async ({ page }) => {
+    await openMemorial(page);
+    await expect(posText(page)).toHaveText("1 / 5");
+    const rows = page.locator('[data-testid="personnel-row"]');
+    await expect(rows).toHaveCount(5);
+    const names = await rows.evaluateAll((els) => els.map((el) => el.getAttribute("data-row-name")));
+    expect(names).toEqual([
+      "software-developer/",
+      "computer-science-tutor/",
+      "research-assistant/",
+      "design-and-development-assistant/",
+      "communications-assistant/",
+    ]);
+  });
+
+  test("research-assistant/ displays the shortened title in its preview", async ({ page }) => {
+    await openMemorial(page);
+    await page.keyboard.press("j");
+    await page.keyboard.press("j"); // -> research-assistant/
+    await page.keyboard.press("Enter");
+    await expect(page.locator('[data-testid="personnel-preview"]')).toContainText("Research Assistant");
+  });
+});
+
+test.describe("Personnel: editor close paths", () => {
   async function openEditor(page: Page) {
     await openPersonnel(page);
-    await page.keyboard.press("Enter"); // -> types
-    await page.keyboard.press("Enter"); // -> Full-Time roles
+    await page.keyboard.press("Enter"); // -> enaimco/
+    await page.keyboard.press("Enter"); // -> enaimco/software-developer/ (role.md selected)
     await page.keyboard.press("Enter"); // -> editor
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
   }
 
-  test("q does nothing in the editor (PLAN.md Phase 1 items 15/16 + Phase 3: :q is the only close path)", async ({
-    page,
-  }) => {
+  test("q does nothing in the editor (:q is the only close path)", async ({ page }) => {
     await openEditor(page);
     await page.keyboard.press("q");
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
@@ -298,13 +353,13 @@ test.describe("Personnel: editor", () => {
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
   });
 
-  test(":q closes the editor back to the role files level, not the dashboard", async ({ page }) => {
+  test(":q closes the editor back to the enaimco/software-developer/ listing, not the dashboard", async ({ page }) => {
     await openEditor(page);
     await page.keyboard.press(":");
     await page.keyboard.type("q");
     await page.keyboard.press("Enter");
     await expect(page.locator('[data-testid="editor-scroller"]')).not.toBeVisible();
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/Full-Time/");
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/software-developer/");
   });
 
   test(":q! also closes the editor", async ({ page }) => {
@@ -319,7 +374,7 @@ test.describe("Personnel: editor", () => {
     await openEditor(page);
     await page.locator('[data-testid="editor-close-pill"]').click();
     await expect(page.locator('[data-testid="editor-scroller"]')).not.toBeVisible();
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/Full-Time/");
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/software-developer/");
   });
 
   test(":w and :wq show a readonly error IN THE CMDLINE BOX and do not close the editor", async ({ page }) => {
@@ -367,16 +422,18 @@ test.describe("Personnel: editor", () => {
 });
 
 test.describe("Personnel: filter mode", () => {
-  test("f + 'co' filters the types list to matching entries only, position indicator updates", async ({ page }) => {
+  test("f + 'co' filters enaimco/software-developer/'s listing to matching entries only", async ({ page }) => {
     await openPersonnel(page);
-    await page.keyboard.press("Enter"); // -> Enaimco types (3 entries)
-    await expect(posText(page)).toHaveText("1 / 3");
+    await page.keyboard.press("Enter"); // -> enaimco/
+    await page.keyboard.press("Enter"); // -> enaimco/software-developer/ (4 entries)
+    await expect(posText(page)).toHaveText("1 / 4");
 
     await page.keyboard.press("f");
     await page.keyboard.type("co");
-    await expect(rowLocator(page, "Co-op/")).toBeVisible();
-    await expect(rowLocator(page, "Full-Time/")).not.toBeVisible();
-    await expect(rowLocator(page, "Part-Time/")).not.toBeVisible();
+    await expect(rowLocator(page, "co-op/")).toBeVisible();
+    await expect(rowLocator(page, "role.md")).not.toBeVisible();
+    await expect(rowLocator(page, "full-time/")).not.toBeVisible();
+    await expect(rowLocator(page, "part-time/")).not.toBeVisible();
     // `../` is always kept regardless of the query.
     await expect(upRow(page)).toBeVisible();
     await expect(posText(page)).toHaveText("1 / 1");
@@ -387,138 +444,150 @@ test.describe("Personnel: filter mode", () => {
     page,
   }) => {
     await openPersonnel(page);
-    await page.keyboard.press("Enter"); // -> Enaimco types
+    await page.keyboard.press("Enter"); // -> enaimco/
+    await page.keyboard.press("Enter"); // -> enaimco/software-developer/
     await promptRow(page).click();
     await page.keyboard.type("co");
-    await expect(rowLocator(page, "Co-op/")).toBeVisible();
-    await expect(rowLocator(page, "Full-Time/")).not.toBeVisible();
+    await expect(rowLocator(page, "co-op/")).toBeVisible();
+    await expect(rowLocator(page, "full-time/")).not.toBeVisible();
     await expect(promptRow(page)).toContainText("co");
   });
 
   test("Esc restores the full list and exits filter mode", async ({ page }) => {
     await openPersonnel(page);
     await page.keyboard.press("Enter");
+    await page.keyboard.press("Enter");
     await page.keyboard.press("f");
     await page.keyboard.type("co");
     await expect(posText(page)).toHaveText("1 / 1");
 
     await page.keyboard.press("Escape");
-    await expect(posText(page)).toHaveText("1 / 3");
-    await expect(rowLocator(page, "Full-Time/")).toBeVisible();
-    await expect(rowLocator(page, "Part-Time/")).toBeVisible();
-    await expect(rowLocator(page, "Co-op/")).toBeVisible();
+    await expect(posText(page)).toHaveText("1 / 4");
+    await expect(rowLocator(page, "role.md")).toBeVisible();
+    await expect(rowLocator(page, "full-time/")).toBeVisible();
+    await expect(rowLocator(page, "co-op/")).toBeVisible();
     // Esc, having exited filter mode rather than left the view, must not
     // also trigger any navigation.
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/");
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/software-developer/");
   });
 
   test("typed 'j' while filtering types into the query instead of navigating", async ({ page }) => {
     await openPersonnel(page);
     await page.keyboard.press("Enter");
+    await page.keyboard.press("Enter");
     await page.keyboard.press("f");
-    await expect(posText(page)).toHaveText("1 / 3");
+    await expect(posText(page)).toHaveText("1 / 4");
 
     await page.keyboard.press("j");
     await expect(promptRow(page)).toContainText("j");
-    // No employment type name contains "j", so the filtered list is empty
-    // (../ still kept).
+    // No entry name at this level contains "j", so the filtered list is
+    // empty (../ still kept).
     await expect(posText(page)).toHaveText("0 / 0");
   });
 
   test("Enter confirms the filter (exits typing) and j then navigates the filtered list", async ({ page }) => {
     await openPersonnel(page);
-    await page.keyboard.press("Enter"); // -> Enaimco types
+    await page.keyboard.press("Enter"); // -> enaimco/
+    await page.keyboard.press("Enter"); // -> enaimco/software-developer/
     await page.keyboard.press("f");
-    await page.keyboard.type("time"); // matches Full-Time/ and Part-Time/
+    await page.keyboard.type("time"); // matches full-time/ and part-time/
 
     await expect(posText(page)).toHaveText("1 / 2");
 
     await page.keyboard.press("Enter"); // confirm filter, back to nav mode
     await page.keyboard.press("j");
     await expect(posText(page)).toHaveText("2 / 2");
-    await expect(rowLocator(page, "Part-Time/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
+    await expect(rowLocator(page, "part-time/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
   });
 
   test("typed characters while NOT filtering still act as nav keys", async ({ page }) => {
     await openPersonnel(page);
-    await expect(posText(page)).toHaveText("1 / 1");
-    // Single company, so j/k are no-ops here, but the key must still be
-    // consumed as navigation, not typed into any query.
+    await expect(posText(page)).toHaveText("1 / 2");
     await page.keyboard.press("j");
     await expect(promptRow(page)).not.toContainText("j");
+    await expect(posText(page)).toHaveText("2 / 2");
   });
 
-  // PLAN.md Phase 9 "Vim extras" — "filtered list aware": G must jump to
-  // the last entry of the FILTERED set, not the last entry of the
-  // unfiltered types list (Co-op, which the "time" filter excludes).
   test("G after a filter jumps to the last entry of the filtered list, not the unfiltered one", async ({ page }) => {
     await openPersonnel(page);
-    await page.keyboard.press("Enter"); // -> Enaimco types (3 entries)
+    await page.keyboard.press("Enter"); // -> enaimco/
+    await page.keyboard.press("Enter"); // -> enaimco/software-developer/ (4 entries)
     await page.keyboard.press("f");
-    await page.keyboard.type("time"); // matches Full-Time/ and Part-Time/ (2 of 3)
+    await page.keyboard.type("time"); // matches full-time/ and part-time/ (2 of 4)
     await page.keyboard.press("Enter"); // confirm filter, back to nav mode
     await expect(posText(page)).toHaveText("1 / 2");
 
     await page.keyboard.press("G");
     await expect(posText(page)).toHaveText("2 / 2");
-    await expect(rowLocator(page, "Part-Time/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
+    await expect(rowLocator(page, "part-time/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
     // Not the unfiltered list's last entry.
-    await expect(rowLocator(page, "Co-op/")).not.toBeVisible();
+    await expect(rowLocator(page, "co-op/")).not.toBeVisible();
 
     await page.keyboard.press("g");
     await page.keyboard.press("g");
     await expect(posText(page)).toHaveText("1 / 2");
-    await expect(rowLocator(page, "Full-Time/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
+    await expect(rowLocator(page, "full-time/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
   });
 
-  test("descending from a filtered types list enters the filtered (not positionally-indexed) type", async ({
+  test("descending from a filtered listing enters the filtered (not positionally-indexed) entry", async ({
     page,
   }) => {
     await openPersonnel(page);
-    await page.keyboard.press("Enter"); // -> Enaimco types
+    await page.keyboard.press("Enter"); // -> enaimco/
+    await page.keyboard.press("Enter"); // -> enaimco/software-developer/
     await page.keyboard.press("f");
-    await page.keyboard.type("co"); // -> only "Co-op/" (row 0 of the filtered list)
-    await expect(rowLocator(page, "Co-op/")).toBeVisible();
+    await page.keyboard.type("co"); // -> only "co-op/" (row 0 of the filtered list)
+    await expect(rowLocator(page, "co-op/")).toBeVisible();
     await expect(posText(page)).toHaveText("1 / 1");
 
     await page.keyboard.press("Enter"); // confirm filter (still row 0)
-    await page.keyboard.press("Enter"); // descend — must land on Co-op, not
-    // whichever type sits at index 0 of the full (unfiltered) list (Full-Time).
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/Co-op/");
-    await expect(rowLocator(page, "software-developer.md")).toBeVisible();
+    await page.keyboard.press("Enter"); // descend — must land on co-op/, not
+    // whichever entry sits at index 0 of the full (unfiltered) list (role.md).
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/software-developer/co-op/");
+    await expect(rowLocator(page, "role.md")).toBeVisible();
   });
 });
 
-test.describe("Personnel: mouse-only walkthrough (PLAN.md Phase 2 item 9)", () => {
-  test("click Enaimco -> Full-Time -> software-developer.md opens the editor, entirely by mouse", async ({
+test.describe("Personnel: mouse-only walkthrough", () => {
+  test("click enaimco -> software-developer -> full-time -> role.md opens the editor, entirely by mouse", async ({
     page,
   }) => {
     await openPersonnel(page);
-    await rowLocator(page, "Enaimco/").click();
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/");
+    await rowLocator(page, "enaimco/").click();
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/");
 
-    await rowLocator(page, "Full-Time/").click();
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/Full-Time/");
+    await rowLocator(page, "software-developer/").click();
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/software-developer/");
 
-    await rowLocator(page, "software-developer.md").click();
+    await rowLocator(page, "full-time/").click();
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/software-developer/full-time/");
+
+    await rowLocator(page, "role.md").click();
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
   });
 
-  test("../ clicks walk all the way back up: roles -> types -> companies -> dashboard", async ({ page }) => {
+  test("../ clicks walk all the way back up: role file -> mixed listing -> enaimco -> root -> dashboard", async ({
+    page,
+  }) => {
     await openPersonnel(page);
-    await rowLocator(page, "Enaimco/").click();
-    await rowLocator(page, "Full-Time/").click();
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/Full-Time/");
+    await rowLocator(page, "enaimco/").click();
+    await rowLocator(page, "software-developer/").click();
+    await rowLocator(page, "full-time/").click();
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/software-developer/full-time/");
 
-    await upRow(page).click(); // roles -> types
-    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/");
-    await expect(rowLocator(page, "Full-Time/")).toBeVisible();
+    await upRow(page).click(); // full-time/ -> enaimco/software-developer/
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/software-developer/");
+    await expect(rowLocator(page, "full-time/")).toBeVisible();
 
-    await upRow(page).click(); // types -> companies
+    await upRow(page).click(); // -> enaimco/
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/enaimco/");
+    await expect(rowLocator(page, "software-developer/")).toBeVisible();
+
+    await upRow(page).click(); // -> root
     await expect(pathText(page)).toHaveText("/Users/Shev/Experience/");
-    await expect(rowLocator(page, "Enaimco/")).toBeVisible();
+    await expect(rowLocator(page, "enaimco/")).toBeVisible();
 
-    await upRow(page).click(); // companies root -> dashboard
+    await upRow(page).click(); // root -> dashboard
     await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
   });
 });

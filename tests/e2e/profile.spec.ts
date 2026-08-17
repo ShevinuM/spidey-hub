@@ -71,16 +71,18 @@ test.describe("Profile: resume hotkey + CV link", () => {
 });
 
 test.describe("Profile: contact rows", () => {
-  test("github/linkedin/mail hrefs are exact; discord is not a link", async ({ page }) => {
+  // PLAN.md Locked #7: contact data taken from the resume, verbatim — no
+  // phone number is published on the site.
+  test("github/linkedin/mail hrefs are exact (resume values); discord is not a link", async ({ page }) => {
     await openProfile(page);
     const links = page.locator('[data-testid="profile-contact-link"]');
     await expect(links).toHaveCount(3);
 
     const hrefs = await links.evaluateAll((els) => els.map((el) => el.getAttribute("href")));
     expect(hrefs).toEqual([
-      "https://github.com/shevinum",
-      "https://ca.linkedin.com/in/shevinum",
-      "mailto:shev@shevinum.dev",
+      "https://github.com/ShevinuM",
+      "https://linkedin.com/in/shevinum",
+      "mailto:shevinu2002@gmail.com",
     ]);
 
     const nonLink = page.locator('[data-testid="profile-contact-nonlink"]');
@@ -90,9 +92,36 @@ test.describe("Profile: contact rows", () => {
     // Belt-and-suspenders: no anchor's *exact* accessible name is the bare
     // "shevinum" discord handle (github/linkedin links legitimately contain
     // "shevinum" as a substring of their full URL text, e.g.
-    // "github.com/shevinum" — a substring-based has-text check would false
+    // "github.com/ShevinuM" — a substring-based has-text check would false
     // -positive on those, so this matches the full text exactly instead).
     expect(await page.getByRole("link", { name: "shevinum", exact: true }).count()).toBe(0);
+  });
+
+  test("no phone number is published anywhere on the page", async ({ page }) => {
+    await openProfile(page);
+    const bodyText = await page.locator("body").innerText();
+    expect(bodyText).not.toMatch(/709-219-3095/);
+  });
+});
+
+test.describe("Profile: EDUCATION section (PLAN.md Iteration 3 Phase 1 item 1.4)", () => {
+  test("both resume entries render (degree, school, location, dates)", async ({ page }) => {
+    await openProfile(page);
+    const rows = page.locator('[data-testid="profile-education-row"]');
+    await expect(rows).toHaveCount(2);
+
+    await expect(rows.nth(0)).toContainText("BSc. Computer Science");
+    await expect(rows.nth(0)).toContainText("Memorial University of Newfoundland");
+    await expect(rows.nth(0)).toContainText("St. John's, NL");
+    await expect(rows.nth(0)).toContainText("Sep 2021");
+    await expect(rows.nth(0)).toContainText("Jun 2026");
+
+    await expect(rows.nth(1)).toContainText("International Visiting Student");
+    await expect(rows.nth(1)).not.toContainText("International Visiting Student, Computer Science");
+    await expect(rows.nth(1)).toContainText("Tecnológico de Monterrey");
+    await expect(rows.nth(1)).toContainText("Guadalajara, Mexico");
+    await expect(rows.nth(1)).toContainText("Feb 2026");
+    await expect(rows.nth(1)).toContainText("Jun 2026");
   });
 });
 
@@ -136,6 +165,27 @@ test.describe("Profile: SUMMARY panel", () => {
     const summary = page.locator('[data-testid="profile-summary"]');
     await expect(summary).toBeVisible();
     const overflowY = await summary.evaluate((el) => getComputedStyle(el).overflowY);
+    expect(overflowY).toBe("auto");
+  });
+});
+
+test.describe("Profile: DOSSIER panel (PLAN.md Iteration 3 Phase 1 item 1.4)", () => {
+  test("renders the data file's real bio, from profile.yaml (not hardcoded)", async ({ page }) => {
+    await openProfile(page);
+    const dossier = page.locator('[data-testid="profile-dossier"]');
+    await expect(dossier).toBeVisible();
+    // Distinctive substrings from the user's own data file, near-verbatim
+    // — enough to confirm this is the real bio, not a paraphrase.
+    await expect(dossier).toContainText("vim and tmux obsession");
+    await expect(dossier).toContainText("Mexico");
+    await expect(dossier).toContainText("Brand New Day");
+    await expect(dossier).toContainText("system design and architecture");
+  });
+
+  test("scrolls (overflow-y: auto)", async ({ page }) => {
+    await openProfile(page);
+    const dossier = page.locator('[data-testid="profile-dossier"]');
+    const overflowY = await dossier.evaluate((el) => getComputedStyle(el).overflowY);
     expect(overflowY).toBe("auto");
   });
 });
