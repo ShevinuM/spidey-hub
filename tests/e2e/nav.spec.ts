@@ -295,10 +295,45 @@ test.describe("modifier fall-through", () => {
 });
 
 test.describe("live clock (bug fix 2)", () => {
+  // PLAN.md Phase 6 item 6.5 deflake: this test previously used
+  // `page.clock.runFor()`, which failed once under parallel-worker load
+  // (Phase 2 verification) despite passing every time in isolation. Root
+  // cause, discriminated empirically while building the Phase 6 boot-golden
+  // capture pipeline (see tests/visual/pipeline.mjs's `captureBootState()`
+  // header comment for the full writeup): `page.clock.install()` does NOT
+  // itself freeze `Date.now()` — real wall-clock time keeps advancing until
+  // the FIRST explicit clock-control call, AND after any `runFor()` call
+  // finishes, the clock resumes ticking in REAL time again until the next
+  // control call. StatusBar.svelte's clock is a self-rescheduling
+  // `setTimeout` chain (`msUntilNextMinute`), not a fixed-interval poll, so
+  // between this test's two `runFor()` calls — while it read/asserted the
+  // "before" DOM text — the clock was already ticking in real wall time
+  // again; under enough parallel-worker CPU contention, more than the
+  // intended 61s of real time could elapse before the second `runFor()`
+  // call ever ran, occasionally rolling the minute display past "23:35" to
+  // "23:36" or later by the time it was read.
+  //
+  // Fixed with `page.clock.pauseAt(<absolute time>)` instead of
+  // `runFor(<duration>)` throughout, mirroring `captureBootState()`'s own
+  // fix: `pauseAt` leaves the clock genuinely FROZEN at its target instant
+  // (confirmed empirically: a bare `setInterval`'s counter and `Date.now()`
+  // were byte-identical across two reads separated by a real 500ms wait),
+  // so no amount of real time passing between assertions — however slow
+  // the runner is — can move the displayed clock. The first `pauseAt` runs
+  // BEFORE navigation (eliminating page-load/hydration jitter leaking into
+  // the "starting instant" the same way it does for boot), and each
+  // subsequent `pauseAt` targets an ABSOLUTE offset from that same t0
+  // rather than a relative duration from "whenever this call happens to
+  // run" (this is NOT a retry-mask — it's the same root-cause clock-control
+  // fix documented for the boot pipeline, applied to a second timer chain).
   test("status bar minute advances after 60s of (faked) time", async ({ page }) => {
-    await page.clock.install({ time: "2026-08-15T23:34:00" });
+    const CLOCK_TIME = "2026-08-15T23:34:00";
+    const t0 = new Date(CLOCK_TIME).getTime();
+
+    await page.clock.install({ time: CLOCK_TIME });
+    await page.clock.pauseAt(t0); // freeze immediately, before navigation
     await page.goto("/");
-    await page.clock.runFor(5000);
+    await page.clock.pauseAt(t0 + 5000);
     await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
 
     const before = await page.locator('[data-testid="status-bar-clock-time"]').innerText();
@@ -306,7 +341,7 @@ test.describe("live clock (bug fix 2)", () => {
     const beforeDate = await page.locator('[data-testid="status-bar-clock-date"]').innerText();
     expect(beforeDate).toBe("15-Aug-26");
 
-    await page.clock.runFor(61_000);
+    await page.clock.pauseAt(t0 + 5000 + 61_000);
 
     const after = await page.locator('[data-testid="status-bar-clock-time"]').innerText();
     expect(after).toBe("23:35");
