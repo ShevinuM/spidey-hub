@@ -219,7 +219,7 @@ argument), then `pnpm generate` and commit as above.
 | `/` | open the grep overlay (from any view, including inside an editor) |
 | `j` / `k` / arrows | move selection within the active pane |
 | `Enter` | open / drill in |
-| `q` or `Esc` | back to the dashboard (closes the grep overlay first, if open) |
+| `q` or `Esc` | back to the dashboard (closes the grep overlay first, if open; from an open file editor, closes back to the file browser/builds view instead) |
 | held ⌘/Ctrl/Alt + key | falls through untouched (browser/OS shortcuts still work) |
 
 ### tmux prefix (`Ctrl-b`)
@@ -247,7 +247,7 @@ keydown listener is ever attached there at all).
 |---|---|---|
 | `j` / `k` | any list (Builds panels, Personnel, grep results) | move selection down/up |
 | `h` | Builds repo tree, Personnel roles level | up one level |
-| `gg` | Builds project list, Personnel lists, grep results | jump to the first entry (double-tap within ~500ms; a single `g` does nothing) |
+| `gg` | Builds project list, Personnel lists, grep results, plus the file editor | jump to the first entry / top of the file (double-tap within ~500ms; a single `g` does nothing) |
 | `G` | same lists, plus the file editor | jump to the last entry / bottom of the file |
 | `Ctrl-d` / `Ctrl-u` | file editor (Builds repo files, Personnel role docs) | half-page scroll |
 
