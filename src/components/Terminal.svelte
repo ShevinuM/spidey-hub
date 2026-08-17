@@ -18,6 +18,7 @@
     BuildsData,
     PersonnelData,
     CompanyEntry,
+    GrepData,
   } from "../lib/data";
   import type { Commit } from "../lib/commits";
   import type { ViewId } from "../lib/views";
@@ -30,6 +31,7 @@
   import Builds from "./Builds.svelte";
   import Personnel from "./Personnel.svelte";
   import Profile from "./Profile.svelte";
+  import GrepOverlay from "./GrepOverlay.svelte";
 
   interface Props {
     initialView: ViewId;
@@ -40,6 +42,7 @@
     builds: BuildsData;
     personnel: PersonnelData;
     companies: CompanyEntry[];
+    grep: GrepData;
     projects: CollectionEntry<"projects">[];
     personnelEntries: CollectionEntry<"personnel">[];
     commitsByRepo: Record<string, Commit[]>;
@@ -54,6 +57,7 @@
     builds,
     personnel,
     companies,
+    grep,
     projects,
     personnelEntries,
     commitsByRepo,
@@ -69,6 +73,12 @@
    * download); everything else (including q/Esc) falls through to the
    * generic handling below (PLAN.md Phase 7). */
   let profileRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
+  /** GrepOverlay.svelte (PLAN.md Phase 8) — always mounted (see that file's
+   * header comment), consulted FIRST on every keydown, ahead of every other
+   * ref above: this is what makes "/" open the overlay from inside an
+   * editor, and what keeps the overlay's own keys (typing, nav, Enter/Esc)
+   * from ever reaching the view underneath while it's open. */
+  let grepRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
 
   // Deliberately an "uncontrolled" seed, not a tracked binding: each route
   // page SSRs Terminal exactly once with the view matching its own URL, and
@@ -131,15 +141,18 @@
   }
 
   function handleKey(e: KeyboardEvent) {
-    // `/` is reserved for the grep overlay (Phase 8). Until then it must
-    // not type or scroll, but it is also not a view switch. Checked before
-    // the modifier-fall-through below so it can run before Ctrl-d/Ctrl-u are
-    // carved out — but only a plain, unmodified "/" is claimed here; Cmd+/,
-    // Ctrl+/ etc. must still fall through untouched (`e.key` is "/"
-    // regardless of which modifiers are held, so this needs its own guard
-    // rather than relying on the later blanket modifier check).
-    if (e.key === "/" && !e.metaKey && !e.ctrlKey && !e.altKey) {
-      e.preventDefault();
+    // GrepOverlay.svelte owns "/" (open) and every key while it's already
+    // open — consulted before anything else, exactly mirroring the
+    // prototype's own dispatch order (Homepage.dc.html line 980:
+    // `if (this.state.grep) { this.grepKey(e); return; }` runs before even
+    // the bare-"/" check, which itself runs before any view-specific
+    // handling). GrepOverlay.handleKey() calls e.preventDefault() itself
+    // exactly where the prototype's grepKey() does (see that file's header
+    // comment) — never here — so an unrecognized modifier combo held while
+    // the overlay is open (e.g. Cmd+L) still reaches the browser, it just
+    // never reaches buildsRef/personnelRef/profileRef or the view-switch
+    // keys below.
+    if (grepRef?.handleKey(e)) {
       return;
     }
 
@@ -232,4 +245,6 @@
 
     <StatusBar {site} {view} />
   </div>
+
+  <GrepOverlay bind:this={grepRef} {grep} onNavigate={setView} />
 </div>

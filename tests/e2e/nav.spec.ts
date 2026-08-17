@@ -248,7 +248,9 @@ test.describe("modifier fall-through", () => {
       return ev.defaultPrevented;
     });
     expect(prevented).toBe(true);
-    // No view switch: grep is a no-op placeholder until Phase 8.
+    // Opening the grep overlay (PLAN.md Phase 8 — see tests/e2e/grep.spec.ts
+    // for its own full behavioral suite) is never a URL/view switch: the
+    // overlay sits on top of whichever view/URL was already active.
     await expect(page).toHaveURL(/\/$/);
   });
 

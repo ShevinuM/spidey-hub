@@ -9,10 +9,12 @@
 // Phase 4 adds "08-tracker" (tracker view chrome: full-opacity wallpaper +
 // back pill). Phase 6 adds "04-personnel-l0"/"05-personnel-l1" (the yazi
 // file-browser pane at both levels) and "06-editor" (the first pixel test
-// of Editor.svelte itself — Phase 5's 02/03 never opened it). Later phases
-// add their own recipe name to RECIPE_NAMES as their views land; the
-// recipes list itself (tests/visual/recipes.ts) already has all 10 entries
-// so no renumbering is needed later.
+// of Editor.svelte itself — Phase 5's 02/03 never opened it). Phase 8 adds
+// "09-grep-empty"/"10-grep-query" (GrepOverlay.svelte, captured over the
+// dashboard — both recipes press "/" from the home view). Later phases add
+// their own recipe name to RECIPE_NAMES as their views land; the recipes
+// list itself (tests/visual/recipes.ts) already has all 10 entries so no
+// renumbering is needed later.
 import { expect, test } from "@playwright/test";
 import { recipes } from "./recipes.ts";
 import { captureState } from "./pipeline.mjs";
@@ -28,6 +30,8 @@ const RECIPE_NAMES = [
   "06-editor",
   "07-profile",
   "08-tracker",
+  "09-grep-empty",
+  "10-grep-query",
 ];
 
 const activeRecipes = recipes.filter((r) => RECIPE_NAMES.includes(r.name));

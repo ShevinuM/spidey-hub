@@ -252,10 +252,15 @@ export const getBuilds = (): BuildsData => loadYaml<BuildsData>("builds.yaml");
 export type FileKind = [glyph: string, color: string];
 
 export interface GrepData {
-  leftPane: { titlePrefix: string; titleTilde: string; promptIcon: string };
+  leftPane: { titlePrefix: string; titleTilde: string; promptIcon: string; cursorGlyph: string };
   modeLine: { liveGrep: string; repoFiles: string };
+  loadingText: string;
+  errorText: string;
   emptyStateTemplate: string;
   noResultsFile: string;
+  rowPosTemplate: string;
+  filePosTemplate: string;
+  fileLinesTemplate: string;
   footer: { hintsLeft: string; closeHint: string };
   fileKinds: Record<string, FileKind>;
   fileKindFallback: FileKind;
