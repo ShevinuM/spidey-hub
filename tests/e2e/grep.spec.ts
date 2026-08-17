@@ -154,6 +154,39 @@ test.describe("Grep overlay", () => {
     await expect(queryText(page)).toHaveText("▌");
   });
 
+  // PLAN.md Phase 9 "Vim extras" — gg/G jump to the first/last hit. Tension
+  // with grep being a live text-search box: "g" alone must remain typeable
+  // (verified by the existing "grep.ts" test above, which starts with a
+  // single "g" not followed by a second one — this test's own regression
+  // guard for the flush-on-any-other-key behavior in GrepOverlay.svelte).
+  test("gg/G jump to the first/last hit (empty query, real index)", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press("/");
+    const files = realIndex();
+    const firstPath = files[0].path;
+    const lastPath = files[files.length - 1].path;
+
+    await expect(rowByPath(page, firstPath)).toHaveAttribute("data-selected", "true");
+
+    await page.keyboard.press("G");
+    await expect(rowByPath(page, lastPath)).toHaveAttribute("data-selected", "true");
+    // Exactly one row is selected, and the window has scrolled the
+    // previously-selected first row out of the rendered subset entirely.
+    await expect(rows(page).and(page.locator('[data-selected="true"]'))).toHaveCount(1);
+    await expect(rowByPath(page, firstPath)).toHaveCount(0);
+
+    // A single "g" does nothing visible — the query stays empty and the
+    // selection doesn't move yet.
+    await page.keyboard.press("g");
+    await expect(queryText(page)).toHaveText("▌");
+    await expect(rowByPath(page, lastPath)).toHaveAttribute("data-selected", "true");
+
+    await page.keyboard.press("g");
+    await expect(rowByPath(page, firstPath)).toHaveAttribute("data-selected", "true");
+    // "gg" never got typed into the query.
+    await expect(queryText(page)).toHaveText("▌");
+  });
+
   test("ctrl-n/ctrl-p move the selection (with ↑/↓ parity)", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");

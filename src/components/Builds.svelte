@@ -219,6 +219,14 @@
     setActiveProject(selectedProjectIdx + delta);
   }
 
+  // ---------------------------------------------------------------------
+  // gg/G in panel [2]'s project list (PLAN.md Phase 9 "Vim extras" — the
+  // Editor's own gg/G, Phase 5, is the precedent this mirrors: same ~500ms
+  // double-tap window, single "g" alone does nothing visible).
+  // ---------------------------------------------------------------------
+  let gPending = false;
+  let gTimer: ReturnType<typeof setTimeout> | undefined;
+
   function selectRepo(delta: number) {
     const n = activeRepos.length;
     if (n === 0) return;
@@ -323,6 +331,7 @@
 
     if (e.key === "0" || e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4") {
       focusedPanel = Number(e.key) as 0 | 1 | 2 | 3 | 4;
+      gPending = false;
       return true;
     }
 
@@ -336,12 +345,31 @@
     if (focusedPanel === 2) {
       if (k === "j" || e.key === "ArrowDown") {
         selectProject(1);
+        gPending = false;
         return true;
       }
       if (k === "k" || e.key === "ArrowUp") {
         selectProject(-1);
+        gPending = false;
         return true;
       }
+      if (e.key === "G") {
+        setActiveProject(sortedProjects.length - 1);
+        gPending = false;
+        return true;
+      }
+      if (e.key === "g") {
+        if (gPending) {
+          clearTimeout(gTimer);
+          gPending = false;
+          setActiveProject(0);
+        } else {
+          gPending = true;
+          gTimer = setTimeout(() => (gPending = false), 500);
+        }
+        return true;
+      }
+      gPending = false;
       return false;
     }
 

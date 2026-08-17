@@ -128,11 +128,11 @@ Real Builds content differs from the prototype's fabricated sample data, so pixe
   - GrepOverlay.svelte is always mounted (not conditional on open); Terminal.svelte consults its `handleKey()` first on every keydown, ahead of buildsRef/personnelRef/profileRef, mirroring the prototype's own dispatch order exactly (grep, when open, claims every key unconditionally; closed, it claims only a bare `/`).
 
 ### Phase 9 — tmux prefix, vim extras, mobile block, README
-- [ ] From Phase 5 verify: add the missing e2e focus-border assertions for Builds panels 0 and 1 (functionally correct, currently untested).
-- [ ] Prefix state machine per assumptions (2s timeout, Esc cancel, only Ctrl-b preventDefault-ed, disabled in grep/mobile); `gg`/`G` in the three lists; editor Ctrl-d/u (if not already in P5).
-- [ ] Mobile block: media query + JS guard (no listeners/timers in blocked mode), card copy from data, escape-hatch link.
-- [ ] Project `README.md`: quickstart, content-editing workflows (add/remove project + submodule, add role, edit profile/site data, refresh commits snapshot, regenerate goldens, update submodules), keymap reference (design + tmux + vim), architecture map, resume.pdf swap note, deploy note (static `dist/`).
-- [ ] Svelte autofixer pass. Commit.
+- [x] From Phase 5 verify: add the missing e2e focus-border assertions for Builds panels 0 and 1 (functionally correct, currently untested).
+- [x] Prefix state machine per assumptions (2s timeout, Esc cancel, only Ctrl-b preventDefault-ed, disabled in grep/mobile); `gg`/`G` in the three lists; editor Ctrl-d/u (if not already in P5).
+- [x] Mobile block: media query + JS guard (no listeners/timers in blocked mode), card copy from data, escape-hatch link.
+- [x] Project `README.md`: quickstart, content-editing workflows (add/remove project + submodule, add role, edit profile/site data, refresh commits snapshot, regenerate goldens, update submodules), keymap reference (design + tmux + vim), architecture map, resume.pdf swap note, deploy note (static `dist/`).
+- [x] Svelte autofixer pass. Commit.
 - **Verify**: e2e: Ctrl-b 2 → personnel, Ctrl-b n/p cycle in order, Ctrl-b d → dashboard, prefix timeout (advance clock 2.1s, then `2` types/nothing happens instead of switching), Ctrl-b ignored while grep open; gg/G jump first/last in builds files + personnel + grep; iPhone-15-ish emulation (390×844, coarse pointer): card visible with spec copy, terminal hidden, pressing `b` does nothing, no key listener attached (assert via evaluating a marker), github link present; 1512×945 fine-pointer: card hidden. README exists and names every workflow above (verifier reads it).
 
 ### Phase 10 — Full acceptance run

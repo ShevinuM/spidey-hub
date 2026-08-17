@@ -22,7 +22,7 @@
   } from "../lib/data";
   import type { Commit } from "../lib/commits";
   import type { ViewId } from "../lib/views";
-  import { VIEW_ROUTES, hotkeyToView, pathToView } from "../lib/views";
+  import { VIEW_ROUTES, activeWindowId, hotkeyToView, pathToView } from "../lib/views";
   import Wallpaper from "./Wallpaper.svelte";
   import StatusBar from "./StatusBar.svelte";
   import Dashboard from "./Dashboard.svelte";
@@ -140,7 +140,111 @@
     history.pushState(null, "", VIEW_ROUTES[next]);
   }
 
+  // ---------------------------------------------------------------------
+  // tmux prefix (PLAN.md Phase 9 / README keymap, "Stated assumptions").
+  // Ctrl-b arms a 2s window during which the very next key is a
+  // window-switch command instead of reaching any view. `prefixArmed`'s
+  // dispatch branch is checked FIRST in handleKey() below — even before
+  // the grep delegation — so a prefixed key (including a bare "/") can
+  // never leak into any view handler OR open the grep overlay; only the
+  // *arm* check (bare Ctrl-b itself) runs after grep delegation, per the
+  // inherited fact that grep must keep swallowing Ctrl-b while open (its
+  // own "unrecognized modifier combo" branch — see GrepOverlay.svelte —
+  // already returns `true` for it unconditionally while open, so Ctrl-b
+  // can never arm the prefix while the overlay is up; armed ∧ grep-open is
+  // therefore unreachable: grep only ever opens via a bare "/", and a
+  // prefixed "/" is now swallowed by the armed-dispatch branch below
+  // before grep ever sees it).
+  // ---------------------------------------------------------------------
+  const PREFIX_CYCLE: ViewId[] = ["builds", "personnel", "retina-v", "profile"];
+  const PREFIX_TARGETS: Partial<Record<string, ViewId>> = {
+    "1": "builds",
+    "2": "personnel",
+    "3": "retina-v",
+    "4": "profile",
+  };
+  const PREFIX_TIMEOUT_MS = 2000;
+
+  let prefixArmed = $state(false);
+  let prefixTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function armPrefix() {
+    prefixArmed = true;
+    clearTimeout(prefixTimer);
+    prefixTimer = setTimeout(() => {
+      prefixArmed = false;
+    }, PREFIX_TIMEOUT_MS);
+  }
+
+  function disarmPrefix() {
+    prefixArmed = false;
+    clearTimeout(prefixTimer);
+  }
+
+  /** n/p — next/prev window. `home` (dashboard) has no window of its own;
+   * treated as sitting at `activeWindowId`'s existing home->builds mapping
+   * (StatusBar/views.ts convention) so n/p from the dashboard still land
+   * somewhere sensible. Untested directly (the e2e cycle test starts from
+   * "builds", where the choice isn't load-bearing) — documented here for
+   * whoever next touches it. */
+  function cyclePrefixView(dir: 1 | -1) {
+    const current = activeWindowId(view) as ViewId;
+    const idx = PREFIX_CYCLE.indexOf(current);
+    const base = idx === -1 ? 0 : idx;
+    const next = PREFIX_CYCLE[(base + dir + PREFIX_CYCLE.length) % PREFIX_CYCLE.length];
+    setView(next);
+  }
+
+  /** The single key following an armed Ctrl-b. Always disarms. A held
+   * modifier (e.g. Ctrl-d) is deliberately NOT treated as a prefix command
+   * — disarm and fall through to the rest of handleKey unchanged, so e.g.
+   * the Builds/Personnel editor's own Ctrl-d/Ctrl-u half-page scroll still
+   * works immediately after an (unused) Ctrl-b, and the global "modifier
+   * combos fall through untouched" rule holds even mid-prefix. */
+  function handlePrefixedKey(e: KeyboardEvent): boolean {
+    disarmPrefix();
+    if (e.metaKey || e.ctrlKey || e.altKey) return false;
+
+    if (e.key === "Escape") return true; // cancel — swallowed, no action
+
+    const target = PREFIX_TARGETS[e.key];
+    if (target) {
+      e.preventDefault();
+      setView(target);
+      return true;
+    }
+
+    const pk = e.key.toLowerCase();
+    if (pk === "n") {
+      e.preventDefault();
+      cyclePrefixView(1);
+      return true;
+    }
+    if (pk === "p") {
+      e.preventDefault();
+      cyclePrefixView(-1);
+      return true;
+    }
+    if (pk === "d" || pk === "w" || e.key === "0") {
+      e.preventDefault();
+      setView("home");
+      return true;
+    }
+
+    // Unrecognized prefixed key — tmux swallows it silently (no action);
+    // only preventDefault a printable character (mirrors GrepOverlay's own
+    // "swallow printable, let modifiers through" split).
+    if (e.key.length === 1) e.preventDefault();
+    return true;
+  }
+
   function handleKey(e: KeyboardEvent) {
+    if (prefixArmed) {
+      if (handlePrefixedKey(e)) return;
+      // A modifier combo mid-prefix: disarmed above, deliberately falls
+      // through to grep/view handling below as if no prefix were armed.
+    }
+
     // GrepOverlay.svelte owns "/" (open) and every key while it's already
     // open — consulted before anything else, exactly mirroring the
     // prototype's own dispatch order (Homepage.dc.html line 980:
@@ -153,6 +257,19 @@
     // never reaches buildsRef/personnelRef/profileRef or the view-switch
     // keys below.
     if (grepRef?.handleKey(e)) {
+      return;
+    }
+
+    // Ctrl-b arms the tmux prefix (PLAN.md Phase 9) — checked AFTER grep
+    // delegation so grep's own dispatch (when open) keeps swallowing it via
+    // its "unrecognized modifier combo" branch, exactly like every other
+    // Ctrl/Cmd/Alt chord while the overlay is up. Only Ctrl-b itself is
+    // preventDefault-ed (global keymap rule: every other modifier combo
+    // falls through untouched) — pressing it again while already armed
+    // simply re-arms (resets the 2s window).
+    if (e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "b") {
+      e.preventDefault();
+      armPrefix();
       return;
     }
 

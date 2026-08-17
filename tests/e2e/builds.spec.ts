@@ -71,6 +71,55 @@ test.describe("Builds: project list + doc pane", () => {
     await page.keyboard.press("k");
     await expect(doc).toContainText("SafePass");
   });
+
+  // PLAN.md Phase 9 verify bullet (inherited from Phase 5's own verify):
+  // "add the missing e2e focus-border assertions for Builds panels 0 and 1"
+  // — panels 2/3/4's border-on-focus is already covered by other tests in
+  // this file; 0 (Changes) and 1 (Status) never had their own, even though
+  // panelBorder()/panelTitleColor() treat all five panels identically.
+  test("0 focuses the Changes panel (border); 1 focuses the Status panel (border)", async ({ page }) => {
+    await gotoReady(page, "/builds");
+    const FOCUSED = /border: 1px solid rgb\(224, 69, 60\)/;
+    const UNFOCUSED = /border: 1px solid rgba\(224, 69, 60, 0\.35\)/;
+
+    await page.keyboard.press("0");
+    await expect(page.locator('[data-testid="builds-panel-0"]')).toHaveAttribute("style", FOCUSED);
+    await expect(page.locator('[data-testid="builds-panel-2"]')).toHaveAttribute("style", UNFOCUSED);
+
+    await page.keyboard.press("1");
+    await expect(page.locator('[data-testid="builds-panel-1"]')).toHaveAttribute("style", FOCUSED);
+    await expect(page.locator('[data-testid="builds-panel-0"]')).toHaveAttribute("style", UNFOCUSED);
+  });
+
+  // PLAN.md Phase 9 "Vim extras" — gg/G in the Builds Files panel (project
+  // list, panel [2]). The editor's own gg/G (repo-file scrolling) already
+  // has a regression test further down this file; this is the project-list
+  // analogue, "filtered list aware" doesn't apply here (no filter concept
+  // in Builds), but must still respect the ~500ms double-tap window and do
+  // nothing visible on a single "g".
+  test("gg/G jump to the first/last project in panel [2]", async ({ page }) => {
+    await gotoReady(page, "/builds");
+    const doc = page.locator('[data-testid="builds-changes-body"]');
+    await expect(doc).toContainText("transcript-tts");
+
+    await page.keyboard.press("G");
+    await expect(doc).toContainText("daily-tech-digest");
+    await expect(page.locator('[data-testid="builds-file-row"][data-project-id="daily-tech-digest"]')).toHaveAttribute(
+      "style",
+      /rgba\(224, 69, 60, 0\.18\)/,
+    );
+
+    // A single "g" does nothing visible.
+    await page.keyboard.press("g");
+    await expect(doc).toContainText("daily-tech-digest");
+
+    await page.keyboard.press("g");
+    await expect(doc).toContainText("transcript-tts");
+    await expect(page.locator('[data-testid="builds-file-row"][data-project-id="transcript-tts"]')).toHaveAttribute(
+      "style",
+      /rgba\(224, 69, 60, 0\.18\)/,
+    );
+  });
 });
 
 test.describe("Builds: commits panel", () => {

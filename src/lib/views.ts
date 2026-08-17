@@ -62,21 +62,47 @@ export function activeWindowId(view: ViewId): string {
  * checked first, exactly per the plan's mapping:
  *   content/personnel|Personnel.svelte -> personnel
  *   content/projects|Builds.svelte     -> builds
- *   Tracker|Wallpaper|subjects         -> retina-v
- *   Profile                            -> profile
+ *   TrackerView.svelte|Wallpaper.svelte -> retina-v
+ *   Profile.svelte                     -> profile
  *   else                               -> null (close only, no navigation)
  *
+ * PLAN.md Phase 9 verify flag (from Phase 8's verifier): the original port
+ * used bare, unanchored substring alternates for fixture fidelity —
+ * `/xp|Yazi/i`, `/projects|Lazygit/i`, `/Tracker|Wallpaper|subjects|Radar/i`,
+ * `/Profile|info/i` — which would silently mis-route a *future* real path
+ * that happens to contain one of those words anywhere (e.g. a hypothetical
+ * `src/lib/info.ts` matching the bare `/info/i`, or a personnel-adjacent
+ * `src/lib/xp-utils.ts` matching `/xp/i`). Tightened below: the real-index
+ * rules are segment-anchored to the exact file/dir names scripts/
+ * generate.mjs actually produces, so they can only ever match the specific
+ * components/content directories named above, not an incidental substring.
+ *
  * The prototype's own fixture-style paths (fixtures/grep-index.json, used
- * only by the visual-regression recipes, which never press Enter) use its
- * original vocabulary instead ("projects"/"Lazygit", "xp"/"Yazi", "Radar",
- * "info") — those alternates are included below purely for fidelity with
- * the prototype's regexes; no test exercises them since the fixture
- * recipes never route.
+ * only by the visual-regression recipes, which never press Enter — see
+ * that file's own paths: src/pages/xp.astro, src/pages/projects.astro,
+ * src/components/Tracker.svelte, src/components/Radar.svelte, src/content/
+ * xp/*.md) use the prototype's original bare-word vocabulary instead. That
+ * fallback is gated to paths OUTSIDE src/ and tests/ — every fixture path
+ * above lives under src/, so this fallback is unreachable for any of them
+ * (fixture Enter-routing already has zero test coverage per the file
+ * header this replaces; this file's own root-level fixture entries like
+ * README.md/package.json/astro.config.mjs don't match the legacy words
+ * either, so the fallback is effectively inert dead code, kept only for
+ * prototype-regex fidelity) — the real rules above always run first and
+ * unconditionally own everything under src/ and tests/, so no future real
+ * file added there can ever fall through to the bare-word fallback.
  */
 export function grepPathToView(path: string): ViewId | null {
-  if (/content\/personnel|Personnel\.svelte|xp|Yazi/i.test(path)) return "personnel";
-  if (/content\/projects|Builds\.svelte|projects|Lazygit/i.test(path)) return "builds";
-  if (/Tracker|Wallpaper|subjects|Radar/i.test(path)) return "retina-v";
-  if (/Profile|info/i.test(path)) return "profile";
+  if (/(^|\/)content\/personnel\/|(^|\/)Personnel\.svelte$/.test(path)) return "personnel";
+  if (/(^|\/)content\/projects\/|(^|\/)Builds\.svelte$/.test(path)) return "builds";
+  if (/(^|\/)(TrackerView|Wallpaper)\.svelte$/.test(path)) return "retina-v";
+  if (/(^|\/)Profile\.svelte$/.test(path)) return "profile";
+
+  if (!/^(src|tests)\//.test(path)) {
+    if (/projects|Lazygit/.test(path)) return "builds";
+    if (/xp|Yazi/.test(path)) return "personnel";
+    if (/Tracker|Radar|subjects/.test(path)) return "retina-v";
+    if (/info/i.test(path)) return "profile";
+  }
   return null;
 }

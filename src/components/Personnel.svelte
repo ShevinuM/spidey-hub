@@ -106,6 +106,11 @@
   let filterMode = $state(false);
   let filterQuery = $state("");
 
+  /** gg/G double-tap state (PLAN.md Phase 9 "Vim extras") — same ~500ms
+   * window as Editor.svelte/Builds.svelte's own gg/G. */
+  let gPending = false;
+  let gTimer: ReturnType<typeof setTimeout> | undefined;
+
   interface Row {
     name: string;
     meta: string;
@@ -209,6 +214,25 @@
     if (n === 0) return;
     if (level === 1) roleSel = ((roleSel + dir) % n + n) % n;
     else companySel = ((companySel + dir) % n + n) % n;
+  }
+
+  /** gg/G — jump to the first/last row of `currentRows` (PLAN.md Phase 9
+   * "Vim extras" — "filtered list aware": `currentRows` already reflects
+   * whichever filter is active, same as moveSelection() above, so gg/G
+   * jump within the filtered set, not the full unfiltered list). Nav-mode
+   * only (not while `filterMode` is active — see handleKey(), where typed
+   * characters including "g"/"G" go straight into the filter query
+   * instead, same as every other letter). */
+  function jumpFirst() {
+    if (currentRows.length === 0) return;
+    if (level === 1) roleSel = 0;
+    else companySel = 0;
+  }
+  function jumpLast() {
+    const n = currentRows.length;
+    if (n === 0) return;
+    if (level === 1) roleSel = n - 1;
+    else companySel = n - 1;
   }
 
   /** Enter/l/ArrowRight — `xpEnter()` (Homepage.dc.html line 905). */
@@ -335,28 +359,50 @@
 
     if (k === "f") {
       filterMode = true;
+      gPending = false;
       return true;
     }
     if (k === "j" || e.key === "ArrowDown") {
       moveSelection(1);
+      gPending = false;
       return true;
     }
     if (k === "k" || e.key === "ArrowUp") {
       moveSelection(-1);
+      gPending = false;
       return true;
     }
     if (e.key === "Enter" || k === "l" || e.key === "ArrowRight") {
       activateSelected();
+      gPending = false;
       return true;
     }
     if (k === "h" || e.key === "Backspace" || e.key === "ArrowLeft") {
       upOneLevel();
+      gPending = false;
+      return true;
+    }
+    if (e.key === "G") {
+      jumpLast();
+      gPending = false;
+      return true;
+    }
+    if (e.key === "g") {
+      if (gPending) {
+        clearTimeout(gTimer);
+        gPending = false;
+        jumpFirst();
+      } else {
+        gPending = true;
+        gTimer = setTimeout(() => (gPending = false), 500);
+      }
       return true;
     }
 
     // q/Escape intentionally unhandled here: falls through to
     // Terminal.svelte's generic q/Esc-to-dashboard fallback (PLAN.md bug
     // fix 3 — always dashboard from the browser, at both levels).
+    gPending = false;
     return false;
   }
 </script>

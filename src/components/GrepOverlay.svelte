@@ -230,11 +230,44 @@
     open = true;
     query = "";
     sel = 0;
+    gPending = false;
+    clearTimeout(gTimer);
     void ensureIndexLoaded();
   }
 
   function closeOverlay() {
     open = false;
+    gPending = false;
+    clearTimeout(gTimer);
+  }
+
+  // ---------------------------------------------------------------------
+  // gg/G (PLAN.md Phase 9 "Vim extras" — jump first/last in the results
+  // list). Genuinely in tension with this being a live text-search box: a
+  // bare "g" keydown is normally just another character appended to
+  // `query` (see the printable-character branch at the bottom of
+  // handleKey() below). The resolution mirrors Editor.svelte's own gg/G
+  // (same ~500ms double-tap window) with one addition Editor.svelte never
+  // needed, since it has no text entry: a pending "g" that ISN'T followed
+  // by a second "g" within the window must be *flushed* into the query as
+  // a literal "g" character (not silently dropped), so search terms that
+  // start with a single "g" (e.g. "grep.ts", already covered by an
+  // existing regression test below) still type correctly — the flush
+  // happens synchronously the moment any other key arrives, not only on
+  // the timeout, so fast typing never observably delays it. Consequence:
+  // "gg" and "G" themselves can never be searched for literally (case-
+  // insensitive search makes "G" reachable as "g" anyway) — accepted
+  // per PLAN.md's explicit "gg/G ... grep results" requirement.
+  // ---------------------------------------------------------------------
+  let gPending = false;
+  let gTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function flushPendingG() {
+    if (!gPending) return;
+    clearTimeout(gTimer);
+    gPending = false;
+    query += "g";
+    sel = 0;
   }
 
   /** Enter — Component.grepOpenRow() (lines 870-880): always closes;
@@ -266,6 +299,12 @@
 
     const k = e.key.toLowerCase();
     const n = Math.max(1, hits.length);
+
+    // A pending "g" (from the LAST keydown) not immediately followed by a
+    // second "g" is flushed into the query as a literal character before
+    // this key does anything else — see flushPendingG()'s doc comment.
+    const isBareG = e.key === "g" && !e.metaKey && !e.ctrlKey && !e.altKey;
+    if (gPending && !isBareG) flushPendingG();
 
     if (e.key === "Escape" || (e.ctrlKey && k === "c")) {
       closeOverlay();
@@ -302,6 +341,35 @@
     // consumed (the view beneath never sees them either) but never
     // preventDefault-ed, matching Component.grepKey() line 891.
     if (e.metaKey || e.ctrlKey || e.altKey) return true;
+
+    // gg/G — jump to the first/last hit (PLAN.md Phase 9 "Vim extras").
+    // Checked before the generic printable-character branch below: a bare
+    // "g" produces no visible change on its own (armed, awaiting a second
+    // "g" within ~500ms — see flushPendingG()'s doc comment for what
+    // happens if one never comes); "G" always jumps to the last hit
+    // immediately (no double-tap).
+    if (isBareG) {
+      e.preventDefault();
+      if (gPending) {
+        clearTimeout(gTimer);
+        gPending = false;
+        sel = 0;
+      } else {
+        gPending = true;
+        gTimer = setTimeout(() => {
+          gPending = false;
+          query += "g";
+          sel = 0;
+        }, 500);
+      }
+      return true;
+    }
+    if (e.key === "G") {
+      e.preventDefault();
+      sel = Math.max(0, hits.length - 1);
+      return true;
+    }
+
     if (e.key.length === 1) {
       e.preventDefault();
       query += e.key;

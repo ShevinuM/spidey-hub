@@ -105,6 +105,24 @@ test.describe("Personnel: companies level (level 0)", () => {
     await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
   });
 
+  // PLAN.md Phase 9 "Vim extras" — gg/G at the companies level (4 rows).
+  test("gg/G jump to the first/last company", async ({ page }) => {
+    await openPersonnel(page);
+    await expect(posText(page)).toHaveText("1 / 4");
+
+    await page.keyboard.press("G");
+    await expect(posText(page)).toHaveText("4 / 4");
+    await expect(rowLocator(page, "Freelance/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
+
+    // A single "g" does nothing visible.
+    await page.keyboard.press("g");
+    await expect(posText(page)).toHaveText("4 / 4");
+
+    await page.keyboard.press("g");
+    await expect(posText(page)).toHaveText("1 / 4");
+    await expect(rowLocator(page, "Enaimco/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
+  });
+
   test("clicking the ../ row returns to the dashboard", async ({ page }) => {
     await openPersonnel(page);
     await page.locator('[data-testid="personnel-up-row"]').click();
@@ -194,6 +212,27 @@ test.describe("Personnel: roles level (level 1)", () => {
     await openEnaimcoRoles(page);
     await page.keyboard.press("Escape");
     await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
+  });
+
+  // PLAN.md Phase 9 "Vim extras" — gg/G at the roles level (Enaimco: 3 roles).
+  test("gg/G jump to the first/last role", async ({ page }) => {
+    await openEnaimcoRoles(page);
+    await expect(posText(page)).toHaveText("1 / 3");
+
+    await page.keyboard.press("G");
+    await expect(posText(page)).toHaveText("3 / 3");
+    await expect(rowLocator(page, "software-developer-co-op.md")).toHaveAttribute(
+      "style",
+      /rgba\(224, 69, 60, 0\.2\)/,
+    );
+
+    await page.keyboard.press("g");
+    await page.keyboard.press("g");
+    await expect(posText(page)).toHaveText("1 / 3");
+    await expect(rowLocator(page, "software-developer-full-time.md")).toHaveAttribute(
+      "style",
+      /rgba\(224, 69, 60, 0\.2\)/,
+    );
   });
 });
 
@@ -286,6 +325,35 @@ test.describe("Personnel: filter mode", () => {
     await expect(posText(page)).toHaveText("1 / 4");
     await page.keyboard.press("j");
     await expect(posText(page)).toHaveText("2 / 4");
+  });
+
+  // PLAN.md Phase 9 "Vim extras" — "filtered list aware": G must jump to the
+  // last entry of the FILTERED set, not the last entry of the full
+  // unfiltered roles list (co-op, which the "time" filter excludes).
+  test("G after a filter jumps to the last entry of the filtered list, not the unfiltered one", async ({ page }) => {
+    await openPersonnel(page);
+    await page.keyboard.press("Enter"); // -> Enaimco roles (3 entries)
+    await page.keyboard.press("f");
+    await page.keyboard.type("time"); // matches full-time.md and part-time.md (2 of 3)
+    await page.keyboard.press("Enter"); // confirm filter, back to nav mode
+    await expect(posText(page)).toHaveText("1 / 2");
+
+    await page.keyboard.press("G");
+    await expect(posText(page)).toHaveText("2 / 2");
+    await expect(rowLocator(page, "software-developer-part-time.md")).toHaveAttribute(
+      "style",
+      /rgba\(224, 69, 60, 0\.2\)/,
+    );
+    // Not the unfiltered list's last entry.
+    await expect(rowLocator(page, "software-developer-co-op.md")).not.toBeVisible();
+
+    await page.keyboard.press("g");
+    await page.keyboard.press("g");
+    await expect(posText(page)).toHaveText("1 / 2");
+    await expect(rowLocator(page, "software-developer-full-time.md")).toHaveAttribute(
+      "style",
+      /rgba\(224, 69, 60, 0\.2\)/,
+    );
   });
 
   test("descending from a filtered companies list enters the filtered (not positionally-indexed) company", async ({
