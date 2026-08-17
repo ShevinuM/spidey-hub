@@ -30,6 +30,10 @@ menu:
     icon: "spider-mask"
     label: "E.D.I.T.H: Retina-V"
     hotkey: "t"
+  - id: help
+    icon: "?"
+    label: "Help"
+    hotkey: "?"
 
 footer:
   syncLine: "⚡ tracker synced 8/8 panes in 48.23ms"

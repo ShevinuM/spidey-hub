@@ -3,7 +3,7 @@
 import Shell from "../layouts/Shell.astro";
 import Terminal from "../components/Terminal.svelte";
 import { getCollection } from "astro:content";
-import { getSite, getDashboard, getTracker, getProfile, getBuilds, getPersonnel, getCompanies, getGrep } from "../lib/data";
+import { getSite, getDashboard, getTracker, getProfile, getBuilds, getPersonnel, getCompanies, getGrep, getHelp } from "../lib/data";
 import { getCommitsByRepo } from "../lib/commits";
 
 const site = getSite();
@@ -14,6 +14,7 @@ const builds = getBuilds();
 const personnel = getPersonnel();
 const companies = getCompanies();
 const grep = getGrep();
+const help = getHelp();
 const projects = await getCollection("projects");
 const personnelEntries = await getCollection("personnel");
 const commitsByRepo = getCommitsByRepo(projects);
@@ -31,6 +32,7 @@ const commitsByRepo = getCommitsByRepo(projects);
     {personnel}
     {companies}
     {grep}
+    {help}
     {projects}
     {personnelEntries}
     {commitsByRepo}

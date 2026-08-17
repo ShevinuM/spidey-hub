@@ -14,6 +14,11 @@ async function statusBarText(page: Page) {
   return (await page.locator(STATUS_BAR).innerText()).replace(/\s+/g, " ").trim();
 }
 
+const WINDOWS = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"];
+function winText(activeId: string): string {
+  return WINDOWS.map((id, i) => `${i}:${id}${id === activeId ? "*" : ""}`).join(" ");
+}
+
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);
   await page.locator('[data-terminal-ready="true"]').waitFor({ state: "attached" });
@@ -129,27 +134,31 @@ test.describe("Profile: SUMMARY panel", () => {
   });
 });
 
-test.describe("Profile: close + status bar", () => {
-  test("q returns to the dashboard", async ({ page }) => {
+test.describe("Profile: q/Esc never navigate, no close pill (PLAN.md Phase 1 items 15/16)", () => {
+  test("q does nothing — stays on profile", async ({ page }) => {
     await openProfile(page);
     await page.keyboard.press("q");
-    await expect(page).toHaveURL(/\/$/);
+    await expect(page).toHaveURL(/\/profile$/);
   });
 
-  test("Esc returns to the dashboard", async ({ page }) => {
+  test("Esc does nothing — stays on profile", async ({ page }) => {
     await openProfile(page);
     await page.keyboard.press("Escape");
+    await expect(page).toHaveURL(/\/profile$/);
+  });
+
+  test("the [q] close pill no longer exists — navigation is status-bar clicks / tmux prefix / dashboard menu only", async ({
+    page,
+  }) => {
+    await openProfile(page);
+    await expect(page.locator('[data-testid="profile-close"]')).toHaveCount(0);
+    // The mouse path off of Profile is the status bar, same as every view.
+    await page.locator('[data-testid="status-bar-window"][data-window-id="dashboard"]').click();
     await expect(page).toHaveURL(/\/$/);
   });
 
-  test("clicking [q] close returns to the dashboard", async ({ page }) => {
+  test("status bar shows windows 0-5 in numeric order with profile active", async ({ page }) => {
     await openProfile(page);
-    await page.locator('[data-testid="profile-close"]').click();
-    await expect(page).toHaveURL(/\/$/);
-  });
-
-  test("status bar shows windows 1-4 in numeric order with profile active", async ({ page }) => {
-    await openProfile(page);
-    expect(await statusBarText(page)).toBe("1:builds 2:personnel 3:retina-v 4:profile*");
+    expect(await statusBarText(page)).toBe(winText("profile"));
   });
 });

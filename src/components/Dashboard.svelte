@@ -46,6 +46,8 @@
           class="dash-row"
           role="button"
           tabindex="0"
+          data-testid="dashboard-menu-row"
+          data-menu-id={item.id}
           onclick={() => pick(item.id)}
           onkeydown={(e) => {
             if (e.key === "Enter" || e.key === " ") pick(item.id);

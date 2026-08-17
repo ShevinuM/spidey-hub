@@ -3,7 +3,6 @@
 header:
   badge: "AGENT PROFILE"
   fileClearance: "FILE SHEV-0001 · CLEARANCE 6"
-  closeHint: "[q] close"
 
 title:
   name: "SHEVINU"

@@ -3,24 +3,30 @@
   //
   // Bug fix 1: the prototype appends the active Retina-V window *after*
   // profile ("...4:profile 3:retina-v*") instead of rendering it in place.
-  // We always render windows 1-4 in numeric order (as authored in
+  // We always render windows 0-5 in numeric order (as authored in
   // site.yaml) and simply highlight whichever one is active, in place.
   //
   // Bug fix 2: the prototype hardcodes "23:34" / "15-Aug-26". We render a
   // live local clock, filled immediately on mount and refreshed on a
   // minute-aligned timer, gated by the same desktop/fine-pointer guard as
   // every other listener/timer in the app (README "Mobile policy").
+  //
+  // PLAN.md Phase 1 item 1.3: every window is mouse-clickable (`onSelect`,
+  // provided by Terminal.svelte as `setView` composed with
+  // `windowIdToView()` for the one id — "dashboard" — that doesn't already
+  // equal its own ViewId), not just the dashboard menu / tmux prefix.
   import type { SiteData } from "../lib/data";
   import type { ViewId } from "../lib/views";
-  import { activeWindowId } from "../lib/views";
+  import { activeWindowId, windowIdToView } from "../lib/views";
   import { formatClockDate, formatClockTime, msUntilNextMinute } from "../lib/clock";
 
   interface Props {
     site: SiteData;
     view: ViewId;
+    onSelect: (view: ViewId) => void;
   }
 
-  const { site, view }: Props = $props();
+  const { site, view, onSelect }: Props = $props();
 
   const active = $derived(activeWindowId(view));
 
@@ -61,11 +67,20 @@
     style="display:flex;align-items:center;gap:8px;padding:0 8px;color:#5fc6b4;white-space:nowrap;flex:0 0 auto"
   >
     {#each site.statusBar.windows as win (win.id)}
-      {#if win.id === active}
-        <span style="background:#e0453c;color:#0b0f14;padding:0 6px">{win.number}:{win.name}*</span>
-      {:else}
-        <span>{win.number}:{win.name}</span>
-      {/if}
+      <span
+        role="button"
+        tabindex="0"
+        class="status-bar-window"
+        data-testid="status-bar-window"
+        data-window-id={win.id}
+        onclick={() => onSelect(windowIdToView(win.id))}
+        onkeydown={(e) => {
+          if (e.key === "Enter" || e.key === " ") onSelect(windowIdToView(win.id));
+        }}
+        style={win.id === active ? "cursor:pointer;background:#e0453c;color:#0b0f14;padding:0 6px" : "cursor:pointer"}
+      >
+        {win.number}:{win.name}{win.id === active ? "*" : ""}
+      </span>
     {/each}
   </div>
   <div style="flex:1"></div>
@@ -75,3 +90,9 @@
     <span data-testid="status-bar-clock-date" style="color:#c98fd0">{clockDate}</span>
   </div>
 </div>
+
+<style>
+  .status-bar-window:hover {
+    color: #8fd0f5;
+  }
+</style>

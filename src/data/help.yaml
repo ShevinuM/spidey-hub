@@ -1,0 +1,190 @@
+# Help window copy (PLAN.md Phase 1 item 13 / "Help window (#13)"). Single
+# source of truth for every binding in the app — current AND future (rows
+# for bindings that land in a later phase are marked `status: planned` so
+# this file and README.md's keymap reference never drift out of sync as the
+# plan progresses; nothing here is invented functionality, it's the plan's
+# own design decisions written down ahead of the code that implements them).
+#
+# Reachable via `Ctrl-b ?` (tmux list-keys), `Ctrl-b 5`, a status-bar click
+# on "5:help", and the dashboard menu's Help row (hotkey `?`).
+
+title: "Help — Keymap Reference"
+scrollHint: "j/k scrolls"
+plannedNote: "planned — lands in a later phase"
+
+sections:
+  - title: "Global"
+    rows:
+      - key: "b / p"
+        description: "Builds (from the dashboard)"
+      - key: "x"
+        description: "Personnel Files (from the dashboard)"
+      - key: "i"
+        description: "Profile (from the dashboard)"
+      - key: "t"
+        description: "E.D.I.T.H: Retina-V (from the dashboard)"
+      - key: "?"
+        description: "Help (from the dashboard)"
+      - key: "/"
+        description: "open the grep overlay (from any view, including inside an editor)"
+      - key: "j / k / arrows"
+        description: "move selection within the active pane"
+      - key: "Enter"
+        description: "open / drill in"
+      - key: "Esc"
+        description: "exits whatever's open — grep, a filter, a cmdline, the tmux prefix — never a view switch"
+      - key: "held ⌘/Ctrl/Alt + key"
+        description: "falls through untouched (browser/OS shortcuts still work)"
+
+  - title: "Window switching (mouse)"
+    rows:
+      - key: "click a status-bar window"
+        description: "jump straight to that window — 0:dashboard 1:builds 2:personnel 3:retina-v 4:profile 5:help"
+      - key: "click a dashboard menu row"
+        description: "same targets as their hotkeys"
+
+  - title: "Builds"
+    rows:
+      - key: "1 / 2 / 3 / 4 / 0"
+        description: "focus panel Status / Files (project list) / Local Repositories / Commits / Changes"
+      - key: "j / k"
+        description: "move selection within the focused panel"
+      - key: "Enter (panel [2], project list)"
+        description: "select a project — its .md shows in panel [0]"
+      - key: "Enter (panel [3], repos)"
+        description: "list that repo's file tree"
+      - key: "Enter (a file in the tree)"
+        description: "open the file in the full-screen vim editor"
+      - key: "h / Backspace (repo tree)"
+        description: "up one directory"
+      - key: "Enter (panel [4], commits)"
+        description: "open the selected commit's page on GitHub in a new tab"
+      - key: "t"
+        description: "E.D.I.T.H: Retina-V (works from Builds too, not only the dashboard)"
+      - key: "gg / G"
+        description: "jump to the first / last project in panel [2] (also inside the file editor — see Vim keys below)"
+      - key: "click a repo row (panel [3])"
+        description: "load that repo's tree into panel [2], same as Enter"
+        status: planned
+      - key: "click a commit / Enter on a commit (panel [4])"
+        description: "load that commit's tree into panel [2] (a lazygit-style loading spinner shows on the repo row) instead of opening GitHub"
+        status: planned
+      - key: "o (commits panel)"
+        description: "opens the selected commit on GitHub in a new tab — replaces today's Enter-opens-GitHub behavior once commit clicks load a tree instead"
+        status: planned
+      - key: "click a file / directory in the tree or preview pane"
+        description: "same as Enter — preview in panel [0], or open the editor"
+        status: planned
+
+  - title: "tmux prefix (Ctrl-b)"
+    rows:
+      - key: "1 / 2 / 3 / 4 / 5"
+        description: "jump straight to Builds / Personnel / Retina-V / Profile / Help"
+      - key: "n"
+        description: "next window (dashboard → builds → personnel → retina-v → profile → help → dashboard …)"
+      - key: "p"
+        description: "previous window (reverse cycle)"
+      - key: "d / w / 0"
+        description: "dashboard"
+      - key: "?"
+        description: "Help (tmux list-keys style)"
+      - key: "Esc"
+        description: "cancel the prefix (no action)"
+      - key: "(while the grep overlay is open)"
+        description: "the prefix still works — it consumes the next key before grep ever sees it"
+      - key: ","
+        description: "rename-window: status bar swaps to an editable prompt prefilled with the current name; Enter commits, Esc cancels"
+        status: planned
+      - key: "&"
+        description: "kill-window: prompts to confirm, then removes the window from the list (refuses to kill the last remaining one)"
+        status: planned
+      - key: "x"
+        description: "kill-pane: removes the focused Builds panel; kills the window instead if it's the only pane"
+        status: planned
+      - key: "["
+        description: "copy-mode: vim-navigate the active pane's text, v to select, y/Enter to yank"
+        status: planned
+      - key: "]"
+        description: "paste the copy-mode buffer into the active text input (grep query, filter, rename prompt, editor search)"
+        status: planned
+      - key: "anything else"
+        description: "silently swallowed (no action — mirrors real tmux's \"unbound prefixed key does nothing\")"
+
+  - title: "Vim keys (file editor)"
+    rows:
+      - key: "j / k"
+        description: "move the line cursor down/up (also works in Builds/Personnel lists)"
+      - key: "h"
+        description: "up one level (Builds repo tree, Personnel roles level)"
+      - key: "gg"
+        description: "jump to the first entry / top of file (double-tap within ~500ms; a single g does nothing)"
+      - key: "G"
+        description: "jump to the last entry / bottom of file"
+      - key: "Ctrl-d / Ctrl-u"
+        description: "half-page scroll"
+      - key: "q / Esc"
+        description: "close the file editor, back to the browser view underneath (not the dashboard)"
+      - key: "h l w b e 0 ^ $"
+        description: "column motions — NORMAL mode, with numeric counts (5j, 3w)"
+        status: planned
+      - key: "v / V"
+        description: "VISUAL / VISUAL-LINE selection"
+        status: planned
+      - key: "y / yy"
+        description: "yank the selection / current line to the paste buffer and system clipboard"
+        status: planned
+      - key: "/ (in-buffer), n / N"
+        description: "search the open file and step through matches"
+        status: planned
+      - key: ": :q :q! :wq"
+        description: "ex-command line — :q/:q! close, :w/:wq show a readonly message, unknown commands show an E492-style error"
+        status: planned
+
+  - title: "Grep overlay"
+    rows:
+      - key: "/"
+        description: "open (from anywhere); a bare / while typing is otherwise just a printable character"
+      - key: "printable characters"
+        description: "append to the live query"
+      - key: "Backspace"
+        description: "delete the last query character"
+      - key: "Ctrl-u / Ctrl-w"
+        description: "clear the query"
+      - key: "↓ / Ctrl-n (or Ctrl-j)"
+        description: "next hit"
+      - key: "↑ / Ctrl-p (or Ctrl-k)"
+        description: "previous hit"
+      - key: "gg / G"
+        description: "jump to the first / last hit"
+      - key: "Enter"
+        description: "open the selected hit — routes to the owning view if the path maps to one, otherwise just closes"
+      - key: "Esc / Ctrl-c"
+        description: "close, no navigation"
+
+  - title: "Personnel filter (f)"
+    rows:
+      - key: "f"
+        description: "enter filter mode on the > prompt"
+      - key: "click the > prompt"
+        description: "also enters filter mode"
+        status: planned
+      - key: "any printable character"
+        description: "appended to the filter query; the entry list live-filters (case-insensitive substring on names)"
+      - key: "Backspace"
+        description: "edit the filter query"
+      - key: "Esc"
+        description: "clear the filter and exit filter mode"
+      - key: "Enter"
+        description: "confirm the filter (exits typing; the filtered list stays applied) and returns to normal j/k navigation"
+
+  - title: "Personnel navigation (mouse)"
+    rows:
+      - key: "click a row"
+        description: "select it (click again, or click the already-selected row, to activate)"
+      - key: "click ../"
+        description: "up one level — or the dashboard, at the companies root"
+
+  - title: "Profile"
+    rows:
+      - key: "r"
+        description: "download resume.pdf in a new tab"

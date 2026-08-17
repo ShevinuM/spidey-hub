@@ -444,9 +444,20 @@
         </div>
       </div>
 
-      <!-- Right pane -->
+      <!-- Right pane. `overflow:visible` (not `hidden`) is deliberate here —
+           PLAN.md Phase 1 item 1.5, the grep clipping fix: this container is
+           the clipping ancestor of the two absolutely-positioned labels
+           below (`grep-file` / `grep-file-pos`, both `top:-9px` so they sit
+           astride the border like the left pane's own title), and
+           `overflow:hidden` clips any negative-offset absolutely-positioned
+           child unconditionally, at every viewport size — that's the actual
+           root cause of the reported clipping, not a `preview`-length or
+           viewport-height issue. The scrollable content area
+           (`previewEl` below) already declares its own `overflow:hidden`,
+           so nothing here relies on the outer container to clip overflowing
+           preview lines. -->
       <div
-        style="position:relative;flex:1;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;border:1px solid rgba(224,69,60,.4);border-radius:4px;background:rgba(9,13,18,.9);padding:12px 12px 8px;overflow:hidden"
+        style="position:relative;flex:1;min-width:0;box-sizing:border-box;display:flex;flex-direction:column;border:1px solid rgba(224,69,60,.4);border-radius:4px;background:rgba(9,13,18,.9);padding:12px 12px 8px;overflow:visible"
       >
         <div
           data-testid="grep-file"

@@ -31,7 +31,7 @@ function expectedView(path: string): "personnel" | "builds" | "retina-v" | "prof
   if (/^src\/content\/projects\//.test(path)) return "builds";
   if (path === "src/components/Personnel.svelte") return "personnel";
   if (path === "src/components/Builds.svelte") return "builds";
-  if (path === "src/components/TrackerView.svelte" || path === "src/components/Wallpaper.svelte") return "retina-v";
+  if (path === "src/components/Wallpaper.svelte") return "retina-v";
   if (path === "src/components/Profile.svelte") return "profile";
   return null;
 }
@@ -50,7 +50,7 @@ test("every path in the real grep index routes exactly as hand-audited (no false
   assert.deepEqual(mismatches, []);
 });
 
-test("routed paths are exactly the personnel content dir, the projects content dir, and the 5 named components", () => {
+test("routed paths are exactly the personnel content dir, the projects content dir, and the 4 named components", () => {
   const routed = realIndex.filter(({ path }) => grepPathToView(path) !== null).map((f) => f.path);
   const expectedRouted = realIndex.filter(({ path }) => expectedView(path) !== null).map((f) => f.path);
   assert.deepEqual([...routed].sort(), [...expectedRouted].sort());

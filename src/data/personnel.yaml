@@ -7,18 +7,21 @@
 pathPrefix: "/Users/Shev/Experience/"
 
 insetTitles:
-  fileBrowser: "─ File Browser ─"
+  # PLAN.md Phase 1 item 11 rename (renumbered from #5 "Renames").
+  fileBrowser: "─ Personnel Files ─"
   filePreview: "File Preview"
 
 promptIcon: ">"
 
 # Hint line under the role table / doc pane (Component.renderVals() line
-# 1083). {file} / {company} are interpolated; the literal wording is
-# unchanged by bug fix 3 (q/Esc always return to the dashboard — only the
-# *behavior* changes, not this copy, per PLAN.md "Approved bug fixes" #3).
+# 1083). {file} / {company} are interpolated. PLAN.md Phase 1 items 15/16
+# (q/Esc navigation removed sitewide) reword the trailing clause away from
+# "q returns to the dashboard" — navigation is now Ctrl-b / status-bar
+# clicks / the dashboard menu, never a bare key, so the hint points at the
+# help window instead.
 hints:
-  atRoleLevel: "enter opens {file} in nvim · h goes back · q returns to the dashboard"
-  atCompanyLevel: "enter opens {company}/ · j/k moves · q returns to the dashboard"
+  atRoleLevel: "enter opens {file} in nvim · h goes back · Ctrl-b ? for help"
+  atCompanyLevel: "enter opens {company}/ · j/k moves · Ctrl-b ? for help"
 
 upEntry:
   icon: "▸"

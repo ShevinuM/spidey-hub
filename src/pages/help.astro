@@ -1,5 +1,6 @@
 ---
-// Route: "/profile" — see src/pages/index.astro for the shared shape notes.
+// Route: "/help" — see src/pages/index.astro for the shared shape notes.
+// PLAN.md Phase 1 item 13: the new sixth status-bar window.
 import Shell from "../layouts/Shell.astro";
 import Terminal from "../components/Terminal.svelte";
 import { getCollection } from "astro:content";
@@ -20,10 +21,10 @@ const personnelEntries = await getCollection("personnel");
 const commitsByRepo = getCommitsByRepo(projects);
 ---
 
-<Shell title="Profile — shevinum.dev">
+<Shell title="Help — shevinum.dev">
   <Terminal
     client:load
-    initialView="profile"
+    initialView="help"
     {site}
     {dashboard}
     {tracker}

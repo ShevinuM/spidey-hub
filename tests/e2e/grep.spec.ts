@@ -57,16 +57,16 @@ test.describe("Grep overlay", () => {
     page,
   }) => {
     await gotoReady(page, "/profile");
-    await expect(page.locator('[data-testid="profile-close"]')).toBeVisible();
+    await expect(page.locator('[data-testid="profile-signal-row"]')).toBeVisible();
 
     await page.keyboard.press("/");
     await expect(overlay(page)).toBeVisible();
     // The view beneath is never unmounted or mutated while the overlay is up.
-    await expect(page.locator('[data-testid="profile-close"]')).toBeVisible();
+    await expect(page.locator('[data-testid="profile-signal-row"]')).toBeVisible();
 
     await page.keyboard.press("Escape");
     await expect(overlay(page)).not.toBeVisible();
-    await expect(page.locator('[data-testid="profile-close"]')).toBeVisible();
+    await expect(page.locator('[data-testid="profile-signal-row"]')).toBeVisible();
   });
 
   test("typing filters the results — 'grep.ts' finds src/lib/grep.ts by path", async ({ page }) => {
@@ -241,6 +241,83 @@ test.describe("Grep overlay", () => {
     const expectedRows = await listEl(page).evaluate((el) => Math.max(4, Math.floor(el.clientHeight / 22)));
     await expect(rows(page)).toHaveCount(expectedRows);
   });
+
+  // PLAN.md Phase 1 item 1.5: the user reported the overlay's top clipped.
+  // Prior research couldn't reproduce it against the LEFT pane's "GREP ~"
+  // title across 8 viewports; the actual culprit is the RIGHT preview
+  // pane's own absolutely-positioned labels (`grep-file` / `grep-file-pos`,
+  // both `top:-9px`, meant to straddle the pane's border the same way the
+  // left title does) — that pane's container had `overflow:hidden`, which
+  // clips a negative-offset absolutely-positioned child unconditionally, at
+  // every viewport size (deterministic, not viewport-dependent — see the
+  // fix's comment in GrepOverlay.svelte). `boundingBox()` alone can't catch
+  // this: a clipped element still reports its full, correct layout rect
+  // (clipping is a paint-time effect, not a layout one) — so the real
+  // assertion walks every ancestor with non-"visible" overflow and checks
+  // the label's rect is fully contained within each one's own rect, which
+  // fails pre-fix and passes post-fix (and guards a future regression, e.g.
+  // someone re-adding `overflow:hidden` to that container).
+  /** Runs inside the page. Returns `null` when `id`'s element is fully
+   * visible (inside the viewport, and inside every ancestor whose computed
+   * overflow isn't "visible") or a human-readable reason string otherwise. */
+  function clipCheck(id: string): string | null {
+    const label = document.querySelector(`[data-testid="${id}"]`);
+    if (!label) return "missing element";
+    const labelRect = label.getBoundingClientRect();
+
+    if (
+      labelRect.top < 0 ||
+      labelRect.left < 0 ||
+      labelRect.bottom > window.innerHeight ||
+      labelRect.right > window.innerWidth
+    ) {
+      return `outside the viewport: ${JSON.stringify(labelRect)}`;
+    }
+
+    let node = label.parentElement;
+    while (node) {
+      const style = getComputedStyle(node);
+      if (style.overflowX !== "visible" || style.overflowY !== "visible") {
+        const a = node.getBoundingClientRect();
+        const EPS = 0.5;
+        const contained =
+          labelRect.left >= a.left - EPS &&
+          labelRect.right <= a.right + EPS &&
+          labelRect.top >= a.top - EPS &&
+          labelRect.bottom <= a.bottom + EPS;
+        if (!contained) {
+          return `clipped by ${node.tagName}.${node.className} ${JSON.stringify(a)} vs label ${JSON.stringify(labelRect)}`;
+        }
+      }
+      node = node.parentElement;
+    }
+    return null;
+  }
+
+  const EXTRA_VIEWPORTS = [
+    { width: 1512, height: 945, deviceScaleFactor: 1 },
+    { width: 1920, height: 1080, deviceScaleFactor: 1 },
+    { width: 1366, height: 768, deviceScaleFactor: 1 },
+    { width: 1280, height: 800, deviceScaleFactor: 2 },
+    { width: 1512, height: 700, deviceScaleFactor: 1 }, // short viewport
+  ];
+
+  for (const vp of EXTRA_VIEWPORTS) {
+    test.describe(`right preview pane labels are never clipped by an ancestor (item #14 fix) — ${vp.width}x${vp.height}@${vp.deviceScaleFactor}x`, () => {
+      test.use({ viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: vp.deviceScaleFactor });
+
+      test("grep-file / grep-file-pos fully contained in every clipping ancestor", async ({ page }) => {
+        await gotoReady(page, "/");
+        await page.keyboard.press("/");
+        await expect(overlay(page)).toBeVisible();
+
+        for (const testid of ["grep-file", "grep-file-pos"]) {
+          const failure = await page.evaluate(clipCheck, testid);
+          expect(failure, `${testid} at ${vp.width}x${vp.height}`).toBeNull();
+        }
+      });
+    });
+  }
 
   test("grep never calls api.github.com", async ({ page }) => {
     const githubRequests: string[] = [];

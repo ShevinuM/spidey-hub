@@ -23,17 +23,17 @@
   // This component reproduces that: `../` is rendered but never part of
   // companySel/roleSel's range, reachable only by mouse (its own onclick)
   // or by the equivalent keyboard actions (h/Backspace/ArrowLeft = up one
-  // level only, never dashboard; q/Esc = PLAN.md bug fix 3, see below).
+  // level only, never dashboard — dashboard is mouse-only via `../`'s click
+  // or the global chrome, see the q/Esc note below).
   //
-  // q/Esc (bug fix 3): the prototype's own key handler sends q/Esc at
-  // xpLevel 1 up to level 0 (contradicting its own hint text, which always
-  // says "q returns to the dashboard"). Bug fix 3 makes q/Esc always reach
-  // the dashboard, at *both* levels — implemented here by simply not
-  // handling q/Esc in handleKey() while the browser (not the editor) is
-  // showing: returning `false` lets Terminal.svelte's own generic
-  // `view !== "home"` -> q/Esc -> dashboard fallback fire, for both levels,
-  // for free. Only the editor's q/Esc is special-cased below (closes the
-  // editor back to the browser, not the dashboard).
+  // q/Esc: PLAN.md Phase 1 items 15/16 ban bare q/Esc as navigation
+  // sitewide — neither key does anything at either level of the browser
+  // (only the editor's own q/Esc, special-cased below, still closes
+  // something: the editor overlay, back to the browser, never the
+  // dashboard). Implemented here by simply not handling q/Esc in
+  // handleKey() while the browser (not the editor) is showing: returning
+  // `false` lets the key fall through Terminal.svelte's handleKey with no
+  // matching branch left to catch it, for both levels, for free.
   //
   // `f` filter mode is a PLAN.md "Stated assumption" (Personnel search) —
   // no prototype precedent. It overlays a live case-insensitive substring

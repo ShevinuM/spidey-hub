@@ -1,7 +1,7 @@
 // View-id plumbing shared by the router pages and Terminal.svelte. Not
 // copy — these are internal identifiers (route paths, dashboard.yaml menu
 // ids, site.yaml status-bar window ids), never rendered as text directly.
-export type ViewId = "home" | "builds" | "personnel" | "retina-v" | "profile";
+export type ViewId = "home" | "builds" | "personnel" | "retina-v" | "profile" | "help";
 
 /** Route path for each view id — used for pushState + popstate parsing. */
 export const VIEW_ROUTES: Record<ViewId, string> = {
@@ -10,6 +10,7 @@ export const VIEW_ROUTES: Record<ViewId, string> = {
   personnel: "/personnel",
   "retina-v": "/retina-v",
   profile: "/profile",
+  help: "/help",
 };
 
 /**
@@ -24,6 +25,7 @@ const MENU_ID_TO_VIEW: Record<string, ViewId> = {
   xp: "personnel",
   info: "profile",
   tracker: "retina-v",
+  help: "help",
 };
 
 export function menuIdToView(menuId: string): ViewId | undefined {
@@ -37,6 +39,7 @@ const HOTKEY_TO_VIEW: Record<string, ViewId> = {
   x: "personnel",
   i: "profile",
   t: "retina-v",
+  "?": "help",
 };
 
 export function hotkeyToView(key: string): ViewId | undefined {
@@ -50,9 +53,21 @@ export function pathToView(pathname: string): ViewId {
   return entry ? entry[0] : "home";
 }
 
-/** Which status-bar window id (site.yaml) is active for a given view. */
+/** Which status-bar window id (site.yaml) is active for a given view. Every
+ * window is now a real, always-listed entry (PLAN.md Phase 1 "Window list
+ * becomes 0:dashboard 1:builds 2:personnel 3:retina-v 4:profile 5:help") —
+ * "home" is the one ViewId whose window id doesn't match its own name. */
 export function activeWindowId(view: ViewId): string {
-  return view === "home" ? "builds" : view;
+  return view === "home" ? "dashboard" : view;
+}
+
+/** Inverse of activeWindowId's "home" special case — used by StatusBar's
+ * click-to-navigate handler (PLAN.md Phase 1 item 1.3) to turn a clicked
+ * site.yaml window id back into the ViewId setView() expects. Every other
+ * window id already equals its ViewId verbatim (builds/personnel/retina-v/
+ * profile/help). */
+export function windowIdToView(id: string): ViewId {
+  return id === "dashboard" ? "home" : (id as ViewId);
 }
 
 /**
@@ -62,7 +77,7 @@ export function activeWindowId(view: ViewId): string {
  * checked first, exactly per the plan's mapping:
  *   content/personnel|Personnel.svelte -> personnel
  *   content/projects|Builds.svelte     -> builds
- *   TrackerView.svelte|Wallpaper.svelte -> retina-v
+ *   Wallpaper.svelte                   -> retina-v
  *   Profile.svelte                     -> profile
  *   else                               -> null (close only, no navigation)
  *
@@ -95,7 +110,7 @@ export function activeWindowId(view: ViewId): string {
 export function grepPathToView(path: string): ViewId | null {
   if (/(^|\/)content\/personnel\/|(^|\/)Personnel\.svelte$/.test(path)) return "personnel";
   if (/(^|\/)content\/projects\/|(^|\/)Builds\.svelte$/.test(path)) return "builds";
-  if (/(^|\/)(TrackerView|Wallpaper)\.svelte$/.test(path)) return "retina-v";
+  if (/(^|\/)Wallpaper\.svelte$/.test(path)) return "retina-v";
   if (/(^|\/)Profile\.svelte$/.test(path)) return "profile";
 
   if (!/^(src|tests)\//.test(path)) {

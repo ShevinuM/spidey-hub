@@ -59,16 +59,22 @@ map:
     label: "ORIGIN // TRK-0"
 
 # Command box, top-left corner of the map (line 76-78).
+# PLAN.md Phase 1 item 11 rename: "spider-tracker" -> "retina-v" (matches the
+# Profile view's own "E.D.I.T.H: RETINA-V" naming for this system).
 commandBox:
-  commandLine: "$ spider-tracker --region latveria --live"
+  commandLine: "$ retina-v --region latveria --live"
   statusLine: "scanning grid 44.71N / 19.24E ....... 3 signatures resolved"
 
 # Two ASCII HUD panels flanking the bottom of the map (lines 80-92). Stored
 # as line arrays (not one block-scalar string) so the exact column spacing
 # is unambiguous per line; render each array joined with "\n" inside a <pre>.
+# The header's "─" fill is re-padded (6 more dashes than the old
+# "spider-tracker" label needed) so every line — including the closing
+# "└...┘" — stays exactly 37 code points wide (verified by
+# tests/unit/tracker-hud.test.ts).
 hud:
   left:
-    - "┌─ spider-tracker ──────────────────┐"
+    - "┌─ retina-v ────────────────────────┐"
     - "│ scan ............ ACTIVE          │"
     - "│ region .......... LATVERIA        │"
     - "│ targets ......... 02 LOCKED       │"
@@ -109,7 +115,3 @@ subjects:
     sig: "Doomstadt · threat high"
     leftFrac: 0.10
     topFrac: 0.12
-
-backPill:
-  label: "[q] back to dashboard"
-  dismissGlyph: "✕"

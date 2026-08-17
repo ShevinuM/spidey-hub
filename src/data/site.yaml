@@ -5,12 +5,17 @@
 statusBar:
   session: "Session: 10.42.7.13"
   separator: "·"
-  # Window list, always rendered in this numeric order 1-4 (bug fix 1: the
+  # Window list, always rendered in this numeric order 0-5 (bug fix 1: the
   # prototype's Retina-V view renders "...4:profile 3:retina-v*" — out of
   # order — because the tracker window is appended after profile instead of
-  # rendered in place; we always render 1-4 with the active one highlighted
-  # in place instead of reordered).
+  # rendered in place; we always render 0-5 with the active one highlighted
+  # in place instead of reordered). PLAN.md Phase 1 "Window list becomes
+  # 0:dashboard 1:builds 2:personnel 3:retina-v 4:profile 5:help" — dashboard
+  # and help are real, clickable windows now, not implicit/absent.
   windows:
+    - number: 0
+      id: dashboard
+      name: dashboard
     - number: 1
       id: builds
       name: builds
@@ -23,6 +28,9 @@ statusBar:
     - number: 4
       id: profile
       name: profile
+    - number: 5
+      id: help
+      name: help
   grepHint: "[/] grep"
 
 mobileBlock:

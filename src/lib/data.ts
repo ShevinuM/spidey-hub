@@ -24,6 +24,7 @@ import buildsRaw from "../data/builds.yaml?raw";
 import grepRaw from "../data/grep.yaml?raw";
 import personnelRaw from "../data/personnel.yaml?raw";
 import companiesRaw from "../data/companies.yaml?raw";
+import helpRaw from "../data/help.yaml?raw";
 
 const RAW: Record<string, string> = {
   "site.yaml": siteRaw,
@@ -34,6 +35,7 @@ const RAW: Record<string, string> = {
   "grep.yaml": grepRaw,
   "personnel.yaml": personnelRaw,
   "companies.yaml": companiesRaw,
+  "help.yaml": helpRaw,
 };
 
 const cache = new Map<string, unknown>();
@@ -136,7 +138,6 @@ export interface TrackerData {
   commandBox: { commandLine: string; statusLine: string };
   hud: { left: string[]; right: string[] };
   subjects: Subject[];
-  backPill: { label: string; dismissGlyph: string };
 }
 
 export const getTracker = (): TrackerData => loadYaml<TrackerData>("tracker.yaml");
@@ -161,7 +162,7 @@ export interface ContactRow {
 }
 
 export interface ProfileData {
-  header: { badge: string; fileClearance: string; closeHint: string };
+  header: { badge: string; fileClearance: string };
   title: { name: string; subtitle: string };
   images: {
     portrait: { alt: string; caption: string };
@@ -299,3 +300,34 @@ export interface CompanyEntry {
 }
 
 export const getCompanies = (): CompanyEntry[] => loadYaml<CompanyEntry[]>("companies.yaml");
+
+// ---------------------------------------------------------------------------
+// help.yaml
+// ---------------------------------------------------------------------------
+
+/** One keymap row. `status` marks bindings that don't exist yet at HEAD —
+ * PLAN.md Phase 1 requires help.yaml to be the single source of truth for
+ * every binding across the whole plan (incl. Phase 3/5 work), added here
+ * ahead of the code that implements it so README/help never drift; `status`
+ * lets HelpView (and a future README generator) flag those rows instead of
+ * silently claiming they already work. Omitted (undefined) means "live
+ * today". */
+export interface HelpRow {
+  key: string;
+  description: string;
+  status?: "planned";
+}
+
+export interface HelpSection {
+  title: string;
+  rows: HelpRow[];
+}
+
+export interface HelpData {
+  title: string;
+  scrollHint: string;
+  plannedNote: string;
+  sections: HelpSection[];
+}
+
+export const getHelp = (): HelpData => loadYaml<HelpData>("help.yaml");

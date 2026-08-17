@@ -19,18 +19,19 @@
     PersonnelData,
     CompanyEntry,
     GrepData,
+    HelpData,
   } from "../lib/data";
   import type { Commit } from "../lib/commits";
   import type { ViewId } from "../lib/views";
-  import { VIEW_ROUTES, activeWindowId, hotkeyToView, pathToView } from "../lib/views";
+  import { VIEW_ROUTES, hotkeyToView, pathToView } from "../lib/views";
   import Wallpaper from "./Wallpaper.svelte";
   import StatusBar from "./StatusBar.svelte";
   import Dashboard from "./Dashboard.svelte";
   import Toasts from "./Toasts.svelte";
-  import TrackerView from "./TrackerView.svelte";
   import Builds from "./Builds.svelte";
   import Personnel from "./Personnel.svelte";
   import Profile from "./Profile.svelte";
+  import HelpView from "./HelpView.svelte";
   import GrepOverlay from "./GrepOverlay.svelte";
 
   interface Props {
@@ -43,6 +44,7 @@
     personnel: PersonnelData;
     companies: CompanyEntry[];
     grep: GrepData;
+    help: HelpData;
     projects: CollectionEntry<"projects">[];
     personnelEntries: CollectionEntry<"personnel">[];
     commitsByRepo: Record<string, Commit[]>;
@@ -58,6 +60,7 @@
     personnel,
     companies,
     grep,
+    help,
     projects,
     personnelEntries,
     commitsByRepo,
@@ -73,6 +76,9 @@
    * download); everything else (including q/Esc) falls through to the
    * generic handling below (PLAN.md Phase 7). */
   let profileRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
+  /** Same contract again — HelpView.svelte only ever claims j/k scrolling
+   * (PLAN.md Phase 1 item 13); everything else falls through unchanged. */
+  let helpRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
   /** GrepOverlay.svelte (PLAN.md Phase 8) — always mounted (see that file's
    * header comment), consulted FIRST on every keydown, ahead of every other
    * ref above: this is what makes "/" open the overlay from inside an
@@ -141,27 +147,26 @@
   }
 
   // ---------------------------------------------------------------------
-  // tmux prefix (PLAN.md Phase 9 / README keymap, "Stated assumptions").
+  // tmux prefix (PLAN.md Phase 9 / README keymap, "Stated assumptions";
+  // reordered by PLAN.md Phase 1 "Prefix precedence over grep" — see below).
   // Ctrl-b arms a 2s window during which the very next key is a
   // window-switch command instead of reaching any view. `prefixArmed`'s
-  // dispatch branch is checked FIRST in handleKey() below — even before
-  // the grep delegation — so a prefixed key (including a bare "/") can
-  // never leak into any view handler OR open the grep overlay; only the
-  // *arm* check (bare Ctrl-b itself) runs after grep delegation, per the
-  // inherited fact that grep must keep swallowing Ctrl-b while open (its
-  // own "unrecognized modifier combo" branch — see GrepOverlay.svelte —
-  // already returns `true` for it unconditionally while open, so Ctrl-b
-  // can never arm the prefix while the overlay is up; armed ∧ grep-open is
-  // therefore unreachable: grep only ever opens via a bare "/", and a
-  // prefixed "/" is now swallowed by the armed-dispatch branch below
-  // before grep ever sees it).
+  // dispatch branch is checked FIRST in handleKey() below, and the *arm*
+  // check (bare Ctrl-b itself) is now checked SECOND — ahead of grep
+  // delegation, tmux-faithful — so the prefix works even while the grep
+  // overlay is open (needed for a later phase's `Ctrl-b ]` paste into the
+  // grep query). This retires the old "prefix inert while grep is open"
+  // rule: while armed, the prefix consumes the next key before grep ever
+  // sees it, exactly like every other view.
   // ---------------------------------------------------------------------
-  const PREFIX_CYCLE: ViewId[] = ["builds", "personnel", "retina-v", "profile"];
+  const PREFIX_CYCLE: ViewId[] = ["home", "builds", "personnel", "retina-v", "profile", "help"];
   const PREFIX_TARGETS: Partial<Record<string, ViewId>> = {
     "1": "builds",
     "2": "personnel",
     "3": "retina-v",
     "4": "profile",
+    "5": "help",
+    "?": "help",
   };
   const PREFIX_TIMEOUT_MS = 2000;
 
@@ -181,15 +186,12 @@
     clearTimeout(prefixTimer);
   }
 
-  /** n/p — next/prev window. `home` (dashboard) has no window of its own;
-   * treated as sitting at `activeWindowId`'s existing home->builds mapping
-   * (StatusBar/views.ts convention) so n/p from the dashboard still land
-   * somewhere sensible. Untested directly (the e2e cycle test starts from
-   * "builds", where the choice isn't load-bearing) — documented here for
-   * whoever next touches it. */
+  /** n/p — next/prev window. Every window (including the dashboard, now a
+   * real "0:dashboard" entry — PLAN.md Phase 1) is a `ViewId` in
+   * `PREFIX_CYCLE`, so this indexes `view` directly with no id-translation
+   * layer needed. */
   function cyclePrefixView(dir: 1 | -1) {
-    const current = activeWindowId(view) as ViewId;
-    const idx = PREFIX_CYCLE.indexOf(current);
+    const idx = PREFIX_CYCLE.indexOf(view);
     const base = idx === -1 ? 0 : idx;
     const next = PREFIX_CYCLE[(base + dir + PREFIX_CYCLE.length) % PREFIX_CYCLE.length];
     setView(next);
@@ -245,31 +247,33 @@
       // through to grep/view handling below as if no prefix were armed.
     }
 
-    // GrepOverlay.svelte owns "/" (open) and every key while it's already
-    // open — consulted before anything else, exactly mirroring the
-    // prototype's own dispatch order (Homepage.dc.html line 980:
-    // `if (this.state.grep) { this.grepKey(e); return; }` runs before even
-    // the bare-"/" check, which itself runs before any view-specific
-    // handling). GrepOverlay.handleKey() calls e.preventDefault() itself
-    // exactly where the prototype's grepKey() does (see that file's header
-    // comment) — never here — so an unrecognized modifier combo held while
-    // the overlay is open (e.g. Cmd+L) still reaches the browser, it just
-    // never reaches buildsRef/personnelRef/profileRef or the view-switch
-    // keys below.
-    if (grepRef?.handleKey(e)) {
-      return;
-    }
-
-    // Ctrl-b arms the tmux prefix (PLAN.md Phase 9) — checked AFTER grep
-    // delegation so grep's own dispatch (when open) keeps swallowing it via
-    // its "unrecognized modifier combo" branch, exactly like every other
-    // Ctrl/Cmd/Alt chord while the overlay is up. Only Ctrl-b itself is
-    // preventDefault-ed (global keymap rule: every other modifier combo
-    // falls through untouched) — pressing it again while already armed
-    // simply re-arms (resets the 2s window).
+    // Ctrl-b arms the tmux prefix (PLAN.md Phase 1 "Prefix precedence over
+    // grep") — checked BEFORE grep delegation now, tmux-faithful: the
+    // prefix works everywhere, including while the grep overlay is open
+    // (needed for a later phase's `Ctrl-b ]` paste into the grep query).
+    // Only Ctrl-b itself is preventDefault-ed (global keymap rule: every
+    // other modifier combo falls through untouched) — pressing it again
+    // while already armed simply re-arms (resets the 2s window).
     if (e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "b") {
       e.preventDefault();
       armPrefix();
+      return;
+    }
+
+    // GrepOverlay.svelte owns "/" (open) and every key while it's already
+    // open — consulted next, exactly mirroring the prototype's own dispatch
+    // order (Homepage.dc.html line 980: `if (this.state.grep) {
+    // this.grepKey(e); return; }` runs before even the bare-"/" check,
+    // which itself runs before any view-specific handling), except that the
+    // tmux prefix (above) now runs ahead of it per the retired "prefix
+    // inert while grep open" rule. GrepOverlay.handleKey() calls
+    // e.preventDefault() itself exactly where the prototype's grepKey()
+    // does (see that file's header comment) — never here — so an
+    // unrecognized modifier combo held while the overlay is open (e.g.
+    // Cmd+L) still reaches the browser, it just never reaches
+    // buildsRef/personnelRef/profileRef/helpRef or the view-switch keys
+    // below.
+    if (grepRef?.handleKey(e)) {
       return;
     }
 
@@ -303,6 +307,13 @@
       }
     }
 
+    if (view === "help" && helpRef && !(e.metaKey || e.ctrlKey || e.altKey)) {
+      if (helpRef.handleKey(e)) {
+        e.preventDefault();
+        return;
+      }
+    }
+
     // Modifier combos fall through untouched — never preventDefault them,
     // regardless of which view is active (PLAN.md keymap: "modifier-held
     // keys fall through untouched").
@@ -310,8 +321,14 @@
 
     const k = e.key.toLowerCase();
 
+    // PLAN.md Phase 1 items 15/16: bare q/Esc never switch views anywhere,
+    // sitewide — navigation is tmux-prefix, status-bar clicks, or the
+    // dashboard menu only. Esc is still handled above, but only as a
+    // modal-exit key owned by grep/filter/prefix — never here. This
+    // `return` still matters with the old q/Esc branch gone: it's what
+    // keeps the dashboard-only hotkeys below from firing from any other
+    // view.
     if (view !== "home") {
-      if (k === "q" || e.key === "Escape") setView("home");
       return;
     }
 
@@ -343,9 +360,14 @@
     {#if view === "home"}
       <Dashboard {dashboard} onSelect={setView} />
     {:else if view === "retina-v"}
-      <!-- Full-opacity wallpaper (handled by Wallpaper's `view` prop) plus
-           the dismissible back pill. -->
-      <TrackerView {tracker} onGoHome={() => setView("home")} />
+      <!-- The full-opacity map/HUD is Wallpaper's own `view`-gated opacity
+           (rendered once, behind every view, above) — PLAN.md Phase 1 items
+           15/16 removed this view's only other content (the "[q] back to
+           dashboard" pill); navigation is status-bar clicks / the tmux
+           prefix / the dashboard menu now, so this branch is otherwise
+           empty. The filler div keeps the flex column's layout identical to
+           every other view (StatusBar still pinned to the bottom). -->
+      <div style="flex:1;min-height:0"></div>
     {:else if view === "builds"}
       <Builds bind:this={buildsRef} {builds} {projects} {commitsByRepo} onTracker={() => setView("retina-v")} />
     {:else if view === "personnel"}
@@ -356,11 +378,13 @@
         {personnelEntries}
         onDashboard={() => setView("home")}
       />
+    {:else if view === "help"}
+      <HelpView bind:this={helpRef} {help} />
     {:else}
-      <Profile bind:this={profileRef} {profile} onGoHome={() => setView("home")} />
+      <Profile bind:this={profileRef} {profile} />
     {/if}
 
-    <StatusBar {site} {view} />
+    <StatusBar {site} {view} onSelect={setView} />
   </div>
 
   <GrepOverlay bind:this={grepRef} {grep} onNavigate={setView} />

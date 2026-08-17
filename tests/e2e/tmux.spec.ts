@@ -1,6 +1,12 @@
 // Behavioral e2e suite for the tmux prefix (Ctrl-b) state machine
 // (Terminal.svelte) and the mobile-block card (Shell.astro) — PLAN.md
-// Phase 9.
+// Phase 9, reworked by PLAN.md Phase 1:
+//   - the window list gained "0:dashboard" and "5:help" (items 6/13), so
+//     `n`/`p` now cycle six windows and `5`/`?` jump straight to Help;
+//   - the prefix now takes precedence over the grep overlay (item 2 in
+//     PLAN.md "Orchestrator design decisions" — "Prefix precedence over
+//     grep"): Ctrl-b arms even while grep is open, retiring the old
+//     "prefix inert while grep is open" rule.
 import { expect, test, type Page } from "@playwright/test";
 
 async function gotoReady(page: Page, path: string) {
@@ -11,6 +17,11 @@ async function gotoReady(page: Page, path: string) {
 const STATUS_BAR = '[data-testid="status-bar-windows"]';
 async function statusBarText(page: Page) {
   return (await page.locator(STATUS_BAR).innerText()).replace(/\s+/g, " ").trim();
+}
+
+const WINDOWS = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"];
+function winText(activeId: string): string {
+  return WINDOWS.map((id, i) => `${i}:${id}${id === activeId ? "*" : ""}`).join(" ");
 }
 
 async function ctrlB(page: Page) {
@@ -29,7 +40,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await ctrlB(page);
     await page.keyboard.press("2");
     await expect(page).toHaveURL(/\/personnel$/);
-    expect(await statusBarText(page)).toBe("1:builds 2:personnel* 3:retina-v 4:profile");
+    expect(await statusBarText(page)).toBe(winText("personnel"));
   });
 
   test("Ctrl-b 1/3/4 switch to builds/retina-v/profile", async ({ page }) => {
@@ -47,7 +58,25 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await expect(page).toHaveURL(/\/builds$/);
   });
 
-  test("Ctrl-b n cycles builds -> personnel -> retina-v -> profile -> builds", async ({ page }) => {
+  test("Ctrl-b 5 switches to help", async ({ page }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press("5");
+    await expect(page).toHaveURL(/\/help$/);
+    expect(await statusBarText(page)).toBe(winText("help"));
+  });
+
+  test("Ctrl-b ? switches to help (tmux list-keys style)", async ({ page }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press("?");
+    await expect(page).toHaveURL(/\/help$/);
+    expect(await statusBarText(page)).toBe(winText("help"));
+  });
+
+  test("Ctrl-b n cycles dashboard -> builds -> personnel -> retina-v -> profile -> help -> dashboard", async ({
+    page,
+  }) => {
     await gotoReady(page, "/builds");
     await expect(page).toHaveURL(/\/builds$/);
 
@@ -65,11 +94,27 @@ test.describe("tmux prefix (Ctrl-b)", () => {
 
     await ctrlB(page);
     await page.keyboard.press("n");
+    await expect(page).toHaveURL(/\/help$/);
+
+    await ctrlB(page);
+    await page.keyboard.press("n");
+    await expect(page).toHaveURL(/\/$/);
+
+    await ctrlB(page);
+    await page.keyboard.press("n");
     await expect(page).toHaveURL(/\/builds$/);
   });
 
   test("Ctrl-b p cycles the reverse direction", async ({ page }) => {
     await gotoReady(page, "/builds");
+
+    await ctrlB(page);
+    await page.keyboard.press("p");
+    await expect(page).toHaveURL(/\/$/);
+
+    await ctrlB(page);
+    await page.keyboard.press("p");
+    await expect(page).toHaveURL(/\/help$/);
 
     await ctrlB(page);
     await page.keyboard.press("p");
@@ -114,7 +159,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     // dashboard hotkey), so this also proves it wasn't silently treated
     // as some other action.
     await expect(page).toHaveURL(/\/$/);
-    expect(await statusBarText(page)).toBe("1:builds* 2:personnel 3:retina-v 4:profile");
+    expect(await statusBarText(page)).toBe(winText("dashboard"));
   });
 
   test("Ctrl-b re-arms the window (pressing it twice doesn't require waiting)", async ({ page }) => {
@@ -125,18 +170,27 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await expect(page).toHaveURL(/\/personnel$/);
   });
 
-  test("Ctrl-b is inert while the grep overlay is open (grep swallows it)", async ({ page }) => {
+  // PLAN.md Phase 1 "Prefix precedence over grep": the prefix now works
+  // even while the grep overlay is open — it consumes the next key before
+  // grep ever sees it — retiring the old "prefix inert while grep is open"
+  // rule this test used to assert the opposite of.
+  test("Ctrl-b works even while the grep overlay is open, and the overlay stays open across the switch", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
     await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
 
     await ctrlB(page);
     await page.keyboard.press("2");
-    // "2" landed in the grep query (grep claimed both keys) — no prefix
-    // ever armed, no view switch happened, the overlay is still open.
-    await expect(page.locator('[data-testid="grep-query"]')).toContainText("2");
+    // The view switched...
+    await expect(page).toHaveURL(/\/personnel$/);
+    // ...and the "2" was consumed by the prefix, not typed into the grep
+    // query.
+    await expect(page.locator('[data-testid="grep-query"]')).not.toContainText("2");
+    // ...and the overlay is still open, sitting on top of the new view (a
+    // later phase's `Ctrl-b ]` pastes INTO this same still-open query).
     await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
-    await expect(page).toHaveURL(/\/$/);
   });
 
   test("a prefixed \"/\" is swallowed — it does not open the grep overlay", async ({ page }) => {

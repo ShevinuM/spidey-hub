@@ -1,9 +1,11 @@
 <script lang="ts">
   // Profile ("Agent Profile") view — design/Homepage.dc.html lines 184-269,
   // PLAN.md Phase 7. All copy comes from src/data/profile.yaml (ProfileData);
-  // this component only supplies structure/styling and the two interactive
-  // bits the prototype's sample markup can't express as static data: the
-  // `[q] close` click target and the `r` resume-download hotkey.
+  // this component only supplies structure/styling and the `r`
+  // resume-download hotkey. PLAN.md Phase 1 items 15/16 removed the
+  // `[q] close` pill entirely — view navigation is status-bar clicks / the
+  // tmux prefix / the dashboard menu now, never a bare key or an in-view
+  // click target, so there is nothing left here to close *to* the dashboard.
   //
   // Image src paths (portrait/field/retina-v/icon-*) are literal, same
   // convention as Wallpaper.svelte/Dashboard.svelte's hardcoded
@@ -23,10 +25,9 @@
 
   interface Props {
     profile: ProfileData;
-    onGoHome: () => void;
   }
 
-  const { profile, onGoHome }: Props = $props();
+  const { profile }: Props = $props();
 
   function isMailto(href: string): boolean {
     return href.startsWith("mailto:");
@@ -60,19 +61,6 @@
       </div>
       <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(224,69,60,.5),rgba(224,69,60,.08))"></div>
       <span style="color:rgba(196,216,232,.45);letter-spacing:.14em">{profile.header.fileClearance}</span>
-      <span
-        onclick={onGoHome}
-        onkeydown={(e) => {
-          if (e.key === "Enter" || e.key === " ") onGoHome();
-        }}
-        role="button"
-        tabindex="0"
-        data-testid="profile-close"
-        class="profile-close"
-        style="cursor:pointer;color:rgba(196,216,232,.6);border:1px solid rgba(255,255,255,.14);border-radius:3px;padding:3px 8px"
-      >
-        {profile.header.closeHint}
-      </span>
     </div>
 
     <div
@@ -218,10 +206,6 @@
 </div>
 
 <style>
-  .profile-close:hover {
-    color: #e0453c;
-    border-color: rgba(224, 69, 60, 0.7);
-  }
   .profile-link:hover {
     color: #e0453c;
   }

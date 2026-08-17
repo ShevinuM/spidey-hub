@@ -59,7 +59,7 @@ test.describe("Personnel: companies level (level 0)", () => {
 
     await expect(posText(page)).toHaveText("1 / 4");
     await expect(rowLocator(page, "Enaimco/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
-    await expect(hintText(page)).toHaveText("enter opens Enaimco/ · j/k moves · q returns to the dashboard");
+    await expect(hintText(page)).toHaveText("enter opens Enaimco/ · j/k moves · Ctrl-b ? for help");
     await expect(pathText(page)).toHaveText("/Users/Shev/Experience/");
   });
 
@@ -70,7 +70,7 @@ test.describe("Personnel: companies level (level 0)", () => {
     await page.keyboard.press("k"); // wraps up from first -> last
     await expect(posText(page)).toHaveText("4 / 4");
     await expect(rowLocator(page, "Freelance/")).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.2\)/);
-    await expect(hintText(page)).toHaveText("enter opens Freelance/ · j/k moves · q returns to the dashboard");
+    await expect(hintText(page)).toHaveText("enter opens Freelance/ · j/k moves · Ctrl-b ? for help");
 
     await page.keyboard.press("j"); // wraps down from last -> first
     await expect(posText(page)).toHaveText("1 / 4");
@@ -92,17 +92,16 @@ test.describe("Personnel: companies level (level 0)", () => {
     await expect(preview).not.toContainText("Software Developer");
   });
 
-  test("q returns to the dashboard (bug fix 3) from the companies level", async ({ page }) => {
+  test("q does nothing from the companies level (PLAN.md Phase 1 items 15/16)", async ({ page }) => {
     await openPersonnel(page);
     await page.keyboard.press("q");
-    await expect(page.locator('[data-testid="personnel-path"]')).not.toBeVisible();
-    await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
+    await expect(page.locator('[data-testid="personnel-path"]')).toBeVisible();
   });
 
-  test("Esc also returns to the dashboard from the companies level", async ({ page }) => {
+  test("Esc also does nothing from the companies level", async ({ page }) => {
     await openPersonnel(page);
     await page.keyboard.press("Escape");
-    await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
+    await expect(page.locator('[data-testid="personnel-path"]')).toBeVisible();
   });
 
   // PLAN.md Phase 9 "Vim extras" — gg/G at the companies level (4 rows).
@@ -150,7 +149,7 @@ test.describe("Personnel: roles level (level 1)", () => {
     await openEnaimcoRoles(page);
     await expect(posText(page)).toHaveText("1 / 3");
     await expect(hintText(page)).toHaveText(
-      "enter opens software-developer-full-time.md in nvim · h goes back · q returns to the dashboard",
+      "enter opens software-developer-full-time.md in nvim · h goes back · Ctrl-b ? for help",
     );
     await expect(page.locator('[data-testid="personnel-preview"]')).toContainText("Software Developer — Full Time");
   });
@@ -160,7 +159,7 @@ test.describe("Personnel: roles level (level 1)", () => {
     await page.keyboard.press("j");
     await expect(posText(page)).toHaveText("2 / 3");
     await expect(hintText(page)).toHaveText(
-      "enter opens software-developer-part-time.md in nvim · h goes back · q returns to the dashboard",
+      "enter opens software-developer-part-time.md in nvim · h goes back · Ctrl-b ? for help",
     );
     await expect(page.locator('[data-testid="personnel-preview"]')).toContainText("Software Developer — Part Time");
 
@@ -202,16 +201,16 @@ test.describe("Personnel: roles level (level 1)", () => {
     }
   });
 
-  test("q from the roles level goes all the way to the dashboard (bug fix 3 regression)", async ({ page }) => {
+  test("q from the roles level does nothing (PLAN.md Phase 1 items 15/16)", async ({ page }) => {
     await openEnaimcoRoles(page);
     await page.keyboard.press("q");
-    await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/");
   });
 
-  test("Esc from the roles level also goes to the dashboard", async ({ page }) => {
+  test("Esc from the roles level also does nothing", async ({ page }) => {
     await openEnaimcoRoles(page);
     await page.keyboard.press("Escape");
-    await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
+    await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/");
   });
 
   // PLAN.md Phase 9 "Vim extras" — gg/G at the roles level (Enaimco: 3 roles).

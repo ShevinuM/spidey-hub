@@ -5,14 +5,30 @@
 //
 // Phase 3 scope: view switching + status bar text per view (including the
 // bug-fix-1 regression: Retina-V renders in numeric order, not appended
-// after Profile), q/Esc-to-dashboard, URL sync + back/forward, toast
-// dismissal, modifier-key fall-through, and the live clock (bug fix 2).
+// after Profile), toast dismissal, modifier-key fall-through, and the live
+// clock (bug fix 2).
+//
+// PLAN.md Phase 1 rewrite: the window list gained two real windows
+// (0:dashboard, 5:help — items 6/13), and bare q/Esc no longer switch views
+// anywhere (items 15/16) — Esc is reserved for modal-exit roles only (grep
+// close, personnel filter exit, prefix cancel), never a view switch. Every
+// test below that used to drive navigation with "q" now uses a status-bar
+// click instead (see `goDashboard()`), and the dedicated q/Esc describe
+// block is inverted to assert NO navigation happens, in every view.
 import { expect, test, type Page } from "@playwright/test";
 
 const STATUS_BAR = '[data-testid="status-bar-windows"]';
 
 async function statusBarText(page: Page) {
   return (await page.locator(STATUS_BAR).innerText()).replace(/\s+/g, " ").trim();
+}
+
+/** The full six-window status-bar line, with `activeId` starred — builds
+ * the expected string instead of hand-writing it at each call site (PLAN.md
+ * Phase 1 renumbers/extends the window list, touching ~20 literals). */
+const WINDOWS = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"];
+function winText(activeId: string): string {
+  return WINDOWS.map((id, i) => `${i}:${id}${id === activeId ? "*" : ""}`).join(" ");
 }
 
 /**
@@ -28,107 +44,166 @@ async function gotoReady(page: Page, path: string) {
   await page.locator('[data-terminal-ready="true"]').waitFor({ state: "attached" });
 }
 
+/** Returns to the dashboard via a status-bar click (PLAN.md Phase 1 item
+ * 1.3) — the mouse-only replacement for the retired q/Esc-to-dashboard
+ * fallback, used wherever a test merely needs to get back home as a setup
+ * step rather than testing navigation itself. */
+async function goDashboard(page: Page) {
+  await page.locator('[data-testid="status-bar-window"][data-window-id="dashboard"]').click();
+  await expect(page).toHaveURL(/\/$/);
+}
+
 test.describe("view switching + status bar (bug fix 1: numeric order)", () => {
-  test("dashboard shows builds active", async ({ page }) => {
+  test("dashboard shows dashboard active", async ({ page }) => {
     await gotoReady(page, "/");
     await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
-    expect(await statusBarText(page)).toBe("1:builds* 2:personnel 3:retina-v 4:profile");
+    expect(await statusBarText(page)).toBe(winText("dashboard"));
   });
 
   test("b switches to builds", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("b");
     await expect(page).toHaveURL(/\/builds$/);
-    expect(await statusBarText(page)).toBe("1:builds* 2:personnel 3:retina-v 4:profile");
+    expect(await statusBarText(page)).toBe(winText("builds"));
   });
 
   test("p also switches to builds", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("p");
     await expect(page).toHaveURL(/\/builds$/);
-    expect(await statusBarText(page)).toBe("1:builds* 2:personnel 3:retina-v 4:profile");
+    expect(await statusBarText(page)).toBe(winText("builds"));
   });
 
   test("x switches to personnel", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("x");
     await expect(page).toHaveURL(/\/personnel$/);
-    expect(await statusBarText(page)).toBe("1:builds 2:personnel* 3:retina-v 4:profile");
+    expect(await statusBarText(page)).toBe(winText("personnel"));
   });
 
   test("i switches to profile", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("i");
     await expect(page).toHaveURL(/\/profile$/);
-    expect(await statusBarText(page)).toBe("1:builds 2:personnel 3:retina-v 4:profile*");
+    expect(await statusBarText(page)).toBe(winText("profile"));
   });
 
   test("t switches to retina-v — renders BETWEEN personnel and profile (bug fix 1)", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("t");
     await expect(page).toHaveURL(/\/retina-v$/);
-    expect(await statusBarText(page)).toBe("1:builds 2:personnel 3:retina-v* 4:profile");
+    expect(await statusBarText(page)).toBe(winText("retina-v"));
+  });
+
+  test("? switches to help", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press("?");
+    await expect(page).toHaveURL(/\/help$/);
+    expect(await statusBarText(page)).toBe(winText("help"));
   });
 });
 
-test.describe("q / Esc return to dashboard from any view", () => {
+test.describe("q / Esc never switch views (PLAN.md Phase 1 items 15/16)", () => {
   for (const [key, hotkey] of [
     ["q", "b"],
     ["q", "x"],
     ["q", "i"],
     ["q", "t"],
+    ["q", "?"],
     ["Escape", "b"],
     ["Escape", "x"],
     ["Escape", "i"],
     ["Escape", "t"],
+    ["Escape", "?"],
   ] as const) {
-    test(`${hotkey} then ${key} returns to dashboard`, async ({ page }) => {
+    test(`${hotkey} then ${key} does NOT return to the dashboard`, async ({ page }) => {
       await gotoReady(page, "/");
       await page.keyboard.press(hotkey);
       await expect(page).not.toHaveURL(/\/$/);
+      const urlAfterEnter = page.url();
       await page.keyboard.press(key);
-      await expect(page).toHaveURL(/\/$/);
-      expect(await statusBarText(page)).toBe("1:builds* 2:personnel 3:retina-v 4:profile");
+      // Still on the same view — the key changed nothing at all.
+      await expect(page).toHaveURL(urlAfterEnter);
     });
   }
+
+  test("q and Esc do nothing from the dashboard itself either", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press("q");
+    await expect(page).toHaveURL(/\/$/);
+    await page.keyboard.press("Escape");
+    await expect(page).toHaveURL(/\/$/);
+    expect(await statusBarText(page)).toBe(winText("dashboard"));
+  });
+});
+
+test.describe("status bar navigation (mouse) — PLAN.md Phase 1 item 1.3", () => {
+  test("clicking each window jumps straight to it, from anywhere", async ({ page }) => {
+    await gotoReady(page, "/");
+    for (const [id, route] of [
+      ["builds", "/builds"],
+      ["personnel", "/personnel"],
+      ["retina-v", "/retina-v"],
+      ["profile", "/profile"],
+      ["help", "/help"],
+      ["dashboard", "/"],
+    ] as const) {
+      await page.locator(`[data-testid="status-bar-window"][data-window-id="${id}"]`).click();
+      await expect(page).toHaveURL(new RegExp(`${route.replace("/", "\\/")}$`));
+      expect(await statusBarText(page)).toBe(winText(id));
+    }
+  });
+
+  test("every status-bar window has a pointer cursor", async ({ page }) => {
+    await gotoReady(page, "/");
+    const windows = page.locator('[data-testid="status-bar-window"]');
+    await expect(windows).toHaveCount(6);
+    const cursors = await windows.evaluateAll((els) => els.map((el) => getComputedStyle(el).cursor));
+    expect(cursors.every((c) => c === "pointer")).toBe(true);
+  });
+
+  test("clicking the already-active window is a no-op", async ({ page }) => {
+    await gotoReady(page, "/builds");
+    await page.locator('[data-testid="status-bar-window"][data-window-id="builds"]').click();
+    await expect(page).toHaveURL(/\/builds$/);
+    expect(await statusBarText(page)).toBe(winText("builds"));
+  });
 });
 
 test.describe("URL sync + back/forward", () => {
   test("pushState on switch, popstate on back/forward", async ({ page }) => {
     // Hotkeys only switch views from "home" (mirrors the prototype: once
-    // inside a view, only q/Esc are handled — see advisor guidance in the
-    // executor transcript). So this drives home -> personnel -> home ->
-    // profile to get three distinct history entries to navigate between.
+    // inside a view, only status-bar clicks / the tmux prefix are handled).
+    // So this drives home -> personnel -> home -> profile to get three
+    // distinct history entries to navigate between.
     await gotoReady(page, "/");
     await page.keyboard.press("x");
     await expect(page).toHaveURL(/\/personnel$/);
-    await page.keyboard.press("q");
-    await expect(page).toHaveURL(/\/$/);
+    await goDashboard(page);
     await page.keyboard.press("i");
     await expect(page).toHaveURL(/\/profile$/);
 
     await page.goBack();
     await expect(page).toHaveURL(/\/$/);
-    expect(await statusBarText(page)).toBe("1:builds* 2:personnel 3:retina-v 4:profile");
+    expect(await statusBarText(page)).toBe(winText("dashboard"));
 
     await page.goBack();
     await expect(page).toHaveURL(/\/personnel$/);
-    expect(await statusBarText(page)).toBe("1:builds 2:personnel* 3:retina-v 4:profile");
+    expect(await statusBarText(page)).toBe(winText("personnel"));
 
     await page.goForward();
     await expect(page).toHaveURL(/\/$/);
-    expect(await statusBarText(page)).toBe("1:builds* 2:personnel 3:retina-v 4:profile");
+    expect(await statusBarText(page)).toBe(winText("dashboard"));
 
     await page.goForward();
     await expect(page).toHaveURL(/\/profile$/);
-    expect(await statusBarText(page)).toBe("1:builds 2:personnel 3:retina-v 4:profile*");
+    expect(await statusBarText(page)).toBe(winText("profile"));
   });
 
   test("landing directly on a non-home route SSRs the matching view", async ({ page }) => {
     await gotoReady(page, "/retina-v");
-    expect(await statusBarText(page)).toBe("1:builds 2:personnel 3:retina-v* 4:profile");
-    await page.keyboard.press("q");
-    await expect(page).toHaveURL(/\/$/);
+    expect(await statusBarText(page)).toBe(winText("retina-v"));
+    await goDashboard(page);
   });
 });
 
@@ -158,67 +233,10 @@ test.describe("toast dismissal", () => {
 
     await page.keyboard.press("b");
     await expect(page).toHaveURL(/\/builds$/);
-    await page.keyboard.press("q");
-    await expect(page).toHaveURL(/\/$/);
+    await goDashboard(page);
 
     await expect(page.locator('[data-testid="toast-danger"]')).toHaveCount(0);
     await expect(page.locator('[data-testid="toast-tracker"]')).toBeVisible();
-  });
-});
-
-test.describe("tracker (Retina-V) back pill (Phase 4)", () => {
-  const PILL = '[data-testid="tracker-back-pill"]';
-  const LABEL = '[data-testid="tracker-back-label"]';
-  const DISMISS = '[data-testid="tracker-back-dismiss"]';
-
-  test("t from dashboard enters tracker with the pill visible", async ({ page }) => {
-    await gotoReady(page, "/");
-    await page.keyboard.press("t");
-    await expect(page).toHaveURL(/\/retina-v$/);
-    await expect(page.locator(PILL)).toBeVisible();
-    await expect(page.locator(LABEL)).toHaveText("[q] back to dashboard");
-  });
-
-  // Note: the prototype also allows `t` to enter the tracker from inside
-  // Builds (Homepage.dc.html line 1004, gated on `view === "projects"`).
-  // The real Builds view doesn't exist until Phase 5 (it's still an empty
-  // placeholder here), so that entry path is out of scope for this phase —
-  // do not add it here; it lands alongside Phase 5's Builds keymap.
-
-  test("clicking the pill label returns to dashboard", async ({ page }) => {
-    await gotoReady(page, "/");
-    await page.keyboard.press("t");
-    await expect(page).toHaveURL(/\/retina-v$/);
-    await page.locator(LABEL).click();
-    await expect(page).toHaveURL(/\/$/);
-  });
-
-  test("q and Esc still return to dashboard from tracker", async ({ page }) => {
-    for (const key of ["q", "Escape"] as const) {
-      await gotoReady(page, "/");
-      await page.keyboard.press("t");
-      await expect(page).toHaveURL(/\/retina-v$/);
-      await page.keyboard.press(key);
-      await expect(page).toHaveURL(/\/$/);
-    }
-  });
-
-  test("clicking the dismiss glyph hides the pill until the next tracker entry", async ({ page }) => {
-    await gotoReady(page, "/");
-    await page.keyboard.press("t");
-    await expect(page.locator(PILL)).toBeVisible();
-
-    await page.locator(DISMISS).click();
-    await expect(page.locator(PILL)).toHaveCount(0);
-
-    // Leaving and re-entering the tracker view resets the dismissal
-    // (prototype's `offBack` is reset to false on every tracker entry —
-    // Homepage.dc.html lines 469/897/1004).
-    await page.keyboard.press("q");
-    await expect(page).toHaveURL(/\/$/);
-    await page.keyboard.press("t");
-    await expect(page).toHaveURL(/\/retina-v$/);
-    await expect(page.locator(PILL)).toBeVisible();
   });
 });
 
