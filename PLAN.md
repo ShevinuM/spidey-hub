@@ -1,147 +1,389 @@
-# PLAN — Portfolio v3, Iteration 2 (user feedback round 1)
+# PLAN.md — Iteration 3: shell-behind-tmux, panes/layouts/choose-tree, help search, real data, Spidey-Hub
 
 ## Objective
 
-Implement the 16 approved changes from the user's morning feedback: tmux/vim-faithful navigation (no bare `q`/Esc view-switching), clickable status bar + dashboard/help windows, a rebuilt Builds interaction model (flat repo list, tree in Files panel, commit-time browsing via GitHub API with loading animation, all-projects virtual repo), Enaimco-only 3-level personnel tree with working mouse/search, a vim-lite engine in the Editor, advanced tmux bindings (rename/kill-window/kill-pane/copy/paste), label renames, and a grep overlay clipping fix — then re-baseline the visual goldens from our own verified implementation.
+Turn the site into a hyperreal tmux client: every window runs a "program" that can `:q` back to
+an in-window shell; the client can detach (`Ctrl-b d`) to a host shell over the dim radar; real
+panes (`Ctrl-b |`/`-`), all 7 tmux preset layouts (`Ctrl-b Space`), and `Ctrl-b w` choose-tree
+work; a `?` fuzzy help palette replaces the cmdline's visible options; and ALL content becomes
+pin-point accurate from the user's resume + data file (8 repos, real Enaimco/Memorial roles,
+Education section, real resume.pdf, corrected contact). Dashboard rebrands to a Spidey-Hub
+wordmark with a large seeded notification pool. Reboot resets everything. Goldens re-baselined
+at 0-pixel tolerance at the end.
 
-## Context
+## Sources of truth
 
-### Prior state (verified, HEAD 117739a)
-Astro 7 + Svelte 5 + Tailwind 4. All content in `src/data/*.yaml` + `src/content/` collections. 20 visual goldens (prototype-captured), 214 e2e, 38 unit, `pnpm check` clean. Key architecture facts from research (file:line refs valid at HEAD):
+- User data file: `/Users/shev/Desktop/Portfolio-Website-Data.md` (personnel structure + bullets)
+- Resume: `/Users/shev/Desktop/Shevinu_2026_Resume.pdf` (contact, education, Enaimco summary bullets)
+- v2 content for Memorial roles: `/Users/shev/Development/personal-portfolio-v2/src/content/experience/`
+- tmux fidelity reference: §"tmux fidelity reference" below (verified against tmux 3.7b source + live binary — do NOT re-research)
 
-- **View model**: `Terminal.svelte` state machine, `ViewId = home|builds|personnel|retina-v|profile` (`src/lib/views.ts:4`), pushState routing, tmux prefix Ctrl-b (2s timeout) with `1-4/n/p/d/w/0/Esc` (`Terminal.svelte:159-239`). Key delegation order: prefix-armed → grepRef → Ctrl-b arm → view ref (builds/personnel/profile) → modifier guard → q/Esc fallback + dashboard hotkeys (`Terminal.svelte:241-320`).
-- **q/Esc inventory**: generic fallback `Terminal.svelte:313-316`; editor close `Editor.svelte:124-128`; personnel filter-Esc `Personnel.svelte:319-322`; grep Esc `GrepOverlay.svelte:309-312`; hint strings in `tracker.yaml:114` (`[q] back to dashboard` pill), `profile.yaml:6` (`[q] close`), `personnel.yaml:20-21` (`· q returns to the dashboard`), `builds.yaml:57-58` (`· q returns to the dashboard.`).
-- **Status bar**: windows from `site.yaml:13-25` (4 windows, no dashboard), zero click handlers (`StatusBar.svelte`).
-- **Builds panels**: [1] status, [2] project .md list, [3] active project's repos (click = select only; Enter opens tree), [4] commits as `<a href target="_blank">`, [0] doc/tree dual-purpose. Tree JSON `public/generated/repos/<name>.json` = `{name, files:[{path, lines}]}` — no blob SHAs, no dirs (synthesized by `src/lib/repoTree.ts`). Commit snapshots `{sha8, msg, html_url, initials}` — **no full sha** (`scripts/generate.mjs:265-283`). Live refresh `src/lib/githubCommits.ts` (unauthenticated, null-on-any-failure, sessionStorage 10min TTL).
-- **Personnel**: 2 levels (companies→roles), grouping is **frontmatter-driven** (`data.company` matched against `companies.yaml`), not path-driven. Filter only enterable via `f`; prompt row has no onclick; rows are select-then-activate (two clicks). `../` row does have onclick (`Personnel.svelte:461`).
-- **Editor**: line-cursor only (no column), j/k/gg/G/Ctrl-d/u, q/Esc close. No h/l/w/b/e/0/$/counts/visual/yank/search. `/` is claimed globally by GrepOverlay before Editor sees it (`grep.spec.ts:208-234` asserts this).
-- **Dashboard B highlight**: cosmetic `invert: "B"` in `dashboard.yaml:16-20`, mirrors mock. Not a hotkey indicator. (Answered to user; no code change.)
-- **Visual harness**: goldens captured from vendored prototype by `capture-goldens.mjs` (hardcoded to `tests/visual/reference/`); `identical.spec.ts` runs the same pipeline against OUR fixture build and reads the same golden files via `snapshotPathTemplate`. **Re-baselining path: `pnpm build:fixtures && playwright test tests/visual/identical.spec.ts --update-snapshots`** — zero harness code changes needed. After that, goldens are self-baselines; `capture-goldens.mjs` becomes stale-authority and must be retired/marked historical.
-- **Grep overlay clipping (#14)**: could NOT be reproduced for the left "GREP ~" title at 8 viewports. User's screenshot shows the **right preview pane's** filename header ("astro.config.mjs" / "15 lines") clipped, not the left title — investigate the right pane's absolute-positioned label (`GrepOverlay.svelte:386-396` region) and its clipping ancestor.
+## Locked decisions (orchestrator-ruled; do not re-litigate)
 
-### User decisions (locked)
-1. **Personnel = Enaimco only.** Delete Vretta, Ontario-Tech, Freelance roles + their `companies.yaml` entries. Restructure to `Enaimco/Full-Time/software-developer.md`, `Enaimco/Part-Time/software-developer.md`, `Enaimco/Co-op/software-developer.md` (types read from existing role titles — no invented facts).
-2. All 16 change items approved as filed; visual identity to the mock is superseded where these changes require divergence; goldens re-baseline from our implementation.
+1. **Session model**: default session is named `10.42.7.13` (matches boot mock `edith --session 10.42.7.13`),
+   6 windows `0:dashboard … 5:help`, each initially one pane running its view program. Status bar left
+   cluster stays `Session: 10.42.7.13 ·` but the value becomes dynamic per attached session
+   (`Session: {name}`).
+2. **`:q` semantics change**: site-mode `:q` (and the `q` cmdline command) now EXITS the active pane's
+   program → the pane becomes a shell prompt in the same tmux window (lazygit analogy). It no longer
+   kills the window. `Ctrl-b &` (kill-window) and `Ctrl-b x` (kill-pane) remain the kill paths.
+   Ex-mode `:q` still closes the editor first (editor context wins), unchanged.
+3. **`Ctrl-b d` is now detach** (real tmux), NOT "go home". `Ctrl-b w` is now choose-tree, NOT "go home".
+   `Ctrl-b 0` still selects window 0. Existing tmux.spec tests for d/w→home are UPDATED, not preserved.
+4. **`Ctrl-b x` kills the active tmux pane** (real semantics, confirm prompt `kill-pane {n}? (y/n)`,
+   lowercase-y-only confirms, any other key cancels). The iteration-2 behavior of x killing
+   Builds-internal panels is REMOVED (they are program UI, not tmux panes). x ALWAYS prompts
+   kill-pane, even on a single-pane window — destroying the last pane destroys the window by
+   cascade (real tmux; no kill-window-confirm fallback).
+5. **Programs are per-pane component instances**: any pane shell can launch any program (`dashboard`,
+   `builds`, `personnel`, `profile`, `retina-v`, `help`), even if it's already running elsewhere.
+   Keyboard delegation targets the FOCUSED pane's program ref only.
+6. **No persistence across reload**: session/pane/shell state is in-memory. Reload = factory state
+   (boot skipped per existing sessionStorage flag). `reboot` (all triggers) = factory state + boot replay.
+7. **Contact data** from resume: `shevinu2002@gmail.com`, `github.com/ShevinuM`,
+   `linkedin.com/in/shevinum`, discord `shevinum` (kept). Phone number is NOT published on the site.
+8. **Contributions-by-Stack table is OMITTED**: no Enaimco work repos exist on this machine and the
+   GitHub token has no Enaimco org access — percentages cannot be computed accurately. Leave it out
+   of role.md; user can add from the work machine later.
+9. **Memorial mapping** (evidence-based): software-developer ← diag-lab.md; computer-science-tutor ←
+   cs-tutor.md; research-assistant ← research-comms.md (displayed title "Research Assistant");
+   design-and-development-assistant ← design-dev-assistant.md; communications-assistant ←
+   sustainability-comms.md. No invented bullets — only rephrase/typo-fix the source bullets.
+10. **Repos**: exactly these 8 submodules + the all-projects virtual repo: daily-tech-digest,
+    transcript-tts, Legend-of-Arlo-Guardians-Gauntlet, SpotifyPal, Advent-of-Code-2024,
+    Advent-Of-Code-2023, Sheldon, Data-Structures-And-Algorithms. SafePass is removed everywhere
+    (.gitmodules, repos/, REPOS array, content doc, generated JSONs).
+11. **Wordmark font**: "Webslinger" by Quinn Davis Type (public domain per designer's FontSpace
+    listing), self-hosted as a subset woff2 in `public/fonts/`, applied ONLY to the dashboard
+    "SPIDEY-HUB" wordmark. If download/conversion fails, fall back to hand-authored inline SVG
+    lettering (never copy Marvel's actual logo artwork).
+12. **Notifications**: ≥48 entries in `src/data/notifications.yaml`; on each arrival (hydration)
+    pick 2 distinct via seeded PRNG (mulberry32). Seed = `Date.now()` in prod; overridable via
+    sessionStorage key `edith:toast-seed` (set by test fixtures) for determinism. Dashboard-only,
+    dismissible, like today's toasts.
+13. **Cmdline**: suggestions list UI removed (input + error line only; Tab completion still works,
+    silently). Cmdline AND the new help palette close on every window/session switch, program
+    exit/launch, and detach (same window-chrome contract as grep).
+14. **`?` opens the help palette** in every context EXCEPT: shell pane focused (types `?`), editor
+    open (any mode), grep/cmdline/copy-mode/choose-tree open, status-bar prompt active, boot. The
+    dashboard hotkey `?`→help-window is REPLACED by `h`→help-window (dashboard.yaml label `[h]`).
+    `Ctrl-b ?` → help window stays.
+15. **Blur**: when the dashboard window is active, the entire wallpaper/radar gets `filter: blur(3px)`
+    (via the existing `wallFilter` knob in Wallpaper.svelte:84). Other views unchanged (0.72 opacity,
+    no blur); retina-v stays sharp at 1.0.
+16. **Out of scope this iteration** (stop conditions): Ctrl-b z zoom, Ctrl-b q display-panes,
+    M-1..M-7 layout bindings (browser Alt conflicts), choose-tree search/filter/tag/sort keys,
+    mouse pane resize/drag, `kill-session`/`kill-server` commands, session persistence, shell
+    pipes/redirection/globbing, nested tmux beyond the faithful error message, phone number on site.
+17. **Visual suite is EXPECTED RED between Phase 2 and Phase 7.** Per-phase verification runs
+    unit + e2e + `pnpm check` + build only. Phase 7 re-baselines and must end with 3 consecutive
+    clean visual runs at maxDiffPixels 0.
+18. **Commits**: brief single-line subjects only, no body, NO Co-Authored-By trailer (user rule).
 
-### Orchestrator design decisions (assumptions to verify against, not improvise around)
-- **Window list becomes**: `0:dashboard 1:builds 2:personnel 3:retina-v 4:profile 5:help`. Dashboard and Help are real windows (site.yaml + ViewId `help` + route `/help`). `activeWindowId`: `home` maps to the real `dashboard` window now.
-- **q/Esc navigation removed sitewide** (items 15/16): delete `Terminal.svelte:313-316` fallback and every `[q]`-hint string/pill. Esc retained ONLY for modal exits (grep close, filter exit, visual-mode exit, copy-mode exit, prefix cancel, prompt cancel) — vim/tmux-faithful. View switching = tmux prefix, status-bar clicks, dashboard menu. Remove tracker back-pill and profile `[q] close` pill entirely (navigation now global chrome). Reword personnel/builds hint strings (data files) to reference `Ctrl-b`. This bans the `q`/Esc KEYS for navigation — mouse click affordances are fine and are the point of items 6/7.
-- **Prefix precedence over grep (delegation change, Phase 1)**: move the Ctrl-b arm check AHEAD of grep delegation in `Terminal.svelte` — tmux-faithful (the prefix works everywhere) and required so `Ctrl-b ]` can paste into the grep query (item 12 / AC6). The old "prefix inert while grep open" rule is RETIRED; update the grep/tmux specs that assert it. While the prefix is armed, grep does not see keys (prefix consumes them, as tmux does).
-- **Editor close** = vim ex-command `:q` (minimal cmdline: `:` opens, displays in footer, Enter executes; `q`/`q!` close via `onClose`; `w`/`wq` → readonly error message from labels; unknown → `E492`-style message; Esc cancels cmdline). No bare q/Esc close. Mouse parity: the editor chrome gets a clickable `[:q]`-styled close pill (label from data) wired to `onClose` — without it there is no mouse path out of the editor.
-- **Help window (#13)**: new `HelpView.svelte` rendering sections/rows from NEW `src/data/help.yaml` (single source for every binding listed below; also add missing `r` resume key). Reachable via `Ctrl-b ?` (tmux list-keys), `Ctrl-b 5`, status-bar click, and a new dashboard menu entry (hotkey `?`) in `dashboard.yaml`. j/k scrolling.
-- **tmux additions (#12)**, all with status-line prompts like real tmux, in-memory state (resets on reload, like a fresh session):
-  - `Ctrl-b ,` rename-window: status bar swaps to `(rename-window) <editable>` (prefilled current name), Enter commits label in window list, Esc cancels.
-  - `Ctrl-b &` kill-window: prompt `kill-window <name>? (y/n)`; `y` removes the window from the list (view switches to next remaining window if current was killed); killing the last remaining window is refused with a status message. Killed windows return on reload.
-  - `Ctrl-b x` kill-pane: in Builds, confirm then remove the focused panel from the layout (layout state resets when the view remounts); in single-pane views, killing the only pane kills the window (same flow as `&`).
-  - `Ctrl-b [` copy-mode: generic overlay over the active pane's text — each view marks its primary pane(s) with `data-copy-source`; copy-mode captures that element's text as lines; vim nav (j/k/h/l/gg/G/Ctrl-d/u), `v` charwise selection, `y`/Enter yanks to an in-memory paste buffer + `navigator.clipboard.writeText`, `q`/Esc exits (q is tmux-faithful IN copy-mode only).
-  - `Ctrl-b ]` paste-buffer: inserts buffer into the active text input (grep query, personnel filter, rename prompt, editor search); otherwise transient status message "no buffer/target". Templates for all prompt/message strings live in `site.yaml` (new `statusBar.prompts` block).
-- **Vim engine (#10)** lives in `Editor.svelte` (innermost delegation link; serves Builds + Personnel): column cursor (block cursor on char), NORMAL/VISUAL/VISUAL-LINE modes with footer mode indicator + real `{line}:{col}`; motions `h l j k`, arrows, `0 ^ $`, `w b e`, `gg G`, `Ctrl-d/u/f/b`, numeric counts (`5j`, `3w`); `v`/`V` + motions, `y` yank (selection / `yy` line, with counts) → shared paste buffer + clipboard; `/` in-buffer search with `n`/`N` and match highlight; all mutating keys (`i a o I A O c d x p s r ~`) → readonly bell message. **Delegation change**: while an editor is open, Editor.handleKey runs BEFORE GrepOverlay so `/` searches the buffer (vim) — grep stays global everywhere else. Update `grep.spec.ts:208-234` accordingly.
-- **Builds rework (#2/#3/#4/#5)**:
-  - Panel [3] "Local Repositories" becomes a **flat list of all repos across all projects** plus a virtual **all-projects** entry (label/desc from `builds.yaml`, new key). Single click (or Enter) loads that repo's working tree **into panel [2]** (Files).
-  - Panel [2] becomes the **tree browser** (dirs navigable, `h`/Backspace/`../` up). Selecting/clicking a file shows its content in **panel [0]** (preview: existing docline rendering for `.md`, plain numbered lines otherwise). `Enter` on a file opens the full-screen vim Editor. Panel [2] title shows `<repo>` or `<repo> @<sha8>` when browsing a commit.
-  - Panel [4] commits: **no more `<a target="_blank">`**. Click/Enter on a commit fetches that commit's tree and shows it in [2] (repo rows in [3] show a lazygit-style animated `Pulling ··●` braille spinner while any fetch for that repo is in flight — item #5, styled to the existing palette; data-testid for tests). `o` on a selected commit opens `html_url` on GitHub (documented in help). Snapshot + live shapes gain full `sha` (`scripts/generate.mjs`, `src/lib/githubCommits.ts`, committed snapshots regenerated).
-  - New `src/lib/githubTrees.ts`: tree listing via GitHub trees API + `GET /repos/ShevinuM/<repo>/contents/<path>?ref=<sha>` → decoded lines. UNVERIFIED API fact — do not encode from memory: confirm with one live curl whether `GET /git/trees/{sha}?recursive=1` accepts a full COMMIT sha directly or requires the commit's `tree.sha` (extra commit fetch first); build the client and its test mocks to the confirmed shape. Fallback: if a stale committed snapshot lacks full `sha`, try `sha8` as the ref and degrade gracefully (error line, state preserved) if the API rejects it. sessionStorage cache (10min TTL like commits), null-on-failure; on failure show a transient, data-driven error line in panel [2]/[0] and keep current tree. Binary/oversize guard (decode failure → "binary or too large" message line).
-  - **all-projects backing**: `scripts/generate.mjs` additionally emits `public/generated/repos/all-projects.json` from `src/content/projects/*.md` (path `<id>.md`, lines = raw file text) — same shape, reuses repoTree/fetch flow unmodified. all-projects has no commits: panel [4] shows a data-driven "local only" line. Commit-browsing disabled for it. **Fixture isolation**: add `fixtures/repos/all-projects.json` built from `fixtures/projects/*.md`, copied in by `build:fixtures` (same idiom as the existing grep-index cp step) so fixture builds/goldens never couple to real project content. Before writing e2e assertions, CHECK which build `test:e2e` targets (real vs fixture) and assert the matching file list.
-- **Personnel (#7/#8/#9/#17)**: 3 levels (company → employmentType → roles) via new required `employmentType` frontmatter field (schema `content.config.ts`) + level-2 state extension in `Personnel.svelte`; **single-click activates** rows (replaces select-then-activate) at all levels incl. `../`; clicking the `>` prompt row enters filter mode (fixes "search doesn't type"); filter works per-level as today; `insetTitles.fileBrowser` → `"─ Personnel Files ─"`; hints reworded without q. Enaimco-only content; role files renamed (drop type suffix), titles/body unchanged otherwise.
-- **Renames (#11)**: `tracker.yaml` `commandLine` → `"$ retina-v --region latveria --live"`; ASCII HUD box `┌─ spider-tracker ─…┐` → `retina-v` with `─` re-padded so box width/alignment is unchanged (closing line too). Fixture project `spider-tracker` (prototype sample data, unrelated) is NOT renamed.
-- **Goldens**: after all phases verified, re-baseline all recipes with `--update-snapshots`; adjust recipes whose key sequences changed (05/06 personnel now need the extra level); add `11-help` and `12-all-projects` recipes; revisit `RATIO_RELAXED` (self-captured baselines should allow tightening to 0); mark `capture-goldens.mjs` + `tests/visual/reference/` as historical in README-PIPELINE (script must refuse to run without an explicit override flag acknowledging it restores prototype parity).
-- Mobile guard, fixture strategy, content-purity rule (zero UI strings in components) all unchanged and re-audited at the end.
+## tmux fidelity reference (verified; use these exact strings/behaviors)
 
-## Phases
+- **Preset layouts (7)** and `next-layout` (prefix Space) cycle order:
+  `even-horizontal → even-vertical → main-horizontal → main-horizontal-mirrored → main-vertical →
+  main-vertical-mirrored → tiled → wrap`. Geometry: even-horizontal = columns L→R; even-vertical =
+  rows top→bottom; main-horizontal = big main pane TOP, others as columns along the bottom;
+  main-horizontal-mirrored = main BOTTOM; main-vertical = main LEFT, others stacked on the right;
+  main-vertical-mirrored = main RIGHT; tiled = near-even grid. First Space on a manually-split
+  window applies even-horizontal (lastLayout = -1 → index 0).
+- **Splits**: `|` behaves like `split-window -h` → new pane to the RIGHT, focused; `-` like
+  `split-window -v` → new pane BELOW, focused; 50/50 of the split pane. Also accept `%` and `"`
+  as the stock aliases.
+- **Pane nav**: prefix `o` = next pane (cycle), prefix arrow keys = directional, prefix `;` = last pane.
+- **Kill prompts** (status-line, single-keystroke, lowercase `y` confirms, ANY other key cancels):
+  `kill-pane {pane_index}? (y/n)` and `kill-window {window_name}? (y/n)`. Killing the last pane kills
+  the window; killing the last window kills the session; if that session was attached the client
+  detaches printing exactly `[exited]` in the host shell.
+- **Detach** (prefix d): host shell prints exactly `[detached (from session {name})]`.
+- **`tmux ls`** per session: `{name}: {N} windows (created {ctime})` + ` (attached)` when attached.
+  Created time comes from the frozen page clock (deterministic under test).
+- **`tmux a` / `tmux attach`** with no -t: most recently used unattached session; if none exist:
+  `no sessions`. `tmux a -t x` missing → `can't find session: x`. `tmux new -s x` duplicate →
+  `duplicate session: x`. Bare `tmux new` → next numeric name ("1", "2", …). Inside a pane shell,
+  `tmux new`/`tmux a` refuse with `sessions should be nested with care, unset $TMUX to force`;
+  `tmux ls` works everywhere.
+- **choose-tree (prefix w)**: pane-content overlay (status bar stays visible). Top-level sessions,
+  windows nested with `├─`/`└─` markers; session line `{name}: {N} windows[, (attached)]`; window
+  line `{index}: {name}{flags}`. Current window initially selected; current session expanded, others
+  collapsed. Preview strip at the bottom describing the selected item (program names per pane).
+  Keys: j/k/Up/Down move; h/Left collapse (or jump to parent); l/Right expand; Enter = switch to
+  selection (session or window) and close; x = kill selected window/session with in-overlay prompt
+  `Kill window {i}? (y/n)` / `Kill session {name}? (y/n)` (case-INSENSITIVE y here — real tmux
+  quirk); q/Esc cancel.
+- **Window auto-rename**: window name = running program's command name (`dashboard`, `builds`, …);
+  when the program exits to shell the name becomes `zsh`; launching a program renames again. A manual
+  `Ctrl-b ,` rename disables auto-rename for that window. Status-line window format stays
+  `{number}:{name}` + `*` active; ADD the real `-` flag on the previously-active window.
 
-Each phase: fresh `executor` (pointed at this file + its phase only, staging only its own paths), then independent `verifier` with the listed checks. FAIL → feedback to same executor via resume; PASS → next.
+## Architecture notes for executors
 
-### Phase 1 — Window model & chrome (items 6, 11, 13, 15, 16, 17 + #14 grep fix)
-- [x] 1.1 Remove q/Esc→dashboard fallback (`Terminal.svelte:313-316`); Esc keeps only modal-exit roles. Remove tracker back-pill + profile close-pill components and their yaml keys; reword `personnel.yaml` hints and `builds.yaml` commandLog line (no `q` references; mention `Ctrl-b ?` help).
-- [x] 1.2 Add `help` + `dashboard` as real windows: `views.ts` (ViewId, route `/help`, activeWindowId, hotkey `?`), `site.yaml` windows `0:dashboard … 5:help`, prefix map `5` + `?`, PREFIX_CYCLE includes all six, `HelpView.svelte` + `src/data/help.yaml` (ALL bindings incl. ones landing in later phases, flagged per-phase, and the previously undocumented `r`), dashboard menu entry in `dashboard.yaml`.
-- [x] 1.3 StatusBar: every window clickable (`setView`), pointer cursor, active styling preserved.
-- [x] 1.4 Renames: tracker `retina-v` (commandLine + ASCII box re-padded, closing edge aligned), personnel inset title `─ Personnel Files ─`.
-- [x] 1.5 Grep top-clip fix: attempt to reproduce right-pane filename-label clipping (astro.config.mjs state, incl. 1512x945 + smaller heights + zoomed DSF) — TIMEBOXED: prior research already failed to reproduce at 8 viewports, so if it doesn't reproduce quickly, do not loop — ship the defensive fix (pane labels must not be clippable by their ancestors) plus a viewport-matrix e2e assertion that the label's boundingBox lies fully inside the viewport and its clip ancestor.
-- [x] 1.6 Update tests: `nav.spec.ts` (status text now `0:dashboard 1:builds* … 5:help`, q/Esc tests inverted — assert q does NOT navigate), `tmux.spec.ts`, `profile.spec.ts` (pill gone), add help-view + statusbar-click tests.
-- Verification: `pnpm check` clean; `pnpm test:e2e` green; grep e2e proves label unclipped; e2e proves q pressed in every view changes nothing; clicking each status-bar window navigates; `Ctrl-b ?` opens help listing all Phase-1 bindings; zero `[q]`/`q returns` strings in src/ (grep audit); no UI strings in components (grep audit on changed files).
+- New pure module `src/lib/tmux.ts`: Session/Window/Pane tree model + operations (split, kill,
+  focus next/directional/last, layout application for all 7 presets, next-layout cycle with
+  lastLayout, auto-rename bookkeeping, session create/attach/detach/list, window flags incl. `-`).
+  100% unit-testable, no DOM. Terminal.svelte owns one `$state` client object and calls into it.
+- Rendering: replace the single `{#if view}` chain with a recursive pane renderer
+  (`PaneTree.svelte`): split nodes render flex containers with 1px borders (active pane border
+  accent like the mock); leaves render the program component (or Shell) via the existing component
+  map, `bind:this` registered into a `Map<paneId, ref>` for delegation. Wallpaper, StatusBar,
+  overlays stay mounted exactly as today.
+- Views keep working at pane sizes (they're flex-based); no per-view layout rework — verify in
+  e2e via bounding boxes only.
+- `setView()` is replaced by `selectWindow(sessionId, windowIdx)` + `launchProgram(paneId, program)`
+  + `exitProgram(paneId)`; ALL of them close grep + cmdline + help palette (window-chrome contract,
+  close-before-early-return like today's `setView`). URL sync: pushState only when the active window
+  of the DEFAULT session is a canonical program window; popstate maps route → session 0 window if
+  present, else no-op.
+- New `src/components/Shell.svelte` (one per shell pane) + pure `src/lib/shell.ts` (line parser,
+  builtins, fs navigation against the generated index, deterministic output lines). Host shell
+  (detached state) reuses the same Shell component fullscreen over the radar (dim wallpaper, no
+  status bar — the mock in the user's screenshot: E.D.I.T.H shell header lines + prompt
+  `shev@edith:~/shevinum.dev git:(main) $`).
+- Shell builtins: `cd`, `ls`, `cat`, `pwd`, `tree`, `clear`, `whoami` (→ `shev`), `help`,
+  `open <view>`, view names as bare commands (launch program in this pane), `neofetch` (ASCII
+  spidey + E.D.I.T.H OS card), `sudo` (joke: `shev is not in the sudoers file. This incident will
+  be reported to D.O.O.M.`), `exit` (pane shell: closes pane → cascades like kill-pane; host shell:
+  prints `logout` then reloads the page), `reboot` (factory + boot replay), `tmux …`. In the HOST
+  shell: `open <view>` ATTACHES session 0 and selects that view's window (the user's return_path
+  is "only via a command" — open IS a return command); bare view-name commands print a hint to
+  attach (`not attached — try: tmux a`); an `edith` builtin attaches session 0 at window 0 (the
+  mock's header advertises `` `edith` to launch the site again ``). While detached, the `Ctrl-b`
+  prefix is INERT — no prefix arming, no prefixed commands; keyboard belongs to the host shell.
+  All strings data-driven from `src/data/shell.yaml` (content-purity rule).
+- Shell fs: build-time `public/generated/fs-index.json` — repo-root tree (dirs + files + byte
+  sizes), same skip list as the grep walker (node_modules/.git/dist/.astro/goldens/reference)
+  PLUS `repos/*` subtrees taken from the per-repo index JSONs (paths only). `cat` resolves content
+  lazily: site files from the grep index, `repos/<name>/…` files from that repo's index JSON;
+  anything else prints `cat: {path}: binary or unindexed`. `tree` = ASCII tree with the same
+  connectors as real tree(1), capped depth 3 with a `…` marker beyond.
+- Delegation changes in Terminal.handleKey: focused-shell panes consume printable keys/Enter/
+  Backspace/arrows (history up/down) BEFORE grep's `/` opener and BEFORE the bare-`:`/`?` openers;
+  `:`/`?`/`/` type into the shell. Editor-open gate unchanged. `?` inserts in grep/cmdline inputs
+  as today.
 
-### Phase 2 — Personnel: Enaimco-only, 3 levels, mouse + search (items 7, 8, 9)
-- [x] 2.1 Content: delete non-Enaimco roles + companies.yaml entries; add `employmentType` to schema (required); move/rename to `Enaimco/{Full-Time,Part-Time,Co-op}/software-developer.md` with `employmentType` matching directory; body content unchanged.
-- [x] 2.2 `Personnel.svelte`: level 2 (types), row derivations, counts templates (`personnel.yaml` gains type-count wording), pathText/hint/pos for 3 levels; `../` goes up one level (roles→types, types→companies) and is KEPT at the companies root where clicking it goes to the dashboard — item 7 explicitly asks for mouse-navigable `../`, and items 15/16 ban the `q` key, not click affordances.
-- [x] 2.3 Single-click activation on all rows (dirs, files, `../`); prompt-row click enters filter mode; `f` still works; Esc exits filter only.
-- [x] 2.4 Rewrite `personnel.spec.ts` for 3 levels/Enaimco-only/single-click/filter-via-click; update grep `views.ts` path mapping for 3-segment personnel paths + its unit test.
-- Verification: e2e green incl. new mouse-only walkthrough (click Enaimco → Full-Time → software-developer.md → editor opens; `../` clicks walk back up); filter via click-then-type filters rows; `pnpm build` succeeds (schema); grep-index regenerates with new paths; unit tests green.
+## Phases & steps
 
-### Phase 3 — Editor vim engine (item 10)
-- [x] 3.1 Column-cursor + block cursor rendering; footer mode indicator + real line:col.
-- [x] 3.2 NORMAL motions (h l j k arrows 0 ^ $ w b e gg G Ctrl-d/u/f/b) with counts; VISUAL + VISUAL-LINE with selection highlight; `y`/`yy` → paste buffer + clipboard; readonly bell for mutating keys (message via labels).
-- [x] 3.3 `/` in-buffer search + n/N + highlight; delegation flip (editor before grep while editor open); `:` cmdline with `q`/`q!` close, `w`→readonly error, unknown→E492 message.
-- [x] 3.4 Tests: new `editor-vim.spec.ts` (motions incl. counts, visual yank → paste-buffer state via testid, search n/N, :q closes, i/x/etc show readonly and change nothing); update `grep.spec.ts` in-editor `/` test; unit tests for a pure `src/lib/vim.ts` motion/word-boundary engine.
-- Verification: unit + e2e green; `pnpm check`; both Builds and Personnel editors get identical behavior (spec parametrized over both entry paths).
+### Phase 1 — Real data: repos, personnel, profile, resume
+- [x] 1.1 Remove SafePass everywhere; `git submodule add` the 6 missing repos (shallow); REPOS
+  array → the 8 names; delete stale `src/content/projects/SafePass.md`; add content docs for the
+  6 new repos (frontmatter matching existing shape; descriptions written ONLY from each repo's
+  actual README; if a README is thin/absent, fall back to the repo's GitHub description — still
+  no invention). Run `pnpm generate`; commit snapshots + indexes.
+- [x] 1.2 RESOLVED BY DEVIATION (orchestrator-accepted): fixture stays fictional per the
+  fixture-isolation design; drift guard green. Original step: Hand-update
+  `fixtures/repos/all-projects.json` to the new project set; update the
+  drift-guard unit test. **DEVIATION (executor, advisor-reviewed): NOT done as literally
+  written.** `fixtures/repos/all-projects.json` mirrors `fixtures/projects/*.md` (fictional
+  visual-test fixtures — flerken-watch/latveria-atlas/etc.), deliberately isolated from real
+  project content per iteration 2's "Fixture isolation" design; there is no real-repo data to
+  port into it, and the drift-guard test (`tests/unit/all-projects-fixture.test.ts`) is already
+  content-agnostic (rebuilds its expectation from the fixture .md files at test time) — it needed
+  no change and still passes. The likely intent — "the all-projects virtual repo reflects the new
+  8-repo set" — is satisfied automatically by 1.1: `public/generated/repos/all-projects.json` is
+  regenerated by `pnpm generate` from the real `src/content/projects/*.md` docs and committed.
+  Left `fixtures/` untouched. Orchestrator: please confirm or redirect.
+- [x] 1.3 Personnel restructure to the user's exact tree (lowercase dirs):
+  `enaimco/software-developer/{role.md, full-time/role.md, part-time/role.md, co-op/role.md}` and
+  `memorial-university/{software-developer,computer-science-tutor,research-assistant,design-and-development-assistant,communications-assistant}/role.md`.
+  Content strictly from the data file + resume + v2 files (typos fixed: improve/infrastructure/
+  introduced/architected/development/maintenance); Enaimco overview role.md = dates May 2024 –
+  Present, St. John's NL, stack line, 4-6 concise XYZ summary bullets sourced from the resume's
+  Enaimco section + data-file co-op bullets; NO contributions table. companies.yaml → enaimco,
+  memorial-university. Personnel.svelte becomes depth-generic (tree derived from content paths;
+  ../ and click-nav work at every level).
+- [x] 1.4 Profile: correct CONTACT (per Locked #7); add EDUCATION section below Contact with both
+  resume entries (degree, school, dates, location) — display titles EXACTLY "BSc. Computer
+  Science" and "International Visiting Student" (user-shortened 2026-08-18 to avoid wrapping in
+  the narrow panel; full titles stay only in the resume PDF); AND surface the data file's "Agent Profile →
+  Summary" bio on the Profile page as its own SUMMARY/dossier block (user's words, near-verbatim —
+  light trims for length are fine, no rewriting of voice; it is the authoritative bio). Data in
+  profile.yaml; no strings in components.
+- [x] 1.5 Replace `public/assets/resume.pdf` with `/Users/shev/Desktop/Shevinu_2026_Resume.pdf`.
+- [x] 1.6 Update e2e (personnel.spec depth/labels, builds.spec repo list, profile.spec education +
+  contact) and unit tests; regenerate grep index.
 
-### Phase 4 — Builds rework (items 2, 3, 4, 5)
-- [x] 4.1 `generate.mjs`: emit `all-projects.json`; add full `sha` to commit snapshots (+ keep sha8); regenerate committed snapshots; `githubCommits.ts` maps full sha too (ignore old cache entries lacking sha).
-- [x] 4.2 Panel [3] flat repo list (all projects' repos + all-projects from `builds.yaml` key); single-click/Enter loads working tree into [2]; per-repo spinner state + braille `Pulling ··●` animation (testid) while any fetch for that repo is in flight.
-- [x] 4.3 Panel [2] = tree browser (title `<repo>` / `<repo> @<sha8>`); file select/click → preview in [0] (docline for .md, numbered plain lines otherwise); Enter → vim Editor; dir nav h/../Enter/click.
-- [x] 4.4 Commits: remove anchors; click/Enter → `githubTrees.ts` tree@sha into [2]; `o` opens html_url; all-projects → data-driven "local only" commits line; failures → transient data-driven error line, tree preserved; sessionStorage caches for trees+contents. **Panel [4] follows ONLY the repo selected in [3]** — commits must NOT change when moving across files/projects in [2] or [0] (user bug report 2026-08-17: "commits change dynamically when I move across files"); e2e-assert commits stay fixed while navigating [2] and change on [3] selection.
-- [x] 4.6 Fix commits-panel row clipping (user screenshot 2026-08-17 15:15: with live data every commit row renders vertically cut — glyphs half-clipped, rows overlapping). Diagnose (likely fixed panel height + row overflow with 15 live commits vs snapshot count, or line-height/row-height mismatch) and fix so rows render at full glyph height and overflow scrolls or truncates at a whole-row boundary. Add an e2e assertion measuring commit-row bounding-box heights ≥ the computed line-height with live-mock data (15 commits) at 1512x945.
-- [x] 4.5 Rewrite `builds.spec.ts`: mocked trees/contents routes (fulfill + abort + 403 cases), spinner appears/disappears, no popup on commit click, `o` opens popup, all-projects lists the 3 real project .md files, preview-in-[0] and Enter-to-editor paths; unit tests for `githubTrees.ts` (tree mapping, base64 decode incl. multibyte, cache TTL, null-on-failure).
-- Verification: unit + e2e green with network blocked (route-abort determinism) AND with mocked success; `pnpm build` + `node scripts/generate.mjs` idempotent, tree clean after (snapshot regen committed); content-purity audit on changed files.
+**Verify 1**: `pnpm generate` idempotent (second run = no diff); `node --test` green; e2e
+personnel/builds/profile/grep specs green; `pnpm check` 0 errors; `pnpm build` succeeds;
+`git submodule status` shows exactly 8; public/assets/resume.pdf ≈108KB; grep confirms no
+"Toronto", no "SafePass", no fabricated dates remain in src/content; personnel dates match the
+data file exactly (co-op May 2024 – Sep 2025; part-time Sep 2025 – Jul 2026; full-time Jul 2026 –
+Present).
 
-### Phase 5 — tmux advanced bindings (item 12)
-- [x] 5.1 Status-line prompt infrastructure (message/prompt/confirm states in StatusBar, templates in `site.yaml`).
-- [x] 5.2 `,` rename (Enter/Esc), `&` kill-window (y/n; last-window refusal; next-window switch), `x` kill-pane (Builds panel removal; single-pane → kill-window flow). Also `Ctrl-b Ctrl-b` = send-prefix (tmux default binding): while armed, a second Ctrl-b dispatches a LITERAL Ctrl-b down the normal view chain — this makes vim's Ctrl-b page-back reachable in the editor (Phase 3 shipped it engine-complete but key-unreachable); e2e-test it and update its help.yaml row.
-- [x] 5.3 `[` copy-mode overlay (data-copy-source per view: editor buffer, builds focused panel, personnel list, profile text, tracker readout, help) with vim nav, v/y/Enter yank → paste buffer + clipboard, q/Esc exit; `]` paste into active input else message.
-- [x] 5.4 Extend `tmux.spec.ts`: rename reflected in status bar; kill-window removes + switches + refuses last; kill-pane removes builds panel and resets on remount; copy-mode yank → paste into grep query round-trips the text; verify help.yaml rows for these bindings are accurate now they exist.
-- [x] 5.5 Status bar is SESSION chrome, grep is WINDOW chrome (user report 2026-08-17 17:24, screenshot): the grep overlay's dim/blur backdrop must NOT cover the status bar — the bar stays fully crisp and clickable while grep is open (backdrop covers only the window area above it, or the bar z-indexes above the backdrop; visually seamless either way). Consequence: grep belongs to the window it was opened in — switching windows while grep is open (status-bar click OR Ctrl-b switch) CLOSES the grep overlay and switches. This REPLACES Phase 1's "overlay stays open across a prefixed view switch" behavior and its tmux.spec.ts test. e2e: elementFromPoint at the status-bar center returns the status bar (not backdrop) while grep is open; clicking a window with grep open switches view AND grep is closed; Ctrl-b 4 with grep open lands on profile with no overlay; reopening grep afterward works.
-- Verification: e2e green; prefix keys WORK while grep is open (rule retired in Phase 1 — `Ctrl-b ]` must paste into the grep query); mobile guard untouched (desktop-gated); `pnpm check`.
+### Phase 2 — Dashboard branding: wordmark, welcome removal, blur, notifications
+- [ ] 2.1 Webslinger woff2 subset in `public/fonts/` + `@font-face`; dashboard plate title becomes
+  the SPIDEY-HUB wordmark (arched/red styling evoking the reference, own rendering); remove
+  `welcomePrefix` line + inline spidey glyph from the plate. dashboard.yaml drives all strings.
+- [ ] 2.2 Wallpaper: `wallFilter = blur(3px)` when the dashboard window is active (knob at
+  Wallpaper.svelte:84); unchanged elsewhere.
+- [ ] 2.3 `src/data/notifications.yaml` with ≥48 entries across: tmux tips, vim tips,
+  site-navigation tips, real facts about Shevinu (from the data file's Summary — travel/Mexico,
+  hiking, reading, psychology, board-game competitiveness, systems-design goal), and
+  Spider-Man/Doomsday/Secret Wars flavor written for a Spider-Man who has LOST HIS MEMORY and is
+  in Battleworld (amnesia framing, no pre-Battleworld self-knowledge). Toasts.svelte: seeded
+  2-distinct pick per Locked #12, dismissal behavior unchanged; dashboard-only.
+- [ ] 2.4 Unit tests: seeded picker (same seed → same pair, distinctness, full-pool reachability);
+  e2e: fixtures set `edith:toast-seed`, assert the pinned pair renders + dismissal; nav.spec toast
+  tests updated.
 
-### Phase 5B — Boot sequence (user request 2026-08-17 afternoon; design handoff `/Users/shev/Desktop/waiting-on-form-answers`)
-Source of truth: `project/Boot Sequence.dc.html` (446 lines; logic in its `Component` class) + `project/support.js` runtime. Recreate EXACTLY — all colors/geometry/keyframes/timings/text copied verbatim; same fidelity bar as v1. The mock's "ready" screen is our existing dashboard (it already reflects iteration-2: retina-v, 6 windows, Help row) — the net-new surface is the boot overlay + handoff animation + status-bar reboot control.
-- [x] 5B.1 New `BootSequence.svelte` overlay (z-order above all views): grid fade-in, radial vignette, teal scan-line sweep, assembling ring stack (all `bIn` delays, `swp/swpR` periods 96s/150s/34s/46s/19s/27s verbatim), conic progress ring (eased pct with sine jitter, formula verbatim), E.D.I.T.H core readout (pct + INIT/SCAN/LINK/LOCK/READY thresholds 30/60/86/99), tick marks/compass glyphs/degree labels at exact positions, `$ edith --boot --session 10.42.7.13` command box with `negotiating...`→`OK · 0.94 / 0.91` handshake (>0.08 progress), e.d.i.t.h ASCII status box with threshold fills (core>14, session>30, windows>44, retina>62, lock>84; 16-char padding), boot log (12 rows at progress thresholds, last 5 visible, [ok]/[!!]/[>>] tag styling), outro bloom (`bBloom`, phase "out" 760ms) → dashboard `bDashIn 1.05s`. Timer = wall-clock `Date.now()` + 33ms interval + hard-stop timeout (NOT rAF — mock's comment explains backgrounded-tab freeze; deterministic under Playwright clock). Boot duration 4600ms; `coreTint` cyan variant (red/gold variants in data but cyan default).
-- [x] 5B.2 ALL text/config in new `src/data/boot.yaml` (+ data.ts getter): log rows verbatim (incl. "grep index 22 files" flavor text — user-editable), status-box labels, handshake strings, command line, session id, phase labels, tint, bootMs, showBootLog. Zero strings in the component.
-- [x] 5B.3 Behavior: boot plays on first document load per browser tab (sessionStorage flag; deep-links/reloads within a session skip it — ORCHESTRATOR DECISION, flag in report: trivially changeable to every-load); UNSKIPPABLE while running (no key/click bypass — mock comment; global key handling inert during boot); `r` on the DASHBOARD replays boot when ready (mock behavior; no conflict — Profile's `r` is view-scoped); status-bar right cluster gains a clickable `↻ reboot` item (USER: label is "reboot", NOT the mock's "replay boot"; string in site.yaml) that replays from any view by first switching home. Boot + its timers gated to desktopMode like all other timers; mobile-block unaffected. Align dashboard.yaml Help row icon to the mock's `?` glyph if it differs.
-- [x] 5B.4 Assets: diff `project/assets/*` against `public/assets/` — copy any missing (pin.svg, pin-target.svg, flerken.svg expected present from v1; byte-compare same-named, report drift, do NOT overwrite v1 assets that differ without flagging).
-- [x] 5B.5 Tests: e2e `boot.spec.ts` — boot appears on fresh context, dashboard hidden until ~4.6s (use Playwright clock), pct/phase progress, outro fires, dashboard interactive after; keys during boot do nothing; sessionStorage flag skips boot on reload; `r` on dashboard replays; reboot click replays from another view; existing suites: add the boot-skip sessionStorage flag via addInitScript in shared helpers/fixtures so the other ~380 tests don't eat 4.6s each (verify total e2e wall-time stays sane). Visual pipeline: recipes must set the skip flag (goldens capture the ready state as today) EXCEPT new boot recipes `13-boot-mid` (clock offset ~2000ms) and `14-boot-ready` (post-outro) captured deterministically under the faked clock — self-baselined in Phase 6 with mandatory human-equivalent zoom review by the verifier against the mock's ref screenshots (`project/ref/*.png`).
-- [x] 5B.6 help.yaml + README: document `r` (dashboard) = reboot, status-bar reboot control.
-- Verification: `pnpm check` 0 errors; unit+e2e green incl. boot.spec; e2e suite total runtime not degraded >15%; fresh-context manual-equivalent Playwright run shows the full boot→outro→dashboard sequence with zero console errors; content-purity audit on new files; boot timings/text spot-checked against the mock source line-by-line (pct formula, thresholds, delays).
+**Verify 2**: unit + e2e green; `pnpm check`; build; grep asserts zero hardcoded notification/title
+strings in components; woff2 exists (small, subset) and referenced with `font-display: swap`;
+`welcome back` appears nowhere in src/.
 
-### Phase 5C — Site-wide floating Cmdline (user request 2026-08-17 evening: noice.nvim-style box, "site wide cmdline")
-One floating `─ Cmdline ─` box component (same visual family as the grep overlay: centered upper-third, bordered box, box-drawing inset title, existing palette, `>` prompt + block cursor, keystrokes echo live). It REPLACES the Phase-3 editor-footer cmdline presentation (the Phase-3 command state machine is kept and lifted — do not rebuild parsing/execution).
-- [x] 5C.1 Component + wiring. THREE entry contexts, one box:
-  (a) `:` while an editor is open → ex mode: Phase-3 commands (`q`,`q!`,`w`,`wq`,`:<n>`) PLUS the site-wide set below;
-  (b) `:` anywhere else (no text input active; `:` stays a literal character inside grep query/personnel filter/rename prompt) → site-wide set;
-  (c) `Ctrl-b :` → SAME box in tmux command-prompt mode (this is real tmux's `command-prompt`): `rename-window <name>`, `kill-window`, `kill-pane`, `select-window <0-5>` — these EXECUTE THROUGH Phase 5's implementations (single source of behavior; no duplicated kill/rename logic).
-- [x] 5C.2 Site-wide command set (all names/aliases/descriptions data-driven in a new `src/data/cmdline.yaml`): window jumps `:dashboard|:home`, `:builds`, `:personnel`, `:profile`, `:retina-v`, `:help`; `:grep <query>` (opens grep overlay pre-filled and searching); `:reboot` (replays the 5B boot sequence); `:resume|:cv` (same action as Profile `r`); `:q` = kill current window via Phase 5 flow (typed ex-command is deliberate — the items-15/16 ban covers the bare KEY only; last-window refusal applies); unknown → E492 template (reuse Phase 3's). Errors render inside the box in the error style for a beat (noice-style message), then Esc/next-`:` clears.
-- [x] 5C.3 Palette feel: live suggestion list under the input — commands prefix-filtered as you type, each with its one-line description from cmdline.yaml; Tab completes the unique/first match; Enter executes; Esc closes (modal exit). j/k do NOT navigate suggestions (arrows do) — j/k must stay typeable in command text.
-- [x] 5C.4 Integration: `Ctrl-b ]` pastes into the cmdline input (register it as a Phase-5 paste target); cmdline box never covers the status bar (session chrome rule from 5.5); keydown delegation: cmdline (when open) is checked at the very top alongside prefix handling; inert during boot (5B).
-- [x] 5C.5 Tests: e2e `cmdline.spec.ts` — open from every view + editor context + `Ctrl-b :`; each site-wide command executes (window jumps, `:grep foo` lands in grep with query "foo", `:reboot` restarts boot, `:q` kills window with last-window refusal); suggestions filter + Tab completion; `:` literal in grep/filter/rename inputs; E492 in-box; Esc closes without side effects; editor ex commands still work through the new box (`:q` closes editor, `:w` readonly error, `:<n>` jumps). Unit tests for the command parser/completion (pure function in `src/lib/cmdline.ts`). Update editor-vim.spec.ts footer-cmdline assertions to the box presentation. help.yaml + README gain a Cmdline section.
-- Verification: `pnpm check` 0 errors; unit + e2e green; content-purity audit (zero strings in components); every command listed in cmdline.yaml demonstrably executes (e2e sweep is generated FROM the yaml so the list can't drift); visual recipe `15-cmdline` (box open, partial query, suggestions visible) added for Phase 6 capture.
+### Phase 3 — Cmdline scoping + bare UI + `?` help palette + `h` binding
+- [ ] 3.1 Remove the cmdline suggestions list rendering (keep input, error line, Tab completion);
+  delete/adjust the suggestion tests in cmdline.spec; visual recipe 15-cmdline changes in Phase 7.
+- [ ] 3.2 Window-chrome the cmdline: add `close()` to the ref contract; close it in every switch
+  path + reboot (integration points per codebase map: Terminal.svelte setView/reboot; close BEFORE
+  the same-view early return). e2e: open cmdline → status-bar click switch → box closed; reboot →
+  closed.
+- [ ] 3.3 New `HelpSearch.svelte` + pure `src/lib/helpSearch.ts`: `?` opens a cmdline-style palette
+  titled from data; empty query lists the command entries (dashboard/builds/personnel/profile/
+  retina-v/help/grep/reboot/resume, as in the user's screenshot); typing fuzzy-searches ALL entries
+  (cmdline commands + every help.yaml key row + shell builtins once Phase 4 lands) with scoring
+  exact > prefix > word-boundary > substring > subsequence (+ small Levenshtein tiebreak), top 10.
+  Up/Down navigate, Enter executes executable entries (view jumps, grep, reboot, resume) and
+  no-ops on keymap rows, Esc closes. Gating per Locked #14. Window-chrome close like 3.2.
+- [ ] 3.4 Rebind dashboard help hotkey `?`→`h` (views.ts HOTKEY_TO_VIEW + dashboard.yaml `[h]`
+  label + help.yaml row); `?` on dashboard now opens the palette like everywhere else.
+- [ ] 3.5 Unit tests for helpSearch scoring/ranking; e2e help-search.spec (open from ≥3 contexts,
+  gated contexts don't open, fuzzy canaries e.g. "kil" → kill-window/kill-pane rows, Enter
+  executes, window-switch closes).
 
-### Phase 6 — Re-baseline & full acceptance
-- [x] 6.0 Consistency hardening (Phase-5 verifier residual): Builds kill-pane confirm must capture its target panel at CONFIRM-OPEN time (like the hardened rename/kill-window paths) so a mouse click on another panel mid-confirm can't redirect the kill; e2e: open kill-pane confirm on Files, click the Repos row, press y → the NAMED panel (Files) is killed, Repos survives.
-- [x] 6.1 Recipes: update 05/06 for 3-level personnel; audit all 10 for changed key semantics (and the boot-skip flag from 5B); add `11-help`, `12-all-projects`, 5B's `13-boot-mid`/`14-boot-ready`, and 5C's `15-cmdline`; capture-goldens.mjs gets refuse-by-default guard + README-PIPELINE history note (goldens are now self-baselines; prototype reference is historical). Boot goldens get mandatory verifier zoom-review for fidelity against the `Boot Sequence.dc.html` SOURCE (styles/geometry/text transcribed there) — NOT against `project/ref/*.png`: the 5B executor determined those screenshots are from an earlier design iteration (skippable boot, `$ retina-v --boot`, status-box "index" row) that the final .dc.html contradicts.
-- [x] 6.2 Re-baseline: `pnpm build:fixtures && playwright test tests/visual/identical.spec.ts --update-snapshots`; then 3 consecutive clean runs of `pnpm test:visual` (determinism); tighten RATIO_RELAXED to 0 where self-baselines allow, keep justified exceptions with fresh forensics.
-- [x] 6.3 README: keymap reference rewritten from help.yaml content (incl. r), Builds/Personnel workflows updated, re-baseline procedure documented; document that `fixtures/repos/all-projects.json` is hand-committed and how to regenerate it; remove the stale `personnel.yaml:50` comment referencing the deleted `filePosTemplate` builds key (Phase-4 verifier findings).
-- [x] 6.3b Anti-drift guard: unit test that rebuilds the fixture all-projects index in-memory from `fixtures/projects/*.md` and asserts it equals the committed `fixtures/repos/all-projects.json` — fixture drift then fails the suite instead of silently corrupting goldens.
-- [x] 6.4 Full acceptance: `pnpm check` (0 errors), `pnpm test:unit`, `pnpm test:e2e`, `pnpm test:visual` all green; `node scripts/generate.mjs` twice → tree clean; content-purity grep audit repo-wide; zero references to removed q-navigation in src/ or docs; PLAN.md boxes all checked.
-- [x] 6.5 Deflake the `nav.spec.ts` live-clock test (Phase-2 verifier observed it failing under parallel load, passing in isolation — pre-existing): make it deterministic (e.g. Playwright clock control or widened tolerance with justification), do NOT just retry-mask it.
-- Verification: independent verifier runs every command fresh and inspects the new recipes' goldens visually (zoom) for rendering defects.
+**Verify 3**: unit + e2e green incl. new spec; `pnpm check`; build; cmdline shows NO options list
+(DOM assertion); `?` in builds/personnel/profile/retina-v/help opens palette; `h` on dashboard
+opens Help window; cmdline/palette close on window switch (e2e).
 
-### Post-acceptance — git history rewrite (user request 2026-08-17 late evening)
-- [x] After the final Phase-6 verifier PASS: rewrite ALL repo history (no remote exists — safe) so every commit has a very brief single-line subject, no body, and no Co-Authored-By trailer. Performed by the ORCHESTRATOR directly (repo administration, not code). Verify content-identical afterwards: `git diff <old-head> <new-head>` must be empty, `git status --porcelain` clean, and a quick `pnpm test:unit` sanity run. All commits from this point forward are authored in that style directly (brief subject, no trailer).
+### Phase 4 — Programs & the in-window shell (`:q` → shell, relaunch, auto-rename)
+- [ ] 4.1 `src/lib/tmux.ts` model (single-pane windows this phase) + Terminal refactor: client
+  $state {sessions, attachedSessionId}; windows own panes owning programs; PaneTree renderer;
+  delegation via focused-pane ref map; URL sync per Architecture notes; popstate routed through
+  selectWindow. All existing behavior (switching, rename, kill-window, prefix cycle, status bar
+  click) preserved against the new model. **CHECKPOINT: after 4.1, run the FULL existing e2e
+  suite and get it green before starting 4.2** — keeps the fix loop scoped to the refactor.
+- [ ] 4.2 Shell.svelte + shell.ts + shell.yaml + `fs-index.json` generation in generate.mjs;
+  builtins per Architecture notes (except tmux session subcommands — Phase 5); `dashboard` etc.
+  launch programs in-pane; `exit` closes the pane→window cascade (last-window guard stays until
+  Phase 5 adds sessions).
+- [ ] 4.3 `:q`/`q` cmdline command → exitProgram(focused pane) per Locked #2; window auto-rename
+  (program name ↔ `zsh`, manual rename wins); status bar shows renames live + `-` flag for last
+  window.
+- [ ] 4.4 Reboot reset now also rebuilds the client to factory (sessions/windows/panes/programs/
+  shell buffers) and clears toast dismissals — single factory() in tmux.ts.
+- [ ] 4.5 Tests: unit tmux.ts (model ops) + shell.ts (parser, cd/cat/tree against a fixture index);
+  e2e shell.spec (`:q` from dashboard → prompt; typing `dashboard` relaunches; cat/cd/pwd/tree/
+  neofetch/sudo/whoami/help outputs; window renamed dashboard→zsh→dashboard in status bar; reboot
+  factory-resets); cmdline.spec `:q` updates; tmux.spec updates for auto-rename.
 
-## Acceptance criteria
-1. Bare `q`/Esc never changes the active view anywhere; Esc only exits modals (grep/filter/visual/copy/prompt/cmdline). Status bar lists `0:dashboard … 5:help`, every window mouse-clickable, active window correct.
-2. Help window exists, reachable via `Ctrl-b ?`, `Ctrl-b 5`, status-bar click, dashboard menu; every binding it lists actually works (spot-verified by e2e for new bindings); its content comes from `src/data/help.yaml`.
-3. Personnel: only Enaimco; browsing path `Enaimco/ → {Full-Time,Part-Time,Co-op}/ → software-developer.md`; every row (incl. `../`) single-click navigable; clicking the prompt then typing filters; title reads `─ Personnel Files ─`.
-4. Builds: [3] lists all-projects + 3 repos flat; clicking a repo populates [2] with its tree; clicking a file previews in [0]; Enter opens the vim editor; clicking a commit loads that commit's tree into [2] with a braille loading animation on the repo row and NO new tab; `o` opens the commit on GitHub; API failure shows a message and keeps state; all-projects lists the 3 project .md files and shows a "local only" commits panel. Commits panel [4] tracks ONLY the [3] repo selection (never file/project movement) and renders rows unclipped at full glyph height with live 15-commit data.
-5. Editor: vim NORMAL/VISUAL/VISUAL-LINE with the motion set, counts, yank-to-clipboard, `/`+n/N search, `:q` close, readonly message on every mutating key; mode + line:col in footer.
-6. tmux: `Ctrl-b ,` `&` `x` `[` `]` behave per the design decisions above with tmux-style status-line prompts; copy-mode yank → `Ctrl-b ]` round-trips into grep/filter inputs; the status bar is never dimmed/blurred by the grep overlay, stays clickable while grep is open, and window-switching with grep open closes the overlay (grep is window chrome, the bar is session chrome).
-7. Tracker says `retina-v` (command line + ASCII box, edges aligned); grep right-pane header never clipped (e2e-asserted).
-8. All suites green: `pnpm check` 0 errors, unit, e2e, visual (self-baselined goldens, 3 consecutive clean runs), `git status --porcelain` empty after full build + generate + test cycle.
-9. Content purity: no user-visible strings hardcoded in components (repo-wide audit); every new string lives in yaml/content; README + help.yaml in sync with actual bindings.
-10. Boot sequence: fresh tab → full E.D.I.T.H boot (rings, pct, phases, handshake, log, bloom) matching the mock's timings/text verbatim → dashboard fade-in; unskippable while running; skipped within a session; `r` on dashboard and the status-bar `↻ reboot` control replay it; boot goldens visually match the `Boot Sequence.dc.html` source on zoom review (NOT `ref/*.png` — those are from an earlier, contradicted design iteration).
-11. Cmdline: `:` anywhere (and `Ctrl-b :` for tmux commands) floats the `─ Cmdline ─` box; every cmdline.yaml command executes (window jumps, `:grep <q>`, `:reboot`, `:resume`, `:q` kill-window, editor ex commands); suggestions + Tab completion work; `:` stays literal inside text inputs; the box never covers the status bar.
+**Verify 4**: full unit + e2e green; `pnpm check`; build; fs-index.json generated & idempotent;
+probes: `:q` on builds → shell; `cat package.json` prints real content; `cat
+repos/Sheldon/README.md` prints from repo index; URL unchanged while in shell; reboot restores
+6 factory windows.
 
-## Stop conditions
-- No deploy, no CI, no new GitHub repos, no auth flows. GitHub API stays unauthenticated client-side.
-- No content invention: role bodies/titles unchanged except file moves + `employmentType` derived from existing titles; deleted roles are deleted, not rewritten.
-- No new views beyond `help`; no redesign of the visual language (new UI reuses existing palette/panel styles).
-- Fixture prototype sample data (incl. its `spider-tracker` project) stays verbatim; only the goldens' authority changes.
-- If a phase's executor believes a design decision here is wrong, it reports back — the orchestrator updates this plan; executors do not improvise.
+### Phase 5 — Host shell, detach, sessions
+- [ ] 5.1 Detach (`Ctrl-b d`, replaces go-home): host shell fullscreen over the radar (wallpaper
+  dim per mock, NO status bar), pre-seeded scrollback from shell.yaml matching the user's mock
+  (E.D.I.T.H header lines, earlier `tmux new -s 10.42.7.13` + edith launch narrative, prompt
+  `shev@edith:~/shevinum.dev git:(main) $`), then appends `[detached (from session 10.42.7.13)]`.
+  Host shell = same Shell component, host mode.
+- [ ] 5.2 tmux subcommands per fidelity reference: `tmux ls`, `tmux new [-s name]`, `tmux a|attach
+  [-t x]` incl. exact error strings, nested-refusal inside panes, most-recent-unattached pick,
+  `no sessions`. New sessions start with one `zsh` window (window 0). Status bar + choose-tree
+  (Phase 6) show the attached session's windows; `Session: {name}` left cluster.
+- [ ] 5.3 Kill cascades: last pane → window → session; killing the attached session's last window
+  detaches to host shell printing `[exited]`. `exit` in host shell prints `logout` + page reload.
+- [ ] 5.4 Reboot factory() reachable from host shell via `reboot` builtin.
+- [ ] 5.5 Tests: unit session ops (create/attach/detach/ls formatting with frozen clock,
+  duplicate/missing errors); e2e sessions.spec (detach shows mock scrollback + detached line;
+  `tmux ls` format; `tmux new -s test` + auto-attach; `tmux a -t 10.42.7.13` returns with window
+  state intact; `[exited]` path; nested refusal; `logout` reload).
+
+**Verify 5**: full unit + e2e green; `pnpm check`; build; probe: detach → host shell (radar dim,
+no status bar) → `tmux ls` shows `10.42.7.13: 6 windows … (attached)`-style rows → `tmux a`
+reattaches with prior window state intact.
+
+### Phase 6 — Panes: splits, nav, kill, layouts, choose-tree
+- [ ] 6.1 Split ops in tmux.ts (binary split tree; `|`/`%` right, `-`/`"` below, focused, 50/50) +
+  PaneTree recursive flex rendering with borders + active-pane border accent; new panes run shell.
+- [ ] 6.2 Pane nav: prefix o / arrows / `;`; focus follows; delegation targets focused pane.
+- [ ] 6.3 `Ctrl-b x` real kill-pane per Locked #4 (+ cascade), Builds panel-kill removed (tests
+  updated; Builds `canKillPane`/`killPane` exports deleted); `kill-pane` tmux command targets the
+  focused pane.
+- [ ] 6.4 Layout engine: all 7 presets per fidelity reference (pure tree→tree functions,
+  unit-tested for pane counts 2/3/4/5); prefix Space cycles in the verified order with lastLayout;
+  `select-layout <name>` added to the tmux command prompt vocabulary (+ usage/unknown errors).
+- [ ] 6.5 choose-tree overlay (`Ctrl-b w`) per fidelity reference: tree of sessions/windows,
+  markers, flags, initial selection, expand/collapse, Enter switch (window or session), x kill
+  with case-insensitive confirm, q/Esc cancel, bottom preview strip (pane programs of selection).
+  Window-chrome rules: opening closes grep/cmdline/palette; it owns the keyboard while open
+  (delegation slot right after copy-mode).
+- [ ] 6.6 Tests: unit layout engine + split/kill tree ops; e2e panes.spec (split, nav, kill
+  confirm exact prompt text, cascades incl. `[exited]`, each of 7 layouts asserted via bounding
+  boxes for 3 panes, Space cycle order, select-layout command) + choose-tree.spec (open, navigate,
+  switch window + session, kill window via x, cancel, initial selection).
+
+**Verify 6**: full unit + e2e green; `pnpm check`; build; probe: `|` then `-` → 3 panes, Space
+seven times returns to even-horizontal; `Ctrl-b w` from a split window switches sessions.
+
+### Phase 7 — Visual re-baseline + acceptance
+- [ ] 7.1 Update recipes: existing 15 re-validated (01-dashboard now = wordmark + blur + seeded
+  toasts; 15-cmdline without options); ADD: 16-shell (dashboard `:q` + `neofetch`), 17-host-shell
+  (detached, mock scrollback), 18-split (3 panes, main-vertical), 19-choose-tree, 20-help-search
+  (`?` + query `kil`). All recipes must produce meaningfully distinct PNGs (byte-compare guard
+  from iteration 2 applies).
+- [ ] 7.2 Re-baseline: `pnpm build:fixtures && playwright test tests/visual/identical.spec.ts
+  --update-snapshots`, then 3 consecutive clean runs (40 goldens, maxDiffPixels 0). Toast seed +
+  clock frozen via fixtures; fs/shell output deterministic by construction.
+- [ ] 7.3 help.yaml + README keymap tables updated for every new binding/command (window `[h]`,
+  `?` palette, splits, layouts, choose-tree, detach, sessions, shell builtins).
+- [ ] 7.4 Full acceptance sweep (verifier): all ACs below with live probes.
+
+## Acceptance criteria (final verifier checklist)
+
+- AC1 `Ctrl-b w` opens a faithful choose-tree; Enter switches windows AND sessions; x kills with
+  the in-overlay prompt; q/Esc cancels; current window initially selected.
+- AC2 `Ctrl-b |` and `Ctrl-b -` split (right/below, focused, 50/50); `%`/`"` alias; prefix
+  o/arrows/`;` navigate; `Ctrl-b x` prompts `kill-pane {n}? (y/n)`, y kills, other keys cancel;
+  cascades window→session→`[exited]`.
+- AC3 `Ctrl-b Space` cycles exactly: even-horizontal, even-vertical, main-horizontal,
+  main-horizontal-mirrored, main-vertical, main-vertical-mirrored, tiled; geometries match the
+  reference; `select-layout <name>` works from `Ctrl-b :`.
+- AC4 `:q` in any program window drops to an in-window shell (session bar intact); typing
+  `dashboard`/`builds`/… relaunches; window auto-renames program↔zsh in the status bar.
+- AC5 Shell builtins all work with data-driven strings: cd/ls/cat/pwd/tree/clear/whoami/help/
+  open/edith/neofetch/sudo/exit/reboot; host-mode `open <view>` and `edith` attach; prefix inert
+  while detached; cat prints real file content from the generated indexes for
+  BOTH site files and repos/ files; fs walk covers src/ public/ fixtures/ repos/ scripts/ tests/
+  + root files.
+- AC6 `Ctrl-b d` detaches to the host shell over the dim radar with the pre-seeded creation
+  narrative + `[detached (from session 10.42.7.13)]`; `tmux ls` / `tmux new -s test` /
+  `tmux a [-t …]` behave with the exact verified strings; `[exited]` on last-window kill; `exit`
+  in host shell → `logout` + reload; nested tmux refusal inside panes.
+- AC7 Reboot (status bar, `r`, `:reboot`, shell `reboot`) restores FULL factory state: 6 windows,
+  no splits, no extra sessions, shell buffers cleared, toasts re-picked, then boot replays.
+- AC8 Data accuracy: personnel tree matches the user's data file exactly (structure + dates:
+  co-op May 2024–Sep 2025, part-time Sep 2025–Jul 2026, full-time Jul 2026–Present, overview
+  May 2024–Present; Memorial 5 roles from v2 sources); NO fabricated content remains (grep:
+  Toronto, "34m → 6m", "event bus" absent); contact = resume values, no phone; Education section
+  present with both entries; Profile shows the data file's Summary bio as a dossier block;
+  Builds shows the 8 repos + all-projects; real resume.pdf served.
+- AC9 Dashboard: SPIDEY-HUB wordmark in the embedded font (no "shevinum.dev" title, no
+  "welcome back"), whole radar blurred behind it; notifications = 2 seeded picks from ≥48-entry
+  pool, dismissible; spot-check 5 seeds → ≥4 distinct pairs.
+- AC10 Cmdline: no options list; closes on window switch/reboot/detach; `?` palette opens
+  everywhere per gating, fuzzy-matches (canary queries), Enter executes commands; dashboard `h`
+  opens Help window; `?` no longer bound to help window anywhere.
+- AC11 All suites green: `pnpm check` 0 errors; `node --test` unit; full Playwright e2e; visual
+  suite 3 consecutive clean runs at maxDiffPixels 0 across all recipes × 2 viewports; `pnpm
+  generate` idempotent; content-purity greps (no UI strings in components beyond accepted
+  residual page titles).
+
+## Risks / notes
+- Legend-of-Arlo & DSA submodules may be heavy — use shallow submodule clones; generated repo
+  JSONs are lazy-fetched so runtime cost is bounded; cap per-file content like the grep walker.
+- The Svelte 5 read-then-write $effect hazard (iteration 2) applies to the new client $state —
+  use untrack() for fetch bookkeeping in Shell/PaneTree.
+- Multi-instance programs (same view in 2 panes) must not double-register paste targets — the
+  stack registry handles it, but editor-open gating must consult the FOCUSED pane only.
+- popstate bypasses the switch pipeline today; route it through selectWindow in Phase 4.
