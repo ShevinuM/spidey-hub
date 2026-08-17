@@ -53,18 +53,26 @@ dossier:
     - "Outside of coding, I love hiking and the outdoors, and I read a lot — technical books, psychology, and fantasy. I'm particularly fascinated by cognitive psychology — Jung's and Briggs's work never gets old for me. I'm a huge movies and TV person too. I fell off the MCU after Phase 4, but Brand New Day and Doomsday leading into Hickman's Secret Wars have pulled me right back in. I also love board games, though spoiler-alert: I get aggressively competitive, and everyone ends up hating me for it."
     - "What I love most about software is the problem-solving — finding the solution and architecting it. My goal is to work in system design and architecture. Ambitious? Maybe. But at least I'm open about it."
 
-# Static narrative stats (not derived from the projects/personnel
-# collections — "roles logged: 7" coincidentally matches the real personnel
-# count today, but the prototype hardcodes it as copy, not a computation).
+# PLAN.md Iteration 3 Phase 1 (orchestrator ruling on deviation #3, real-
+# data accuracy mandate covers these user-visible numbers too): still
+# hand-authored copy (not computed by the build), but now pinned to
+# derivable-true values as of this writing — re-verify if the repo/
+# personnel content set changes again:
+#   repos shipped = 8  (the real repos/ submodule set, Locked #10)
+#   roles logged  = 9  (4 enaimco/software-developer/**/role.md + 5
+#                        memorial-university/*/role.md)
+#   years active  = 4  (first Memorial University role, Oct 2022, per
+#                        src/content/personnel/memorial-university/
+#                        design-and-development-assistant/role.md, -> now)
 recordDatabase:
   title: "RECORD DATABASE"
   stats:
     - label: "repos shipped"
-      value: 10
+      value: 8
     - label: "roles logged"
-      value: 7
+      value: 9
     - label: "years active"
-      value: 5
+      value: 4
 
 cv:
   title: "CV"
