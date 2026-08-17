@@ -130,15 +130,39 @@
     return panelTitles[focusedPanel];
   }
 
+  /** PLAN.md Phase 6 item 6.0 hardening: the panel NUMBER focused right
+   * now, for Terminal.svelte's startKillPaneConfirm to capture at
+   * confirm-OPEN time (mirroring renameWindow/killWindow's "id captured at
+   * prompt-open time" pattern) rather than re-reading `focusedPanel` at
+   * confirm-execute time, when a mouse click on another panel's row in the
+   * meantime could have moved it. */
+  export function focusedPanelNumber(): 0 | 1 | 2 | 3 | 4 {
+    return focusedPanel;
+  }
+
   /** Removes the currently-focused panel and moves focus to the first
    * remaining one so a stray digit/j/k press afterward always lands
-   * somewhere visible. */
+   * somewhere visible. Used only by the immediate (no-confirm) `:kill-pane`
+   * cmdline command (PLAN.md 5C.1(c)), where there is no time window
+   * between "decide" and "act" for a click to redirect. */
   export function killFocusedPane(): void {
+    killPane(focusedPanel);
+  }
+
+  /** PLAN.md Phase 6 item 6.0: kills the pane captured by NUMBER, not
+   * whatever happens to be focused when this runs. Terminal.svelte's
+   * kill-pane confirm flow captures the target panel number when the
+   * confirm dialog OPENS and always resolves through this function, so a
+   * mouse click on a different panel's row while the "kill-pane <name>?
+   * (y/n)" prompt is still open cannot redirect which panel actually dies
+   * — only the originally-named panel does; if the click also moved focus
+   * elsewhere, that panel remains focused afterward untouched. */
+  export function killPane(n: 0 | 1 | 2 | 3 | 4): void {
     const next = new Set(removedPanels);
-    next.add(focusedPanel);
+    next.add(n);
     removedPanels = next;
-    const remaining = ALL_PANELS.filter((n) => !next.has(n));
-    if (remaining.length) focusedPanel = remaining[0];
+    const remaining = ALL_PANELS.filter((x) => !next.has(x));
+    if (remaining.length && focusedPanel === n) focusedPanel = remaining[0];
   }
 
   const selectedRepo = $derived(flatRepos[selectedRepoIdx]);

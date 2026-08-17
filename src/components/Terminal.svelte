@@ -97,6 +97,12 @@
     canKillPane?: () => boolean;
     focusedPanelTitle?: () => string;
     killFocusedPane?: () => void;
+    /** PLAN.md Phase 6 item 6.0 hardening — see startKillPaneConfirm below:
+     * the panel number captured at confirm-open time, and the kill that
+     * always targets a captured number rather than "whatever is focused
+     * now". */
+    focusedPanelNumber?: () => 0 | 1 | 2 | 3 | 4;
+    killPane?: (n: 0 | 1 | 2 | 3 | 4) => void;
     /** PLAN.md Phase 5C — forwards to the embedded Editor's own
      * `runExCommand` (the lifted Phase-3 ex-command state machine) while
      * one is open; `{ recognized: false }` otherwise. */
@@ -437,12 +443,26 @@
   /** Ctrl-b x — PLAN.md Phase 5 item 5.2: inside Builds with more than one
    * panel visible, confirms removing the FOCUSED panel only; everywhere
    * else (including Builds reduced to its last panel), "the only pane = the
-   * window", so it's the exact same confirm/flow as Ctrl-b &. */
+   * window", so it's the exact same confirm/flow as Ctrl-b &.
+   *
+   * PLAN.md Phase 6 item 6.0 hardening: the target panel NUMBER (and its
+   * title, for the prompt text) is captured HERE, at confirm-OPEN time —
+   * same "id captured at prompt-open time" pattern as
+   * startRenamePrompt/startKillWindowConfirm above. The committed closure
+   * always kills that captured number via `buildsRef.killPane(n)`, never
+   * re-reading `buildsRef.focusedPanelTitle()`/killFocusedPane() (which
+   * read whatever is CURRENTLY focused) at confirm-execute time — so a
+   * mouse click on a different panel's row while the "kill-pane <name>?
+   * (y/n)" confirm is still open cannot redirect the kill to the
+   * newly-clicked panel. */
   function startKillPaneConfirm() {
     if (view === "builds" && buildsRef?.canKillPane?.()) {
       const pane = buildsRef.focusedPanelTitle?.() ?? "";
+      const paneNumber = buildsRef.focusedPanelNumber?.();
       const text = site.statusBar.prompts.killPaneTemplate.replace("{pane}", pane);
-      statusBarRef?.startConfirm(text, killPaneOrWindow);
+      statusBarRef?.startConfirm(text, () => {
+        if (paneNumber !== undefined) buildsRef?.killPane?.(paneNumber);
+      });
       return;
     }
     startKillWindowConfirm();

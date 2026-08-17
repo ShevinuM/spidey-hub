@@ -475,6 +475,38 @@ test.describe("Ctrl-b x kill-pane (PLAN.md Phase 5 item 5.2)", () => {
     await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
     await expect(page).toHaveURL(/\/profile$/);
   });
+
+  // PLAN.md Phase 6 item 6.0: kill-pane confirm hardening. The confirm's
+  // target panel must be captured when the "kill-pane <name>? (y/n)" prompt
+  // OPENS, not re-read from whatever is CURRENTLY focused when `y` commits
+  // — mirroring the rename/kill-window hardening already covered by the
+  // "prompt keyboard ownership" describe block below. Before this fix,
+  // clicking a different panel's row while the confirm was still open
+  // moved `focusedPanel`, and pressing `y` killed that NEWLY focused panel
+  // instead of the one named in the prompt.
+  test("a mouse click on a different panel mid-confirm cannot redirect the kill — the ORIGINALLY named panel dies", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/builds");
+    await page.keyboard.press("2"); // focus panel [2] Files
+    await expect(page.locator('[data-testid="builds-panel-2"]')).toBeVisible();
+
+    await ctrlB(page);
+    await page.keyboard.press("x");
+    await expect(page.locator('[data-testid="status-confirm"]')).toContainText("Files");
+
+    // Click the Repos panel's row while the confirm is still open — this
+    // moves focusedPanel to [3] without answering the prompt.
+    await page.locator('[data-testid="builds-repo-row"]').first().click();
+    await expect(page.locator('[data-testid="status-confirm"]')).toContainText("Files");
+
+    await page.keyboard.press("y");
+
+    // The ORIGINALLY named panel (Files, [2]) is dead; the clicked one
+    // (Repos, [3]) survives untouched.
+    await expect(page.locator('[data-testid="builds-panel-2"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="builds-panel-3"]')).toBeVisible();
+  });
 });
 
 // Verifier round 2 regression: fixing "Ctrl-b ] can paste into a status-bar
