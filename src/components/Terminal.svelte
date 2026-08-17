@@ -20,10 +20,13 @@
     CompanyEntry,
     GrepData,
     HelpData,
+    WindowEntry,
   } from "../lib/data";
   import type { Commit } from "../lib/commits";
   import type { ViewId } from "../lib/views";
-  import { VIEW_ROUTES, hotkeyToView, pathToView } from "../lib/views";
+  import { VIEW_ROUTES, activeWindowId, hotkeyToView, pathToView, windowIdToView } from "../lib/views";
+  import { getPasteBuffer } from "../lib/pasteBuffer";
+  import { getActivePasteTarget } from "../lib/pasteTargets";
   import Wallpaper from "./Wallpaper.svelte";
   import StatusBar from "./StatusBar.svelte";
   import Dashboard from "./Dashboard.svelte";
@@ -33,6 +36,7 @@
   import Profile from "./Profile.svelte";
   import HelpView from "./HelpView.svelte";
   import GrepOverlay from "./GrepOverlay.svelte";
+  import CopyMode from "./CopyMode.svelte";
 
   interface Props {
     initialView: ViewId;
@@ -72,7 +76,18 @@
    * vim Editor is currently open, so this component's own handleKey can be
    * given a turn BEFORE GrepOverlay's — vim-faithful: `/` searches the
    * open buffer, not the site. */
-  let buildsRef = $state<{ handleKey: (e: KeyboardEvent) => boolean; isEditorOpen?: () => boolean } | null>(null);
+  let buildsRef = $state<{
+    handleKey: (e: KeyboardEvent) => boolean;
+    isEditorOpen?: () => boolean;
+    /** PLAN.md Phase 5 item 5.2 "Ctrl-b x" — kill-pane wiring: whether more
+     * than one Builds panel is currently visible (if not, `x` falls back to
+     * the kill-window flow instead — "in single-pane views, the only pane =
+     * the window"), the focused panel's own title (for the confirm
+     * prompt's `{pane}` text), and the actual removal. */
+    canKillPane?: () => boolean;
+    focusedPanelTitle?: () => string;
+    killFocusedPane?: () => void;
+  } | null>(null);
   /** Same `bind:this` + `handleKey(): boolean` + `isEditorOpen()` contract,
    * one level down — Personnel.svelte's own embedded Editor (PLAN.md Phase
    * 6, vim engine PLAN.md Phase 3). */
@@ -91,7 +106,24 @@
    * the overlay from inside Builds/Personnel when no editor is open, and
    * what keeps the overlay's own keys (typing, nav, Enter/Esc) from ever
    * reaching the view underneath while it's open. */
-  let grepRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
+  let grepRef = $state<{ handleKey: (e: KeyboardEvent) => boolean; close?: () => void } | null>(null);
+
+  /** StatusBar's status-line prompt state machine (PLAN.md Phase 5 item
+   * 5.1) — consulted at the very top of handleKey() below, ahead of even
+   * the prefix-arm check, so a rename/confirm prompt truly owns the
+   * keyboard the instant it opens. */
+  let statusBarRef = $state<{
+    handleKey: (e: KeyboardEvent) => boolean;
+    isPromptActive: () => boolean;
+    showMessage: (text: string) => void;
+    startRename: (initial: string, onCommit: (name: string) => void) => void;
+    startConfirm: (text: string, onYes: () => void) => void;
+  } | null>(null);
+
+  /** Ctrl-b [ copy-mode overlay (PLAN.md Phase 5 item 5.3) — same
+   * always-mounted / bind:this / handleKey():boolean contract as
+   * GrepOverlay, consulted right after the status-bar prompt. */
+  let copyModeRef = $state<{ handleKey: (e: KeyboardEvent) => boolean; openOverlay: () => void } | null>(null);
 
   // Deliberately an "uncontrolled" seed, not a tracked binding: each route
   // page SSRs Terminal exactly once with the view matching its own URL, and
@@ -147,7 +179,22 @@
     };
   });
 
+  /** Live, mutable window list (PLAN.md Phase 5 items 5.1/5.2) — seeded from
+   * `site.statusBar.windows` but no longer read from it directly once
+   * mounted: `Ctrl-b ,` mutates a window's `name` in place, `Ctrl-b &`
+   * removes one entirely. In-memory only, exactly like a fresh tmux session
+   * — a reload always starts back at the full 0-5 list from site.yaml. Each
+   * entry is its own shallow clone so mutating one never touches the
+   * original `site` prop object. */
+  let windows = $state<WindowEntry[]>(site.statusBar.windows.map((w) => ({ ...w })));
+
+  /** Closing the grep overlay is now folded into every view switch (PLAN.md
+   * Phase 5 item 5.5: "grep is WINDOW chrome" — switching windows while
+   * grep is open always closes it, whether the switch came from a
+   * status-bar click, a prefix digit/n/p/d/w/0, or a kill-window that
+   * happened to evict the current view). A no-op when grep isn't open. */
   function setView(next: ViewId) {
+    grepRef?.close?.();
     if (next === view) return;
     view = next;
     history.pushState(null, "", VIEW_ROUTES[next]);
@@ -161,21 +208,44 @@
   // dispatch branch is checked FIRST in handleKey() below, and the *arm*
   // check (bare Ctrl-b itself) is now checked SECOND — ahead of grep
   // delegation, tmux-faithful — so the prefix works even while the grep
-  // overlay is open (needed for a later phase's `Ctrl-b ]` paste into the
-  // grep query). This retires the old "prefix inert while grep is open"
-  // rule: while armed, the prefix consumes the next key before grep ever
-  // sees it, exactly like every other view.
+  // overlay is open (needed for `Ctrl-b ]`'s paste into the grep query,
+  // PLAN.md Phase 5 item 5.3). This retires the old "prefix inert while
+  // grep is open" rule: while armed, the prefix consumes the next key
+  // before grep ever sees it, exactly like every other view.
+  //
+  // PLAN.md Phase 5 item 5.2 "Ctrl-b ," / "&" / "x" / "[" / "]" — rename-
+  // window, kill-window, kill-pane, copy-mode, and paste-buffer — are all
+  // dispatched from `handlePrefixedKey` below alongside the pre-existing
+  // digit/n/p/d/w/0 targets, since they're all "the single key following an
+  // armed Ctrl-b" in exactly the same way.
   // ---------------------------------------------------------------------
-  const PREFIX_CYCLE: ViewId[] = ["home", "builds", "personnel", "retina-v", "profile", "help"];
-  const PREFIX_TARGETS: Partial<Record<string, ViewId>> = {
+  const NUMBER_TO_VIEW: Record<string, ViewId> = {
     "1": "builds",
     "2": "personnel",
     "3": "retina-v",
     "4": "profile",
     "5": "help",
-    "?": "help",
   };
   const PREFIX_TIMEOUT_MS = 2000;
+
+  /** n/p cycle order — the still-present windows, in their current (always
+   * numeric, never reordered) order. A killed window simply drops out of
+   * the cycle; nothing else about the ordering changes. */
+  const prefixCycle = $derived(windows.map((w) => windowIdToView(w.id)));
+
+  /** Digit/`?` targets, recomputed from the live `windows` list so a killed
+   * window's digit stops doing anything (tmux-faithful: an unbound prefixed
+   * key is silently swallowed) without needing a separate "is this window
+   * still alive" check at every call site. */
+  const prefixTargets = $derived.by((): Partial<Record<string, ViewId>> => {
+    const present = new Set(windows.map((w) => w.id));
+    const targets: Partial<Record<string, ViewId>> = {};
+    for (const [digit, target] of Object.entries(NUMBER_TO_VIEW)) {
+      if (present.has(target)) targets[digit] = target;
+    }
+    if (present.has("help")) targets["?"] = "help";
+    return targets;
+  });
 
   let prefixArmed = $state(false);
   let prefixTimer: ReturnType<typeof setTimeout> | undefined;
@@ -195,13 +265,90 @@
 
   /** n/p — next/prev window. Every window (including the dashboard, now a
    * real "0:dashboard" entry — PLAN.md Phase 1) is a `ViewId` in
-   * `PREFIX_CYCLE`, so this indexes `view` directly with no id-translation
+   * `prefixCycle`, so this indexes `view` directly with no id-translation
    * layer needed. */
   function cyclePrefixView(dir: 1 | -1) {
-    const idx = PREFIX_CYCLE.indexOf(view);
+    const cycle = prefixCycle;
+    const idx = cycle.indexOf(view);
     const base = idx === -1 ? 0 : idx;
-    const next = PREFIX_CYCLE[(base + dir + PREFIX_CYCLE.length) % PREFIX_CYCLE.length];
-    setView(next);
+    const next = cycle[(base + dir + cycle.length) % cycle.length];
+    if (next) setView(next);
+  }
+
+  /** The active window's own display name, for the rename prompt's
+   * prefilled text and the kill-window/kill-pane confirm templates'
+   * `{name}` substitution. */
+  function currentWindowName(): string {
+    const id = activeWindowId(view);
+    return windows.find((w) => w.id === id)?.name ?? "";
+  }
+
+  /** Ctrl-b , — PLAN.md Phase 5 item 5.2. */
+  function renameWindow(name: string) {
+    const id = activeWindowId(view);
+    windows = windows.map((w) => (w.id === id ? { ...w, name } : w));
+  }
+
+  /** Ctrl-b & (and the Builds single-pane Ctrl-b x fallback, and a
+   * kill-pane that emptied the last Builds panel) — PLAN.md Phase 5 item
+   * 5.2. Refuses (a status message, no removal) when only one window is
+   * left; otherwise removes the active window and, if it WAS the active
+   * one, switches to whatever now sits at its old index (i.e. the window
+   * that used to be right after it — `remaining[idx]` — or wraps to the
+   * first remaining window if it was last). Single source of behavior:
+   * every "kill this window" path in the app funnels through here. */
+  function killWindow() {
+    if (windows.length <= 1) {
+      statusBarRef?.showMessage(site.statusBar.prompts.killLastWindowMessage);
+      return;
+    }
+    const id = activeWindowId(view);
+    const idx = windows.findIndex((w) => w.id === id);
+    const wasActive = idx !== -1;
+    const remaining = windows.filter((w) => w.id !== id);
+    windows = remaining;
+    if (wasActive) {
+      const fallback = remaining[idx] ?? remaining[0];
+      if (fallback) setView(windowIdToView(fallback.id));
+    }
+  }
+
+  function startRenamePrompt() {
+    statusBarRef?.startRename(currentWindowName(), renameWindow);
+  }
+
+  function startKillWindowConfirm() {
+    const text = site.statusBar.prompts.killWindowTemplate.replace("{name}", currentWindowName());
+    statusBarRef?.startConfirm(text, killWindow);
+  }
+
+  /** Ctrl-b x — PLAN.md Phase 5 item 5.2: inside Builds with more than one
+   * panel visible, confirms removing the FOCUSED panel only; everywhere
+   * else (including Builds reduced to its last panel), "the only pane = the
+   * window", so it's the exact same confirm/flow as Ctrl-b &. */
+  function startKillPaneConfirm() {
+    if (view === "builds" && buildsRef?.canKillPane?.()) {
+      const pane = buildsRef.focusedPanelTitle?.() ?? "";
+      const text = site.statusBar.prompts.killPaneTemplate.replace("{pane}", pane);
+      statusBarRef?.startConfirm(text, () => buildsRef?.killFocusedPane?.());
+      return;
+    }
+    startKillWindowConfirm();
+  }
+
+  /** Ctrl-b ] — PLAN.md Phase 5 item 5.3: inserts the shared paste buffer
+   * into whichever text input is currently registered (src/lib/
+   * pasteTargets.ts) — the grep query, the personnel filter, the rename
+   * prompt, or the editor's in-buffer search. A transient status message
+   * covers both "nothing is listening" and "nothing's been yanked yet". */
+  function pasteFromBuffer() {
+    const target = getActivePasteTarget();
+    const buffer = getPasteBuffer();
+    if (target && buffer) {
+      target.insert(buffer.text);
+      return;
+    }
+    statusBarRef?.showMessage(site.statusBar.prompts.pasteEmptyMessage);
   }
 
   /** The single key following an armed Ctrl-b. Always disarms. A held
@@ -209,14 +356,17 @@
    * — disarm and fall through to the rest of handleKey unchanged, so e.g.
    * the Builds/Personnel editor's own Ctrl-d/Ctrl-u half-page scroll still
    * works immediately after an (unused) Ctrl-b, and the global "modifier
-   * combos fall through untouched" rule holds even mid-prefix. */
+   * combos fall through untouched" rule holds even mid-prefix. (Ctrl-b
+   * itself is special-cased one level up, in handleKey(), as tmux's own
+   * "send-prefix" binding — see that function's comment — so it never
+   * reaches this modifier check at all on the second press.) */
   function handlePrefixedKey(e: KeyboardEvent): boolean {
     disarmPrefix();
     if (e.metaKey || e.ctrlKey || e.altKey) return false;
 
     if (e.key === "Escape") return true; // cancel — swallowed, no action
 
-    const target = PREFIX_TARGETS[e.key];
+    const target = prefixTargets[e.key];
     if (target) {
       e.preventDefault();
       setView(target);
@@ -239,6 +389,31 @@
       setView("home");
       return true;
     }
+    if (e.key === ",") {
+      e.preventDefault();
+      startRenamePrompt();
+      return true;
+    }
+    if (e.key === "&") {
+      e.preventDefault();
+      startKillWindowConfirm();
+      return true;
+    }
+    if (pk === "x") {
+      e.preventDefault();
+      startKillPaneConfirm();
+      return true;
+    }
+    if (e.key === "[") {
+      e.preventDefault();
+      copyModeRef?.openOverlay();
+      return true;
+    }
+    if (e.key === "]") {
+      e.preventDefault();
+      pasteFromBuffer();
+      return true;
+    }
 
     // Unrecognized prefixed key — tmux swallows it silently (no action);
     // only preventDefault a printable character (mirrors GrepOverlay's own
@@ -248,20 +423,59 @@
   }
 
   function handleKey(e: KeyboardEvent) {
+    // PLAN.md Phase 5 item 5.1: a status-line prompt (rename/confirm) OWNS
+    // the keyboard the instant it's open — checked ahead of literally
+    // everything else, including the prefix-arm check, so e.g. typing "j"
+    // into a rename can never leak through to a list behind it. Item 5.3's
+    // copy-mode overlay gets the same always-mounted / consulted-early
+    // treatment as GrepOverlay, one step below the prompt.
+    if (statusBarRef?.handleKey(e)) return;
+    if (copyModeRef?.handleKey(e)) return;
+
+    // A bare modifier keydown (Control/Shift/Alt/Meta pressed on its own,
+    // with no other key) is never itself "a key" anywhere in this app's
+    // keymap — critically, it must never be mistaken for "a modifier combo
+    // held during an armed prefix" (which legitimately disarms, e.g.
+    // Cmd+L): the browser fires a separate keydown for the Control key
+    // itself just before the "b" keydown that carries `ctrlKey: true`, and
+    // without this guard that Control-only event gets treated as exactly
+    // such a disarming combo — breaking Ctrl-b Ctrl-b send-prefix entirely,
+    // since the prefix is disarmed a keydown before the real second Ctrl-b
+    // ever arrives.
+    if (e.key === "Control" || e.key === "Shift" || e.key === "Alt" || e.key === "Meta") return;
+
+    // Ctrl-b Ctrl-b — tmux's own default "send-prefix" binding (PLAN.md
+    // Phase 5 item 5.2): while armed, a SECOND Ctrl-b disarms (like any
+    // other prefixed key) but, uniquely, does NOT stop there — it falls
+    // through to the normal view-delegation chain below as a literal
+    // keydown, which is what makes vim's own Ctrl-b (full-page-back,
+    // `isEditorScrollChord` further down) reachable at all: a bare Ctrl-b
+    // is otherwise always consumed by the prefix-arm branch first. This
+    // replaces the old "pressing Ctrl-b again while armed just re-arms"
+    // behavior — re-arming is still what happens for every OTHER prefixed
+    // key (see `armPrefix()`'s own re-entrant reset), just not this one.
+    let sendPrefixLiteral = false;
     if (prefixArmed) {
-      if (handlePrefixedKey(e)) return;
-      // A modifier combo mid-prefix: disarmed above, deliberately falls
-      // through to grep/view handling below as if no prefix were armed.
+      if (e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "b") {
+        disarmPrefix();
+        sendPrefixLiteral = true;
+      } else if (handlePrefixedKey(e)) {
+        return;
+      }
+      // A modifier combo mid-prefix (any other Ctrl/Meta/Alt chord):
+      // disarmed inside handlePrefixedKey above, deliberately falls through
+      // to grep/view handling below as if no prefix were armed.
     }
 
     // Ctrl-b arms the tmux prefix (PLAN.md Phase 1 "Prefix precedence over
     // grep") — checked BEFORE grep delegation now, tmux-faithful: the
     // prefix works everywhere, including while the grep overlay is open
-    // (needed for a later phase's `Ctrl-b ]` paste into the grep query).
-    // Only Ctrl-b itself is preventDefault-ed (global keymap rule: every
-    // other modifier combo falls through untouched) — pressing it again
-    // while already armed simply re-arms (resets the 2s window).
-    if (e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "b") {
+    // (needed for `Ctrl-b ]`'s paste into the grep query). Only Ctrl-b
+    // itself is preventDefault-ed (global keymap rule: every other modifier
+    // combo falls through untouched). Skipped when `sendPrefixLiteral` is
+    // set above — this exact Ctrl-b keydown is the second half of a
+    // send-prefix chord, not a fresh arm.
+    if (!sendPrefixLiteral && e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "b") {
       e.preventDefault();
       armPrefix();
       return;
@@ -416,8 +630,9 @@
       <Profile bind:this={profileRef} {profile} />
     {/if}
 
-    <StatusBar {site} {view} onSelect={setView} />
+    <StatusBar bind:this={statusBarRef} {site} {windows} {view} onSelect={setView} />
   </div>
 
   <GrepOverlay bind:this={grepRef} {grep} onNavigate={setView} />
+  <CopyMode bind:this={copyModeRef} copyMode={site.copyMode} />
 </div>

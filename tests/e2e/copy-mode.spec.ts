@@ -1,0 +1,238 @@
+// Behavioral e2e suite for the tmux copy-mode overlay (CopyMode.svelte) —
+// PLAN.md Phase 5 item 5.3 / #12, `Ctrl-b [` / `Ctrl-b ]`.
+//
+// The "which pane does copy-mode capture" half is deliberately data-driven
+// off each view's OWN rendered `[data-copy-source]` text (read at test time,
+// same convention grep.spec.ts/builds.spec.ts already use for on-disk
+// content) rather than hardcoded copy, so this suite can't drift from
+// whatever each view's data files actually render.
+import { expect, test, type Page } from "@playwright/test";
+
+async function gotoReady(page: Page, path: string) {
+  await page.goto(path);
+  await page.locator('[data-terminal-ready="true"]').waitFor({ state: "attached" });
+}
+
+async function ctrlB(page: Page) {
+  await page.keyboard.down("Control");
+  await page.keyboard.press("b");
+  await page.keyboard.up("Control");
+}
+
+async function openCopyMode(page: Page) {
+  await ctrlB(page);
+  await page.keyboard.press("[");
+}
+
+const overlay = (page: Page) => page.locator('[data-testid="copy-mode-overlay"]');
+const linesEl = (page: Page) => page.locator('[data-testid="copy-mode-lines"]');
+const cursor = (page: Page) => page.locator('[data-testid="copy-mode-cursor"]').first();
+
+async function cursorLine(page: Page): Promise<string | null> {
+  return cursor(page).evaluate((el) => el.closest("[data-copy-mode-line]")?.getAttribute("data-copy-mode-line") ?? null);
+}
+
+test.describe("Copy mode (Ctrl-b [)", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  // PLAN.md Phase 5.4: "enter from ≥3 different views" — every
+  // `data-copy-source` pane the design decisions enumerate gets its own
+  // entry point here, each asserted against its own live-read source text.
+  const entryPoints: { name: string; open: (page: Page) => Promise<void> }[] = [
+    {
+      name: "dashboard menu",
+      async open(page) {
+        await gotoReady(page, "/");
+      },
+    },
+    {
+      name: "personnel row list",
+      async open(page) {
+        await gotoReady(page, "/personnel");
+      },
+    },
+    {
+      name: "profile summary",
+      async open(page) {
+        await gotoReady(page, "/profile");
+      },
+    },
+    {
+      name: "Builds focused panel",
+      async open(page) {
+        await gotoReady(page, "/builds");
+        await page.keyboard.press("1"); // focus panel [1] Status
+      },
+    },
+    {
+      name: "help content",
+      async open(page) {
+        await gotoReady(page, "/help");
+      },
+    },
+  ];
+
+  for (const entry of entryPoints) {
+    test(`captures the ${entry.name} as its active pane`, async ({ page }) => {
+      await entry.open(page);
+      const sourceText = (await page.locator("[data-copy-source]").innerText()).trim();
+      expect(sourceText.length).toBeGreaterThan(0);
+      const firstLine = sourceText.split("\n")[0];
+
+      await openCopyMode(page);
+      await expect(overlay(page)).toBeVisible();
+      await expect(linesEl(page)).toContainText(firstLine);
+    });
+  }
+
+  test("captures the vim editor buffer as its active pane", async ({ page }) => {
+    await gotoReady(page, "/builds");
+    await page.keyboard.press("3");
+    await page.keyboard.press("Enter");
+    await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
+    await page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]').click();
+    await page.keyboard.press("2");
+    await page.keyboard.press("Enter");
+    await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
+    const firstLine = (await page.locator('[data-line="1"] [data-testid="editor-line-text"]').textContent()) ?? "";
+    expect(firstLine.length).toBeGreaterThan(0);
+
+    await openCopyMode(page);
+    await expect(overlay(page)).toBeVisible();
+    await expect(linesEl(page)).toContainText(firstLine);
+  });
+
+  test("j/k/gg/G move the cursor across the captured lines", async ({ page }) => {
+    await gotoReady(page, "/help");
+    await openCopyMode(page);
+    await expect(overlay(page)).toBeVisible();
+    expect(await cursorLine(page)).toBe("1");
+
+    await page.keyboard.press("j");
+    expect(await cursorLine(page)).toBe("2");
+    await page.keyboard.press("k");
+    expect(await cursorLine(page)).toBe("1");
+
+    const totalLines = await page.locator("[data-copy-mode-line]").count();
+    test.skip(totalLines < 3, "captured pane too short for gg/G to be meaningful");
+
+    await page.keyboard.press("G");
+    expect(await cursorLine(page)).toBe(String(totalLines));
+    // The lines container renders every line at once and scrolls — G must
+    // actually scroll the cursor into view, not just relabel it while the
+    // viewport stays put.
+    await expect(cursor(page)).toBeInViewport();
+
+    await page.keyboard.press("g");
+    await page.keyboard.press("g");
+    expect(await cursorLine(page)).toBe("1");
+    await expect(cursor(page)).toBeInViewport();
+  });
+
+  test("h/l move the cursor within a line", async ({ page }) => {
+    await gotoReady(page, "/help");
+    await openCopyMode(page);
+    await page.keyboard.press("l");
+    await page.keyboard.press("l");
+    // Still on line 1 — h/l only move the column, never the line.
+    expect(await cursorLine(page)).toBe("1");
+  });
+
+  test("Ctrl-d/Ctrl-u page the cursor down/up", async ({ page }) => {
+    await gotoReady(page, "/help");
+    await openCopyMode(page);
+    const totalLines = await page.locator("[data-copy-mode-line]").count();
+    test.skip(totalLines < 15, "captured pane too short for a page move to be meaningful");
+
+    await page.keyboard.down("Control");
+    await page.keyboard.press("d");
+    await page.keyboard.up("Control");
+    const afterDown = Number(await cursorLine(page));
+    expect(afterDown).toBeGreaterThan(1);
+
+    await page.keyboard.down("Control");
+    await page.keyboard.press("u");
+    await page.keyboard.up("Control");
+    const afterUp = Number(await cursorLine(page));
+    expect(afterUp).toBeLessThan(afterDown);
+  });
+
+  test("v starts a charwise selection that highlights as motions extend it", async ({ page }) => {
+    await gotoReady(page, "/help");
+    await openCopyMode(page);
+    await page.keyboard.press("v");
+    await page.keyboard.press("l");
+    await page.keyboard.press("l");
+    await expect(page.locator('[data-testid="copy-mode-selection"]').first()).toBeVisible();
+  });
+
+  test("y yanks the selection to the paste buffer + system clipboard, then exits", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await gotoReady(page, "/help");
+    await openCopyMode(page);
+    await page.keyboard.press("v");
+    await page.keyboard.press("l");
+    await page.keyboard.press("l");
+    await page.keyboard.press("l");
+    await page.keyboard.press("y");
+
+    await expect(overlay(page)).not.toBeVisible();
+    const clip = await page.evaluate(() => navigator.clipboard.readText());
+    expect(clip.length).toBeGreaterThan(0);
+  });
+
+  test("Enter yanks the current line with no selection active, then exits", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await gotoReady(page, "/profile");
+    const sourceText = (await page.locator("[data-copy-source]").innerText()).trim();
+    const firstLine = sourceText.split("\n")[0];
+
+    await openCopyMode(page);
+    await page.keyboard.press("Enter");
+    await expect(overlay(page)).not.toBeVisible();
+
+    const clip = await page.evaluate(() => navigator.clipboard.readText());
+    expect(clip).toBe(firstLine);
+  });
+
+  test("q exits copy-mode without yanking (the one place bare q is allowed)", async ({ page }) => {
+    await gotoReady(page, "/help");
+    await openCopyMode(page);
+    await expect(overlay(page)).toBeVisible();
+    await page.keyboard.press("q");
+    await expect(overlay(page)).not.toBeVisible();
+  });
+
+  test("Esc exits copy-mode without yanking", async ({ page }) => {
+    await gotoReady(page, "/help");
+    await openCopyMode(page);
+    await page.keyboard.press("Escape");
+    await expect(overlay(page)).not.toBeVisible();
+  });
+
+  // PLAN.md Phase 5.4 round-trip requirement: a copy-mode yank in one view,
+  // pasted via Ctrl-b ] into an entirely different overlay's text input.
+  test("round trip: a copy-mode yank pastes into the grep query via Ctrl-b ]", async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await gotoReady(page, "/help");
+    await openCopyMode(page);
+    await page.keyboard.press("v");
+    await page.keyboard.press("l");
+    await page.keyboard.press("l");
+    await page.keyboard.press("l");
+    await page.keyboard.press("y");
+    await expect(overlay(page)).not.toBeVisible();
+    const yanked = await page.evaluate(() => navigator.clipboard.readText());
+    expect(yanked.length).toBeGreaterThan(0);
+
+    await page.keyboard.press("/");
+    await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
+    await expect(page.locator('[data-testid="grep-query"]')).toHaveText("▌");
+
+    await ctrlB(page);
+    await page.keyboard.press("]");
+    await expect(page.locator('[data-testid="grep-query"]')).toContainText(yanked);
+  });
+});

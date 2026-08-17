@@ -45,6 +45,8 @@
   import { grepPathToView } from "../lib/views";
   import type { GrepData, FileKind } from "../lib/data";
   import { search, formatCount, type RepoFile } from "../lib/grep";
+  import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
+  import { STATUS_BAR_HEIGHT_PX } from "../lib/layout";
 
   interface Props {
     grep: GrepData;
@@ -241,6 +243,31 @@
     clearTimeout(gTimer);
   }
 
+  /** PLAN.md Phase 5 item 5.5: "grep is WINDOW chrome" — Terminal.svelte's
+   * `setView()` calls this unconditionally on every switch (status-bar
+   * click, any prefix target) so an open overlay never survives a window
+   * change. A no-op when already closed. */
+  export function close(): void {
+    closeOverlay();
+  }
+
+  const PASTE_TARGET_ID = "grep-query";
+
+  /** Ctrl-b ] paste-target registration (PLAN.md Phase 5 item 5.3) — active
+   * only while the overlay itself is open, pushed/popped by id so it never
+   * disturbs whatever else is registered above or below it in the stack. */
+  $effect(() => {
+    if (!open) return;
+    pushPasteTarget({
+      id: PASTE_TARGET_ID,
+      insert: (text: string) => {
+        query += text;
+        sel = 0;
+      },
+    });
+    return () => removePasteTarget(PASTE_TARGET_ID);
+  });
+
   // ---------------------------------------------------------------------
   // gg/G (PLAN.md Phase 9 "Vim extras" — jump first/last in the results
   // list). Genuinely in tension with this being a live text-search box: a
@@ -381,9 +408,16 @@
 </script>
 
 {#if open}
+  <!-- PLAN.md Phase 5 item 5.5 ("Status bar is SESSION chrome, grep is
+       WINDOW chrome"): `bottom` stops exactly at the status bar's own
+       height instead of the viewport edge, so the dim/blur backdrop never
+       paints over it — the bar stays fully crisp and clickable while grep
+       is open. StatusBar.svelte renders at a normal z-index *below* this
+       fixed-position overlay, so clipping the backdrop's rect is enough on
+       its own; no z-index war needed. -->
   <div
     data-testid="grep-overlay"
-    style="position:fixed;left:0;top:0;right:0;bottom:0;z-index:40;background:rgba(6,9,13,.5);backdrop-filter:blur(2.5px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:4vh 3vw"
+    style="position:fixed;left:0;top:0;right:0;bottom:{STATUS_BAR_HEIGHT_PX}px;z-index:40;background:rgba(6,9,13,.5);backdrop-filter:blur(2.5px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:4vh 3vw"
   >
     <div style="width:min(1480px,96vw);height:min(760px,80vh);display:flex;gap:12px;font-size:13px;line-height:1.62">
       <!-- Left pane -->

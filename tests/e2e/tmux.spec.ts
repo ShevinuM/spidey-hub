@@ -162,21 +162,61 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     expect(await statusBarText(page)).toBe(winText("dashboard"));
   });
 
-  test("Ctrl-b re-arms the window (pressing it twice doesn't require waiting)", async ({ page }) => {
+  // PLAN.md Phase 5 item 5.2: Ctrl-b Ctrl-b is tmux's own default
+  // "send-prefix" binding — it REPLACES the old "pressing Ctrl-b again while
+  // armed just re-arms the 2s window" behavior this test used to assert.
+  // The second Ctrl-b disarms and is dispatched as a literal keydown instead
+  // of arming anything further, so a digit typed right after it is
+  // unprefixed (does nothing from the dashboard, which has no digit
+  // hotkeys) rather than being treated as a fresh prefix target.
+  test("Ctrl-b Ctrl-b (send-prefix) does not re-arm — a digit typed right after is unprefixed", async ({ page }) => {
     await gotoReady(page, "/");
     await ctrlB(page);
-    await ctrlB(page); // re-arm, resetting the 2s window
+    await ctrlB(page);
     await page.keyboard.press("2");
-    await expect(page).toHaveURL(/\/personnel$/);
+    // Still on the dashboard: the second Ctrl-b was send-prefix (consumed,
+    // dispatched as a literal chord with nothing bound to it outside an
+    // open editor), not a re-arm, so "2" never switched anything.
+    await expect(page).toHaveURL(/\/$/);
+    expect(await statusBarText(page)).toBe(winText("dashboard"));
   });
 
-  // PLAN.md Phase 1 "Prefix precedence over grep": the prefix now works
-  // even while the grep overlay is open — it consumes the next key before
-  // grep ever sees it — retiring the old "prefix inert while grep is open"
-  // rule this test used to assert the opposite of.
-  test("Ctrl-b works even while the grep overlay is open, and the overlay stays open across the switch", async ({
-    page,
-  }) => {
+  // PLAN.md Phase 5 item 5.2: send-prefix's whole purpose is making vim's
+  // own Ctrl-b (full-page-back) reachable from a real keypress — Phase 3
+  // shipped the engine complete but this exact chord unreachable (a bare
+  // Ctrl-b was always consumed by the prefix arm first). Opens a real repo
+  // file (same fixture/entry point editor-vim.spec.ts uses) long enough to
+  // scroll, jumps to the last line, then proves Ctrl-b Ctrl-b actually moves
+  // the cursor backward.
+  test("Ctrl-b Ctrl-b pages back in the open vim editor (send-prefix reaches vim's Ctrl-b)", async ({ page }) => {
+    await page.route("**/api.github.com/**", (route) => route.abort());
+    await gotoReady(page, "/builds");
+    await page.keyboard.press("3");
+    await page.keyboard.press("Enter");
+    await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
+    await page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]').click();
+    await page.keyboard.press("2");
+    await page.keyboard.press("Enter");
+    const position = page.locator('[data-testid="editor-position"]');
+    await expect(position).toBeVisible();
+
+    const totalLines = await page.locator("[data-line]").count();
+    test.skip(totalLines < 8, "fixture file too short for a meaningful page-back");
+
+    await page.keyboard.press("G");
+    await expect(position).toContainText(`${totalLines}:`);
+
+    await ctrlB(page);
+    await ctrlB(page);
+    await expect(position).not.toContainText(`${totalLines}:`);
+  });
+
+  // PLAN.md Phase 5 item 5.5 REPLACES this test's old assertion: the grep
+  // overlay is now WINDOW chrome, not something that survives a window
+  // switch — switching via the prefix (or a status-bar click) always closes
+  // it. The prefix itself still works while grep is open (retiring the
+  // Phase-1 "prefix inert while grep open" rule) — that half is unchanged.
+  test("Ctrl-b works even while the grep overlay is open, and the switch closes the overlay", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
     await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
@@ -186,10 +226,15 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     // The view switched...
     await expect(page).toHaveURL(/\/personnel$/);
     // ...and the "2" was consumed by the prefix, not typed into the grep
-    // query.
-    await expect(page.locator('[data-testid="grep-query"]')).not.toContainText("2");
-    // ...and the overlay is still open, sitting on top of the new view (a
-    // later phase's `Ctrl-b ]` pastes INTO this same still-open query).
+    // query (proven indirectly: the overlay is gone entirely below, but if
+    // the prefix hadn't consumed it first the query would still show a
+    // dangling "2" the instant before close).
+    // ...and the overlay is now closed — grep is window chrome, not session
+    // chrome, so a window switch always takes it down.
+    await expect(page.locator('[data-testid="grep-overlay"]')).not.toBeVisible();
+
+    // Reopening grep from the new window works cleanly.
+    await page.keyboard.press("/");
     await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
   });
 
@@ -242,6 +287,226 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     });
     expect(prevented).toBe(false);
     await expect(page).toHaveURL(/\/$/);
+  });
+});
+
+test.describe("Ctrl-b , rename-window (PLAN.md Phase 5 item 5.2)", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  test("prefills the active window's current name; typed characters append; Enter commits it into the status bar", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/builds");
+    await ctrlB(page);
+    await page.keyboard.press(",");
+    const prompt = page.locator('[data-testid="status-prompt"]');
+    await expect(prompt).toBeVisible();
+    await expect(prompt).toContainText("(rename-window) builds");
+
+    await page.keyboard.type("-x");
+    await expect(prompt).toContainText("(rename-window) builds-x");
+    await page.keyboard.press("Enter");
+    await expect(prompt).not.toBeVisible();
+
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveText("1:builds-x*");
+    // Navigation is unaffected by the rename — the id, not the label, still
+    // drives which window is "1" and where clicking/prefix-1 goes.
+    await expect(page).toHaveURL(/\/builds$/);
+  });
+
+  test("Esc cancels — the window name is unchanged", async ({ page }) => {
+    await gotoReady(page, "/builds");
+    await ctrlB(page);
+    await page.keyboard.press(",");
+    await page.keyboard.type("nope");
+    await page.keyboard.press("Escape");
+    await expect(page.locator('[data-testid="status-prompt"]')).not.toBeVisible();
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveText("1:builds*");
+  });
+
+  test("an empty commit (Enter on a fully-backspaced prompt) also leaves the name unchanged", async ({ page }) => {
+    await gotoReady(page, "/builds");
+    await ctrlB(page);
+    await page.keyboard.press(",");
+    for (let i = 0; i < "builds".length; i++) await page.keyboard.press("Backspace");
+    await page.keyboard.press("Enter");
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveText("1:builds*");
+  });
+
+  // PLAN.md Phase 5.4: "prompt owns keys — typing j into rename doesn't
+  // scroll anything behind it."
+  test("the prompt owns the keyboard — typing j does not move the Builds repo selection behind it", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/builds");
+    await page.keyboard.press("3");
+    const firstRow = page.locator('[data-testid="builds-repo-row"]').first();
+    await expect(firstRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.22\)/);
+
+    await ctrlB(page);
+    await page.keyboard.press(",");
+    await page.keyboard.press("j");
+    await expect(page.locator('[data-testid="status-prompt"]')).toContainText("buildsj");
+    await expect(firstRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.22\)/);
+
+    await page.keyboard.press("Escape");
+  });
+});
+
+test.describe("Ctrl-b & kill-window (PLAN.md Phase 5 item 5.2)", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  test("confirm prompt shows the active window's name; y removes it and switches to the next remaining window", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/builds");
+    await ctrlB(page);
+    await page.keyboard.press("&");
+    await expect(page.locator('[data-testid="status-confirm"]')).toHaveText("kill-window builds? (y/n)");
+
+    await page.keyboard.press("y");
+    await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(0);
+    // builds (index 1) was active; the window that used to sit right after
+    // it — personnel (index 2) — becomes the new active view.
+    await expect(page).toHaveURL(/\/personnel$/);
+  });
+
+  test("n cancels — nothing removed, view unchanged", async ({ page }) => {
+    await gotoReady(page, "/builds");
+    await ctrlB(page);
+    await page.keyboard.press("&");
+    await page.keyboard.press("n");
+    await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
+    await expect(page).toHaveURL(/\/builds$/);
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(1);
+  });
+
+  test("Esc cancels — nothing removed, view unchanged", async ({ page }) => {
+    await gotoReady(page, "/builds");
+    await ctrlB(page);
+    await page.keyboard.press("&");
+    await page.keyboard.press("Escape");
+    await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
+    await expect(page).toHaveURL(/\/builds$/);
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(1);
+  });
+
+  test("killing every window down to the last one is refused with a status message, and that window survives", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/");
+    for (let i = 0; i < 5; i++) {
+      await ctrlB(page);
+      await page.keyboard.press("&");
+      await page.keyboard.press("y");
+    }
+    await expect(page.locator('[data-testid="status-bar-window"]')).toHaveCount(1);
+
+    await ctrlB(page);
+    await page.keyboard.press("&");
+    await page.keyboard.press("y");
+    await expect(page.locator('[data-testid="status-message"]')).toContainText("only window");
+
+    // The message auto-clears; the single remaining window is untouched.
+    await expect(page.locator('[data-testid="status-message"]')).not.toBeVisible();
+    await expect(page.locator('[data-testid="status-bar-window"]')).toHaveCount(1);
+  });
+});
+
+test.describe("Ctrl-b x kill-pane (PLAN.md Phase 5 item 5.2)", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  test("inside Builds with multiple panels, confirms and removes only the FOCUSED panel; it's back after Builds remounts", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/builds");
+    await page.keyboard.press("2"); // focus panel [2] Files
+    await expect(page.locator('[data-testid="builds-panel-2"]')).toBeVisible();
+
+    await ctrlB(page);
+    await page.keyboard.press("x");
+    await expect(page.locator('[data-testid="status-confirm"]')).toContainText("kill-pane");
+    await page.keyboard.press("y");
+
+    await expect(page.locator('[data-testid="builds-panel-2"]')).toHaveCount(0);
+    // The other panels keep their positions — untouched by the removal.
+    await expect(page.locator('[data-testid="builds-panel-1"]')).toBeVisible();
+    await expect(page.locator('[data-testid="builds-panel-3"]')).toBeVisible();
+    await expect(page.locator('[data-testid="builds-panel-4"]')).toBeVisible();
+    await expect(page.locator('[data-testid="builds-panel-0"]')).toBeVisible();
+
+    // Leaving and re-entering Builds remounts it — the layout resets.
+    await page.locator('[data-testid="status-bar-window"][data-window-id="personnel"]').click();
+    await page.locator('[data-testid="status-bar-window"][data-window-id="builds"]').click();
+    await expect(page.locator('[data-testid="builds-panel-2"]')).toBeVisible();
+  });
+
+  test("in a single-pane view, x falls back to the exact same kill-window confirm as &", async ({ page }) => {
+    await gotoReady(page, "/profile");
+    await ctrlB(page);
+    await page.keyboard.press("x");
+    await expect(page.locator('[data-testid="status-confirm"]')).toHaveText("kill-window profile? (y/n)");
+    await page.keyboard.press("n");
+    await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
+    await expect(page).toHaveURL(/\/profile$/);
+  });
+});
+
+// PLAN.md Phase 5 item 5.5: "Status bar is SESSION chrome, grep is WINDOW
+// chrome" — the dim/blur backdrop must never cover the bar, and any window
+// switch while grep is open (click OR prefix) closes the overlay.
+test.describe("grep is window chrome, the status bar is session chrome (PLAN.md Phase 5 item 5.5)", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  test("the status bar is still hit-testable at its own center while grep is open", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press("/");
+    await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
+
+    const box = await page.locator('[data-testid="status-bar-windows"]').boundingBox();
+    if (!box) throw new Error("status bar not laid out");
+    const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    const testid = await page.evaluate(
+      ({ x, y }) => document.elementFromPoint(x, y)?.getAttribute("data-testid") ?? null,
+      point,
+    );
+    expect(testid).not.toBe("grep-overlay");
+    expect(["status-bar-windows", "status-bar-window"]).toContain(testid);
+  });
+
+  test("clicking a status-bar window while grep is open switches view AND closes grep; grep reopens cleanly after", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press("/");
+    await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
+
+    await page.locator('[data-testid="status-bar-window"][data-window-id="personnel"]').click();
+    await expect(page).toHaveURL(/\/personnel$/);
+    await expect(page.locator('[data-testid="grep-overlay"]')).not.toBeVisible();
+
+    await page.keyboard.press("/");
+    await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
+  });
+
+  test("Ctrl-b 4 with grep open lands on profile with no overlay", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press("/");
+    await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
+
+    await ctrlB(page);
+    await page.keyboard.press("4");
+    await expect(page).toHaveURL(/\/profile$/);
+    await expect(page.locator('[data-testid="grep-overlay"]')).not.toBeVisible();
   });
 });
 

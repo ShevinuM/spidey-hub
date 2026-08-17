@@ -67,6 +67,7 @@
     type VisualRange,
   } from "../lib/vim";
   import { setPasteBuffer, writeToSystemClipboard, type PasteBufferKind } from "../lib/pasteBuffer";
+  import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
 
   export interface EditorLine {
     n: number;
@@ -273,6 +274,27 @@
   // ---------------------------------------------------------------------
 
   const searchMatches = $derived(findMatches(rawLines, lastSearchQuery));
+
+  // ---------------------------------------------------------------------
+  // Ctrl-b ] paste-target registration (PLAN.md Phase 5 item 5.3 / the
+  // design decisions' "grep query, personnel filter, rename prompt, editor
+  // search" list) — active only while the in-buffer `/` search prompt is
+  // actually accepting keystrokes, exactly like GrepOverlay's own query and
+  // Personnel's own filter registrations.
+  // ---------------------------------------------------------------------
+
+  const SEARCH_PASTE_TARGET_ID = "editor-search";
+
+  $effect(() => {
+    if (pending !== "search") return;
+    pushPasteTarget({
+      id: SEARCH_PASTE_TARGET_ID,
+      insert: (text: string) => {
+        searchQuery += text;
+      },
+    });
+    return () => removePasteTarget(SEARCH_PASTE_TARGET_ID);
+  });
 
   // ---------------------------------------------------------------------
   // Keymap
@@ -747,6 +769,7 @@
     onscroll={syncScroll}
     class="editor-scroller"
     data-testid="editor-scroller"
+    data-copy-source
     style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:1px;padding:2px 14px"
   >
     {#each lines as l (l.n)}

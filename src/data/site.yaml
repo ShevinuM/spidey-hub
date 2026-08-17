@@ -32,6 +32,31 @@ statusBar:
       id: help
       name: help
   grepHint: "[/] grep"
+  # tmux-style status-line prompt templates (PLAN.md Phase 5 item 5.1 / #12).
+  # `{...}` placeholders are the same convention every other data.ts template
+  # already uses (grep.yaml's filePosTemplate, builds.yaml's
+  # subtitleTemplate, etc.) — StatusBar.svelte does the substitution.
+  prompts:
+    # "(rename-window) " prefix in front of the editable, prefilled window
+    # name (Ctrl-b ,).
+    renamePrefix: "(rename-window) "
+    # Ctrl-b & and the Builds single-pane Ctrl-b x fallback.
+    killWindowTemplate: "kill-window {name}? (y/n)"
+    # Ctrl-b x inside Builds, when more than one panel remains.
+    killPaneTemplate: "kill-pane {pane}? (y/n)"
+    # Shown instead of removing the window when it's the only one left.
+    killLastWindowMessage: "can't kill the only window"
+    # Ctrl-b ] with no active text input, or an empty paste buffer.
+    pasteEmptyMessage: "nothing to paste"
+
+# Ctrl-b [ copy-mode overlay (PLAN.md Phase 5 item 5.3 / #12). One generic
+# overlay reused across every view's `data-copy-source` pane — see
+# CopyMode.svelte's header comment for the capture contract.
+copyMode:
+  titlePrefix: "COPY MODE"
+  titleTilde: "~"
+  hint: "j/k/h/l/gg/G move · Ctrl-d/u page · v select · y / Enter yank · q / Esc exit"
+  emptyText: "(nothing to copy)"
 
 mobileBlock:
   # README.md "Mobile policy" example copy, quoted verbatim.

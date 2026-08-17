@@ -51,6 +51,7 @@
     <div
       bind:this={scrollerEl}
       data-testid="help-scroller"
+      data-copy-source
       class="help-scroller"
       style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:16px;padding-top:8px"
     >

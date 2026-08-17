@@ -32,7 +32,7 @@ sections:
       - key: "Enter"
         description: "open / drill in"
       - key: "Esc"
-        description: "exits whatever's open — grep, a filter, a cmdline, the tmux prefix — never a view switch"
+        description: "exits whatever's open — grep, a filter, a status-line prompt, copy-mode, the tmux prefix — never a view switch"
       - key: "held ⌘/Ctrl/Alt + key"
         description: "falls through untouched (browser/OS shortcuts still work)"
 
@@ -87,20 +87,17 @@ sections:
       - key: "(while the grep overlay is open)"
         description: "the prefix still works — it consumes the next key before grep ever sees it"
       - key: ","
-        description: "rename-window: status bar swaps to an editable prompt prefilled with the current name; Enter commits, Esc cancels"
-        status: planned
+        description: "rename-window: status bar swaps to an editable prompt prefilled with the current name; Enter commits, Esc cancels — while open it owns the keyboard, exactly like grep"
       - key: "&"
-        description: "kill-window: prompts to confirm, then removes the window from the list (refuses to kill the last remaining one)"
-        status: planned
+        description: "kill-window: status bar prompts \"kill-window <name>? (y/n)\"; y removes the window from the list and switches to the next remaining one if it was active (refuses, with a status message, to kill the last remaining window)"
       - key: "x"
-        description: "kill-pane: removes the focused Builds panel; kills the window instead if it's the only pane"
-        status: planned
+        description: "kill-pane: inside Builds with more than one panel visible, confirms then removes the FOCUSED panel only (the rest keep their positions; the layout resets the next time Builds is opened); everywhere else — including Builds reduced to one panel — the only pane IS the window, so it's the exact same kill-window confirm as &"
+      - key: "Ctrl-b (send-prefix)"
+        description: "tmux's own default binding: a second Ctrl-b while the prefix is armed disarms it and dispatches a LITERAL Ctrl-b down to the view underneath — this is how vim's own Ctrl-b (full-page-back, see Vim keys below) is reachable at all, since a bare Ctrl-b is otherwise always consumed by the prefix arm"
       - key: "["
-        description: "copy-mode: vim-navigate the active pane's text, v to select, y/Enter to yank"
-        status: planned
+        description: "copy-mode: opens a generic overlay over the active pane's text (editor buffer, the focused Builds panel, the Personnel row list, the Profile summary, the tracker HUD, the Help content, or the dashboard menu) — vim-navigate it, v to start a selection, y/Enter to yank and exit, q/Esc to exit without yanking"
       - key: "]"
-        description: "paste the copy-mode buffer into the active text input (grep query, filter, rename prompt, editor search)"
-        status: planned
+        description: "paste-buffer: inserts the last copy-mode/vim yank into the active text input (grep query, Personnel filter, the rename prompt, or the editor's in-buffer search) — a status-line message appears if nothing's active or nothing's been yanked yet"
       - key: "anything else"
         description: "silently swallowed (no action — mirrors real tmux's \"unbound prefixed key does nothing\")"
 
@@ -117,7 +114,7 @@ sections:
       - key: "Ctrl-d / Ctrl-u"
         description: "half-page scroll"
       - key: "Ctrl-f / Ctrl-b"
-        description: "full-page scroll (Ctrl-b is shadowed by the tmux prefix in this app — see the tmux prefix section above; reachable from the engine's own unit tests, not from a real keypress)"
+        description: "full-page scroll — Ctrl-b is normally consumed by the tmux prefix arm first, but Ctrl-b Ctrl-b (send-prefix, see the tmux prefix section above) dispatches a literal Ctrl-b through to here, so both directions are reachable from a real keypress"
       - key: ":q / :q!"
         description: "close the file editor, back to the browser view underneath (not the dashboard) — the ONLY way to close it; bare q/Esc no longer do (PLAN.md items 15/16)"
       - key: "click the [:q] pill"
@@ -134,6 +131,21 @@ sections:
         description: "ex-command line — :w/:wq show a readonly error, :<number> jumps to that line, anything else shows an E492-style error; Esc cancels"
       - key: "i a o I A O c d x p s r ~ (etc.)"
         description: "every mutating key flashes a readonly-buffer message and changes nothing — this viewer never writes"
+
+  - title: "Copy mode (Ctrl-b [)"
+    rows:
+      - key: "h / l / j / k / arrows"
+        description: "move the copy-mode cursor over the captured pane text"
+      - key: "gg / G"
+        description: "jump to the first / last line"
+      - key: "Ctrl-d / Ctrl-u"
+        description: "page down / up"
+      - key: "v"
+        description: "start (or cancel) a charwise selection"
+      - key: "y / Enter"
+        description: "yank the selection (or, with no selection, the cursor's current line) to the paste buffer + system clipboard, then exit — Ctrl-b ] pastes it elsewhere"
+      - key: "q / Esc"
+        description: "exit copy-mode without yanking — bare q is intentionally allowed here (and ONLY here): it never switches a view, it just closes this overlay"
 
   - title: "Grep overlay"
     rows:

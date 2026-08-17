@@ -40,7 +40,7 @@
       </div>
     </div>
 
-    <div style="width:min(560px,100%);display:flex;flex-direction:column;gap:2px">
+    <div data-copy-source style="width:min(560px,100%);display:flex;flex-direction:column;gap:2px">
       {#each dashboard.menu as item (item.id)}
         <div
           class="dash-row"

@@ -60,13 +60,30 @@ export interface WindowEntry {
   name: string;
 }
 
+export interface StatusPrompts {
+  renamePrefix: string;
+  killWindowTemplate: string;
+  killPaneTemplate: string;
+  killLastWindowMessage: string;
+  pasteEmptyMessage: string;
+}
+
+export interface CopyModeData {
+  titlePrefix: string;
+  titleTilde: string;
+  hint: string;
+  emptyText: string;
+}
+
 export interface SiteData {
   statusBar: {
     session: string;
     separator: string;
     windows: WindowEntry[];
     grepHint: string;
+    prompts: StatusPrompts;
   };
+  copyMode: CopyModeData;
   mobileBlock: {
     heading: string;
     body: string;

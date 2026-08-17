@@ -201,7 +201,13 @@
       <div style="font-size:12px;color:rgba(196,216,232,.45)">{tracker.commandBox.statusLine}</div>
     </div>
 
+    <!-- PLAN.md Phase 5 item 5.3: CopyMode's "tracker readout/HUD"
+         data-copy-source, gated to the tracker view only (this markup is
+         always in the DOM at every view, just faded via wallOpacity above)
+         so `Ctrl-b [` never captures the HUD text while some other view is
+         active. -->
     <pre
+      data-copy-source={view === "retina-v" ? "" : undefined}
       style="position:absolute;left:30px;bottom:56px;margin:0;font:12px/1.5 inherit;color:rgba(224,69,60,.6);background:rgba(9,13,18,.78);border:1px solid rgba(224,69,60,.22);border-radius:4px;padding:8px 12px">{tracker.hud.left.join(
         "\n",
       )}</pre>

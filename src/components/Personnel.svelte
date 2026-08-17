@@ -69,6 +69,7 @@
   import type { CollectionEntry } from "astro:content";
   import type { PersonnelData, CompanyEntry } from "../lib/data";
   import { classifyBody, colorFor } from "../lib/docline";
+  import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
   import Editor, { type EditorLine } from "./Editor.svelte";
 
   type RoleEntry = CollectionEntry<"personnel">;
@@ -288,6 +289,22 @@
     filterMode = true;
     gPending = false;
   }
+
+  const FILTER_PASTE_TARGET_ID = "personnel-filter";
+
+  /** Ctrl-b ] paste-target registration (PLAN.md Phase 5 item 5.3) — active
+   * only while the filter prompt is actually accepting keystrokes. */
+  $effect(() => {
+    if (!filterMode) return;
+    pushPasteTarget({
+      id: FILTER_PASTE_TARGET_ID,
+      insert: (text: string) => {
+        filterQuery += text;
+        resetSelection();
+      },
+    });
+    return () => removePasteTarget(FILTER_PASTE_TARGET_ID);
+  });
 
   function moveSelection(dir: number) {
     const n = currentRows.length;
@@ -555,7 +572,10 @@
         >
           {pathText}
         </div>
-        <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:3px">
+        <div
+          data-copy-source
+          style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:3px"
+        >
           {#each currentRows as row, i (row.name)}
             <div
               role="button"
