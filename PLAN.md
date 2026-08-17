@@ -126,6 +126,7 @@ Real Builds content differs from the prototype's fabricated sample data, so pixe
 - **Verify**: visual `09/10` pass both viewports (fixture index reproduces the prototype's 24-file snapshot: identical rows, counts `24/24` empty and `N/M` for "svelte", identical preview); e2e on real index: `/` from profile opens overlay, typing filters (a known real path e.g. `src/lib/grep.ts` findable by its own name), Enter on a personnel content hit lands in personnel view, Esc closes back to prior view, Ctrl-u clears, counter format `X/Y` correct against the real index JSON.
 
 ### Phase 9 — tmux prefix, vim extras, mobile block, README
+- [ ] From Phase 5 verify: add the missing e2e focus-border assertions for Builds panels 0 and 1 (functionally correct, currently untested).
 - [ ] Prefix state machine per assumptions (2s timeout, Esc cancel, only Ctrl-b preventDefault-ed, disabled in grep/mobile); `gg`/`G` in the three lists; editor Ctrl-d/u (if not already in P5).
 - [ ] Mobile block: media query + JS guard (no listeners/timers in blocked mode), card copy from data, escape-hatch link.
 - [ ] Project `README.md`: quickstart, content-editing workflows (add/remove project + submodule, add role, edit profile/site data, refresh commits snapshot, regenerate goldens, update submodules), keymap reference (design + tmux + vim), architecture map, resume.pdf swap note, deploy note (static `dist/`).
