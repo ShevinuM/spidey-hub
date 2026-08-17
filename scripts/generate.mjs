@@ -286,8 +286,12 @@ async function generateCommitSnapshots() {
 
 async function main() {
   generateRepoIndexes();
-  generateGrepIndex();
+  // Commit snapshots must complete before the grep index is generated: the
+  // grep indexer walks src/generated/commits/*.json as part of the site's
+  // own source, so generating it first would embed the pre-fetch snapshot
+  // state and leave the index permanently one generation stale.
   await generateCommitSnapshots();
+  generateGrepIndex();
 }
 
 main().catch((err) => {
