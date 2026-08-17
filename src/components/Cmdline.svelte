@@ -201,8 +201,11 @@
     return true;
   }
 
+  /** PLAN.md Phase 6 item 6.4 content-purity fix: the "takes an argument"
+   * notation (e.g. "grep <…>") is data-driven (`cmdline.argsPlaceholder`),
+   * not a string literal here. */
   function describe(c: CmdlineCommandDef): string {
-    return c.takesArgs ? `${c.name} <…>` : c.name;
+    return c.takesArgs ? `${c.name}${cmdline.argsPlaceholder}` : c.name;
   }
 </script>
 

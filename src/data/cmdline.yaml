@@ -31,6 +31,14 @@ prompt:
   glyph: ">"
   cursorGlyph: "▌"
 
+# Content-purity fix (PLAN.md Phase 6 item 6.4 audit): the suggestion
+# list's "takes an argument" notation (e.g. "grep <…>") was previously a
+# string literal baked into Cmdline.svelte's own describe() helper — moved
+# here so every user-visible string in that component is data-driven.
+# Appended verbatim (with its own leading space) after a command's name
+# when `takesArgs` is true; empty otherwise.
+argsPlaceholder: " <…>"
+
 # Ex-mode-only display entries (context (a) — see file header). Real
 # execution is Phase 3's own parseExCommand/Editor.svelte, unchanged; these
 # exist only so the box's suggestion list has a name+description to show,

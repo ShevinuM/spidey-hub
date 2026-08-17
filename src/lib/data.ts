@@ -495,6 +495,10 @@ export interface CmdlineErrors {
 export interface CmdlineData {
   title: string;
   prompt: { glyph: string; cursorGlyph: string };
+  /** PLAN.md Phase 6 item 6.4 content-purity fix: appended after a
+   * command's name in the suggestion list when its `takesArgs` is true
+   * (e.g. "grep <…>") — was previously hardcoded in Cmdline.svelte. */
+  argsPlaceholder: string;
   exCommands: CmdlineCommandDef[];
   commands: CmdlineCommandDef[];
   tmuxCommands: CmdlineCommandDef[];

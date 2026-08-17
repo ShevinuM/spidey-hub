@@ -25,10 +25,17 @@ import "../styles/global.css";
 import { getSite } from "../lib/data";
 
 interface Props {
-  title?: string;
+  // PLAN.md Phase 6 item 6.4 content-purity fix: was `title?: string` with
+  // a hardcoded `"shevinum.dev"` fallback here — every one of the six route
+  // pages already passes its own explicit title, so the fallback was dead
+  // in practice but still a user-visible string literal sitting in a
+  // layout file. Required now: `astro check` fails loudly if a future page
+  // ever forgets to pass one, instead of silently falling back to
+  // hardcoded copy.
+  title: string;
 }
 
-const { title = "shevinum.dev" } = Astro.props;
+const { title } = Astro.props;
 const { mobileBlock } = getSite();
 ---
 
