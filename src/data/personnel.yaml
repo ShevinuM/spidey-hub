@@ -46,8 +46,10 @@ roleWordPlural: "roles"
 typeRoleCountTemplate: "{n} {word}"
 
 # File Browser footer position indicator, e.g. "2 / 4" (Component.renderVals()
-# line 1090: `(lvl===1?ri+1:ci+1) + " / " + (...)`) — same templating
-# convention as builds.yaml's `filePosTemplate`, defined independently here.
+# line 1090: `(lvl===1?ri+1:ci+1) + " / " + (...)`) — same `{...}`
+# templating convention every other data.ts template uses (e.g. grep.yaml's
+# `filePosTemplate`, builds.yaml's `subtitleTemplate`), defined
+# independently here since this file has no dependency on either of those.
 posTemplate: "{n} / {total}"
 
 # Mirrors builds.yaml's `editor:` section values (Homepage.dc.html lines
