@@ -67,11 +67,16 @@
   }: Props = $props();
 
   /** Set by Builds.svelte's `bind:this` while `view === "builds"` — see
-   * handleKey() below for the delegation contract (PLAN.md Phase 5). */
-  let buildsRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
-  /** Same `bind:this` + `handleKey(): boolean` contract, one level down —
-   * Personnel.svelte's own embedded Editor (PLAN.md Phase 6). */
-  let personnelRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
+   * handleKey() below for the delegation contract (PLAN.md Phase 5).
+   * `isEditorOpen` (PLAN.md Phase 3 item 10) reports whether its embedded
+   * vim Editor is currently open, so this component's own handleKey can be
+   * given a turn BEFORE GrepOverlay's — vim-faithful: `/` searches the
+   * open buffer, not the site. */
+  let buildsRef = $state<{ handleKey: (e: KeyboardEvent) => boolean; isEditorOpen?: () => boolean } | null>(null);
+  /** Same `bind:this` + `handleKey(): boolean` + `isEditorOpen()` contract,
+   * one level down — Personnel.svelte's own embedded Editor (PLAN.md Phase
+   * 6, vim engine PLAN.md Phase 3). */
+  let personnelRef = $state<{ handleKey: (e: KeyboardEvent) => boolean; isEditorOpen?: () => boolean } | null>(null);
   /** Same contract again — Profile.svelte only ever claims `r` (resume
    * download); everything else (including q/Esc) falls through to the
    * generic handling below (PLAN.md Phase 7). */
@@ -80,10 +85,12 @@
    * (PLAN.md Phase 1 item 13); everything else falls through unchanged. */
   let helpRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
   /** GrepOverlay.svelte (PLAN.md Phase 8) — always mounted (see that file's
-   * header comment), consulted FIRST on every keydown, ahead of every other
-   * ref above: this is what makes "/" open the overlay from inside an
-   * editor, and what keeps the overlay's own keys (typing, nav, Enter/Esc)
-   * from ever reaching the view underneath while it's open. */
+   * header comment), consulted ahead of every other ref above EXCEPT the
+   * active view's own vim Editor when one is open (PLAN.md Phase 3's
+   * delegation flip, see handleKey() below): this is what makes "/" open
+   * the overlay from inside Builds/Personnel when no editor is open, and
+   * what keeps the overlay's own keys (typing, nav, Enter/Esc) from ever
+   * reaching the view underneath while it's open. */
   let grepRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
 
   // Deliberately an "uncontrolled" seed, not a tracked binding: each route
@@ -260,44 +267,69 @@
       return;
     }
 
-    // GrepOverlay.svelte owns "/" (open) and every key while it's already
-    // open — consulted next, exactly mirroring the prototype's own dispatch
-    // order (Homepage.dc.html line 980: `if (this.state.grep) {
-    // this.grepKey(e); return; }` runs before even the bare-"/" check,
-    // which itself runs before any view-specific handling), except that the
+    // Ctrl-d/Ctrl-u/Ctrl-f/Ctrl-b are reserved for the Builds/Personnel file
+    // editors' half/full-page scroll (PLAN.md Phase 5 "Editor scrolling",
+    // extended by Phase 3's vim engine with Ctrl-f/b) — the one deliberate
+    // exception to "modifier combos fall through untouched" so far (the
+    // tmux prefix above is Ctrl-b itself, which is why a bare Ctrl-b never
+    // reaches this chord check: it's always consumed by the prefix-arm
+    // branch first — see the executor report for this known Ctrl-b/vim
+    // overlap). Everything else still falls through untouched.
+    const isEditorScrollChord =
+      e.ctrlKey &&
+      !e.metaKey &&
+      !e.altKey &&
+      (e.key === "d" || e.key === "D" || e.key === "u" || e.key === "U" || e.key === "f" || e.key === "F" || e.key === "b" || e.key === "B");
+
+    /** Tries the active view's own ref (Builds/Personnel/Profile/Help),
+     * subject to the same "no bare modifier combos except the editor
+     * scroll chord" gate every ref has always used. Returns whether the
+     * key was consumed. */
+    function tryActiveViewRef(): boolean {
+      if (view === "builds" && buildsRef && (isEditorScrollChord || !(e.metaKey || e.ctrlKey || e.altKey))) {
+        if (buildsRef.handleKey(e)) {
+          e.preventDefault();
+          return true;
+        }
+      }
+      if (view === "personnel" && personnelRef && (isEditorScrollChord || !(e.metaKey || e.ctrlKey || e.altKey))) {
+        if (personnelRef.handleKey(e)) {
+          e.preventDefault();
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // PLAN.md Phase 3 "delegation flip": while the active view's vim Editor
+    // is open, it must get first refusal ahead of GrepOverlay so `/`
+    // searches the open buffer instead of opening grep — vim-faithful.
+    // Everywhere else (no editor open), the original order holds: grep is
+    // consulted first, exactly mirroring the prototype's own dispatch order
+    // (Homepage.dc.html line 980: `if (this.state.grep) { this.grepKey(e);
+    // return; }` runs before any view-specific handling), except that the
     // tmux prefix (above) now runs ahead of it per the retired "prefix
-    // inert while grep open" rule. GrepOverlay.handleKey() calls
-    // e.preventDefault() itself exactly where the prototype's grepKey()
-    // does (see that file's header comment) — never here — so an
-    // unrecognized modifier combo held while the overlay is open (e.g.
-    // Cmd+L) still reaches the browser, it just never reaches
-    // buildsRef/personnelRef/profileRef/helpRef or the view-switch keys
-    // below.
+    // inert while grep open" rule.
+    const editorIsOpen =
+      (view === "builds" && !!buildsRef?.isEditorOpen?.()) || (view === "personnel" && !!personnelRef?.isEditorOpen?.());
+
+    if (editorIsOpen && tryActiveViewRef()) {
+      return;
+    }
+
+    // GrepOverlay.svelte owns "/" (open) and every key while it's already
+    // open. GrepOverlay.handleKey() calls e.preventDefault() itself exactly
+    // where the prototype's grepKey() does (see that file's header
+    // comment) — never here — so an unrecognized modifier combo held while
+    // the overlay is open (e.g. Cmd+L) still reaches the browser, it just
+    // never reaches buildsRef/personnelRef/profileRef/helpRef or the
+    // view-switch keys below.
     if (grepRef?.handleKey(e)) {
       return;
     }
 
-    // Ctrl-d/Ctrl-u are reserved for the Builds/Personnel file editors'
-    // half-page scroll (PLAN.md Phase 5 "Editor scrolling", inherited by
-    // Phase 6's personnel role editor) — the one deliberate exception to
-    // "modifier combos fall through untouched" so far (Phase 9 adds
-    // Ctrl-b/tmux-prefix and Phase 8 adds grep's own Ctrl chords the same
-    // way: carved out here, everything else still falls through).
-    const isEditorScrollChord =
-      e.ctrlKey && !e.metaKey && !e.altKey && (e.key === "d" || e.key === "D" || e.key === "u" || e.key === "U");
-
-    if (view === "builds" && buildsRef && (isEditorScrollChord || !(e.metaKey || e.ctrlKey || e.altKey))) {
-      if (buildsRef.handleKey(e)) {
-        e.preventDefault();
-        return;
-      }
-    }
-
-    if (view === "personnel" && personnelRef && (isEditorScrollChord || !(e.metaKey || e.ctrlKey || e.altKey))) {
-      if (personnelRef.handleKey(e)) {
-        e.preventDefault();
-        return;
-      }
+    if (!editorIsOpen && tryActiveViewRef()) {
+      return;
     }
 
     if (view === "profile" && profileRef && !(e.metaKey || e.ctrlKey || e.altKey)) {

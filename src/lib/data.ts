@@ -212,14 +212,21 @@ export interface RepoBrowserData {
 
 export interface EditorLabels {
   modeLabel: string;
+  modeVisualLabel: string;
+  modeVisualLineLabel: string;
   branch: string;
   breadcrumbSeparator: string;
-  closeHint: string;
+  closePillLabel: string;
   tabIcon: string;
   topLabel: string;
   bottomLabel: string;
   percentTemplate: string;
   positionTemplate: string;
+  searchPromptGlyph: string;
+  cmdlinePromptGlyph: string;
+  readonlyBellMessage: string;
+  writeReadonlyMessage: string;
+  notAnEditorCommandTemplate: string;
 }
 
 export interface BuildsData {

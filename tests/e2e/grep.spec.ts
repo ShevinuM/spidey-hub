@@ -207,7 +207,9 @@ test.describe("Grep overlay", () => {
     await expect(rows(page).first()).toHaveAttribute("data-selected", "true");
   });
 
-  test("/ works from inside the personnel editor", async ({ page }) => {
+  test("/ inside the personnel editor searches the buffer instead of opening grep (PLAN.md Phase 3 delegation flip)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/personnel");
     await page.keyboard.press("Enter"); // -> Enaimco's employment types level
     await page.keyboard.press("Enter"); // -> that type's role files level
@@ -215,13 +217,28 @@ test.describe("Grep overlay", () => {
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
 
     await page.keyboard.press("/");
-    await expect(overlay(page)).toBeVisible();
+    // The vim engine's own in-buffer search opens instead — grep must NOT.
+    await expect(overlay(page)).not.toBeVisible();
+    await expect(page.locator('[data-testid="editor-mode"]')).toHaveText("/");
 
     await page.keyboard.press("Escape");
-    await expect(overlay(page)).not.toBeVisible();
-    // Closing the overlay lands back on the exact same underlying state —
-    // the editor, not the browser or the dashboard.
+    await expect(page.locator('[data-testid="editor-mode"]')).toHaveText("NORMAL");
+    // Esc only cancelled the in-buffer search — the editor itself, and the
+    // browser view underneath it, are both untouched.
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
+
+    // Same must hold from VISUAL mode — "/" drops the selection back to
+    // NORMAL and opens in-buffer search, never grep (a `/` that fell
+    // through here would open grep ON TOP of the still-open editor, with no
+    // keyboard path left to close it: the delegation flip only gives the
+    // editor first refusal, not the only one).
+    await page.keyboard.press("v");
+    await expect(page.locator('[data-testid="editor-mode"]')).toHaveText("VISUAL");
+    await page.keyboard.press("/");
+    await expect(overlay(page)).not.toBeVisible();
+    await expect(page.locator('[data-testid="editor-mode"]')).toHaveText("/");
+    await page.keyboard.press("Escape");
+    await expect(page.locator('[data-testid="editor-mode"]')).toHaveText("NORMAL");
   });
 
   test("/ preventDefaults and wins over personnel filter-mode typing", async ({ page }) => {

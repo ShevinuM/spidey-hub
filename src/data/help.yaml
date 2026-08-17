@@ -26,7 +26,7 @@ sections:
       - key: "?"
         description: "Help (from the dashboard)"
       - key: "/"
-        description: "open the grep overlay (from any view, including inside an editor)"
+        description: "open the grep overlay (from any view — inside the vim file editor, / searches the open buffer instead; see Vim keys below)"
       - key: "j / k / arrows"
         description: "move selection within the active pane"
       - key: "Enter"
@@ -122,23 +122,24 @@ sections:
         description: "jump to the last entry / bottom of file"
       - key: "Ctrl-d / Ctrl-u"
         description: "half-page scroll"
-      - key: "q / Esc"
-        description: "close the file editor, back to the browser view underneath (not the dashboard)"
+      - key: "Ctrl-f / Ctrl-b"
+        description: "full-page scroll (Ctrl-b is shadowed by the tmux prefix in this app — see the tmux prefix section above; reachable from the engine's own unit tests, not from a real keypress)"
+      - key: ":q / :q!"
+        description: "close the file editor, back to the browser view underneath (not the dashboard) — the ONLY way to close it; bare q/Esc no longer do (PLAN.md items 15/16)"
+      - key: "click the [:q] pill"
+        description: "same as :q — mouse parity for closing the editor"
       - key: "h l w b e 0 ^ $"
         description: "column motions — NORMAL mode, with numeric counts (5j, 3w)"
-        status: planned
       - key: "v / V"
-        description: "VISUAL / VISUAL-LINE selection"
-        status: planned
+        description: "VISUAL / VISUAL-LINE selection; motions extend it, Esc cancels back to NORMAL"
       - key: "y / yy"
-        description: "yank the selection / current line to the paste buffer and system clipboard"
-        status: planned
+        description: "yank the selection / current line (3yy for 3 lines) to the paste buffer and system clipboard"
       - key: "/ (in-buffer), n / N"
-        description: "search the open file and step through matches"
-        status: planned
-      - key: ": :q :q! :wq"
-        description: "ex-command line — :q/:q! close, :w/:wq show a readonly message, unknown commands show an E492-style error"
-        status: planned
+        description: "search the open file and step through matches, with wraparound"
+      - key: ": :w :wq :<number>"
+        description: "ex-command line — :w/:wq show a readonly error, :<number> jumps to that line, anything else shows an E492-style error; Esc cancels"
+      - key: "i a o I A O c d x p s r ~ (etc.)"
+        description: "every mutating key flashes a readonly-buffer message and changes nothing — this viewer never writes"
 
   - title: "Grep overlay"
     rows:

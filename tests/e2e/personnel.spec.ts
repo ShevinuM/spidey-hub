@@ -278,17 +278,78 @@ test.describe("Personnel: editor", () => {
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
   }
 
-  test("q closes the editor back to the role files level, not the dashboard", async ({ page }) => {
+  test("q does nothing in the editor (PLAN.md Phase 1 items 15/16 + Phase 3: :q is the only close path)", async ({
+    page,
+  }) => {
     await openEditor(page);
     await page.keyboard.press("q");
+    await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
+  });
+
+  test("bare Esc in NORMAL mode does nothing — the editor stays open", async ({ page }) => {
+    await openEditor(page);
+    await page.keyboard.press("Escape");
+    await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
+  });
+
+  test(":q closes the editor back to the role files level, not the dashboard", async ({ page }) => {
+    await openEditor(page);
+    await page.keyboard.press(":");
+    await page.keyboard.type("q");
+    await page.keyboard.press("Enter");
     await expect(page.locator('[data-testid="editor-scroller"]')).not.toBeVisible();
     await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/Full-Time/");
   });
 
-  test("Esc also closes the editor back to the role files level", async ({ page }) => {
+  test(":q! also closes the editor", async ({ page }) => {
     await openEditor(page);
-    await page.keyboard.press("Escape");
+    await page.keyboard.press(":");
+    await page.keyboard.type("q!");
+    await page.keyboard.press("Enter");
+    await expect(page.locator('[data-testid="editor-scroller"]')).not.toBeVisible();
+  });
+
+  test("clicking the [:q] pill closes the editor", async ({ page }) => {
+    await openEditor(page);
+    await page.locator('[data-testid="editor-close-pill"]').click();
+    await expect(page.locator('[data-testid="editor-scroller"]')).not.toBeVisible();
     await expect(pathText(page)).toHaveText("/Users/Shev/Experience/Enaimco/Full-Time/");
+  });
+
+  test(":w and :wq show a readonly error and do not close the editor", async ({ page }) => {
+    await openEditor(page);
+    await page.keyboard.press(":");
+    await page.keyboard.type("w");
+    await page.keyboard.press("Enter");
+    await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
+    await expect(page.locator('[data-testid="editor-message"]')).toContainText("readonly");
+
+    await page.keyboard.press(":");
+    await page.keyboard.type("wq");
+    await page.keyboard.press("Enter");
+    await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
+  });
+
+  test("an unknown ex command shows an E492-style error", async ({ page }) => {
+    await openEditor(page);
+    await page.keyboard.press(":");
+    await page.keyboard.type("bogus");
+    await page.keyboard.press("Enter");
+    await expect(page.locator('[data-testid="editor-message"]')).toContainText("E492");
+  });
+
+  test("i and x show a readonly bell and change nothing", async ({ page }) => {
+    await openEditor(page);
+    const firstLine = page.locator('[data-line="1"] [data-testid="editor-line-text"]');
+    const before = await firstLine.textContent();
+
+    await page.keyboard.press("i");
+    await expect(page.locator('[data-testid="editor-message"]')).toContainText("E21");
+    await expect(firstLine).toHaveText(before ?? "");
+
+    await page.keyboard.press("x");
+    await expect(page.locator('[data-testid="editor-message"]')).toContainText("E21");
+    await expect(firstLine).toHaveText(before ?? "");
   });
 });
 

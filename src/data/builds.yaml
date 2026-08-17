@@ -77,15 +77,30 @@ repoBrowser:
 # the Builds caller's copy of those literal strings — identical wording to
 # personnel.yaml's `editor:` section (src/data/personnel.yaml) because both
 # reproduce the same prototype markup (Homepage.dc.html lines 317-336:
-# "NORMAL", "⑂ main", "esc to close"), not because the two data files share
-# storage.
+# "NORMAL", "⑂ main"), not because the two data files share storage.
+#
+# PLAN.md Phase 3 (vim-lite engine) extends this block with VISUAL/
+# VISUAL-LINE mode labels, the search/cmdline prompt glyphs, the `[:q]`
+# close-pill label (replacing the old always-true "esc to close" hint — Esc
+# no longer closes the editor, only `:q`/`:q!` do), and the three vim-style
+# status messages (readonly bell, `:w` error, `:<unknown>` E492). The
+# `readonlyBellMessage`/`writeReadonlyMessage`/`notAnEditorCommandTemplate`
+# wording below mirrors real vim's own error text (E21/E45/E492) —
+# vim-faithful, not invented.
 editor:
   modeLabel: "NORMAL"
+  modeVisualLabel: "VISUAL"
+  modeVisualLineLabel: "VISUAL LINE"
   branch: "⑂ main"
   breadcrumbSeparator: "›"
-  closeHint: "esc to close"
+  closePillLabel: "[:q]"
   tabIcon: "▤"
   topLabel: "Top"
   bottomLabel: "Bot"
   percentTemplate: "{n}%"
   positionTemplate: "{line}:{col}"
+  searchPromptGlyph: "/"
+  cmdlinePromptGlyph: ":"
+  readonlyBellMessage: "E21: Cannot make changes, 'modifiable' is off"
+  writeReadonlyMessage: "E45: 'readonly' option is set (add ! to override)"
+  notAnEditorCommandTemplate: "E492: Not an editor command: {cmd}"

@@ -51,19 +51,31 @@ typeRoleCountTemplate: "{n} {word}"
 posTemplate: "{n} / {total}"
 
 # Mirrors builds.yaml's `editor:` section values (Homepage.dc.html lines
-# 317-336: "NORMAL", "⑂ main", "esc to close", "▤", "Top"/"Bot", position
-# templates) — defined independently here, not imported from builds.yaml,
-# since this file has no dependency on Builds' data. The role doc pane
-# never scrolls in the prototype (a role doc always fits), so topLabel/
-# bottomLabel/percentTemplate only ever render "Top" here in practice, but
-# EditorLabels requires all 9 fields for Editor.svelte's shared status line.
+# 317-336: "NORMAL", "⑂ main", "▤", "Top"/"Bot", position templates) —
+# defined independently here, not imported from builds.yaml, since this file
+# has no dependency on Builds' data. The role doc pane never scrolls in the
+# prototype (a role doc always fits), so topLabel/bottomLabel/percentTemplate
+# only ever render "Top" here in practice, but EditorLabels requires every
+# field for Editor.svelte's shared status line.
+#
+# PLAN.md Phase 3 (vim-lite engine) extends this block the same way as
+# builds.yaml's — see that file's comment for the full rationale (VISUAL/
+# VISUAL-LINE labels, search/cmdline glyphs, the `[:q]` close pill replacing
+# the old "esc to close" hint, and the vim-faithful E21/E45/E492 messages).
 editor:
   modeLabel: "NORMAL"
+  modeVisualLabel: "VISUAL"
+  modeVisualLineLabel: "VISUAL LINE"
   branch: "⑂ main"
   breadcrumbSeparator: "›"
-  closeHint: "esc to close"
+  closePillLabel: "[:q]"
   tabIcon: "▤"
   topLabel: "Top"
   bottomLabel: "Bot"
   percentTemplate: "{n}%"
   positionTemplate: "{line}:{col}"
+  searchPromptGlyph: "/"
+  cmdlinePromptGlyph: ":"
+  readonlyBellMessage: "E21: Cannot make changes, 'modifiable' is off"
+  writeReadonlyMessage: "E45: 'readonly' option is set (add ! to override)"
+  notAnEditorCommandTemplate: "E492: Not an editor command: {cmd}"

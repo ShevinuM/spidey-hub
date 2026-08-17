@@ -68,10 +68,10 @@ Each phase: fresh `executor` (pointed at this file + its phase only, staging onl
 - Verification: e2e green incl. new mouse-only walkthrough (click Enaimco → Full-Time → software-developer.md → editor opens; `../` clicks walk back up); filter via click-then-type filters rows; `pnpm build` succeeds (schema); grep-index regenerates with new paths; unit tests green.
 
 ### Phase 3 — Editor vim engine (item 10)
-- [ ] 3.1 Column-cursor + block cursor rendering; footer mode indicator + real line:col.
-- [ ] 3.2 NORMAL motions (h l j k arrows 0 ^ $ w b e gg G Ctrl-d/u/f/b) with counts; VISUAL + VISUAL-LINE with selection highlight; `y`/`yy` → paste buffer + clipboard; readonly bell for mutating keys (message via labels).
-- [ ] 3.3 `/` in-buffer search + n/N + highlight; delegation flip (editor before grep while editor open); `:` cmdline with `q`/`q!` close, `w`→readonly error, unknown→E492 message.
-- [ ] 3.4 Tests: new `editor-vim.spec.ts` (motions incl. counts, visual yank → paste-buffer state via testid, search n/N, :q closes, i/x/etc show readonly and change nothing); update `grep.spec.ts` in-editor `/` test; unit tests for a pure `src/lib/vim.ts` motion/word-boundary engine.
+- [x] 3.1 Column-cursor + block cursor rendering; footer mode indicator + real line:col.
+- [x] 3.2 NORMAL motions (h l j k arrows 0 ^ $ w b e gg G Ctrl-d/u/f/b) with counts; VISUAL + VISUAL-LINE with selection highlight; `y`/`yy` → paste buffer + clipboard; readonly bell for mutating keys (message via labels).
+- [x] 3.3 `/` in-buffer search + n/N + highlight; delegation flip (editor before grep while editor open); `:` cmdline with `q`/`q!` close, `w`→readonly error, unknown→E492 message.
+- [x] 3.4 Tests: new `editor-vim.spec.ts` (motions incl. counts, visual yank → paste-buffer state via testid, search n/N, :q closes, i/x/etc show readonly and change nothing); update `grep.spec.ts` in-editor `/` test; unit tests for a pure `src/lib/vim.ts` motion/word-boundary engine.
 - Verification: unit + e2e green; `pnpm check`; both Builds and Personnel editors get identical behavior (spec parametrized over both entry paths).
 
 ### Phase 4 — Builds rework (items 2, 3, 4, 5)
@@ -95,6 +95,7 @@ Each phase: fresh `executor` (pointed at this file + its phase only, staging onl
 - [ ] 6.2 Re-baseline: `pnpm build:fixtures && playwright test tests/visual/identical.spec.ts --update-snapshots`; then 3 consecutive clean runs of `pnpm test:visual` (determinism); tighten RATIO_RELAXED to 0 where self-baselines allow, keep justified exceptions with fresh forensics.
 - [ ] 6.3 README: keymap reference rewritten from help.yaml content (incl. r), Builds/Personnel workflows updated, re-baseline procedure documented.
 - [ ] 6.4 Full acceptance: `pnpm check` (0 errors), `pnpm test:unit`, `pnpm test:e2e`, `pnpm test:visual` all green; `node scripts/generate.mjs` twice → tree clean; content-purity grep audit repo-wide; zero references to removed q-navigation in src/ or docs; PLAN.md boxes all checked.
+- [ ] 6.5 Deflake the `nav.spec.ts` live-clock test (Phase-2 verifier observed it failing under parallel load, passing in isolation — pre-existing): make it deterministic (e.g. Playwright clock control or widened tolerance with justification), do NOT just retry-mask it.
 - Verification: independent verifier runs every command fresh and inspects the new recipes' goldens visually (zoom) for rendering defects.
 
 ## Acceptance criteria

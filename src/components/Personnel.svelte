@@ -420,12 +420,20 @@
   // Keymap
   // ---------------------------------------------------------------------
 
+  /** Exposed for Terminal.svelte's delegation-order flip (PLAN.md Phase 3
+   * item 10) — same contract as Builds.svelte's `isEditorOpen()`. */
+  export function isEditorOpen(): boolean {
+    return editorOpen;
+  }
+
   export function handleKey(e: KeyboardEvent): boolean {
+    // PLAN.md Phase 3 removes the old bare q/Esc close entirely — the
+    // editor now owns Esc itself (cancels visual/search/cmdline only,
+    // never closes) and `:q`/`:q!` (via Editor.svelte's ex-cmdline) is the
+    // only close path, wired to `closeEditor` below through `onClose`. This
+    // used to short-circuit both keys here before the editor ever saw them,
+    // which would have made "Esc exits visual mode" impossible to reach.
     if (editorOpen) {
-      if (e.key === "Escape" || e.key.toLowerCase() === "q") {
-        closeEditor();
-        return true;
-      }
       return editorRef ? editorRef.handleKey(e) : false;
     }
 

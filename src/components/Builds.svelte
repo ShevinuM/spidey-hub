@@ -322,6 +322,15 @@
   // Keymap
   // ---------------------------------------------------------------------
 
+  /** Exposed for Terminal.svelte's delegation-order flip (PLAN.md Phase 3
+   * item 10): while a file is open in the vim editor, Terminal must give
+   * this component's `handleKey()` (which just forwards to `editorRef`) a
+   * turn BEFORE GrepOverlay's, so `/` searches the buffer instead of
+   * opening grep. */
+  export function isEditorOpen(): boolean {
+    return !!editorFile;
+  }
+
   export function handleKey(e: KeyboardEvent): boolean {
     if (editorFile) {
       return editorRef ? editorRef.handleKey(e) : false;

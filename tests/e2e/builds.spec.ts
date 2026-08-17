@@ -199,7 +199,7 @@ test.describe("Builds: repo browsing (panel [3] -> pane [0])", () => {
     await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
   });
 
-  test("descend into a dir, open a file (real content, keyboard-driven); h walks back up; q exits the editor", async ({
+  test("descend into a dir, open a file (real content, keyboard-driven); h walks back up; :q exits the editor", async ({
     page,
   }) => {
     await gotoReady(page, "/builds");
@@ -232,7 +232,16 @@ test.describe("Builds: repo browsing (panel [3] -> pane [0])", () => {
     );
     await expect(page.locator('[data-testid="editor-position"]')).toContainText("Top");
 
+    // Bare q/Esc no longer close the editor (PLAN.md items 15/16 + Phase 3);
+    // only :q / :q! do.
     await page.keyboard.press("q");
+    await expect(scroller).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(scroller).toBeVisible();
+
+    await page.keyboard.press(":");
+    await page.keyboard.type("q");
+    await page.keyboard.press("Enter");
     await expect(scroller).toHaveCount(0);
     // Back in the repo tree at feeds/ (not the root, not the doc).
     await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="dev_to.py"]')).toBeVisible();
