@@ -2,8 +2,8 @@
 # Source: design/Homepage.dc.html lines 258-320 and Component.renderVals()
 # (xpPath/xpHint templates, lines 1073, 1083).
 
-# "/Users/Shev/Experience/" (+ "{company}/" when inside a company folder) —
-# Component.renderVals() line 1073.
+# "/Users/Shev/Experience/" (+ the current directory path when browsing
+# deeper) — Component.renderVals() line 1073.
 pathPrefix: "/Users/Shev/Experience/"
 
 insetTitles:
@@ -14,18 +14,21 @@ insetTitles:
 promptIcon: ">"
 
 # Hint line under the role table / doc pane (Component.renderVals() line
-# 1083). {file} / {company} / {type} are interpolated. PLAN.md Phase 1
-# items 15/16 (q/Esc navigation removed sitewide) reword the trailing
-# clause away from "q returns to the dashboard" — navigation is now Ctrl-b
-# / status-bar clicks / the dashboard menu, never a bare key, so the hint
-# points at the help window instead.
+# 1083). PLAN.md Phase 1 items 15/16 (q/Esc navigation removed sitewide)
+# reword the trailing clause away from "q returns to the dashboard" —
+# navigation is now Ctrl-b / status-bar clicks / the dashboard menu, never a
+# bare key, so the hint points at the help window instead.
 #
-# PLAN.md Phase 2 item 8: `atTypeLevel` is the new middle-level hint (the
-# employment-type browser sitting between companies and role files).
+# PLAN.md Iteration 3 Phase 1 item 1.3: Personnel.svelte is now a
+# depth-generic directory browser, so there are exactly two row-selected
+# hint shapes rather than one per fixed level — `atDir`/`atFile`, plus
+# `atRoot` for the top-level directory listing specifically (where h/
+# Backspace never do anything, same as the old atCompanyLevel hint).
+# {dir}/{file} are interpolated with the selected row's own name.
 hints:
-  atRoleLevel: "enter opens {file} in nvim · h goes back · Ctrl-b ? for help"
-  atCompanyLevel: "enter opens {company}/ · j/k moves · Ctrl-b ? for help"
-  atTypeLevel: "enter opens {type}/ · h goes back · Ctrl-b ? for help"
+  atRoot: "enter opens {dir}/ · j/k moves · Ctrl-b ? for help"
+  atDir: "enter opens {dir}/ · h goes back · Ctrl-b ? for help"
+  atFile: "enter opens {file} in nvim · h goes back · Ctrl-b ? for help"
 
 upEntry:
   icon: "▸"
@@ -34,16 +37,12 @@ upEntry:
 companyRowIcon: "▸"
 roleRowIcon: "▤"
 
-# Company row meta, e.g. "3 roles" / "1 role" (Component.renderVals() line
-# 1030: `c.roles.length + (c.roles.length > 1 ? " roles" : " role")`).
+# Directory row meta at ANY depth, e.g. "3 roles" / "1 role" — the count of
+# role files nested anywhere beneath that directory (Component.renderVals()
+# line 1030: `c.roles.length + (c.roles.length > 1 ? " roles" : " role")`).
 roleCountTemplate: "{n} {word}"
 roleWordSingular: "role"
 roleWordPlural: "roles"
-
-# PLAN.md Phase 2 item 8: employment-type row meta at level 1, e.g.
-# "1 role" — same `{n} {word}` shape as roleCountTemplate above, reusing
-# roleWordSingular/roleWordPlural (a new template key, not new words).
-typeRoleCountTemplate: "{n} {word}"
 
 # File Browser footer position indicator, e.g. "2 / 4" (Component.renderVals()
 # line 1090: `(lvl===1?ri+1:ci+1) + " / " + (...)`) — same `{...}`

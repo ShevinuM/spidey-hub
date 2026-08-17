@@ -12,12 +12,14 @@
 // `fixtures/personnel` deliberately does not exist — see PLAN.md Phase 2
 // item 3.
 //
-// PLAN.md Phase 2 (Iteration 2) item 7/2.1: personnel content is
-// Enaimco-only now (Vretta/Ontario-Tech/Freelance deleted along with their
-// companies.yaml entries) and is 3 levels deep on disk —
-// Enaimco/{Full-Time,Part-Time,Co-op}/software-developer.md — grouped by
-// the frontmatter `company` + new required `employmentType` field, not by
-// directory structure (glob()'s flat entry list doesn't care about depth).
+// PLAN.md Iteration 3 Phase 1 item 1.3: personnel content is now a
+// variable-depth, path-driven tree (`enaimco/software-developer/{role.md,
+// full-time/role.md, part-time/role.md, co-op/role.md}` and
+// `memorial-university/<role-slug>/role.md` × 5) — Personnel.svelte derives
+// the whole tree from each entry's `filePath`, so grouping is no longer a
+// frontmatter concern. The old `company`/`employmentType` fields (used by
+// the fixed 3-level company->type->role model) are gone; a role's position
+// in the tree comes entirely from its directory path now.
 import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
 
@@ -55,20 +57,22 @@ const personnel = defineCollection({
   loader: glob({
     pattern: "**/*.md",
     base: "src/content/personnel",
+    // Same rationale as `projects` above: directory/file names in this tree
+    // are already the literal, lowercase strings we want to display (per
+    // PLAN.md Locked #9's "lowercase dirs" rule), so this just preserves the
+    // on-disk relative path (minus extension) as-is rather than trusting
+    // Astro's default slugify step.
+    generateId: ({ entry }) => entry.replace(/\.md$/, ""),
   }),
   schema: z.object({
-    company: z.string(),
+    // Display title for the role (e.g. "Software Developer",
+    // "Research Assistant") — the source data file's role titles verbatim
+    // or lightly shortened per PLAN.md Locked #9's mapping notes, never
+    // invented.
     role: z.string(),
-    months: z.string(),
     dates: z.string(),
     loc: z.string(),
     order: z.number(),
-    // PLAN.md Phase 2 item 7: required, drives the new level-2 grouping
-    // (companies -> employment types -> role files) in Personnel.svelte.
-    // Matches the role's containing directory name exactly (Full-Time /
-    // Part-Time / Co-op) — derived from the existing role titles, not
-    // invented.
-    employmentType: z.string(),
   }),
 });
 

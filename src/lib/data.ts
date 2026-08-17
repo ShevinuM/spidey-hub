@@ -183,6 +183,15 @@ export interface ContactRow {
   href: string | null;
 }
 
+/** PLAN.md Iteration 3 Phase 1 item 1.4: one EDUCATION entry (degree,
+ * school, location, dates) — both rows sourced verbatim from the resume. */
+export interface EducationRow {
+  degree: string;
+  school: string;
+  loc: string;
+  dates: string;
+}
+
 export interface ProfileData {
   header: { badge: string; fileClearance: string };
   title: { name: string; subtitle: string };
@@ -204,6 +213,7 @@ export interface ProfileData {
     href: string;
   };
   contact: { title: string; rows: ContactRow[] };
+  education: { title: string; rows: EducationRow[] };
   signal: { label: string; coords: string; initialReadout: string };
 }
 
@@ -342,19 +352,22 @@ export interface PersonnelData {
   pathPrefix: string;
   insetTitles: { fileBrowser: string; filePreview: string };
   promptIcon: string;
-  hints: { atRoleLevel: string; atCompanyLevel: string; atTypeLevel: string };
+  // PLAN.md Iteration 3 Phase 1 item 1.3: Personnel.svelte is now a
+  // depth-generic directory browser (variable-depth tree derived from
+  // content file paths), so the hint line has exactly two shapes rather
+  // than one per fixed level: `atDir` for any directory row (root or
+  // nested — {dir} is interpolated with the directory's own name, "h goes
+  // back" is simply omitted by the template text at the root since there's
+  // nowhere to go back to) and `atFile` for a role file row. `atRoot` covers
+  // the top level specifically, where h/Backspace never do anything (no
+  // "goes back" clause, same wording rule the old atCompanyLevel hint used).
+  hints: { atRoot: string; atDir: string; atFile: string };
   upEntry: { icon: string; name: string };
   companyRowIcon: string;
   roleRowIcon: string;
   roleCountTemplate: string;
   roleWordSingular: string;
   roleWordPlural: string;
-  // PLAN.md Phase 2 item 8: level-2 (employment type) row count wording —
-  // a new template key following roleCountTemplate's own `{n} {word}`
-  // pattern, reusing roleWordSingular/roleWordPlural (the words "role" /
-  // "roles" mean the same thing at this level, so no need to duplicate them
-  // under new keys too).
-  typeRoleCountTemplate: string;
   posTemplate: string;
   editor: EditorLabels;
 }

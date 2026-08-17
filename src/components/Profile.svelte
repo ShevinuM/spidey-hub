@@ -193,6 +193,21 @@
             {/each}
           </div>
         </div>
+        <div
+          data-testid="profile-education"
+          style="flex:none;border:1px solid rgba(217,176,74,.4);padding:6px 10px;display:flex;flex-direction:column;gap:5px"
+        >
+          <div style="color:rgba(217,176,74,.9);letter-spacing:.14em;font-size:11px">{profile.education.title}</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:11px">
+            {#each profile.education.rows as row (row.degree)}
+              <div data-testid="profile-education-row" style="display:flex;flex-direction:column;gap:1px">
+                <span style="color:rgba(196,216,232,.85)">{row.degree}</span>
+                <span style="color:rgba(196,216,232,.6)">{row.school} · {row.loc}</span>
+                <span style="color:rgba(196,216,232,.45)">{row.dates}</span>
+              </div>
+            {/each}
+          </div>
+        </div>
       </div>
     </div>
 

@@ -39,7 +39,7 @@ summary:
   heading: "─ SUMMARY"
   paragraphs:
     - "Recruited into software in 2021 and never left the terminal. Builds platforms end to end — APIs, pipelines, and the tooling teams live in."
-    - "Full time at Enaimco, where a 34-minute deploy became six. Off-hours: a signature tracker, an anomaly watcher, and this site."
+    - "Full time at Enaimco, where a 15-minute deploy became under one. Off-hours: a signature tracker, an anomaly watcher, and this site."
 
 # Static narrative stats (not derived from the projects/personnel
 # collections — "roles logged: 7" coincidentally matches the real personnel
@@ -66,22 +66,38 @@ cv:
 contact:
   title: "CONTACT"
   rows:
+    # PLAN.md Locked #7: contact data taken from the resume, verbatim — no
+    # phone number is published on the site.
     - icon: "assets/icon-github.svg"
       alt: "GitHub"
-      text: "github.com/shevinum"
-      href: "https://github.com/shevinum"
+      text: "github.com/ShevinuM"
+      href: "https://github.com/ShevinuM"
     - icon: "assets/icon-linkedin.svg"
       alt: "LinkedIn"
-      text: "ca.linkedin.com/in/shevinum"
-      href: "https://ca.linkedin.com/in/shevinum"
+      text: "linkedin.com/in/shevinum"
+      href: "https://linkedin.com/in/shevinum"
     - icon: "assets/icon-mail.svg"
       alt: "Email"
-      text: "shev@shevinum.dev"
-      href: "mailto:shev@shevinum.dev"
+      text: "shevinu2002@gmail.com"
+      href: "mailto:shevinu2002@gmail.com"
     - icon: "assets/icon-discord.svg"
       alt: "Discord"
       text: "shevinum"
       href: null
+
+# PLAN.md Iteration 3 Phase 1 item 1.4: new section below Contact, both
+# entries verbatim from the resume's EDUCATION block.
+education:
+  title: "EDUCATION"
+  rows:
+    - degree: "Bachelor of Science, Computer Science"
+      school: "Memorial University of Newfoundland"
+      loc: "St. John's, NL"
+      dates: "Sep 2021 – Jun 2026"
+    - degree: "International Visiting Student, Computer Science"
+      school: "Tecnológico de Monterrey"
+      loc: "Guadalajara, Mexico"
+      dates: "Feb 2026 – Jun 2026"
 
 signal:
   label: "SIGNAL"
