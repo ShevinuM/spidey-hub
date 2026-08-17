@@ -15,7 +15,13 @@
 // test below that used to drive navigation with "q" now uses a status-bar
 // click instead (see `goDashboard()`), and the dedicated q/Esc describe
 // block is inverted to assert NO navigation happens, in every view.
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures.ts";
+// PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
+// from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
+// sessionStorage flag before every navigation, so BootSequence.svelte's
+// ~4.6s unskippable sequence never runs for these tests — see that
+// file's header comment for why this is a context-fixture override
+// rather than a per-goto-helper change.
 
 const STATUS_BAR = '[data-testid="status-bar-windows"]';
 

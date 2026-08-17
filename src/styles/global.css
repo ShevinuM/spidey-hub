@@ -105,3 +105,89 @@ a:hover {
     opacity: 0;
   }
 }
+
+/* Boot-sequence keyframes (PLAN.md Phase 5B, design/"Boot Sequence.dc.html"
+   lines 16-26). `swpR` is `swp`'s reverse — the mock defines it alongside
+   `swp` for rings that spin counter-clockwise; `bFlick` is defined by the
+   mock but never referenced by its own template (dead keyframe) — kept
+   here anyway for 1:1 fidelity with "every keyframe" (PLAN.md 5B.1), never
+   applied by BootSequence.svelte. */
+@keyframes swpR {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes bIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes bAsmIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.78);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+@keyframes bWave {
+  0% {
+    transform: scale(0.16);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.04);
+    opacity: 0;
+  }
+}
+@keyframes bBloom {
+  0% {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  44% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+}
+@keyframes bDashIn {
+  from {
+    opacity: 0;
+    transform: scale(1.025);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes bFlick {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  47% {
+    opacity: 0.62;
+  }
+  53% {
+    opacity: 0.9;
+  }
+}
+@keyframes bScan {
+  0% {
+    transform: translateY(-12vh);
+  }
+  100% {
+    transform: translateY(112vh);
+  }
+}

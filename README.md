@@ -281,6 +281,22 @@ triggers the jump.
 | `Esc` | clear the filter and exit filter mode |
 | `Enter` | confirm the filter (exits typing; the filtered list stays applied) and returns to normal `j`/`k` navigation |
 
+### Boot sequence / reboot
+
+> Full keymap reference rewrite from `src/data/help.yaml` is Phase 6 — this
+> section only documents the PLAN.md Phase 5B addition ahead of that.
+
+A fresh browser tab plays the E.D.I.T.H boot sequence (`src/components/
+BootSequence.svelte`, copy/config in `src/data/boot.yaml`) once before the
+dashboard appears — unskippable while it runs (no key or click bypasses
+it). It plays at most once per tab: a reload or a deep link later in the
+same tab (sessionStorage flag) goes straight to the requested view.
+
+| key / control | action |
+|---|---|
+| `r` (on the ready dashboard only) | replays the boot sequence |
+| `↻ reboot` (status-bar right cluster, any view) | switches to the dashboard and replays the boot sequence |
+
 ## Architecture
 
 - **Routes**: five static pages, `src/pages/{index,builds,personnel,profile,retina-v}.astro`.

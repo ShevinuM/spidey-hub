@@ -6,7 +6,13 @@
 // rAF loop and 2500ms probe interval are exactly the thing under test here,
 // and the visual suite (tests/visual/identical.spec.ts) already covers the
 // pixel-frozen path via the faked clock + SIGNAL-row mask.
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures.ts";
+// PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
+// from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
+// sessionStorage flag before every navigation, so BootSequence.svelte's
+// ~4.6s unskippable sequence never runs for these tests — see that
+// file's header comment for why this is a context-fixture override
+// rather than a per-goto-helper change.
 
 const STATUS_BAR = '[data-testid="status-bar-windows"]';
 

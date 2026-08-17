@@ -10,7 +10,13 @@
 // port the component itself uses (src/lib/grep.ts, already unit-tested in
 // tests/unit/grep.test.ts) — never hardcoded — so this suite can't drift
 // from the index's real contents as the site's own source grows.
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures.ts";
+// PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
+// from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
+// sessionStorage flag before every navigation, so BootSequence.svelte's
+// ~4.6s unskippable sequence never runs for these tests — see that
+// file's header comment for why this is a context-fixture override
+// rather than a per-goto-helper change.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { search, formatCount, type RepoFile } from "../../src/lib/grep.ts";

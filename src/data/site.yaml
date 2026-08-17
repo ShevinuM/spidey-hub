@@ -32,6 +32,11 @@ statusBar:
       id: help
       name: help
   grepHint: "[/] grep"
+  # ↻ reboot (PLAN.md Phase 5B item 5B.3) — status-bar right-cluster control
+  # that replays the boot sequence from any view. Explicitly "reboot", not
+  # the mock's own "↻ replay boot" (user's own wording, Homepage.dc.html
+  # line 157's mock equivalent renamed per direct request).
+  rebootLabel: "↻ reboot"
   # tmux-style status-line prompt templates (PLAN.md Phase 5 item 5.1 / #12).
   # `{...}` placeholders are the same convention every other data.ts template
   # already uses (grep.yaml's filePosTemplate, builds.yaml's

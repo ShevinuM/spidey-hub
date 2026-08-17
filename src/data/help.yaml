@@ -25,6 +25,8 @@ sections:
         description: "E.D.I.T.H: Retina-V (from the dashboard)"
       - key: "?"
         description: "Help (from the dashboard)"
+      - key: "r"
+        description: "reboot (from the dashboard only — replays the E.D.I.T.H boot sequence); Profile has its own r for downloading the resume, unrelated"
       - key: "/"
         description: "open the grep overlay (from any view — inside the vim file editor, / searches the open buffer instead; see Vim keys below)"
       - key: "j / k / arrows"
@@ -194,3 +196,12 @@ sections:
     rows:
       - key: "r"
         description: "download resume.pdf in a new tab"
+
+  - title: "Boot / reboot"
+    rows:
+      - key: "(fresh tab)"
+        description: "the E.D.I.T.H boot sequence plays once automatically; it is unskippable — no key or click bypasses it — and plays at most once per browser tab (a reload/deep-link later in the same tab skips straight to the dashboard)"
+      - key: "r"
+        description: "on the ready dashboard, replays the boot sequence (see the Global section above)"
+      - key: "click ↻ reboot"
+        description: "status-bar right cluster, reachable from any view — switches to the dashboard and replays the boot sequence"

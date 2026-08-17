@@ -7,7 +7,13 @@
 // 3 employment types (Full-Time, Part-Time, Co-op — src/data/companies.yaml
 // order + src/content/personnel/Enaimco/**/*.md `order` frontmatter), each
 // with exactly 1 role file named `software-developer.md`.
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures.ts";
+// PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
+// from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
+// sessionStorage flag before every navigation, so BootSequence.svelte's
+// ~4.6s unskippable sequence never runs for these tests — see that
+// file's header comment for why this is a context-fixture override
+// rather than a per-goto-helper change.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 

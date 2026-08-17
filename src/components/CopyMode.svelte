@@ -86,7 +86,13 @@
     open = true;
   }
 
-  function close(): void {
+  /** Exported (PLAN.md Phase 5B item 5B.3) so Terminal.svelte's ↻ reboot
+   * handler can close a stray copy-mode overlay the same way it already
+   * closes a stray grep overlay (`grepRef.close()`) before switching to the
+   * dashboard and replaying boot — copy-mode's own z-index (50) sits above
+   * the status bar, so its "↻ reboot" click would otherwise land on a
+   * dead overlay instead of the dashboard underneath. */
+  export function close(): void {
     open = false;
     gPending = false;
     clearTimeout(gTimer);

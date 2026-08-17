@@ -20,6 +20,7 @@
     CompanyEntry,
     GrepData,
     HelpData,
+    BootData,
     WindowEntry,
   } from "../lib/data";
   import type { Commit } from "../lib/commits";
@@ -37,6 +38,7 @@
   import HelpView from "./HelpView.svelte";
   import GrepOverlay from "./GrepOverlay.svelte";
   import CopyMode from "./CopyMode.svelte";
+  import BootSequence from "./BootSequence.svelte";
 
   interface Props {
     initialView: ViewId;
@@ -49,6 +51,7 @@
     companies: CompanyEntry[];
     grep: GrepData;
     help: HelpData;
+    boot: BootData;
     projects: CollectionEntry<"projects">[];
     personnelEntries: CollectionEntry<"personnel">[];
     commitsByRepo: Record<string, Commit[]>;
@@ -65,6 +68,7 @@
     companies,
     grep,
     help,
+    boot,
     projects,
     personnelEntries,
     commitsByRepo,
@@ -121,12 +125,41 @@
     showMessage: (text: string) => void;
     startRename: (initial: string, onCommit: (name: string) => void) => void;
     startConfirm: (text: string, onYes: () => void) => void;
+    cancelPrompt: () => void;
   } | null>(null);
 
   /** Ctrl-b [ copy-mode overlay (PLAN.md Phase 5 item 5.3) — same
    * always-mounted / bind:this / handleKey():boolean contract as
    * GrepOverlay, consulted right after the status-bar prompt. */
-  let copyModeRef = $state<{ handleKey: (e: KeyboardEvent) => boolean; openOverlay: () => void } | null>(null);
+  let copyModeRef = $state<{
+    handleKey: (e: KeyboardEvent) => boolean;
+    openOverlay: () => void;
+    close: () => void;
+  } | null>(null);
+
+  /** BootSequence.svelte (PLAN.md Phase 5B) — always mounted, rendered
+   * above every other overlay (see that component's own z-index note).
+   * `isActive()` gates ALL key handling below (checked first, ahead of
+   * even copy-mode); `replay()` is invoked by the dashboard's `r` hotkey
+   * and the status-bar ↻ reboot control. */
+  let bootRef = $state<{ replay: () => void; isActive: () => boolean } | null>(null);
+
+  /** Plays the mock's `bDashIn` entrance animation on the site chrome the
+   * moment a real boot hands off to the ready dashboard (BootSequence's
+   * `onReady` callback — never fires on the sessionStorage skip path,
+   * since there's nothing to "hand off" from there). Cleared ~1.05s later
+   * (the animation's own duration) so it doesn't linger as a stale inline
+   * style or replay on an unrelated re-render. */
+  let dashIn = $state(false);
+  let dashInTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function onBootReady() {
+    clearTimeout(dashInTimer);
+    dashIn = true;
+    dashInTimer = setTimeout(() => {
+      dashIn = false;
+    }, 1050);
+  }
 
   // Deliberately an "uncontrolled" seed, not a tracked binding: each route
   // page SSRs Terminal exactly once with the view matching its own URL, and
@@ -201,6 +234,20 @@
     if (next === view) return;
     view = next;
     history.pushState(null, "", VIEW_ROUTES[next]);
+  }
+
+  /** Status-bar ↻ reboot control (PLAN.md Phase 5B item 5B.3) — replays
+   * boot from ANY view by first switching home. Cancels a stray status-bar
+   * prompt and a stray copy-mode overlay first (both hazards the plan
+   * calls out explicitly: a rename/confirm prompt would otherwise survive
+   * the switch bound to the old window, and copy-mode's own z-index sits
+   * above the status bar so it would occlude the freshly-replayed boot).
+   * `setView` already closes a stray grep overlay. */
+  function reboot() {
+    statusBarRef?.cancelPrompt?.();
+    copyModeRef?.close?.();
+    setView("home");
+    bootRef?.replay();
   }
 
   // ---------------------------------------------------------------------
@@ -458,6 +505,15 @@
   }
 
   function handleKey(e: KeyboardEvent) {
+    // PLAN.md Phase 5B: boot is unskippable — "there is no key or click
+    // that jumps past it into the site" (BootSequence.svelte's own header
+    // comment). Checked before EVERYTHING else, including copy-mode, which
+    // can't legitimately be open yet at this point anyway but is skipped
+    // unconditionally here for the same reason the mock's own boot
+    // componentDidMount only ever wires up its own `r`-on-ready check and
+    // nothing else while booting.
+    if (bootRef?.isActive?.()) return;
+
     // Item 5.3's copy-mode overlay is always-mounted / consulted-early,
     // same as GrepOverlay's own contract — checked before the prefix system
     // below, same relative position it has always had.
@@ -638,6 +694,17 @@
       return;
     }
 
+    // PLAN.md Phase 5B item 5B.3: `r` on the ready dashboard replays boot
+    // (mock's own `componentDidMount`'s `phase === "ready"` guard — by
+    // construction here `view === "home"` already implies boot isn't
+    // active, since the top-of-function gate above returns early while it
+    // is). No conflict with Profile's own `r` (resume download): that's a
+    // different view, handled by profileRef further up this function.
+    if (k === "r") {
+      bootRef?.replay();
+      return;
+    }
+
     const target = hotkeyToView(k);
     if (target) setView(target);
   }
@@ -649,7 +716,9 @@
 
 <div
   data-terminal-ready={keysReady}
-  style="position:relative;min-height:100vh;overflow:hidden;background:#0b0f14;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;color:#c9d1d9"
+  style="position:relative;min-height:100vh;overflow:hidden;background:#0b0f14;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;color:#c9d1d9;animation:{dashIn
+    ? 'bDashIn 1.05s cubic-bezier(.2,.7,.3,1) both'
+    : 'none'}"
 >
   <Wallpaper {tracker} {view} />
 
@@ -690,9 +759,10 @@
       <Profile bind:this={profileRef} {profile} />
     {/if}
 
-    <StatusBar bind:this={statusBarRef} {site} {windows} {view} onSelect={setView} />
+    <StatusBar bind:this={statusBarRef} {site} {windows} {view} onSelect={setView} onReboot={reboot} />
   </div>
 
   <GrepOverlay bind:this={grepRef} {grep} onNavigate={setView} />
   <CopyMode bind:this={copyModeRef} copyMode={site.copyMode} />
+  <BootSequence bind:this={bootRef} {boot} {desktopMode} onReady={onBootReady} />
 </div>

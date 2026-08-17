@@ -1,0 +1,169 @@
+# E.D.I.T.H boot sequence copy + config (PLAN.md Phase 5B).
+# Source: /Users/shev/Desktop/waiting-on-form-answers/project/
+# "Boot Sequence.dc.html", the `booting` sc-if block (lines 167-276) and its
+# `Component` class props/LOG array (lines 283-442). Geometry (ring sizes,
+# tick-mark positions/rotations, keyframe timings/delays) stays inline in
+# BootSequence.svelte, matching Wallpaper.svelte's own convention (ring/tick
+# geometry inline, only textual content here) — everything below is text a
+# viewer actually reads, or a config knob the mock exposed as an editable
+# prop (bootMs/coreTint/showBootLog).
+
+bootMs: 4600
+# "cyan" is the only variant actually rendered (PLAN.md: "render only the
+# active tint variant; keep red/gold configs in data") — the mock exposed
+# `coreTint` as a 3-way design-tool enum prop; `tints` below keeps all three
+# palettes on file so a future change of this one value is a data edit, not
+# a code change, even though only `tints[coreTint]` is ever painted.
+coreTint: cyan
+showBootLog: true
+
+sessionId: "10.42.7.13"
+# "{session}" is substituted with sessionId above.
+commandLineTemplate: "$ edith --boot --session {session}"
+
+handshake:
+  label: "e.d.i.t.h core handshake ....... "
+  ready: "OK · 0.94 / 0.91"
+  # The mock appends 1-3 "." to this while negotiating (Component.
+  # renderVals()'s `handshake`, src/lib/boot.ts's handshakeText()).
+  negotiating: "negotiating"
+
+phaseLabels:
+  init: "INIT"
+  scan: "SCAN"
+  link: "LINK"
+  lock: "LOCK"
+  ready: "READY"
+
+coreLabel: "E.D.I.T.H"
+
+# Compass ring furniture (PLAN.md 5B.1 "tick marks/compass glyphs/degree
+# labels") — visible glyphs, so they live here even though their positions
+# are pure geometry (inline in the component, like Wallpaper's ring/tick
+# treatment).
+compass:
+  top: "▼"
+  bottom: "▲"
+  left: "◀"
+  right: "▶"
+  degrees: ["000", "090", "180", "270"]
+
+# e.d.i.t.h status box (lines 248-254): the `┌─…─┐`/`└─…─┘` border rows are
+# stored verbatim; each data row's `prefix` is the literal text up to (not
+# including) the 16-char padded value, so the box's fixed-width alignment
+# is exactly the mock's own ASCII art, unchanged by any of this file's
+# other content. `threshold`/`onlineText` feed
+# src/lib/boot.ts's statusRowValue() (PLAN.md: "16-char padded threshold
+# fills (14/30/44/62/84)").
+statusBox:
+  top: "┌─ e.d.i.t.h ───────────────────────┐"
+  bottom: "└───────────────────────────────────┘"
+  rowSuffix: "│"
+  rows:
+    - prefix: "│ core ............ "
+      threshold: 14
+      onlineText: "ONLINE"
+    - prefix: "│ session ......... "
+      threshold: 30
+      onlineText: "10.42.7.13"
+    - prefix: "│ windows ......... "
+      threshold: 44
+      onlineText: "6 MAPPED"
+    - prefix: "│ retina-v ........ "
+      threshold: 62
+      onlineText: "02 LOCKED"
+    - prefix: "│ lock ............ "
+      threshold: 84
+      onlineText: "0.94 / 0.91"
+
+bootLogTitle: "── boot log ──────────────────"
+
+# LOG array (lines 287-300), VERBATIM — including the "grep index 22 files"
+# flavor text (user-editable, kept exactly as authored). `threshold` is the
+# 0..1 progress fraction at which the row becomes visible;
+# src/lib/boot.ts's logRows() keeps only the ones reached so far, most-
+# recent-last, capped to the last 5.
+log:
+  - threshold: 0.02
+    tag: ok
+    label: "mounting shell"
+    val: "Shell.astro"
+  - threshold: 0.10
+    tag: ok
+    label: "hydrating island"
+    val: "Terminal.svelte"
+  - threshold: 0.18
+    tag: ok
+    label: "tmux session"
+    val: "6 windows"
+  - threshold: 0.27
+    tag: ok
+    label: "grep index"
+    val: "22 files"
+  - threshold: 0.36
+    tag: ok
+    label: "repo trees"
+    val: "3 submodules"
+  - threshold: 0.45
+    tag: ok
+    label: "commit snapshots"
+    val: "15 x 3"
+  - threshold: 0.55
+    tag: ok
+    label: "retina-v optics"
+    val: "CALIBRATED"
+  - threshold: 0.64
+    tag: ok
+    label: "retina-v feed"
+    val: "latveria grid"
+  - threshold: 0.73
+    tag: ok
+    label: "retina-v lock"
+    val: "0.94 / 0.91"
+  - threshold: 0.82
+    tag: warn
+    label: "retina-v anomaly"
+    val: "FLERKEN [!]"
+  - threshold: 0.90
+    tag: ok
+    label: "wallpaper radar"
+    val: "3 signatures"
+  - threshold: 0.96
+    tag: done
+    label: "e.d.i.t.h online"
+    val: "welcome back, shev"
+
+# Full palette per tint (lines 217-237); only `tints[coreTint]` above is
+# ever rendered. Named fields map 1:1 onto the mock's inline styles for the
+# core-readout circle: `border`/`glowStart`/`glowEnd` build the
+# `radial-gradient(...)` background, `shadowInset`/`shadowOuter` the
+# box-shadow, `labelColor` the small "E.D.I.T.H" caption, `pctColor` the big
+# percentage, `phaseColor` the phase word underneath.
+tints:
+  cyan:
+    border: "rgba(95,198,180,.55)"
+    glowStart: "rgba(95,198,180,.24)"
+    glowEnd: "rgba(9,13,18,.92)"
+    shadowInset: "rgba(95,198,180,.16)"
+    shadowOuter: "rgba(95,198,180,.12)"
+    labelColor: "rgba(234,250,246,.7)"
+    pctColor: "#eafaf6"
+    phaseColor: "#5fc6b4"
+  red:
+    border: "rgba(224,69,60,.6)"
+    glowStart: "rgba(224,69,60,.22)"
+    glowEnd: "rgba(9,13,18,.92)"
+    shadowInset: "rgba(224,69,60,.16)"
+    shadowOuter: "rgba(224,69,60,.12)"
+    labelColor: "rgba(244,236,233,.7)"
+    pctColor: "#f4ece9"
+    phaseColor: "#e0453c"
+  gold:
+    border: "rgba(217,176,74,.6)"
+    glowStart: "rgba(217,176,74,.2)"
+    glowEnd: "rgba(9,13,18,.92)"
+    shadowInset: "rgba(217,176,74,.16)"
+    shadowOuter: "rgba(217,176,74,.1)"
+    labelColor: "rgba(244,240,229,.7)"
+    pctColor: "#f6efe0"
+    phaseColor: "#d9b04a"

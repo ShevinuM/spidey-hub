@@ -8,7 +8,13 @@
 // builds.spec.ts / personnel.spec.ts already use for their own editor
 // assertions) rather than hardcoding line text, so this suite can't drift
 // from whatever the fixture repos/role docs actually contain.
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures.ts";
+// PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
+// from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
+// sessionStorage flag before every navigation, so BootSequence.svelte's
+// ~4.6s unskippable sequence never runs for these tests — see that
+// file's header comment for why this is a context-fixture override
+// rather than a per-goto-helper change.
 
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);

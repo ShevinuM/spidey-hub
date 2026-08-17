@@ -34,6 +34,55 @@ export const recipes: Recipe[] = [
   },
 ];
 
+/**
+ * Boot-sequence recipes (PLAN.md Phase 5B item 5B.5). DEFINED here but
+ * deliberately kept OUT of the `recipes` array above:
+ * `capture-goldens.mjs` iterates `recipes` unconditionally against the
+ * vendored prototype reference (which has no boot sequence at all — it
+ * predates this feature entirely) and `identical.spec.ts` would fail
+ * `toMatchSnapshot` for any name with no committed golden. Neither of
+ * those recipe/pipeline entry points may be touched by this phase (PLAN.md
+ * Phase 5B constraints: "do NOT run or capture visual goldens — Phase 6
+ * does"). Phase 6 wires an actual capture path for these two names and
+ * moves/merges them into `recipes` (or a sibling array `identical.spec.ts`
+ * also consults) at that point, with the mandatory zoom-review against
+ * `/Users/shev/Desktop/waiting-on-form-answers/project/ref/*.png`.
+ *
+ * Each recipe intentionally has NO key/type `actions` (the boot overlay
+ * swallows all input while active — PLAN.md 5B.3) and instead carries a
+ * `clockOffsetMs` describing how far into (or past) the boot sequence to
+ * advance a FAKED clock before the screenshot — this is what determinism
+ * requires here (see the comment on each entry): the boot's own state
+ * (pct/phase/log rows/handshake) is entirely a function of elapsed time,
+ * which a fixed clock offset pins exactly, but its CSS keyframe animations
+ * (the assembling rings' `swp`/`swpR` sweeps, `bWave`/`bScan`, etc.) are
+ * NOT pinned by the JS clock at all — only `page.screenshot({animations:
+ * "disabled"})` (already the pipeline's own convention, see pipeline.mjs)
+ * freezes those, and must keep doing so for these two recipes exactly as
+ * it does for the existing ten.
+ */
+export interface BootRecipe {
+  name: string;
+  /** Milliseconds of FAKED elapsed time (`page.clock`) to advance past
+   * navigation before capturing — NOT wall-clock, and NOT one of the
+   * `RecipeAction` key/type replays every other recipe uses. */
+  clockOffsetMs: number;
+}
+
+export const bootRecipes: BootRecipe[] = [
+  // Mid-boot: comfortably inside the 4600ms default `bootMs` (src/data/
+  // boot.yaml) — rings assembled (bAsmIn/bIn have all finished by ~1.15s),
+  // progress ring/pct/phase/log/handshake all mid-flight and non-trivial
+  // (phase should read SCAN or LINK, the boot log should have 3-5 visible
+  // rows, the handshake should already read "OK · …").
+  { name: "13-boot-mid", clockOffsetMs: 2000 },
+  // Post-outro: past bootMs (4600) + the hard-stop slack (60) + the
+  // bBloom outro hold (760) with margin, i.e. the mock's `ready` dashboard
+  // — this is BootSequence.svelte fully unmounted and the site chrome
+  // mid/post its `bDashIn` entrance animation.
+  { name: "14-boot-ready", clockOffsetMs: 4600 + 60 + 760 + 200 },
+];
+
 export const viewports = [
   { name: "1512x945", width: 1512, height: 945 },
   { name: "1920x1080", width: 1920, height: 1080 },

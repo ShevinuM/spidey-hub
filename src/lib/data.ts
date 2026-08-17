@@ -25,6 +25,7 @@ import grepRaw from "../data/grep.yaml?raw";
 import personnelRaw from "../data/personnel.yaml?raw";
 import companiesRaw from "../data/companies.yaml?raw";
 import helpRaw from "../data/help.yaml?raw";
+import bootRaw from "../data/boot.yaml?raw";
 
 const RAW: Record<string, string> = {
   "site.yaml": siteRaw,
@@ -36,6 +37,7 @@ const RAW: Record<string, string> = {
   "personnel.yaml": personnelRaw,
   "companies.yaml": companiesRaw,
   "help.yaml": helpRaw,
+  "boot.yaml": bootRaw,
 };
 
 const cache = new Map<string, unknown>();
@@ -81,6 +83,7 @@ export interface SiteData {
     separator: string;
     windows: WindowEntry[];
     grepHint: string;
+    rebootLabel: string;
     prompts: StatusPrompts;
   };
   copyMode: CopyModeData;
@@ -397,3 +400,70 @@ export interface HelpData {
 }
 
 export const getHelp = (): HelpData => loadYaml<HelpData>("help.yaml");
+
+// ---------------------------------------------------------------------------
+// boot.yaml
+// ---------------------------------------------------------------------------
+
+export interface BootHandshakeData {
+  label: string;
+  ready: string;
+  negotiating: string;
+}
+
+export interface BootCompassData {
+  top: string;
+  bottom: string;
+  left: string;
+  right: string;
+  degrees: string[];
+}
+
+export interface BootStatusRow {
+  prefix: string;
+  threshold: number;
+  onlineText: string;
+}
+
+export interface BootStatusBoxData {
+  top: string;
+  bottom: string;
+  rowSuffix: string;
+  rows: BootStatusRow[];
+}
+
+export interface BootLogEntry {
+  threshold: number;
+  tag: "ok" | "warn" | "done";
+  label: string;
+  val: string;
+}
+
+export interface BootTintPalette {
+  border: string;
+  glowStart: string;
+  glowEnd: string;
+  shadowInset: string;
+  shadowOuter: string;
+  labelColor: string;
+  pctColor: string;
+  phaseColor: string;
+}
+
+export interface BootData {
+  bootMs: number;
+  coreTint: "cyan" | "red" | "gold";
+  showBootLog: boolean;
+  sessionId: string;
+  commandLineTemplate: string;
+  handshake: BootHandshakeData;
+  phaseLabels: { init: string; scan: string; link: string; lock: string; ready: string };
+  coreLabel: string;
+  compass: BootCompassData;
+  statusBox: BootStatusBoxData;
+  bootLogTitle: string;
+  log: BootLogEntry[];
+  tints: Record<"cyan" | "red" | "gold", BootTintPalette>;
+}
+
+export const getBoot = (): BootData => loadYaml<BootData>("boot.yaml");

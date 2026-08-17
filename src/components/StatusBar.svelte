@@ -44,9 +44,15 @@
     windows: WindowEntry[];
     view: ViewId;
     onSelect: (view: ViewId) => void;
+    /** ↻ reboot (PLAN.md Phase 5B item 5B.3) — always rendered in the
+     * right-hand cluster (unlike the window list, which the rename/confirm
+     * prompt states below replace), so it must stay clickable regardless
+     * of prompt state; Terminal.svelte's handler cancels any open prompt
+     * itself before switching + replaying. */
+    onReboot: () => void;
   }
 
-  const { site, windows, view, onSelect }: Props = $props();
+  const { site, windows, view, onSelect, onReboot }: Props = $props();
 
   const active = $derived(activeWindowId(view));
 
@@ -123,6 +129,17 @@
    * consumes every key (rename/confirm keyboard ownership). */
   export function isPromptActive(): boolean {
     return prompt.kind === "rename" || prompt.kind === "confirm";
+  }
+
+  /** PLAN.md Phase 5B hazard note: "reboot from a view with a prompt open
+   * should cancel the prompt" — the ↻ reboot control (right cluster) is
+   * always rendered, even while a rename/kill-window/kill-pane prompt has
+   * replaced the window list on the left, so Terminal.svelte's reboot
+   * handler calls this first. A no-op for the "message"/"none" states
+   * (nothing to own/cancel there). */
+  export function cancelPrompt(): void {
+    clearTimeout(messageTimer);
+    prompt = { kind: "none" };
   }
 
   function pasteIntoRename(text: string): void {
@@ -246,6 +263,19 @@
   {/if}
   <div style="flex:1"></div>
   <div style="flex:none;display:flex;gap:12px;padding:0 14px;white-space:nowrap">
+    <span
+      role="button"
+      tabindex="0"
+      data-testid="status-bar-reboot"
+      onclick={onReboot}
+      onkeydown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onReboot();
+      }}
+      style="cursor:pointer;color:rgba(217,176,74,.8)"
+      class="status-bar-reboot"
+    >
+      {site.statusBar.rebootLabel}
+    </span>
     <span style="color:rgba(95,198,180,.75)">{site.statusBar.grepHint}</span>
     <span data-testid="status-bar-clock-time" style="color:#d7a3e0">{clockTime}</span>
     <span data-testid="status-bar-clock-date" style="color:#c98fd0">{clockDate}</span>
@@ -255,5 +285,8 @@
 <style>
   .status-bar-window:hover {
     color: #8fd0f5;
+  }
+  .status-bar-reboot:hover {
+    color: #e0453c;
   }
 </style>

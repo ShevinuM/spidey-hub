@@ -4,7 +4,13 @@
 // (hotkey `?`). Content is asserted against the real src/data/help.yaml
 // (read directly, same pattern as grep.spec.ts's real-index comparisons)
 // so this suite can never drift from the actual copy.
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures.ts";
+// PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
+// from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
+// sessionStorage flag before every navigation, so BootSequence.svelte's
+// ~4.6s unskippable sequence never runs for these tests — see that
+// file's header comment for why this is a context-fixture override
+// rather than a per-goto-helper change.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";

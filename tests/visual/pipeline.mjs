@@ -35,6 +35,7 @@
 // "23:34" throughout, matching the prototype's hardcoded text and (from
 // Phase 3) the implementation's live clock at this same fixed instant.
 import { CLOCK_TIME, RUN_FOR_MS } from "./recipes.ts";
+import { BOOT_SEEN_STORAGE_KEY } from "../../src/lib/bootState.ts";
 
 /**
  * CSS selector for the SIGNAL footer's net-readout span (Profile view).
@@ -126,6 +127,23 @@ export const STATUS_BAR_WINDOWS_SELECTOR =
  * @returns {Promise<Buffer>} PNG bytes
  */
 export async function captureState(page, url, recipe) {
+  // PLAN.md Phase 5B item 5B.5: pre-seed the boot-seen sessionStorage flag
+  // BEFORE navigation so BootSequence.svelte's ~4.6s unskippable sequence
+  // never runs during a golden capture — these 10 (soon 12, see
+  // recipes.ts's `bootRecipes`, captured separately once Phase 6 wires
+  // their own path) recipes all want the READY dashboard/view state,
+  // exactly as before this feature existed. Harmless against the vendored
+  // prototype reference (capture-goldens.mjs's other caller): that page
+  // has no sessionStorage-aware boot code at all, so the flag is simply
+  // unread there.
+  await page.addInitScript((key) => {
+    try {
+      sessionStorage.setItem(key, "1");
+    } catch {
+      // ignore — same best-effort contract as src/lib/bootState.ts
+    }
+  }, BOOT_SEEN_STORAGE_KEY);
+
   await page.clock.install({ time: CLOCK_TIME });
   await page.goto(url, { waitUntil: "load" });
   await page.clock.runFor(RUN_FOR_MS);
