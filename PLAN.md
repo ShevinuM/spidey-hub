@@ -124,7 +124,7 @@ One floating `─ Cmdline ─` box component (same visual family as the grep ove
 - Verification: independent verifier runs every command fresh and inspects the new recipes' goldens visually (zoom) for rendering defects.
 
 ### Post-acceptance — git history rewrite (user request 2026-08-17 late evening)
-- [ ] After the final Phase-6 verifier PASS: rewrite ALL repo history (no remote exists — safe) so every commit has a very brief single-line subject, no body, and no Co-Authored-By trailer. Performed by the ORCHESTRATOR directly (repo administration, not code). Verify content-identical afterwards: `git diff <old-head> <new-head>` must be empty, `git status --porcelain` clean, and a quick `pnpm test:unit` sanity run. All commits from this point forward are authored in that style directly (brief subject, no trailer).
+- [x] After the final Phase-6 verifier PASS: rewrite ALL repo history (no remote exists — safe) so every commit has a very brief single-line subject, no body, and no Co-Authored-By trailer. Performed by the ORCHESTRATOR directly (repo administration, not code). Verify content-identical afterwards: `git diff <old-head> <new-head>` must be empty, `git status --porcelain` clean, and a quick `pnpm test:unit` sanity run. All commits from this point forward are authored in that style directly (brief subject, no trailer).
 
 ## Acceptance criteria
 1. Bare `q`/Esc never changes the active view anywhere; Esc only exits modals (grep/filter/visual/copy/prompt/cmdline). Status bar lists `0:dashboard … 5:help`, every window mouse-clickable, active window correct.
