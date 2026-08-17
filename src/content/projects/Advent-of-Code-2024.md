@@ -14,4 +14,4 @@ Solutions to the Advent of Code 2024 puzzle series.
 - Go
 
 ## Status
-in progress · daily puzzle solutions
+shipped · solutions in Go

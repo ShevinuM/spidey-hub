@@ -15,4 +15,4 @@ Solutions to the Advent of Code 2023 puzzle series, mainly in Python.
 - Java
 
 ## Status
-in progress · daily puzzle solutions
+shipped · solutions mainly in Python, some Java
