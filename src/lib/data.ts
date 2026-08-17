@@ -275,7 +275,7 @@ export interface PersonnelData {
   upEntry: { icon: string; name: string };
   companyRowIcon: string;
   roleRowIcon: string;
-  editor: { modeLabel: string; branch: string; breadcrumbSeparator: string; closeHint: string };
+  editor: EditorLabels;
 }
 
 export const getPersonnel = (): PersonnelData => loadYaml<PersonnelData>("personnel.yaml");

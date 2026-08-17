@@ -28,6 +28,7 @@
   import Toasts from "./Toasts.svelte";
   import TrackerView from "./TrackerView.svelte";
   import Builds from "./Builds.svelte";
+  import Personnel from "./Personnel.svelte";
 
   interface Props {
     initialView: ViewId;
@@ -43,11 +44,15 @@
     commitsByRepo: Record<string, Commit[]>;
   }
 
-  const { initialView, site, dashboard, tracker, builds, projects, commitsByRepo }: Props = $props();
+  const { initialView, site, dashboard, tracker, builds, personnel, companies, projects, personnelEntries, commitsByRepo }: Props =
+    $props();
 
   /** Set by Builds.svelte's `bind:this` while `view === "builds"` — see
    * handleKey() below for the delegation contract (PLAN.md Phase 5). */
   let buildsRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
+  /** Same `bind:this` + `handleKey(): boolean` contract, one level down —
+   * Personnel.svelte's own embedded Editor (PLAN.md Phase 6). */
+  let personnelRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
 
   // Deliberately an "uncontrolled" seed, not a tracked binding: each route
   // page SSRs Terminal exactly once with the view matching its own URL, and
@@ -122,16 +127,24 @@
       return;
     }
 
-    // Ctrl-d/Ctrl-u are reserved for the Builds file editor's half-page
-    // scroll (PLAN.md Phase 5 "Editor scrolling") — the one deliberate
-    // exception to "modifier combos fall through untouched" so far (Phase 9
-    // adds Ctrl-b/tmux-prefix and Phase 8 adds grep's own Ctrl chords the
-    // same way: carved out here, everything else still falls through).
+    // Ctrl-d/Ctrl-u are reserved for the Builds/Personnel file editors'
+    // half-page scroll (PLAN.md Phase 5 "Editor scrolling", inherited by
+    // Phase 6's personnel role editor) — the one deliberate exception to
+    // "modifier combos fall through untouched" so far (Phase 9 adds
+    // Ctrl-b/tmux-prefix and Phase 8 adds grep's own Ctrl chords the same
+    // way: carved out here, everything else still falls through).
     const isEditorScrollChord =
       e.ctrlKey && !e.metaKey && !e.altKey && (e.key === "d" || e.key === "D" || e.key === "u" || e.key === "U");
 
     if (view === "builds" && buildsRef && (isEditorScrollChord || !(e.metaKey || e.ctrlKey || e.altKey))) {
       if (buildsRef.handleKey(e)) {
+        e.preventDefault();
+        return;
+      }
+    }
+
+    if (view === "personnel" && personnelRef && (isEditorScrollChord || !(e.metaKey || e.ctrlKey || e.altKey))) {
+      if (personnelRef.handleKey(e)) {
         e.preventDefault();
         return;
       }
@@ -182,8 +195,16 @@
       <TrackerView {tracker} onGoHome={() => setView("home")} />
     {:else if view === "builds"}
       <Builds bind:this={buildsRef} {builds} {projects} {commitsByRepo} onTracker={() => setView("retina-v")} />
+    {:else if view === "personnel"}
+      <Personnel
+        bind:this={personnelRef}
+        {personnel}
+        {companies}
+        {personnelEntries}
+        onDashboard={() => setView("home")}
+      />
     {:else}
-      <!-- Personnel / Profile: Phases 6-7. -->
+      <!-- Profile: Phase 7. -->
       <div style="flex:1;min-height:0"></div>
     {/if}
 

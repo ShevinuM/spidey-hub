@@ -27,8 +27,20 @@ upEntry:
 companyRowIcon: "▸"
 roleRowIcon: "▤"
 
+# Mirrors builds.yaml's `editor:` section values (Homepage.dc.html lines
+# 317-336: "NORMAL", "⑂ main", "esc to close", "▤", "Top"/"Bot", position
+# templates) — defined independently here, not imported from builds.yaml,
+# since this file has no dependency on Builds' data. The role doc pane
+# never scrolls in the prototype (a role doc always fits), so topLabel/
+# bottomLabel/percentTemplate only ever render "Top" here in practice, but
+# EditorLabels requires all 9 fields for Editor.svelte's shared status line.
 editor:
   modeLabel: "NORMAL"
   branch: "⑂ main"
   breadcrumbSeparator: "›"
   closeHint: "esc to close"
+  tabIcon: "▤"
+  topLabel: "Top"
+  bottomLabel: "Bot"
+  percentTemplate: "{n}%"
+  positionTemplate: "{line}:{col}"
