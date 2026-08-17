@@ -153,7 +153,16 @@ function walk(dir, skipDirs, collected, root) {
 // 1. Repo indexes (public/generated/repos/<name>.json)
 // ---------------------------------------------------------------------------
 
-const REPOS = ["transcript-tts", "SafePass", "daily-tech-digest"];
+const REPOS = [
+  "daily-tech-digest",
+  "transcript-tts",
+  "Legend-of-Arlo-Guardians-Gauntlet",
+  "SpotifyPal",
+  "Advent-of-Code-2024",
+  "Advent-Of-Code-2023",
+  "Sheldon",
+  "Data-Structures-And-Algorithms",
+];
 
 function generateRepoIndexes() {
   const outDir = join(ROOT, "public/generated/repos");

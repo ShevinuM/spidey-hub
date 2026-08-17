@@ -1,6 +1,6 @@
 ---
 title: daily-tech-digest
-order: 2
+order: 0
 repos:
   - name: daily-tech-digest
     github: ShevinuM/daily-tech-digest

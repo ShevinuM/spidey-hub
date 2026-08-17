@@ -1,9 +1,24 @@
 [submodule "repos/transcript-tts"]
 	path = repos/transcript-tts
 	url = https://github.com/ShevinuM/transcript-tts
-[submodule "repos/SafePass"]
-	path = repos/SafePass
-	url = https://github.com/ShevinuM/SafePass
 [submodule "repos/daily-tech-digest"]
 	path = repos/daily-tech-digest
 	url = https://github.com/ShevinuM/daily-tech-digest
+[submodule "repos/Legend-of-Arlo-Guardians-Gauntlet"]
+	path = repos/Legend-of-Arlo-Guardians-Gauntlet
+	url = https://github.com/ShevinuM/Legend-of-Arlo-Guardians-Gauntlet
+[submodule "repos/SpotifyPal"]
+	path = repos/SpotifyPal
+	url = https://github.com/ShevinuM/SpotifyPal
+[submodule "repos/Advent-of-Code-2024"]
+	path = repos/Advent-of-Code-2024
+	url = https://github.com/ShevinuM/Advent-of-Code-2024
+[submodule "repos/Advent-Of-Code-2023"]
+	path = repos/Advent-Of-Code-2023
+	url = https://github.com/ShevinuM/Advent-Of-Code-2023
+[submodule "repos/Sheldon"]
+	path = repos/Sheldon
+	url = https://github.com/ShevinuM/Sheldon
+[submodule "repos/Data-Structures-And-Algorithms"]
+	path = repos/Data-Structures-And-Algorithms
+	url = https://github.com/ShevinuM/Data-Structures-And-Algorithms
