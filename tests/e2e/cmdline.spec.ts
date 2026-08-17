@@ -353,7 +353,7 @@ test.describe("Cmdline: editor ex-mode still works through the box (PLAN.md 5C.1
       },
       async assertParentVisible(page) {
         await expect(page.locator('[data-testid="personnel-path"]')).toHaveText(
-          "/Users/Shev/Experience/Enaimco/Full-Time/",
+          "/Users/Shev/Experience/enaimco/software-developer/",
         );
       },
     },

@@ -99,16 +99,18 @@ test.describe("Grep overlay", () => {
   test("Enter on a personnel content hit lands in the personnel view", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
-    // "Co-op/software-developer.md" is a path-only substring (PLAN.md
-    // Phase 2 item 7 restructured personnel content to
-    // Enaimco/<employmentType>/software-developer.md — the term never
-    // appears as body text elsewhere in the real index, verified against
-    // the committed index), so its one path-hit row is deterministically
-    // the first (sel resets to 0 on every query edit).
-    await page.keyboard.type("Co-op/software-developer.md");
+    // The co-op role's own frontmatter `role:` line (PLAN.md Iteration 3
+    // Phase 1 item 1.3 restructured personnel content to a path-derived
+    // tree where every leaf is literally named "role.md" — that bare
+    // filename alone is no longer a unique search term across the whole
+    // index, since it's also a substring of test files/fixtures that
+    // mention this content's own path). This exact frontmatter value only
+    // ever appears in the one real content file, verified against the
+    // committed index.
+    await page.keyboard.type('role: "Software Developer, Co-op"');
     await expect(rows(page).first()).toHaveAttribute(
       "data-path",
-      "src/content/personnel/Enaimco/Co-op/software-developer.md",
+      "src/content/personnel/enaimco/software-developer/co-op/role.md",
     );
     await page.keyboard.press("Enter");
     await expect(overlay(page)).not.toBeVisible();
@@ -217,7 +219,7 @@ test.describe("Grep overlay", () => {
     page,
   }) => {
     await gotoReady(page, "/personnel");
-    await page.keyboard.press("Enter"); // -> Enaimco's employment types level
+    await page.keyboard.press("Enter"); // -> enaimco/ (single child: software-developer/)
     await page.keyboard.press("Enter"); // -> that type's role files level
     await page.keyboard.press("Enter"); // -> editor
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
@@ -249,7 +251,7 @@ test.describe("Grep overlay", () => {
 
   test("/ preventDefaults and wins over personnel filter-mode typing", async ({ page }) => {
     await gotoReady(page, "/personnel");
-    await page.keyboard.press("Enter"); // -> Enaimco's employment types level
+    await page.keyboard.press("Enter"); // -> enaimco/ (single child: software-developer/)
     await page.keyboard.press("f"); // -> filter mode
     await expect(page.locator('[data-testid="personnel-prompt"]')).toBeVisible();
 

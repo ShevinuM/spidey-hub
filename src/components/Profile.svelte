@@ -127,7 +127,6 @@
         </div>
         <div
           data-testid="profile-dossier"
-          data-copy-source
           style="flex:1.4 1 auto;min-height:84px;overflow-y:auto;border:1px solid rgba(224,69,60,.35);padding:6px 10px;display:flex;flex-direction:column;gap:5px;font-size:11.5px;line-height:1.34;color:rgba(196,216,232,.75)"
         >
           <div style="color:rgba(217,176,74,.85);letter-spacing:.16em">{profile.dossier.heading}</div>

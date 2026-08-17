@@ -78,14 +78,14 @@ const entryPoints: EntryPoint[] = [
     name: "Personnel",
     async open(page) {
       await gotoReady(page, "/personnel");
-      await page.keyboard.press("Enter"); // -> Enaimco's employment types
-      await page.keyboard.press("Enter"); // -> that type's role files
+      await page.keyboard.press("Enter"); // -> enaimco/
+      await page.keyboard.press("Enter"); // -> enaimco/software-developer/ (role.md selected first)
       await page.keyboard.press("Enter"); // -> editor
       await expect(scroller(page)).toBeVisible();
     },
     async assertParentVisible(page) {
       await expect(page.locator('[data-testid="personnel-path"]')).toHaveText(
-        "/Users/Shev/Experience/Enaimco/Full-Time/",
+        "/Users/Shev/Experience/enaimco/software-developer/",
       );
     },
   },
