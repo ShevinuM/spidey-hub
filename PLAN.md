@@ -85,7 +85,7 @@ Each phase: fresh `executor` (pointed at this file + its phase only, staging onl
 
 ### Phase 5 — tmux advanced bindings (item 12)
 - [ ] 5.1 Status-line prompt infrastructure (message/prompt/confirm states in StatusBar, templates in `site.yaml`).
-- [ ] 5.2 `,` rename (Enter/Esc), `&` kill-window (y/n; last-window refusal; next-window switch), `x` kill-pane (Builds panel removal; single-pane → kill-window flow).
+- [ ] 5.2 `,` rename (Enter/Esc), `&` kill-window (y/n; last-window refusal; next-window switch), `x` kill-pane (Builds panel removal; single-pane → kill-window flow). Also `Ctrl-b Ctrl-b` = send-prefix (tmux default binding): while armed, a second Ctrl-b dispatches a LITERAL Ctrl-b down the normal view chain — this makes vim's Ctrl-b page-back reachable in the editor (Phase 3 shipped it engine-complete but key-unreachable); e2e-test it and update its help.yaml row.
 - [ ] 5.3 `[` copy-mode overlay (data-copy-source per view: editor buffer, builds focused panel, personnel list, profile text, tracker readout, help) with vim nav, v/y/Enter yank → paste buffer + clipboard, q/Esc exit; `]` paste into active input else message.
 - [ ] 5.4 Extend `tmux.spec.ts`: rename reflected in status bar; kill-window removes + switches + refuses last; kill-pane removes builds panel and resets on remount; copy-mode yank → paste into grep query round-trips the text; verify help.yaml rows for these bindings are accurate now they exist.
 - Verification: e2e green; prefix keys WORK while grep is open (rule retired in Phase 1 — `Ctrl-b ]` must paste into the grep query); mobile guard untouched (desktop-gated); `pnpm check`.
