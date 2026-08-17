@@ -7,7 +7,7 @@ order: 0
 # Software Developer — Full-Time
 Enaimco · St. John's, NL · Jul 2026 – Present
 
-TypeScript · Python · HCL · YAML · Fastify · Node · MongoDB · Redis · Azure · Terraform
+`typescript` `python` `hcl` `yaml` `fastify` `node` `mongodb` `redis` `azure` `terraform`
 
 ## Features / Areas Worked In
 - Release + Automated E2E Testing

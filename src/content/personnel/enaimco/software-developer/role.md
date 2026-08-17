@@ -7,7 +7,7 @@ order: 0
 # Software Developer
 Enaimco · St. John's, NL · May 2024 – Present
 
-Python · TypeScript · Fastify · Azure · MongoDB · Terraform · Docker · Playwright · New Relic
+`python` `typescript` `fastify` `azure` `mongodb` `terraform` `docker` `playwright` `new-relic`
 
 ## Summary
 - Cut deploy time from 15+ minutes to under 1 by rebuilding CI/CD around cached builds and containers.

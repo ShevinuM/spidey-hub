@@ -132,7 +132,7 @@ test("fetchCommitFileContent returns {kind:'binary'} for an oversized file", asy
     json: async () => ({ size: 500_000, encoding: "base64", content: "" }),
   })) as unknown as typeof fetch;
   try {
-    const result = await fetchCommitFileContent("SafePass", "big.bin", undefined, "deadbeef");
+    const result = await fetchCommitFileContent("transcript-tts", "big.bin", undefined, "deadbeef");
     assert.deepEqual(result, { kind: "binary" });
   } finally {
     globalThis.fetch = originalFetch;
@@ -144,7 +144,7 @@ test("fetchCommitFileContent returns null on a 403 (rate limit), never throws", 
   const originalFetch = globalThis.fetch;
   globalThis.fetch = (async () => ({ ok: false, status: 403 })) as unknown as typeof fetch;
   try {
-    const result = await fetchCommitFileContent("SafePass", "README.md", "deadbeef", "deadbeef");
+    const result = await fetchCommitFileContent("transcript-tts", "README.md", "deadbeef", "deadbeef");
     assert.equal(result, null);
   } finally {
     globalThis.fetch = originalFetch;
@@ -161,7 +161,7 @@ test("fetchCommitFileContent decodes a real base64 text payload into lines", asy
     json: async () => ({ size: text.length, encoding: "base64", content: b64 }),
   })) as unknown as typeof fetch;
   try {
-    const result = await fetchCommitFileContent("SafePass", "README.md", "deadbeef", "deadbeef");
+    const result = await fetchCommitFileContent("transcript-tts", "README.md", "deadbeef", "deadbeef");
     assert.deepEqual(result, { kind: "text", lines: ["# héllo", "second line"] });
   } finally {
     globalThis.fetch = originalFetch;

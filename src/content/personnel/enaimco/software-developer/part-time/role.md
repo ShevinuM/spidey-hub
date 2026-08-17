@@ -7,7 +7,7 @@ order: 1
 # Software Developer — Part-Time
 Enaimco · St. John's, NL · Sep 2025 – Jul 2026
 
-TypeScript · Python · HCL · YAML · Node · MongoDB · Azure · Terraform
+`typescript` `python` `hcl` `yaml` `node` `mongodb` `azure` `terraform`
 
 ## Features / Areas Worked In
 - Document Management

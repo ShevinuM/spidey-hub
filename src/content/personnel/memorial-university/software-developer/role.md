@@ -7,7 +7,7 @@ order: 0
 # Software Developer
 Diag Lab, Memorial University · Remote, Canada · Sep 2023 – Present
 
-Django · Python · PostgreSQL · Linux · Git · GitLab
+`django` `python` `postgresql` `linux` `git` `gitlab`
 
 ## Highlights
 - Worked with 2 research teams across 2 major universities in Canada to support medical image analysis.

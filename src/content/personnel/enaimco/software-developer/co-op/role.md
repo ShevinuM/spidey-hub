@@ -7,7 +7,7 @@ order: 2
 # Software Developer — Co-op
 Enaimco · St. John's, NL · May 2024 – Sep 2025
 
-TypeScript · Python · HCL · YAML · Node · MongoDB · Azure · Terraform
+`typescript` `python` `hcl` `yaml` `node` `mongodb` `azure` `terraform`
 
 ## Highlights
 - Managed 50+ resources across 10+ resource types on Azure, maintaining 7 production environments with maximum uptime.

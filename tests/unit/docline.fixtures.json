@@ -85,55 +85,74 @@
     },
     {
       "kind": "personnel",
-      "path": "src/content/personnel/Enaimco/Full-Time/software-developer.md",
+      "path": "src/content/personnel/enaimco/software-developer/full-time/role.md",
       "kinds": [
         "h",
         "m",
         "p",
-        "p",
-        "p",
-        "p",
-        "h",
-        "b",
-        "b",
-        "b",
+        "c",
         "p",
         "h",
-        "c"
+        "b",
+        "p",
+        "p",
+        "b",
+        "p",
+        "p"
       ]
     },
     {
       "kind": "personnel",
-      "path": "src/content/personnel/Enaimco/Part-Time/software-developer.md",
+      "path": "src/content/personnel/enaimco/software-developer/part-time/role.md",
       "kinds": [
         "h",
         "m",
         "p",
-        "p",
+        "c",
         "p",
         "h",
         "b",
+        "p",
         "b",
         "p",
-        "h",
-        "c"
+        "b",
+        "p",
+        "p"
       ]
     },
     {
       "kind": "personnel",
-      "path": "src/content/personnel/Enaimco/Co-op/software-developer.md",
+      "path": "src/content/personnel/enaimco/software-developer/co-op/role.md",
       "kinds": [
         "h",
         "m",
         "p",
-        "p",
+        "c",
         "p",
         "h",
         "b",
         "b",
+        "b",
+        "b",
+        "b",
+        "b",
+        "b",
         "p",
         "h",
-        "c"
+        "b",
+        "p",
+        "b",
+        "p",
+        "p",
+        "p",
+        "b",
+        "p",
+        "p",
+        "b",
+        "p",
+        "p",
+        "p",
+        "p"
       ]
     }
   ]
