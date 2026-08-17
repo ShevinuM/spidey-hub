@@ -1,5 +1,11 @@
 [
   {
+    "sha8": "e3d098ef",
+    "msg": "Digest for 2026-08-17",
+    "html_url": "https://github.com/ShevinuM/daily-tech-digest/commit/e3d098ef468d3a85b22ee934e74f1f598caeaed6",
+    "initials": "Da"
+  },
+  {
     "sha8": "91d8a786",
     "msg": "Digest for 2026-08-16",
     "html_url": "https://github.com/ShevinuM/daily-tech-digest/commit/91d8a7862da4ff3bfae219b81e98b8db937cbaca",
@@ -82,11 +88,5 @@
     "msg": "got rid of paywall rule (for now)",
     "html_url": "https://github.com/ShevinuM/daily-tech-digest/commit/96e47a5ee07f22d91e01f953005d4716b529119a",
     "initials": "Sh"
-  },
-  {
-    "sha8": "a22f3197",
-    "msg": "Digest for 2026-08-06",
-    "html_url": "https://github.com/ShevinuM/daily-tech-digest/commit/a22f3197fa3fbf6fa7b8448f2bff914906c0ee1c",
-    "initials": "Da"
   }
 ]
