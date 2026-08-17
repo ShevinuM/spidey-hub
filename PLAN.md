@@ -136,7 +136,7 @@ Real Builds content differs from the prototype's fabricated sample data, so pixe
 - **Verify**: e2e: Ctrl-b 2 → personnel, Ctrl-b n/p cycle in order, Ctrl-b d → dashboard, prefix timeout (advance clock 2.1s, then `2` types/nothing happens instead of switching), Ctrl-b ignored while grep open; gg/G jump first/last in builds files + personnel + grep; iPhone-15-ish emulation (390×844, coarse pointer): card visible with spec copy, terminal hidden, pressing `b` does nothing, no key listener attached (assert via evaluating a marker), github link present; 1512×945 fine-pointer: card hidden. README exists and names every workflow above (verifier reads it).
 
 ### Phase 10 — Full acceptance run
-- [ ] Verifier-only phase (no new code unless failures loop back to the owning phase's executor).
+- [x] Verifier-only phase (no new code unless failures loop back to the owning phase's executor).
 - **Verify**: acceptance criteria below, all runs from clean checkout state (`git status` clean → `pnpm install && pnpm generate && pnpm check && pnpm build && pnpm test:visual && pnpm test:e2e`).
 
 ## Verification commands (canonical)
