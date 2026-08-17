@@ -1,8 +1,12 @@
 // Shared capture pipeline (PLAN.md "Capture pipeline (identical for
 // goldens and impl)"). Both tests/visual/capture-goldens.mjs (Phase 1,
-// captures from the vendored prototype reference) and, from Phase 3,
-// tests/visual/identical.spec.ts (captures from the real Astro build) call
-// `captureState()` below so the two sides can never drift apart.
+// captures from the vendored prototype reference — now historical/guarded,
+// see that file's header) and tests/visual/identical.spec.ts (captures
+// from the real Astro build) call `captureState()` below so the two sides
+// can never drift apart. `captureBootState()` (PLAN.md Phase 6 item 6.1),
+// further down this file, is a second, deliberately SEPARATE capture
+// function for the two boot-sequence recipes only — see its own header
+// comment for why boot needs a different clock-control sequence entirely.
 //
 // Order of operations, and why (see tests/visual/README-PIPELINE.md for the
 // long version):
@@ -34,7 +38,7 @@
 // recipes.ts) — comfortably under 60s, so the displayed minute stays
 // "23:34" throughout, matching the prototype's hardcoded text and (from
 // Phase 3) the implementation's live clock at this same fixed instant.
-import { CLOCK_TIME, RUN_FOR_MS } from "./recipes.ts";
+import { BOOT_HARD_STOP_MS, CLOCK_TIME, RUN_FOR_MS } from "./recipes.ts";
 import { BOOT_SEEN_STORAGE_KEY } from "../../src/lib/bootState.ts";
 
 /**
@@ -87,40 +91,6 @@ export const SIGNAL_ROW_SELECTOR =
   'div[style*="border-top: 1px solid rgba(224, 69, 60, 0.25)"]';
 
 /**
- * Selector for the status-bar windows-list container (`1:builds
- * 2:personnel 3:retina-v 4:profile`), masked only for the "08-tracker"
- * recipe.
- *
- * PLAN.md bug fix 1 (approved deviation): the unpatched prototype renders
- * the active Retina-V window appended *after* profile
- * ("…4:profile 3:retina-v*" — Homepage.dc.html lines 451/454) instead of in
- * numeric order. The vendored reference is intentionally NOT patched for
- * this (README-PATCH.md's contract is exactly two edits, both required
- * only by the no-network constraint — this bug has no such requirement),
- * so the committed 08-tracker goldens faithfully reproduce the prototype's
- * buggy order while the real implementation renders the fixed order
- * ("1:builds 2:personnel 3:retina-v* 4:profile" — StatusBar.svelte). That
- * is a structural, not antialiasing, pixel difference (~2370px, over the
- * plan's 0.0005 maxDiffPixelRatio relaxation ceiling), so it cannot be
- * reconciled by threshold relaxation — masking this one row is the only
- * option, mirroring the SIGNAL_ROW_SELECTOR precedent above. No coverage
- * is lost: tests/e2e/nav.spec.ts asserts the exact windows text
- * ("1:builds 2:personnel 3:retina-v* 4:profile") for the tracker view via
- * a real DOM read, independent of any screenshot.
- *
- * Matched two ways because the two sides serialize the same authored
- * inline style differently: the prototype is React-rendered, so its style
- * attribute is normalized to `color: rgb(95, 198, 180)` (space after each
- * colon, rgb() functional notation); the real implementation is Astro-SSR'd
- * static markup, so it keeps the authored `color:#5fc6b4` verbatim (but
- * carries `data-testid="status-bar-windows"`, which the prototype has no
- * equivalent of). A comma-list matches whichever branch applies per side
- * and de-duplicates automatically if a page somehow matched both.
- */
-export const STATUS_BAR_WINDOWS_SELECTOR =
-  '[data-testid="status-bar-windows"], div[style*="color: rgb(95, 198, 180)"]';
-
-/**
  * @param {import('@playwright/test').Page} page
  * @param {string} url
  * @param {import('./recipes.ts').Recipe} recipe
@@ -129,10 +99,12 @@ export const STATUS_BAR_WINDOWS_SELECTOR =
 export async function captureState(page, url, recipe) {
   // PLAN.md Phase 5B item 5B.5: pre-seed the boot-seen sessionStorage flag
   // BEFORE navigation so BootSequence.svelte's ~4.6s unskippable sequence
-  // never runs during a golden capture — these 10 (soon 12, see
-  // recipes.ts's `bootRecipes`, captured separately once Phase 6 wires
-  // their own path) recipes all want the READY dashboard/view state,
-  // exactly as before this feature existed. Harmless against the vendored
+  // never runs during a golden capture — every recipe THIS function
+  // captures (the original 10 plus `extraRecipes`/`cmdlineRecipes`) wants
+  // the READY dashboard/view state, exactly as before boot existed. The
+  // two `bootRecipes` entries are captured by `captureBootState()` below
+  // instead, which deliberately does the OPPOSITE (no pre-seed — its whole
+  // point is a genuine, unskipped boot). Harmless against the vendored
   // prototype reference (capture-goldens.mjs's other caller): that page
   // has no sessionStorage-aware boot code at all, so the flag is simply
   // unread there.
@@ -183,24 +155,113 @@ export async function captureState(page, url, recipe) {
     }
   }
 
-  const isTracker = recipe.name === "08-tracker";
-  const statusBarWindows = page.locator(STATUS_BAR_WINDOWS_SELECTOR);
-  if (isTracker) {
-    // See STATUS_BAR_WINDOWS_SELECTOR's comment: bug fix 1 makes this row
-    // structurally differ between the (deliberately unpatched) prototype
-    // golden and the fixed implementation, in every tracker-state capture.
-    const windowsCount = await statusBarWindows.count();
-    if (windowsCount !== 1) {
-      throw new Error(`08-tracker mask selector matched windows=${windowsCount}, expected 1`);
-    }
-  }
-
+  // PLAN.md Phase 6 item 6.1 hazard note, resolved: "08-tracker" used to
+  // also mask the status-bar windows-list row, because the vendored
+  // prototype's UNPATCHED window-ordering bug (Retina-V appended after
+  // Profile instead of in numeric order) made that row structurally differ
+  // from our bug-fixed implementation in every tracker capture. Since
+  // PLAN.md's re-baseline (6.2) retires the prototype as the goldens'
+  // authority — both sides of every future comparison are OUR OWN
+  // implementation — that discrepancy no longer exists: the row is static,
+  // deterministic text with nothing else timing-sensitive about it, so the
+  // mask (and its former selector/assertion) is simply deleted rather than
+  // carried forward as dead weight. tests/e2e/nav.spec.ts still asserts the
+  // exact windows text for the tracker view independently of any
+  // screenshot, so no coverage is lost. (The SIGNAL_ROW_SELECTOR mask
+  // above stays: that one exists because the Profile meter measures REAL
+  // load-timing data even under a faked Date, which is still true
+  // self-vs-self.)
   const mask = [signalRow];
-  if (isTracker) mask.push(statusBarWindows);
 
   return page.screenshot({
     animations: "disabled",
     caret: "hide",
     mask,
+  });
+}
+
+/**
+ * Boot-sequence golden capture (PLAN.md Phase 6 item 6.1/6.2, recipes.ts's
+ * `bootRecipes`) — a SEPARATE function from `captureState()` above, not a
+ * branch inside it, because boot recipes need a fundamentally different
+ * clock-control sequence to be deterministic, discovered by direct
+ * empirical probing (isolated `page.clock` experiments against both a bare
+ * `setInterval` and the real BootSequence.svelte component, each run
+ * repeatedly to separate signal from one-off jitter) rather than assumed
+ * from `captureState()`'s existing "install, goto, runFor" shape:
+ *
+ * 1. **`page.clock.install()` does NOT itself freeze `Date.now()`** — real
+ *    wall-clock time keeps advancing after install until the FIRST
+ *    explicit control call (`runFor`/`pauseAt`/etc). Measured directly: a
+ *    plain `page.goto()` against this app's own dev server let 27-61ms of
+ *    real time leak into `Date.now()` before any control call, purely from
+ *    page-load/hydration jitter — irrelevant to `captureState()`'s other
+ *    ten recipes (their `RUN_FOR_MS` dwarfs it and nothing they render is
+ *    sensitive to sub-second elapsed precision) but fatal to boot's
+ *    elapsed-driven pct/phase/handshake/log math, whose `t0` is captured
+ *    inside BootSequence.svelte's own mount effect the instant it runs —
+ *    proven by a raw `clock.runFor(offsetMs)` (no pre-navigation freeze)
+ *    landing on a DIFFERENT `data-elapsed` on three separate runs (1898,
+ *    1960, 1963 for a nominal 2000ms target). The fix: call
+ *    `page.clock.pauseAt(<install time>)` as the FIRST action after
+ *    `install()`, BEFORE `page.goto()` — confirmed empirically to pin
+ *    `Date.now()` to that exact instant through navigation, hydration, and
+ *    an arbitrary additional real-time wait (5/5 identical runs, `elapsed`
+ *    landing on the EXACT millisecond target every time thereafter).
+ * 2. **`pauseAt()` only fires timers that already existed at the moment
+ *    it's called — not ones a callback schedules DURING that same jump.**
+ *    BootSequence.svelte's `finish()` (called from inside the tick
+ *    interval or the hard-stop timeout) itself schedules the outro's
+ *    `setTimeout(…, OUT_MS)`; a single `pauseAt(t0 + <far past hard-stop>)`
+ *    measurably never fires that nested timeout (confirmed: `boot-sequence`
+ *    stayed mounted and `data-elapsed` stuck at `dur()` across a sweep of
+ *    ten offsets from `dur()` up to `dur() + 2400`ms). Reaching the
+ *    post-outro "ready" terminal state therefore needs TWO sequential
+ *    `pauseAt` calls: one just past the hard-stop (so `finish()` runs and
+ *    schedules the outro timer), then a second past the outro hold (so
+ *    THAT timer, now pre-existing, fires) — confirmed deterministic across
+ *    repeated runs.
+ *
+ * Neither hazard is specific to this app's code — both are read straight
+ * off Playwright's Clock API's own documented/observed semantics — so any
+ * `clockOffsetMs` past `BOOT_HARD_STOP_MS` (recipes.ts) is staged through
+ * automatically; offsets at or before it resolve in the single final
+ * `pauseAt` alone.
+ *
+ * No boot-seen sessionStorage pre-seed here (the opposite of
+ * `captureState()`) — a boot golden's entire point is to capture a GENUINE,
+ * unskipped boot.
+ *
+ * @param {import('@playwright/test').Page} page
+ * @param {string} url
+ * @param {import('./recipes.ts').BootRecipe} bootRecipe
+ * @returns {Promise<Buffer>} PNG bytes
+ */
+export async function captureBootState(page, url, bootRecipe) {
+  await page.route("**/api.github.com/**", (route) => route.abort());
+
+  await page.clock.install({ time: CLOCK_TIME });
+  const t0 = new Date(CLOCK_TIME).getTime();
+  await page.clock.pauseAt(t0);
+
+  await page.goto(url, { waitUntil: "load" });
+  await page
+    .locator('[data-testid="boot-sequence"][data-boot-running="true"]')
+    .waitFor({ state: "attached", timeout: 15000 });
+
+  if (bootRecipe.clockOffsetMs > BOOT_HARD_STOP_MS) {
+    // Stage through the hard-stop first so finish()'s outro setTimeout has
+    // actually been SCHEDULED (not just due) before the final jump — see
+    // this function's header comment, hazard 2.
+    await page.clock.pauseAt(t0 + BOOT_HARD_STOP_MS + 10);
+  }
+  await page.clock.pauseAt(t0 + bootRecipe.clockOffsetMs);
+
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForLoadState("networkidle");
+
+  return page.screenshot({
+    animations: "disabled",
+    caret: "hide",
   });
 }

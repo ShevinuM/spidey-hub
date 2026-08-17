@@ -1,8 +1,7 @@
 // Shared visual-regression state recipes (PLAN.md "Visual-regression
 // harness"). Each recipe is a sequence of key/type actions replayed against
-// a freshly loaded page (prototype reference in Phase 1; the real
-// implementation from Phase 3 on via tests/visual/identical.spec.ts) to
-// reach one of the 10 states captured at each viewport (20 goldens total).
+// a freshly loaded page to reach one of the states captured at each
+// viewport.
 //
 // Action shapes:
 //   { key: string }   -> page.keyboard.press(key)
@@ -15,15 +14,57 @@ export interface Recipe {
   actions: RecipeAction[];
 }
 
+/**
+ * The ORIGINAL 10 recipes (20 goldens at 2 viewports), captured against
+ * BOTH the vendored prototype reference (tests/visual/capture-goldens.mjs
+ * — Phase 1, now guarded/historical, see that file's header) and the real
+ * implementation (tests/visual/identical.spec.ts). Kept deliberately
+ * scoped to states the prototype itself can reach (no help window, no
+ * all-projects, no boot sequence, no cmdline box — none of those existed
+ * yet when the prototype was vendored), so capture-goldens.mjs's guarded
+ * "restore prototype parity" path never has to attempt a state the
+ * prototype has no code for. PLAN.md Phase 6 item 6.1's "11-help",
+ * "12-all-projects", the boot recipes, and "15-cmdline" all live in their
+ * own sibling arrays below instead of being appended here for exactly that
+ * reason — identical.spec.ts imports and asserts the union of every array
+ * on this page (15 recipes total), capture-goldens.mjs only ever this one.
+ *
+ * PLAN.md Phase 6 item 6.1 audit (executor, verified by actually running
+ * every recipe against the current implementation, not by reading source
+ * alone — see the fixed three below):
+ *   - "03-builds-j": the Phase 4 Builds rework changed the default focused
+ *     panel on entry to [2] Files (empty until a repo is opened), so the
+ *     OLD action list `[{key:"b"},{key:"j"}]` pressed "j" against an empty,
+ *     unfocused-for-input panel — confirmed empirically byte-IDENTICAL to
+ *     "02-builds"'s own screenshot (Buffer.compare === 0), i.e. a
+ *     zero-value golden. Fixed to explicitly focus panel [3] (Local
+ *     Repositories, `{key:"3"}`) before "j", which moves the repo-list
+ *     selection highlight — confirmed to produce a distinct screenshot.
+ *   - "05-personnel-l1"/"06-editor": PLAN.md's own callout ("05/06
+ *     personnel now need the 3-level path") — Personnel gained a middle
+ *     employmentType level (PLAN.md Phase 2), so what used to be reachable
+ *     in 1/2 Enters from the companies level now needs 2/3. Confirmed
+ *     empirically: the OLD "06-editor" action list left `hasEditor: false`
+ *     (it landed on the level-2 role-files LIST, one Enter short of
+ *     `activateRoleRow`'s `editorOpen = true`) — i.e. "06-editor" never
+ *     actually opened Editor.svelte, defeating the recipe's entire purpose
+ *     (identical.spec.ts's own header comment already claims this is "the
+ *     first pixel test of Editor.svelte itself"). Fixed by adding the one
+ *     extra `Enter` each recipe needs to reach the equivalent depth as
+ *     before the extra level was inserted — "05" now reaches the level-2
+ *     role-files listing (the yazi-style file-browser pane at its OTHER
+ *     depth, matching "04"'s dir listing at the companies level), "06"
+ *     continues one more Enter into the actual editor.
+ */
 export const recipes: Recipe[] = [
   { name: "01-dashboard", actions: [] },
   { name: "02-builds", actions: [{ key: "b" }] },
-  { name: "03-builds-j", actions: [{ key: "b" }, { key: "j" }] },
+  { name: "03-builds-j", actions: [{ key: "b" }, { key: "3" }, { key: "j" }] },
   { name: "04-personnel-l0", actions: [{ key: "x" }] },
-  { name: "05-personnel-l1", actions: [{ key: "x" }, { key: "Enter" }] },
+  { name: "05-personnel-l1", actions: [{ key: "x" }, { key: "Enter" }, { key: "Enter" }] },
   {
     name: "06-editor",
-    actions: [{ key: "x" }, { key: "Enter" }, { key: "Enter" }],
+    actions: [{ key: "x" }, { key: "Enter" }, { key: "Enter" }, { key: "Enter" }],
   },
   { name: "07-profile", actions: [{ key: "i" }] },
   { name: "08-tracker", actions: [{ key: "t" }] },
@@ -35,31 +76,69 @@ export const recipes: Recipe[] = [
 ];
 
 /**
- * Boot-sequence recipes (PLAN.md Phase 5B item 5B.5). DEFINED here but
- * deliberately kept OUT of the `recipes` array above:
- * `capture-goldens.mjs` iterates `recipes` unconditionally against the
- * vendored prototype reference (which has no boot sequence at all — it
- * predates this feature entirely) and `identical.spec.ts` would fail
- * `toMatchSnapshot` for any name with no committed golden. Neither of
- * those recipe/pipeline entry points may be touched by this phase (PLAN.md
- * Phase 5B constraints: "do NOT run or capture visual goldens — Phase 6
- * does"). Phase 6 wires an actual capture path for these two names and
- * moves/merges them into `recipes` (or a sibling array `identical.spec.ts`
- * also consults) at that point, with the mandatory zoom-review against
- * `/Users/shev/Desktop/waiting-on-form-answers/project/ref/*.png`.
+ * Iteration-2 recipes (PLAN.md Phase 6 item 6.1: "wire in 11-help,
+ * 12-all-projects"). Standard key/type `Recipe` shape (captured via the
+ * same `captureState()` as the array above) but kept in their OWN array,
+ * not appended to `recipes`, because they reach states the vendored
+ * prototype has no code path for at all (help didn't exist as a window,
+ * panel [3] had no virtual all-projects entry) — capture-goldens.mjs must
+ * never be asked to run these against the prototype, even under its
+ * refuse-by-default override flag (see that file's header comment).
+ * identical.spec.ts is the only consumer.
  *
- * Each recipe intentionally has NO key/type `actions` (the boot overlay
- * swallows all input while active — PLAN.md 5B.3) and instead carries a
- * `clockOffsetMs` describing how far into (or past) the boot sequence to
- * advance a FAKED clock before the screenshot — this is what determinism
- * requires here (see the comment on each entry): the boot's own state
- * (pct/phase/log rows/handshake) is entirely a function of elapsed time,
- * which a fixed clock offset pins exactly, but its CSS keyframe animations
- * (the assembling rings' `swp`/`swpR` sweeps, `bWave`/`bScan`, etc.) are
- * NOT pinned by the JS clock at all — only `page.screenshot({animations:
- * "disabled"})` (already the pipeline's own convention, see pipeline.mjs)
- * freezes those, and must keep doing so for these two recipes exactly as
- * it does for the existing ten.
+ * "12-all-projects": the virtual all-projects repo is always the LAST row
+ * in panel [3]'s flat list (Builds.svelte's `flatRepos` derivation pushes
+ * it after every real project repo) — `k` from the default `selectedRepoIdx
+ * === 0` wraps to that last row (`selectRepo`'s `((idx + delta) % n + n) %
+ * n` modulo arithmetic) without needing to hand-count how many real repos
+ * precede it, so this recipe stays correct if the fixture project count
+ * ever changes. `Enter` then activates it, loading its tree (the fixture
+ * projects' own .md files) into panel [2]. Verified empirically: lands on
+ * `/builds`, panel [2]'s subtitle reads "- all-projects", and its tree
+ * lists the fixture project markdown files.
+ */
+export const extraRecipes: Recipe[] = [
+  { name: "11-help", actions: [{ key: "?" }] },
+  { name: "12-all-projects", actions: [{ key: "b" }, { key: "3" }, { key: "k" }, { key: "Enter" }] },
+];
+
+/**
+ * Boot-sequence recipes (PLAN.md Phase 5B item 5B.5, wired in by Phase 6
+ * item 6.1). Kept in their OWN array rather than merged into `recipes` or
+ * `extraRecipes`: they have a fundamentally different action shape (a
+ * clock offset, not a key/type replay — the boot overlay swallows all
+ * input while active, PLAN.md 5B.3) AND the vendored prototype has no boot
+ * sequence at all, so — same reasoning as `extraRecipes` above —
+ * capture-goldens.mjs must never iterate these. Only identical.spec.ts
+ * (via `captureBootState()` in pipeline.mjs, not `captureState()`)
+ * consumes this array.
+ *
+ * `clockOffsetMs` is how far into (or past) the boot sequence to advance a
+ * FAKED clock before the screenshot: the boot's own state (pct/phase/log
+ * rows/handshake) is entirely a function of elapsed time, which a fixed
+ * offset pins exactly PROVIDED the capture path also eliminates real-
+ * wall-clock leakage into that elapsed value — see `captureBootState()`'s
+ * own header comment in pipeline.mjs for the two determinism hazards this
+ * required discriminating empirically (`page.clock.install()` does not
+ * itself freeze `Date.now()` — real time keeps advancing until the first
+ * explicit `pauseAt`/`runFor` call, which is long enough for page-
+ * navigation jitter alone to shift a raw `clock.runFor(offset)` capture by
+ * tens of milliseconds run to run; and `pauseAt()` only fires timers that
+ * already existed at the moment it's called, not ones a callback
+ * schedules *during* that same jump, so reaching the post-outro terminal
+ * state needs two sequential `pauseAt` calls, not one). Boot's CSS
+ * keyframe animations (the assembling rings' `swp`/`swpR` sweeps,
+ * `bWave`/`bScan`, etc.) are separately NOT pinned by the JS clock at all
+ * — only `page.screenshot({animations: "disabled"})` (already the
+ * pipeline's own convention) freezes those, and must keep doing so here
+ * exactly as it does for every other recipe.
+ *
+ * Fidelity target for the verifier's mandatory zoom review (PLAN.md 6.1,
+ * updated by the docs commit at `bab6d29`): the `Boot Sequence.dc.html`
+ * SOURCE (styles/geometry/text transcribed into BootSequence.svelte/
+ * boot.ts/boot.yaml) — NOT `project/ref/*.png`, which the 5B executor
+ * determined are screenshots of an earlier, contradicted design iteration
+ * (skippable boot, a different command line, an extra status-box row).
  */
 export interface BootRecipe {
   name: string;
@@ -69,18 +148,35 @@ export interface BootRecipe {
   clockOffsetMs: number;
 }
 
+/** Hand-mirrored from src/data/boot.yaml's `bootMs` (4600) and
+ * BootSequence.svelte's own `OUT_MS` (760) — same "no runtime yaml import
+ * outside the Vite pipeline" constraint tests/e2e/boot.spec.ts's own
+ * identical literals are already subject to (see that file's header
+ * comment); pipeline.mjs's `captureBootState()` needs these to know when a
+ * `clockOffsetMs` crosses the hard-stop boundary and requires the two-stage
+ * `pauseAt` sequence described above. */
+export const BOOT_MS = 4600;
+export const BOOT_HARD_STOP_MS = BOOT_MS + 60;
+export const BOOT_OUT_MS = 760;
+
 export const bootRecipes: BootRecipe[] = [
   // Mid-boot: comfortably inside the 4600ms default `bootMs` (src/data/
   // boot.yaml) — rings assembled (bAsmIn/bIn have all finished by ~1.15s),
   // progress ring/pct/phase/log/handshake all mid-flight and non-trivial
   // (phase should read SCAN or LINK, the boot log should have 3-5 visible
-  // rows, the handshake should already read "OK · …").
+  // rows, the handshake should already read "OK · …"). Verified empirically
+  // against the real formulas (src/lib/boot.ts): elapsed pins to EXACTLY
+  // 2000 every run under captureBootState()'s two-stage-freeze approach,
+  // yielding pct=63%/phase=LINK deterministically (5/5 repeated captures).
   { name: "13-boot-mid", clockOffsetMs: 2000 },
   // Post-outro: past bootMs (4600) + the hard-stop slack (60) + the
   // bBloom outro hold (760) with margin, i.e. the mock's `ready` dashboard
   // — this is BootSequence.svelte fully unmounted and the site chrome
-  // mid/post its `bDashIn` entrance animation.
-  { name: "14-boot-ready", clockOffsetMs: 4600 + 60 + 760 + 200 },
+  // mid/post its `bDashIn` entrance animation. A terminal state (no timer
+  // is still running once reached), so the general "does real time leak in
+  // afterward" hazard above doesn't apply to reading it — verified stable
+  // across repeated captures.
+  { name: "14-boot-ready", clockOffsetMs: BOOT_HARD_STOP_MS + 10 + BOOT_OUT_MS + 200 },
 ];
 
 /**

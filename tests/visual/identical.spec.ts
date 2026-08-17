@@ -5,73 +5,52 @@
 // (tests/visual/pipeline.mjs) used to produce tests/visual/goldens/, so the
 // two sides can never structurally drift apart.
 //
-// Phase 3 wired "01-dashboard" (dashboard/wallpaper/status bar/toasts).
-// Phase 4 adds "08-tracker" (tracker view chrome: full-opacity wallpaper +
-// back pill). Phase 6 adds "04-personnel-l0"/"05-personnel-l1" (the yazi
-// file-browser pane at both levels) and "06-editor" (the first pixel test
-// of Editor.svelte itself — Phase 5's 02/03 never opened it). Phase 8 adds
-// "09-grep-empty"/"10-grep-query" (GrepOverlay.svelte, captured over the
-// dashboard — both recipes press "/" from the home view). Later phases add
-// their own recipe name to RECIPE_NAMES as their views land; the recipes
-// list itself (tests/visual/recipes.ts) already has all 10 entries so no
-// renumbering is needed later.
+// PLAN.md Phase 6 item 6.1 wires in all four recipe arrays from recipes.ts —
+// 15 recipes total, 30 goldens across both viewports:
+//   - `recipes` (10): the original set, re-baselined against our OWN
+//     implementation as of Phase 6 (see recipes.ts's header comment for the
+//     three action-list fixes this required — "03-builds-j"/"05-personnel-
+//     l1"/"06-editor" — found by actually running them, not by inspection).
+//   - `extraRecipes` (2): "11-help", "12-all-projects" — states the
+//     vendored prototype never had.
+//   - `cmdlineRecipes` (1): "15-cmdline" — the Phase 5C floating command box.
+//   - `bootRecipes` (2): "13-boot-mid"/"14-boot-ready" — captured through a
+//     SEPARATE function (`captureBootState()`, not `captureState()`) because
+//     they need a different, boot-specific clock-control sequence to be
+//     deterministic — see that function's header comment in pipeline.mjs.
+//
+// This suite is now the goldens' SOLE authority (PLAN.md 6.2's
+// `--update-snapshots` re-baseline): tests/visual/capture-goldens.mjs's
+// vendored-prototype path is retired to historical/guarded status (see its
+// own header comment) and is never run as part of normal development.
 import { expect, test } from "@playwright/test";
-import { recipes } from "./recipes.ts";
-import { captureState } from "./pipeline.mjs";
+import { bootRecipes, cmdlineRecipes, extraRecipes, recipes } from "./recipes.ts";
+import { captureBootState, captureState } from "./pipeline.mjs";
 
-// Recipes wired up so far. Append to this list, in order, as later phases
-// complete their views — do not reorder tests/visual/recipes.ts itself.
-const RECIPE_NAMES = [
-  "01-dashboard",
-  "02-builds",
-  "03-builds-j",
-  "04-personnel-l0",
-  "05-personnel-l1",
-  "06-editor",
-  "07-profile",
-  "08-tracker",
-  "09-grep-empty",
-  "10-grep-query",
-];
-
-const activeRecipes = recipes.filter((r) => RECIPE_NAMES.includes(r.name));
+// The 13 standard (key/type replay) recipes, captured via captureState().
+// bootRecipes are handled by their own describe block below via
+// captureBootState() instead — a different capture function, not just a
+// different recipe shape.
+const keyRecipes = [...recipes, ...extraRecipes, ...cmdlineRecipes];
 
 // PLAN.md "Visual-regression harness": "start maxDiffPixels: 0; if
 // antialiasing noise appears, an executor may relax to at most
 // maxDiffPixelRatio: 0.0005 per shot with a comment justifying it, and the
 // verifier must eyeball the diff images."
 //
-// "02-builds"/"03-builds-j" (Phase 5) each have exactly 1 pixel of diff at
-// both viewports, always at the same spot: the boundary between the "•"
-// bullet glyph and the following space in panel [3]'s third repo row
-// ("dotfiles main ↓4" — Homepage.dc.html's own sample data). The DOM/CSS at
-// that exact spot is byte-identical to the prototype's markup
-// (`<span>{mark}</span> {name}`); the differing pixels are a handful of
-// dim, near-background antialiasing shades (e.g. rgb(84,94,103) vs
-// rgb(32,39,45) — both within a few percent of the panel's own
-// near-black background), consistent across repeated local captures, with
-// no other pixel in either screenshot affected — i.e. Chromium
-// text-rendering/hinting jitter at that specific sub-pixel glyph boundary,
-// not a structural or content difference. 1 px is ~7e-7 of the
-// 1512x945/1920x1080 frame, far under the 0.0005 ceiling.
-// "06-editor" (Phase 6) is the first capture to actually open Editor.svelte
-// (02-builds/03-builds-j never open a file). At both viewports pixelmatch
-// counts exactly 6 diff pixels, all at ONE glyph boundary — the file tab's
-// "▤" icon (top-right) — at the same right-edge column offset in both
-// viewports: x=1238, y=18-23 at 1512x945; x=1646, y=18-23 at 1920x1080 (a
-// vertical run of 6px on one edge column of the glyph). The breadcrumb text
-// ("Enaimco › software-developer-full-time.md") is never flagged by
-// pixelmatch at either viewport. Expected (golden) pixels at that column are
-// near-black background tones (e.g. rgb(30,19,23) through rgb(39,22,25));
-// actual (impl) pixels are a uniform rgb(152,51,46) — a lighter red
-// antialiasing shade one step further into the glyph's edge falloff, with 8
-// immediately adjacent pixels classified as anti-aliasing by pixelmatch and
-// excluded from the count. This is single-glyph AA jitter at one sub-pixel
-// boundary, not a structural or content difference, consistent with the
-// Chromium text-rendering/hinting jitter already documented for
-// 02-builds/03-builds-j above. 6px is ~4.2e-6 of the 1512x945/1920x1080
-// frame, far under the 0.0005 ceiling.
-const RATIO_RELAXED = new Set(["02-builds", "03-builds-j", "06-editor"]);
+// PLAN.md Phase 6 item 6.2 ("revisit RATIO_RELAXED... self-captured
+// baselines should allow tightening to 0"): the PRE-Phase-6 relaxations on
+// "02-builds"/"03-builds-j"/"06-editor" existed to reconcile Chromium AA
+// jitter between the vendored PROTOTYPE reference and our implementation —
+// two visually near-identical but not byte-identical renderers. Now that
+// the goldens are self-baselines (captured from, and compared against, this
+// SAME implementation), that specific rationale is gone; every recipe here
+// starts at `maxDiffPixels: 0` again. Any entry added back to the set below
+// must cite fresh forensics from the actual 6.2 three-run determinism check
+// (which pixels, how many, why — e.g. the README-PIPELINE.md-documented GPU
+// blur-rasterization jitter, which is capture-vs-capture and can in
+// principle still surface here), not the pre-6.2 prototype-skew reasoning.
+const RATIO_RELAXED = new Set<string>([]);
 
 test.describe("visual: implementation vs goldens", () => {
   test.beforeEach(async ({ page }) => {
@@ -82,12 +61,29 @@ test.describe("visual: implementation vs goldens", () => {
     await page.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  for (const recipe of activeRecipes) {
+  for (const recipe of keyRecipes) {
     test(recipe.name, async ({ page, baseURL }) => {
       const png = await captureState(page, baseURL ?? "http://localhost:4322", recipe);
       expect(png).toMatchSnapshot({
         name: `${recipe.name}.png`,
         ...(RATIO_RELAXED.has(recipe.name) ? { maxDiffPixelRatio: 0.0005 } : { maxDiffPixels: 0 }),
+      });
+    });
+  }
+});
+
+// PLAN.md Phase 6 items 6.1/6.2: boot-sequence goldens, captured via
+// captureBootState() (pipeline.mjs) rather than captureState() — see that
+// function's header comment for the clock-control hazards specific to a
+// still-running, elapsed-time-driven overlay that the other 13 recipes
+// (all captured at a settled, boot-already-skipped view) never hit.
+test.describe("visual: boot sequence vs goldens", () => {
+  for (const bootRecipe of bootRecipes) {
+    test(bootRecipe.name, async ({ page, baseURL }) => {
+      const png = await captureBootState(page, baseURL ?? "http://localhost:4322", bootRecipe);
+      expect(png).toMatchSnapshot({
+        name: `${bootRecipe.name}.png`,
+        ...(RATIO_RELAXED.has(bootRecipe.name) ? { maxDiffPixelRatio: 0.0005 } : { maxDiffPixels: 0 }),
       });
     });
   }
