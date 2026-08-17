@@ -279,6 +279,64 @@ for (const entry of entryPoints) {
       await entry.assertParentVisible(page);
     });
 
+    // Regression test (live-reproduced defect, orchestrator ruling): `:`
+    // from an active VISUAL/VISUAL-LINE selection used to leave the
+    // selection alive underneath the box, so a subsequent `:<n>` jump
+    // EXTENDED the selection instead of moving a bare cursor. Phase-3
+    // semantics require the selection to drop to NORMAL AT BOX-OPEN TIME —
+    // asserted immediately after pressing `:`, before typing or executing
+    // any command, so this can't pass by coincidence of the command
+    // itself happening to reset the mode.
+    test("`:` from VISUAL drops the selection to NORMAL at box-open time; :<n> does not extend it", async ({
+      page,
+    }) => {
+      await entry.open(page);
+      const totalLines = await page.locator("[data-line]").count();
+      test.skip(totalLines < 5, "fixture file too short for :5 to be meaningful");
+
+      await page.keyboard.press("v");
+      await page.keyboard.press("l");
+      await page.keyboard.press("l");
+      await page.keyboard.press("l");
+      await expect(modeText(page)).toHaveText("VISUAL");
+      await expect(page.locator('[data-testid="editor-selection"]')).not.toHaveCount(0);
+
+      await page.keyboard.press(":");
+      await expect(cmdlineOverlay(page)).toBeVisible();
+      await expect(modeText(page)).toHaveText("NORMAL");
+      await expect(page.locator('[data-testid="editor-selection"]')).toHaveCount(0);
+
+      await page.keyboard.type("5");
+      await page.keyboard.press("Enter");
+      await expect(cmdlineOverlay(page)).not.toBeVisible();
+      await expect(position(page)).toContainText("5:");
+      await expect(modeText(page)).toHaveText("NORMAL");
+      await expect(page.locator('[data-testid="editor-selection"]')).toHaveCount(0);
+    });
+
+    test("`:` from VISUAL LINE drops the selection to NORMAL at box-open time (shared mode state)", async ({
+      page,
+    }) => {
+      await entry.open(page);
+      const totalLines = await page.locator("[data-line]").count();
+      test.skip(totalLines < 5, "fixture file too short for :5 to be meaningful");
+
+      await page.keyboard.press("V");
+      await page.keyboard.press("j");
+      await expect(modeText(page)).toHaveText("VISUAL LINE");
+      await expect(page.locator('[data-testid="editor-selection"]')).not.toHaveCount(0);
+
+      await page.keyboard.press(":");
+      await expect(cmdlineOverlay(page)).toBeVisible();
+      await expect(modeText(page)).toHaveText("NORMAL");
+      await expect(page.locator('[data-testid="editor-selection"]')).toHaveCount(0);
+
+      await page.keyboard.type("5");
+      await page.keyboard.press("Enter");
+      await expect(position(page)).toContainText("5:");
+      await expect(page.locator('[data-testid="editor-selection"]')).toHaveCount(0);
+    });
+
     test(":w and :wq show a readonly error IN THE BOX and never close the editor", async ({ page }) => {
       await entry.open(page);
       await typeCmdline(page, "w");

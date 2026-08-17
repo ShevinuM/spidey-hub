@@ -553,16 +553,33 @@
       searchQuery = "";
       return true;
     }
-    // `:` is deliberately left UNHANDLED here (PLAN.md Phase 5C): it's the
-    // site-wide floating Cmdline box now, not this component's own pending
-    // state (see runExCommand above). Falling all the way through to
-    // `return false` at the bottom of this function is exactly what's
-    // wanted — Terminal.svelte's delegation chain keeps offering the key to
-    // everything else (grep, which ignores a non-"/" key while closed) and
-    // finally reaches its own fallback opener, which opens the box in "ex"
-    // mode. The `pending === "search"` branch above still runs FIRST on
-    // every keydown, so a literal `:` typed mid-`/search` lands in the
-    // query, never opening the box.
+    // `:` is NOT fully handled here — it's the site-wide floating Cmdline
+    // box now, not this component's own pending state (see runExCommand
+    // above) — but a VISUAL/VISUAL-LINE selection must still be dropped
+    // back to NORMAL AT THE MOMENT the box opens, same as `/` above
+    // (orchestrator ruling after a live-reproduced defect: leaving the
+    // selection alive under the box let a subsequent `:<n>` jump EXTEND it
+    // — span count grew 1->4 — instead of moving a bare cursor with no
+    // selection, which is the Phase-3-faithful behavior). The reset
+    // happens here, at keydown time, NOT inside runExCommand (which only
+    // ever sees the command text after Enter, long after any selection
+    // state would already need to have been cleared).
+    //
+    // Still deliberately `return false` (NOT consumed): Terminal.svelte's
+    // delegation chain must keep offering this exact keydown to everything
+    // else (grep, which ignores a non-"/" key while closed) and finally to
+    // its own fallback opener, which is what actually opens the box in
+    // "ex" mode — only the MODE RESET is this component's job, the key
+    // itself stays unhandled. The `pending === "search"` branch above still
+    // runs FIRST on every keydown, so a literal `:` typed mid-`/search`
+    // lands in the query, never reaching this branch at all.
+    if (key === ":") {
+      if (mode !== "normal") {
+        mode = "normal";
+        visualAnchor = null;
+      }
+      return false;
+    }
     if (mode === "normal" && lower === "n" && lastSearchQuery) {
       const m = nextMatch(searchMatches, cursor, key === "N" ? -1 : 1);
       if (m) setCursor({ line: m.line, col: m.col });
