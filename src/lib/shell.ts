@@ -267,6 +267,32 @@ export interface SessionSummary {
   attached: boolean;
 }
 
+/** PLAN.md Iteration 3 Phase 5 items 5.2/5.3 — one roster row for `tmux ls`
+ * / the `tmux new [-s name]` duplicate check / the `tmux a [-t name]`
+ * missing-session check / bare `tmux a`'s "most recently used unattached
+ * session" pick / `open <view>`'s "does that window still exist" check.
+ * Deliberately its own type (not a re-export of tmux.ts's `Session`) —
+ * shell.ts stays a zero-Svelte/zero-tmux.ts-dependency pure module (same
+ * "structurally equivalent, not imported" convention `FsEntry` already
+ * documents against repoTree.ts/grep.ts) — the (impure) caller builds one
+ * of these per live `Session` on every keystroke. */
+export interface SessionRosterEntry {
+  id: string;
+  name: string;
+  windowCount: number;
+  createdAt: number;
+  attached: boolean;
+  /** Mirrors tmux.ts's `Session.lastAttachedSeq` — a logical recency
+   * counter, NOT a clock read (see that field's own comment on why: a
+   * pinned test clock would otherwise collapse every session's timestamp to
+   * the same instant). */
+  lastAttachedSeq: number;
+  /** Every window id currently present in this session — `open <view>`'s
+   * "does the target window still exist" check (PLAN.md Architecture
+   * notes: "if the window was killed → attach + message"). */
+  windowIds: string[];
+}
+
 export interface RunContext {
   fsEntries: FsEntry[];
   /** Already-warmed content lookup for `cat` — the (impure) caller resolves
@@ -283,7 +309,20 @@ export interface RunContext {
    * itself (determinism rules: every timestamp flows through an explicit
    * parameter, never a hidden global read). */
   nowMs: number;
+  /** Kept for neofetch's own uptime anchor (`session.createdAt`) — the ONE
+   * remaining use of a single "current session" summary now that `tmux ls`
+   * (below) reads the full `sessions` roster instead. */
   session: SessionSummary;
+  /** PLAN.md Iteration 3 Phase 5 items 5.2/5.3 — every session the CLIENT
+   * currently knows about (attached or not) — `tmux ls`/`new`/`a`/`attach`'s
+   * own validation source. Always populated, in both pane and host mode
+   * ("`tmux ls` works everywhere" — PLAN.md tmux fidelity reference). */
+  sessions: SessionRosterEntry[];
+  /** The well-known default session's bare name ("10.42.7.13", PLAN.md
+   * Locked decision #1) — HOST mode's `open <view>`/`edith` builtin always
+   * target this specific session by name, never "whichever is most
+   * recent" (PLAN.md Architecture notes). */
+  defaultSessionName: string;
   shell: ShellData;
   /** The six canonical program names — bare-command validation for `open`/
    * relaunch-by-name (PLAN.md Architecture notes). */
@@ -294,11 +333,61 @@ export type ShellEffect =
   | { kind: "none" }
   | { kind: "launch"; program: string }
   | { kind: "exit-pane" }
-  | { kind: "reboot" };
+  | { kind: "reboot" }
+  /** `tmux a [-t name]` resolved to an EXISTING session id (PLAN.md item
+   * 5.2) — the impure caller (Terminal.svelte) performs the actual
+   * `attachSession()` mutation. */
+  | { kind: "attach"; sessionId: string }
+  /** `tmux new [-s name]` — `name` is already fully resolved/validated
+   * (explicit `-s` name checked non-duplicate, or the next free numeric
+   * name computed) by the time this effect is returned; the caller creates
+   * AND immediately attaches (real tmux's own combined behavior for a
+   * brand-new session started from outside). */
+  | { kind: "create-and-attach"; name: string }
+  /** HOST mode's `open <view>` / `edith` builtin (PLAN.md Architecture
+   * notes) — attaches the default session and selects `view`'s window if
+   * it still exists (`windowExists`); the caller shows a fallback message
+   * instead of a hard navigation when it doesn't (that window was killed
+   * at some point) — same "attach + message per your judgment" allowance
+   * PLAN.md leaves to the executor. */
+  | { kind: "attach-view"; sessionId: string; view: string; windowExists: boolean };
 
 export interface RunOutcome {
   state: ShellState;
   effect: ShellEffect;
+}
+
+// ---------------------------------------------------------------------
+// Sessions (PLAN.md Iteration 3 Phase 5 items 5.1/5.2)
+// ---------------------------------------------------------------------
+
+/** Bare `tmux new` fidelity rule: "next numeric name (\"1\", \"2\", …)" —
+ * the first positive integer (as a string) not already in use by any
+ * existing session. Pure — takes the plain name list, never a `Session[]`
+ * (module boundary: shell.ts never imports tmux.ts). */
+export function nextNumericSessionName(existingNames: string[]): string {
+  let n = 1;
+  while (existingNames.includes(String(n))) n += 1;
+  return String(n);
+}
+
+/** Bare `tmux a`/`attach` fidelity rule: "most recently used unattached
+ * session" — the highest `lastAttachedSeq` in `sessions`, or `undefined`
+ * for an empty roster (`no sessions`, rendered by the caller). Small,
+ * deliberate duplicate of tmux.ts's own `pickMostRecentSession` (same
+ * one-line sort, different element type) rather than an import — see this
+ * file's header comment on why shell.ts never imports tmux.ts. */
+function pickMostRecentUnattached(sessions: SessionRosterEntry[]): SessionRosterEntry | undefined {
+  return [...sessions].sort((a, b) => b.lastAttachedSeq - a.lastAttachedSeq)[0];
+}
+
+/** PLAN.md Iteration 3 Phase 5 item 5.1 — builds the detached HOST shell's
+ * pre-seeded scrollback from shell.yaml's `host.narrative` rows, with every
+ * row's `{session}` placeholder substituted for the real default session
+ * name. Pure (no DOM/fetch) so it's callable from both Terminal.svelte (at
+ * client-factory/reboot time) and a unit test. */
+export function seedHostNarrative(shell: ShellData, sessionName: string): ShellLine[] {
+  return shell.host.narrative.map((row) => ({ text: row.text.replace("{session}", sessionName), kind: row.kind }));
 }
 
 function formatUptime(shell: ShellData, fromMs: number, toMs: number): string {
@@ -400,7 +489,17 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
       if (!target || !ctx.viewNames.includes(target)) {
         return out([errLine(ctx.shell.errors.commandNotFoundTemplate.replace("{cmd}", cmd))]);
       }
+      if (ctx.mode === "host") return attachViewOutcome(base, ctx, target);
       return { state: base, effect: { kind: "launch", program: target } };
+    }
+
+    // PLAN.md Architecture notes — HOST mode only ("the mock's header
+    // advertises `edith` to launch the site again"); a pane shell has
+    // nothing to attach (it's already attached — that's what a pane IS), so
+    // it falls through to the ordinary command-not-found case below.
+    case "edith": {
+      if (ctx.mode !== "host") return out([errLine(ctx.shell.errors.commandNotFoundTemplate.replace("{cmd}", cmd))]);
+      return attachViewOutcome(base, ctx, "dashboard");
     }
 
     case "exit":
@@ -412,26 +511,84 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
     case "tmux": {
       const sub = args[0];
       if (sub === "ls") {
-        const row = ctx.shell.tmux.lsRowTemplate
-          .replace("{name}", ctx.session.name)
-          .replace("{n}", String(ctx.session.windowCount))
-          .replace("{ctime}", formatCtime(new Date(ctx.session.createdAt)));
-        const suffix = ctx.session.attached ? ctx.shell.tmux.lsAttachedSuffix : "";
-        return out([outLine(row + suffix)]);
+        if (ctx.sessions.length === 0) return out([errLine(ctx.shell.tmux.noSessionsMessage)]);
+        const rows = ctx.sessions.map((s) => {
+          const row = ctx.shell.tmux.lsRowTemplate
+            .replace("{name}", s.name)
+            .replace("{n}", String(s.windowCount))
+            .replace("{ctime}", formatCtime(new Date(s.createdAt)));
+          return row + (s.attached ? ctx.shell.tmux.lsAttachedSuffix : "");
+        });
+        return out(rows.map(outLine));
       }
-      if (sub === "new" || sub === "a" || sub === "attach") {
-        // PLAN.md tmux fidelity reference: inside a pane shell, new/attach
-        // always refuse — real tmux nesting protection. Host mode's own
-        // working new/attach lands in Phase 5.
-        return out([errLine(ctx.shell.errors.nestedTmuxMessage)]);
+
+      // PLAN.md tmux fidelity reference: inside a pane shell, new/attach
+      // always refuse — real tmux nesting protection. `ls` above works
+      // everywhere; only these two subcommands are pane-restricted.
+      if (sub === "new") {
+        if (ctx.mode === "pane") return out([errLine(ctx.shell.errors.nestedTmuxMessage)]);
+        if (args.length === 1) {
+          const name = nextNumericSessionName(ctx.sessions.map((s) => s.name));
+          return { state: base, effect: { kind: "create-and-attach", name } };
+        }
+        if (args[1] === "-s" && args[2]) {
+          const name = args[2];
+          if (ctx.sessions.some((s) => s.name === name)) {
+            return out([errLine(ctx.shell.tmux.duplicateSessionTemplate.replace("{name}", name))]);
+          }
+          return { state: base, effect: { kind: "create-and-attach", name } };
+        }
+        return out([errLine(ctx.shell.errors.tmuxUnknownSubcommandTemplate.replace("{cmd}", "new"))]);
+      }
+      if (sub === "a" || sub === "attach") {
+        if (ctx.mode === "pane") return out([errLine(ctx.shell.errors.nestedTmuxMessage)]);
+        if (args.length === 1) {
+          const chosen = pickMostRecentUnattached(ctx.sessions);
+          if (!chosen) return out([errLine(ctx.shell.tmux.noSessionsMessage)]);
+          return { state: base, effect: { kind: "attach", sessionId: chosen.id } };
+        }
+        if (args[1] === "-t" && args[2]) {
+          const name = args[2];
+          const found = ctx.sessions.find((s) => s.name === name);
+          if (!found) return out([errLine(ctx.shell.tmux.cantFindSessionTemplate.replace("{name}", name))]);
+          return { state: base, effect: { kind: "attach", sessionId: found.id } };
+        }
+        return out([errLine(ctx.shell.errors.tmuxUnknownSubcommandTemplate.replace("{cmd}", sub))]);
       }
       return out([errLine(ctx.shell.errors.tmuxUnknownSubcommandTemplate.replace("{cmd}", sub ?? ""))]);
     }
 
     default:
       if (ctx.viewNames.includes(cmd) && args.length === 0) {
+        // PLAN.md Architecture notes: "bare view-name commands print a hint
+        // to attach" in HOST mode — a bare name never attaches on its own,
+        // only `open <view>`/`edith` do (those are the site's own
+        // "return commands", per the user's own return_path design).
+        if (ctx.mode === "host") return out([errLine(ctx.shell.host.notAttachedMessage)]);
         return { state: base, effect: { kind: "launch", program: cmd } };
       }
       return out([errLine(ctx.shell.errors.commandNotFoundTemplate.replace("{cmd}", cmd))]);
+  }
+
+  /** Shared tail of HOST mode's `open <view>`/`edith` (PLAN.md Architecture
+   * notes) — both always target the well-known DEFAULT session by name
+   * (never "whichever is most recent"). If that session doesn't exist at
+   * all (destroyed via a kill-cascade and never recreated), reports it the
+   * same way a missing `-t` target does; otherwise emits the attach-view
+   * effect, letting the window-existence check ride along for the
+   * (impure) caller to act on (PLAN.md: "if the window was killed → attach
+   * + message per your judgment"). */
+  function attachViewOutcome(state: ShellState, runCtx: RunContext, view: string): RunOutcome {
+    const found = runCtx.sessions.find((s) => s.name === runCtx.defaultSessionName);
+    if (!found) {
+      return {
+        state: {
+          ...state,
+          lines: [...state.lines, errLine(runCtx.shell.tmux.cantFindSessionTemplate.replace("{name}", runCtx.defaultSessionName))],
+        },
+        effect: { kind: "none" },
+      };
+    }
+    return { state, effect: { kind: "attach-view", sessionId: found.id, view, windowExists: found.windowIds.includes(view) } };
   }
 }

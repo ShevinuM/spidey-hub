@@ -87,7 +87,7 @@ export interface CopyModeData {
 
 export interface SiteData {
   statusBar: {
-    session: string;
+    sessionTemplate: string;
     separator: string;
     windows: WindowEntry[];
     grepHint: string;
@@ -571,6 +571,20 @@ export interface ShellErrors {
   tmuxUnknownSubcommandTemplate: string;
 }
 
+export interface ShellHostNarrativeRow {
+  text: string;
+  kind: "input" | "output" | "error";
+}
+
+export interface ShellHostData {
+  narrative: ShellHostNarrativeRow[];
+  detachedTemplate: string;
+  exitedMessage: string;
+  logoutMessage: string;
+  notAttachedMessage: string;
+  windowGoneTemplate: string;
+}
+
 export interface ShellHelpRow {
   cmd: string;
   description: string;
@@ -595,7 +609,14 @@ export interface ShellData {
     uptimeLabel: string;
     uptimeTemplate: string;
   };
-  tmux: { lsRowTemplate: string; lsAttachedSuffix: string };
+  tmux: {
+    lsRowTemplate: string;
+    lsAttachedSuffix: string;
+    noSessionsMessage: string;
+    duplicateSessionTemplate: string;
+    cantFindSessionTemplate: string;
+  };
+  host: ShellHostData;
 }
 
 export const getShell = (): ShellData => loadYaml<ShellData>("shell.yaml");

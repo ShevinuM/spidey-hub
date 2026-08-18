@@ -3,7 +3,11 @@
 # "Mobile policy" (mobile-block card), "Keymap (global)".
 
 statusBar:
-  session: "Session: 10.42.7.13"
+  # PLAN.md Iteration 3 Phase 5 item 5.2 / Locked decision #1: the left
+  # cluster stays "Session: 10.42.7.13 ·" for the default session, but the
+  # NAME is now dynamic per attached session (`tmux new -s test` etc.) —
+  # StatusBar.svelte substitutes `{name}` from the live client model.
+  sessionTemplate: "Session: {name}"
   separator: "·"
   # Window list, always rendered in this numeric order 0-5 (bug fix 1: the
   # prototype's Retina-V view renders "...4:profile 3:retina-v*" — out of

@@ -28,7 +28,7 @@
 //     rebuild is byte-for-byte reproducible and every id is stable within a
 //     given tree shape (PLAN.md Phase 4 determinism rules).
 
-import { createShellState, type ShellState } from "./shell.ts";
+import { createShellState, type ShellLine, type ShellState } from "./shell.ts";
 
 /** A pane's currently-running program. "shell" is the in-window shell a
  * program's `:q` drops back to (PLAN.md Locked decision #2) — every OTHER
@@ -96,14 +96,47 @@ export interface Session {
    * "created {ctime}" column (PLAN.md tmux fidelity reference), never
    * `Date.now()` read again after creation (determinism rules). */
   createdAt: number;
+  /** PLAN.md Iteration 3 Phase 5 item 5.2 — "most recently used unattached
+   * session" (bare `tmux a`/`attach`, and the kill-cascade's own "switch to
+   * the most recent remaining session" fidelity rule) needs a RECENCY
+   * ordering across sessions. A logical counter (`Client.attachSeq`, bumped
+   * by `attachSession` below), never a frozen-clock epoch — under a pinned
+   * test clock every session's `createdAt`/`Date.now()` read would collapse
+   * to the identical instant, degrading "most recent" into "insertion
+   * order" and silently miscomputing the pick (advisor-caught: a `tmux new
+   * -s test` + detach + `tmux a` sequence would otherwise reattach the
+   * DEFAULT session instead of `test`). Sortable, deterministic under
+   * fixtures, no clock dependence. `0` until a session has ever been
+   * attached (unreachable via `tmux a`'s own candidate set in practice —
+   * every session that exists was created via an attach-and-create flow —
+   * kept only so the field always has a well-defined initial value). */
+  lastAttachedSeq: number;
 }
 
 export interface Client {
   sessions: Session[];
-  /** Null once Phase 5 adds detach (no session owns the keyboard — the host
-   * shell does instead). Phase 4 is always attached to exactly one session,
-   * so this is always a real id here. */
+  /** Null once detached (PLAN.md Iteration 3 Phase 5 item 5.1) — no session
+   * owns the keyboard; the host shell (`Client.hostPane` below) does
+   * instead. Phase 4 was always attached to exactly one session; Phase 5
+   * makes this legitimately nullable. */
   attachedSessionId: string | null;
+  /** Monotonic counter backing `Session.lastAttachedSeq` above — bumped by
+   * every `attachSession()` call (including the kill-cascade's own silent
+   * switch-to-most-recent-remaining), never read directly by callers. */
+  attachSeq: number;
+  /** PLAN.md Iteration 3 Phase 5 item 5.1 — the detached HOST shell's own
+   * pane, deliberately modeled as a REAL `Pane` (not a bare `ShellState`)
+   * living directly on the client rather than inside any session/window:
+   * this is what lets src/components/Shell.svelte mount it with its
+   * existing `pane: Pane` prop contract completely unchanged (the exact
+   * same `pane.shell = {...}` write-through Svelte reactivity every other
+   * pane already relies on) — no new component-level plumbing needed for
+   * Phase 5 to reuse Phase 4's Shell.svelte verbatim. `program` is always
+   * "shell" here (never read meaningfully; kept only because `Pane` requires
+   * it). Survives detach/re-attach cycles within the page's lifetime;
+   * `createFactoryClient()` (reboot) is the only thing that resets it.
+   */
+  hostPane: Pane;
 }
 
 // ---------------------------------------------------------------------------
@@ -227,6 +260,116 @@ export function killWindow(session: Session, windowId: string): KillWindowResult
 }
 
 // ---------------------------------------------------------------------------
+// Sessions (PLAN.md Iteration 3 Phase 5 items 5.1/5.2/5.3)
+// ---------------------------------------------------------------------------
+
+/** Bare `tmux a`/`attach` (no `-t`) fidelity rule: "most recently used
+ * unattached session" — the highest `lastAttachedSeq` among `sessions`.
+ * `undefined` for an empty list (`no sessions`, rendered by the caller). */
+function pickMostRecentSession(sessions: Session[]): Session | undefined {
+  return [...sessions].sort((a, b) => b.lastAttachedSeq - a.lastAttachedSeq)[0];
+}
+
+/** Attaches the client to an EXISTING session by id (a no-op if `sessionId`
+ * doesn't exist) — bumps the recency counter so this session becomes the new
+ * "most recently used" for the next bare `tmux a`. Used by both a resolved
+ * `tmux a [-t name]` and the immediate attach half of `tmux new [-s name]`
+ * (real tmux: starting a brand-new session from outside BOTH creates and
+ * attaches). */
+export function attachSession(client: Client, sessionId: string): void {
+  const session = client.sessions.find((s) => s.id === sessionId);
+  if (!session) return;
+  client.attachedSessionId = sessionId;
+  client.attachSeq += 1;
+  session.lastAttachedSeq = client.attachSeq;
+}
+
+/** `Ctrl-b d` (PLAN.md Locked decision #3) — no session owns the keyboard
+ * afterward; the caller (Terminal.svelte) is the one that appends the
+ * `[detached (from session {name})]` line to `Client.hostPane`'s own shell
+ * buffer (this file stays free of shell.yaml string content). */
+export function detachClient(client: Client): void {
+  client.attachedSessionId = null;
+}
+
+/** `tmux new [-s name]` (host mode only — a pane shell always refuses
+ * before reaching this, PLAN.md tmux fidelity reference) — creates a
+ * brand-new session with exactly one window (`0:zsh`, auto-named, running a
+ * shell — real tmux's own behavior for a session nobody has launched a
+ * program in yet). Does NOT attach on its own; the caller pairs this with
+ * `attachSession()` immediately after, matching real tmux's combined
+ * create-and-attach. `name` must already be validated (non-duplicate) by
+ * the caller (src/lib/shell.ts's own `runCommand` — duplicate-name
+ * rejection needs the exact `duplicate session: {name}` string, which lives
+ * in shell.yaml, not here). */
+export function createSession(client: Client, name: string, epoch: number): Session {
+  const sessionId = `session:${name}`;
+  const windowId = `${sessionId}#w0`;
+  const pane = makePane(windowId, 0, "shell");
+  const window: Window = {
+    id: windowId,
+    number: 0,
+    name: "zsh",
+    autoName: true,
+    root: { type: "leaf", pane },
+    activePaneId: pane.id,
+  };
+  const session: Session = {
+    id: sessionId,
+    name,
+    windows: [window],
+    activeWindowIdx: 0,
+    lastWindowIdx: 0,
+    createdAt: epoch,
+    lastAttachedSeq: 0,
+  };
+  client.sessions = [...client.sessions, session];
+  return session;
+}
+
+export type KillWindowCascadeResult =
+  | { kind: "window-removed" }
+  /** `detachedToHost: true` — no sessions remain; the client is now fully
+   * detached (`[exited]`, rendered by the caller). `false` — another session
+   * still existed, and the client was silently switched to the most
+   * recently used one (PLAN.md item 5.3: "show nothing special"). */
+  | { kind: "session-destroyed"; detachedToHost: boolean };
+
+/**
+ * `Ctrl-b &` / `:kill-window` / shell `exit` in the LAST pane of a window,
+ * routed through here instead of the plain `killWindow()` above once
+ * sessions exist (PLAN.md Iteration 3 Phase 5 item 5.3 — this SUPERSEDES
+ * Phase 4's "refuse to kill the only window" behavior, which was a
+ * placeholder for a world where no other session could ever exist to fall
+ * back to). Killing a window that ISN'T the session's last one still just
+ * removes it (delegates to `killWindow`, which never refuses when
+ * `windows.length > 1`). Killing the session's LAST window destroys the
+ * session outright (real tmux: killing the last window kills the session);
+ * if the destroyed session was the attached one, the client either switches
+ * silently to the most-recently-used REMAINING session, or, if none remain,
+ * detaches to the host shell (`[exited]`).
+ */
+export function killWindowCascade(client: Client, session: Session, windowId: string): KillWindowCascadeResult {
+  if (session.windows.length <= 1) {
+    client.sessions = client.sessions.filter((s) => s.id !== session.id);
+    if (client.attachedSessionId !== session.id) {
+      return { kind: "session-destroyed", detachedToHost: false };
+    }
+    const next = pickMostRecentSession(client.sessions);
+    if (!next) {
+      client.attachedSessionId = null;
+      return { kind: "session-destroyed", detachedToHost: true };
+    }
+    client.attachedSessionId = next.id;
+    client.attachSeq += 1;
+    next.lastAttachedSeq = client.attachSeq;
+    return { kind: "session-destroyed", detachedToHost: false };
+  }
+  killWindow(session, windowId);
+  return { kind: "window-removed" };
+}
+
+// ---------------------------------------------------------------------------
 // Program launch/exit (PLAN.md Locked decision #2 / #5)
 // ---------------------------------------------------------------------------
 
@@ -299,6 +442,13 @@ export interface FactoryOptions {
    * imply) just to reach the window matching `initialView`. */
   activeWindowId?: string;
   sessionId?: string;
+  /** PLAN.md Iteration 3 Phase 5 item 5.1 — the detached host shell's
+   * pre-seeded scrollback (shell.ts's `seedHostNarrative()`, itself sourced
+   * from shell.yaml's `host.narrative` rows — content-driven, this file
+   * only ever holds whatever `ShellLine[]` the caller hands it). Defaults to
+   * empty so every existing unit test's `createFactoryClient()` call (none
+   * of which pass this) keeps working unchanged. */
+  hostNarrative?: ShellLine[];
 }
 
 function makePane(windowId: string, index: number, program: ProgramName): Pane {
@@ -338,7 +488,22 @@ export function createFactoryClient(opts: FactoryOptions): Client {
     activeWindowIdx: activeIdx,
     lastWindowIdx: activeIdx,
     createdAt: opts.epoch,
+    // Attached immediately at creation — the one and only session this
+    // factory build knows about is, by construction, the "most recently
+    // used" one (matters the moment a second session is created via `tmux
+    // new` and later killed, at which point the cascade needs to pick
+    // between this one and that one).
+    lastAttachedSeq: 1,
   };
 
-  return { sessions: [session], attachedSessionId: sessionId };
+  return {
+    sessions: [session],
+    attachedSessionId: sessionId,
+    attachSeq: 1,
+    hostPane: {
+      id: "host",
+      program: "shell",
+      shell: { ...createShellState(), lines: opts.hostNarrative ?? [] },
+    },
+  };
 }
