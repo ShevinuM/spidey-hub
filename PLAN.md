@@ -283,19 +283,19 @@ repos/Sheldon/README.md` prints from repo index; URL unchanged while in shell; r
 6 factory windows.
 
 ### Phase 5 — Host shell, detach, sessions
-- [ ] 5.1 Detach (`Ctrl-b d`, replaces go-home): host shell fullscreen over the radar (wallpaper
+- [x] 5.1 Detach (`Ctrl-b d`, replaces go-home): host shell fullscreen over the radar (wallpaper
   dim per mock, NO status bar), pre-seeded scrollback from shell.yaml matching the user's mock
   (E.D.I.T.H header lines, earlier `tmux new -s 10.42.7.13` + edith launch narrative, prompt
   `shev@edith:~/shevinum.dev git:(main) $`), then appends `[detached (from session 10.42.7.13)]`.
   Host shell = same Shell component, host mode.
-- [ ] 5.2 tmux subcommands per fidelity reference: `tmux ls`, `tmux new [-s name]`, `tmux a|attach
+- [x] 5.2 tmux subcommands per fidelity reference: `tmux ls`, `tmux new [-s name]`, `tmux a|attach
   [-t x]` incl. exact error strings, nested-refusal inside panes, most-recent-unattached pick,
   `no sessions`. New sessions start with one `zsh` window (window 0). Status bar + choose-tree
   (Phase 6) show the attached session's windows; `Session: {name}` left cluster.
-- [ ] 5.3 Kill cascades: last pane → window → session; killing the attached session's last window
+- [x] 5.3 Kill cascades: last pane → window → session; killing the attached session's last window
   detaches to host shell printing `[exited]`. `exit` in host shell prints `logout` + page reload.
-- [ ] 5.4 Reboot factory() reachable from host shell via `reboot` builtin.
-- [ ] 5.5 Tests: unit session ops (create/attach/detach/ls formatting with frozen clock,
+- [x] 5.4 Reboot factory() reachable from host shell via `reboot` builtin.
+- [x] 5.5 Tests: unit session ops (create/attach/detach/ls formatting with frozen clock,
   duplicate/missing errors); e2e sessions.spec (detach shows mock scrollback + detached line;
   `tmux ls` format; `tmux new -s test` + auto-attach; `tmux a -t 10.42.7.13` returns with window
   state intact; `[exited]` path; nested refusal; `logout` reload).

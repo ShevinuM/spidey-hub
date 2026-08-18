@@ -15,18 +15,22 @@ import {
   joinPath,
   kindOf,
   listDir,
+  nextNumericSessionName,
   parseLine,
   renderTree,
   resolveCatTarget,
   resolveCd,
   resolveSegments,
   runCommand,
+  seedHostNarrative,
   typeChar,
   type FsEntry,
   type RunContext,
+  type SessionRosterEntry,
   type ShellState,
 } from "../../src/lib/shell.ts";
 import type { ShellData } from "../../src/lib/data.ts";
+import { formatCtime } from "../../src/lib/clock.ts";
 
 const FS: FsEntry[] = [
   { path: "package.json", size: 100 },
@@ -64,10 +68,37 @@ const SHELL: ShellData = {
     uptimeLabel: "Uptime",
     uptimeTemplate: "{mins} min",
   },
-  tmux: { lsRowTemplate: "{name}: {n} windows (created {ctime})", lsAttachedSuffix: " (attached)" },
+  tmux: {
+    lsRowTemplate: "{name}: {n} windows (created {ctime})",
+    lsAttachedSuffix: " (attached)",
+    noSessionsMessage: "no sessions",
+    duplicateSessionTemplate: "duplicate session: {name}",
+    cantFindSessionTemplate: "can't find session: {name}",
+  },
+  host: {
+    narrative: [
+      { text: "E.D.I.T.H shell · zsh 5.9 · session {session}", kind: "output" },
+      { text: "shev@edith:~/shevinum.dev git:(main) $ tmux new -s {session}", kind: "input" },
+    ],
+    detachedTemplate: "[detached (from session {name})]",
+    exitedMessage: "[exited]",
+    logoutMessage: "logout",
+    notAttachedMessage: "not attached — try: tmux a",
+    windowGoneTemplate: "{view} window not found — attached to session {name}",
+  },
 };
 
 const VIEW_NAMES = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"] as const;
+
+const DEFAULT_SESSION: SessionRosterEntry = {
+  id: "session-0",
+  name: "10.42.7.13",
+  windowCount: 6,
+  createdAt: 1_723_000_000_000,
+  attached: true,
+  lastAttachedSeq: 1,
+  windowIds: ["dashboard", "builds", "personnel", "retina-v", "profile", "help"],
+};
 
 function ctx(overrides: Partial<RunContext> = {}): RunContext {
   return {
@@ -76,6 +107,8 @@ function ctx(overrides: Partial<RunContext> = {}): RunContext {
     mode: "pane",
     nowMs: 1_723_000_000_000,
     session: { name: "10.42.7.13", windowCount: 6, createdAt: 1_723_000_000_000, attached: true },
+    sessions: [DEFAULT_SESSION],
+    defaultSessionName: "10.42.7.13",
     shell: SHELL,
     viewNames: VIEW_NAMES,
     ...overrides,
@@ -392,12 +425,27 @@ test("runCommand: reboot returns the reboot effect", () => {
   assert.deepEqual(effect, { kind: "reboot" });
 });
 
-test("runCommand: tmux ls formats the row from session data + formatCtime", () => {
+test("runCommand: tmux ls lists EVERY session in the roster, each with its own attached flag", () => {
+  const testCreatedAt = 1_700_000_000_000;
   const { state } = run(createShellState(), "tmux ls", {
-    session: { name: "10.42.7.13", windowCount: 6, createdAt: Date.UTC(2026, 7, 17, 23, 34, 0), attached: true },
+    sessions: [
+      { ...DEFAULT_SESSION, createdAt: Date.UTC(2026, 7, 17, 23, 34, 0), attached: true },
+      { ...DEFAULT_SESSION, id: "session:test", name: "test", windowCount: 1, createdAt: testCreatedAt, attached: false, windowIds: ["w0"] },
+    ],
   });
-  const line = state.lines.at(-1)!.text;
-  assert.match(line, /^10\.42\.7\.13: 6 windows \(created .+\) \(attached\)$/);
+  const lines = state.lines.slice(1).map((l) => l.text);
+  assert.match(lines[0], /^10\.42\.7\.13: 6 windows \(created .+\) \(attached\)$/);
+  assert.equal(lines[1], `test: 1 windows (created ${formatCtime(new Date(testCreatedAt))})`);
+});
+
+test("runCommand: tmux ls works from a pane (not gated by mode)", () => {
+  const { state } = run(createShellState(), "tmux ls", { mode: "pane" });
+  assert.match(state.lines.at(-1)!.text, /^10\.42\.7\.13:/);
+});
+
+test("runCommand: tmux ls with an empty roster prints 'no sessions'", () => {
+  const { state } = run(createShellState(), "tmux ls", { sessions: [] });
+  assert.equal(state.lines.at(-1)?.text, "no sessions");
 });
 
 test("runCommand: tmux new/a/attach inside a pane refuse with the exact nesting message", () => {
@@ -410,6 +458,111 @@ test("runCommand: tmux new/a/attach inside a pane refuse with the exact nesting 
 test("runCommand: tmux with an unrecognized subcommand shows a usage error", () => {
   const { state } = run(createShellState(), "tmux bogus");
   assert.equal(state.lines.at(-1)?.text, "usage: tmux bogus");
+});
+
+// ---------------------------------------------------------------------
+// Sessions (PLAN.md Iteration 3 Phase 5 items 5.1/5.2)
+// ---------------------------------------------------------------------
+
+test("nextNumericSessionName: picks the first free positive integer", () => {
+  assert.equal(nextNumericSessionName([]), "1");
+  assert.equal(nextNumericSessionName(["10.42.7.13"]), "1");
+  assert.equal(nextNumericSessionName(["1", "2"]), "3");
+  assert.equal(nextNumericSessionName(["2", "1"]), "3");
+  assert.equal(nextNumericSessionName(["1", "3"]), "2"); // fills the gap
+});
+
+test("seedHostNarrative: substitutes {session} in every row, keeping kind", () => {
+  const lines = seedHostNarrative(SHELL, "10.42.7.13");
+  assert.equal(lines[0].text, "E.D.I.T.H shell · zsh 5.9 · session 10.42.7.13");
+  assert.equal(lines[0].kind, "output");
+  assert.equal(lines[1].text, "shev@edith:~/shevinum.dev git:(main) $ tmux new -s 10.42.7.13");
+  assert.equal(lines[1].kind, "input");
+});
+
+test("runCommand: tmux new (bare, host mode) creates the next numeric session name", () => {
+  const { effect } = run(createShellState(), "tmux new", { mode: "host", sessions: [DEFAULT_SESSION] });
+  assert.deepEqual(effect, { kind: "create-and-attach", name: "1" });
+});
+
+test("runCommand: tmux new -s <name> (host mode) creates that exact name", () => {
+  const { effect } = run(createShellState(), "tmux new -s test", { mode: "host" });
+  assert.deepEqual(effect, { kind: "create-and-attach", name: "test" });
+});
+
+test("runCommand: tmux new -s <duplicate name> (host mode) errors — exact fidelity string", () => {
+  const { state, effect } = run(createShellState(), "tmux new -s 10.42.7.13", { mode: "host" });
+  assert.deepEqual(effect, { kind: "none" });
+  assert.equal(state.lines.at(-1)?.text, "duplicate session: 10.42.7.13");
+});
+
+test("runCommand: tmux new -s with no name argument is a usage error, not a silent fallback to auto-numeric", () => {
+  const { state, effect } = run(createShellState(), "tmux new -s", { mode: "host" });
+  assert.deepEqual(effect, { kind: "none" });
+  assert.equal(state.lines.at(-1)?.text, "usage: tmux new");
+});
+
+test("runCommand: tmux a (bare, host mode) attaches the most-recently-used session, not merely the first", () => {
+  const older: SessionRosterEntry = { ...DEFAULT_SESSION, id: "s-older", name: "older", lastAttachedSeq: 1 };
+  const newer: SessionRosterEntry = { ...DEFAULT_SESSION, id: "s-newer", name: "newer", lastAttachedSeq: 5 };
+  const { effect } = run(createShellState(), "tmux a", { mode: "host", sessions: [older, newer] });
+  assert.deepEqual(effect, { kind: "attach", sessionId: "s-newer" });
+});
+
+test("runCommand: tmux a (bare, host mode) with no sessions at all errors — exact fidelity string", () => {
+  const { state, effect } = run(createShellState(), "tmux a", { mode: "host", sessions: [] });
+  assert.deepEqual(effect, { kind: "none" });
+  assert.equal(state.lines.at(-1)?.text, "no sessions");
+});
+
+test("runCommand: tmux a -t <name> (host mode) attaches that exact session", () => {
+  const { effect } = run(createShellState(), "tmux a -t 10.42.7.13", { mode: "host" });
+  assert.deepEqual(effect, { kind: "attach", sessionId: DEFAULT_SESSION.id });
+});
+
+test("runCommand: tmux a -t <missing name> (host mode) errors — exact fidelity string", () => {
+  const { state, effect } = run(createShellState(), "tmux a -t nope", { mode: "host" });
+  assert.deepEqual(effect, { kind: "none" });
+  assert.equal(state.lines.at(-1)?.text, "can't find session: nope");
+});
+
+test("runCommand: open <view> in host mode attaches the default session and selects that window when it exists", () => {
+  const { effect } = run(createShellState(), "open builds", { mode: "host" });
+  assert.deepEqual(effect, { kind: "attach-view", sessionId: DEFAULT_SESSION.id, view: "builds", windowExists: true });
+});
+
+test("runCommand: open <view> in host mode still attaches when the window was killed, flagging windowExists false", () => {
+  const gone: SessionRosterEntry = { ...DEFAULT_SESSION, windowIds: ["dashboard"] };
+  const { effect } = run(createShellState(), "open builds", { mode: "host", sessions: [gone] });
+  assert.deepEqual(effect, { kind: "attach-view", sessionId: gone.id, view: "builds", windowExists: false });
+});
+
+test("runCommand: open <view> in host mode errors when the default session no longer exists at all", () => {
+  const { state, effect } = run(createShellState(), "open builds", { mode: "host", sessions: [] });
+  assert.deepEqual(effect, { kind: "none" });
+  assert.equal(state.lines.at(-1)?.text, "can't find session: 10.42.7.13");
+});
+
+test("runCommand: open <view> in pane mode is UNCHANGED — a plain in-pane launch, never an attach", () => {
+  const { effect } = run(createShellState(), "open builds", { mode: "pane" });
+  assert.deepEqual(effect, { kind: "launch", program: "builds" });
+});
+
+test("runCommand: edith (host mode) attaches the default session at window 0 (dashboard)", () => {
+  const { effect } = run(createShellState(), "edith", { mode: "host" });
+  assert.deepEqual(effect, { kind: "attach-view", sessionId: DEFAULT_SESSION.id, view: "dashboard", windowExists: true });
+});
+
+test("runCommand: edith in pane mode is command-not-found (a pane is already attached)", () => {
+  const { state, effect } = run(createShellState(), "edith", { mode: "pane" });
+  assert.deepEqual(effect, { kind: "none" });
+  assert.equal(state.lines.at(-1)?.text, "edith: command not found");
+});
+
+test("runCommand: a bare view name in HOST mode prints the not-attached hint instead of launching", () => {
+  const { state, effect } = run(createShellState(), "dashboard", { mode: "host" });
+  assert.deepEqual(effect, { kind: "none" });
+  assert.equal(state.lines.at(-1)?.text, "not attached — try: tmux a");
 });
 
 test("runCommand: an unknown command reports 'command not found'", () => {

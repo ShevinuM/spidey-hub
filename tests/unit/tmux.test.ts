@@ -10,12 +10,16 @@ import {
   activeSessionOf,
   activeWindowOf,
   allPanes,
+  attachSession,
   createFactoryClient,
+  createSession,
   cycleWindow,
+  detachClient,
   exitProgram,
   findPaneById,
   focusedPane,
   killWindow,
+  killWindowCascade,
   launchProgram,
   programDisplayName,
   renameWindowManual,
@@ -295,4 +299,130 @@ test("allPanes/findPaneById/focusedPane agree on the single leaf pane", () => {
   assert.equal(findPaneById(win.root, panes[0].id), panes[0]);
   assert.equal(findPaneById(win.root, "bogus"), undefined);
   assert.equal(focusedPane(win), panes[0]);
+});
+
+// ---------------------------------------------------------------------
+// Factory client: attachSeq / hostPane (PLAN.md Iteration 3 Phase 5 item 5.1)
+// ---------------------------------------------------------------------
+
+test("createFactoryClient seeds attachSeq=1, the default session at lastAttachedSeq=1, and an empty hostPane running shell", () => {
+  const client = freshClient();
+  assert.equal(client.attachSeq, 1);
+  assert.equal(activeSessionOf(client)!.lastAttachedSeq, 1);
+  assert.equal(client.hostPane.program, "shell");
+  assert.deepEqual(client.hostPane.shell.lines, []);
+});
+
+test("createFactoryClient seeds the hostPane's scrollback from hostNarrative when given one", () => {
+  const client = createFactoryClient({
+    sessionName: "10.42.7.13",
+    windows: SIX_WINDOWS,
+    epoch: 0,
+    hostNarrative: [{ text: "hello", kind: "output" }],
+  });
+  assert.deepEqual(client.hostPane.shell.lines, [{ text: "hello", kind: "output" }]);
+});
+
+// ---------------------------------------------------------------------
+// Sessions: create / attach / detach (PLAN.md Iteration 3 Phase 5 items
+// 5.1/5.2)
+// ---------------------------------------------------------------------
+
+test("createSession adds a new session with one auto-named zsh window (window 0), NOT yet attached", () => {
+  const client = freshClient();
+  const before = client.attachedSessionId;
+  const session = createSession(client, "test", 5000);
+  assert.equal(client.sessions.length, 2);
+  assert.equal(session.name, "test");
+  assert.equal(session.windows.length, 1);
+  assert.equal(session.windows[0].name, "zsh");
+  assert.equal(session.windows[0].number, 0);
+  assert.equal(focusedPane(session.windows[0]).program, "shell");
+  assert.equal(session.createdAt, 5000);
+  assert.equal(session.lastAttachedSeq, 0);
+  assert.equal(client.attachedSessionId, before); // unchanged — createSession never attaches on its own
+});
+
+test("attachSession switches the client and bumps the session's recency counter", () => {
+  const client = freshClient();
+  const session = createSession(client, "test", 0);
+  attachSession(client, session.id);
+  assert.equal(client.attachedSessionId, session.id);
+  assert.equal(client.attachSeq, 2);
+  assert.equal(session.lastAttachedSeq, 2);
+});
+
+test("attachSession is a no-op for an unknown session id", () => {
+  const client = freshClient();
+  const before = client.attachedSessionId;
+  attachSession(client, "no-such-session");
+  assert.equal(client.attachedSessionId, before);
+  assert.equal(client.attachSeq, 1);
+});
+
+test("detachClient nulls attachedSessionId without touching the session list", () => {
+  const client = freshClient();
+  detachClient(client);
+  assert.equal(client.attachedSessionId, null);
+  assert.equal(client.sessions.length, 1);
+});
+
+// ---------------------------------------------------------------------
+// killWindowCascade (PLAN.md Iteration 3 Phase 5 item 5.3 — SUPERSEDES
+// Phase 4's "refuse to kill the only window": real tmux kills the SESSION
+// when its last window dies, not the client's ability to do so at all)
+// ---------------------------------------------------------------------
+
+test("killWindowCascade on a window that ISN'T the session's last one just removes it (delegates to killWindow)", () => {
+  const client = freshClient();
+  const session = activeSessionOf(client)!;
+  const result = killWindowCascade(client, session, "dashboard");
+  assert.deepEqual(result, { kind: "window-removed" });
+  assert.equal(session.windows.length, 5);
+  assert.equal(client.sessions.length, 1);
+});
+
+test("killWindowCascade on the attached session's LAST window, with another session still around, silently switches to it", () => {
+  const client = freshClient();
+  const other = createSession(client, "other", 0);
+  attachSession(client, other.id); // other is now the "most recent" and the ATTACHED one
+
+  const defaultSession = client.sessions.find((s) => s.name === "10.42.7.13")!;
+  for (const w of [...defaultSession.windows.slice(1)]) killWindow(defaultSession, w.id);
+  assert.equal(defaultSession.windows.length, 1);
+
+  // Kill the default session's own last window WHILE `other` is attached —
+  // the default session (not attached) is destroyed outright, with no
+  // client-level side effect (the attached session is untouched).
+  const result = killWindowCascade(client, defaultSession, defaultSession.windows[0].id);
+  assert.deepEqual(result, { kind: "session-destroyed", detachedToHost: false });
+  assert.equal(client.sessions.length, 1);
+  assert.equal(client.attachedSessionId, other.id);
+});
+
+test("killWindowCascade on the ATTACHED session's last window switches the client to the most-recently-used REMAINING session", () => {
+  const client = freshClient();
+  const defaultSession = activeSessionOf(client)!;
+  const other = createSession(client, "other", 0);
+  attachSession(client, other.id); // other: lastAttachedSeq=2, attached
+  attachSession(client, defaultSession.id); // back to default: lastAttachedSeq=3, attached; other is now "most recent unattached"
+
+  for (const w of [...defaultSession.windows.slice(1)]) killWindow(defaultSession, w.id);
+  const result = killWindowCascade(client, defaultSession, defaultSession.windows[0].id);
+  assert.deepEqual(result, { kind: "session-destroyed", detachedToHost: false });
+  assert.equal(client.sessions.length, 1);
+  assert.equal(client.attachedSessionId, other.id); // switched, not detached
+  assert.equal(client.sessions[0].id, other.id);
+});
+
+test("killWindowCascade on the attached session's last window, with NO other session left, detaches to host", () => {
+  const client = freshClient();
+  const session = activeSessionOf(client)!;
+  for (const w of [...session.windows.slice(1)]) killWindow(session, w.id);
+  assert.equal(session.windows.length, 1);
+
+  const result = killWindowCascade(client, session, session.windows[0].id);
+  assert.deepEqual(result, { kind: "session-destroyed", detachedToHost: true });
+  assert.equal(client.sessions.length, 0);
+  assert.equal(client.attachedSessionId, null);
 });

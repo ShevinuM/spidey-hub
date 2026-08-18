@@ -142,8 +142,12 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await expect(page).toHaveURL(/\/builds$/);
   });
 
-  test("Ctrl-b d, Ctrl-b w, and Ctrl-b 0 all return to the dashboard", async ({ page }) => {
-    for (const key of ["d", "w", "0"]) {
+  // PLAN.md Locked decision #3 / Iteration 3 Phase 5 item 5.1: `d` is now
+  // real tmux detach (see tests/e2e/sessions.spec.ts for its own coverage),
+  // REPLACING the Phase 4 "go home" behavior this test used to assert for
+  // all three keys. `w`/`0` keep "go home" until Phase 6 wires choose-tree.
+  test("Ctrl-b w and Ctrl-b 0 both return to the dashboard", async ({ page }) => {
+    for (const key of ["w", "0"]) {
       await gotoReady(page, "/builds");
       await ctrlB(page);
       await page.keyboard.press(key);
@@ -443,7 +447,14 @@ test.describe("Ctrl-b & kill-window (PLAN.md Phase 5 item 5.2)", () => {
     await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(1);
   });
 
-  test("killing every window down to the last one is refused with a status message, and that window survives", async ({
+  // PLAN.md Iteration 3 Phase 5 item 5.3 SUPERSEDES the Phase 4 "refuse to
+  // kill the only window" behavior this test used to assert — sessions now
+  // exist to fall back to (or, as here, not to): killing the session's last
+  // window destroys the session outright and, since it's the only session,
+  // detaches the client to the host shell printing exactly `[exited]`. See
+  // tests/e2e/sessions.spec.ts for the "another session still exists"
+  // sibling case.
+  test("killing every window down to the last one destroys the session and detaches to the host shell ([exited])", async ({
     page,
   }) => {
     await gotoReady(page, "/");
@@ -457,11 +468,11 @@ test.describe("Ctrl-b & kill-window (PLAN.md Phase 5 item 5.2)", () => {
     await ctrlB(page);
     await page.keyboard.press("&");
     await page.keyboard.press("y");
-    await expect(page.locator('[data-testid="status-message"]')).toContainText("only window");
 
-    // The message auto-clears; the single remaining window is untouched.
-    await expect(page.locator('[data-testid="status-message"]')).not.toBeVisible();
-    await expect(page.locator('[data-testid="status-bar-window"]')).toHaveCount(1);
+    // No status bar left at all — the client is detached.
+    await expect(page.locator('[data-testid="status-bar-windows"]')).not.toBeVisible();
+    await expect(page.locator('[data-shell-mode="host"]')).toBeVisible();
+    await expect(page.locator('[data-testid="shell-line"]').last()).toHaveText("[exited]");
   });
 });
 

@@ -536,7 +536,13 @@ test.describe("Cmdline: tmux command-prompt mode (PLAN.md 5C.1(c) — executes t
     await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(0);
   });
 
-  test("kill-window refuses to kill the last remaining window (same status message as Ctrl-b &)", async ({
+  // PLAN.md Iteration 3 Phase 5 item 5.3 SUPERSEDES the Phase 4 "refuse to
+  // kill the only window" behavior this test used to assert (see
+  // tests/e2e/tmux.spec.ts's own updated "killing every window down to the
+  // last one" test) — killing the session's last window now destroys the
+  // session outright and, with no other session to fall back to, detaches
+  // the client to the host shell printing exactly `[exited]`.
+  test("kill-window on the last remaining window destroys the session and detaches to the host shell ([exited])", async ({
     page,
   }) => {
     await gotoReady(page, "/");
@@ -550,8 +556,8 @@ test.describe("Cmdline: tmux command-prompt mode (PLAN.md 5C.1(c) — executes t
     await ctrlB(page);
     await page.keyboard.press(":");
     await typeAndEnter(page, "kill-window");
-    await expect(page.locator('[data-testid="status-message"]')).toContainText("only window");
-    await expect(page.locator('[data-testid="status-bar-window"]')).toHaveCount(1);
+    await expect(page.locator('[data-testid="status-bar-windows"]')).not.toBeVisible();
+    await expect(page.locator('[data-testid="shell-line"]').last()).toHaveText("[exited]");
   });
 
   test("kill-pane inside Builds with multiple panels removes only the focused panel, matching Ctrl-b x", async ({
