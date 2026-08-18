@@ -21,6 +21,11 @@ engine, advanced tmux bindings, a boot sequence, a floating cmdline, etc.)
 deliberately diverge from the prototype's own behavior, and 5 of the 15
 final recipes (`11-help`, `12-all-projects`, `13-boot-mid`, `14-boot-ready`,
 `15-cmdline`) reach states the prototype has no code path for at all.
+Iteration 3 Phase 7 added 5 more of the latter kind (`16-shell` through
+`20-help-search` — real panes/layouts/choose-tree/sessions/shell, the `?`
+HelpSearch palette), bringing the total to 20 recipes / 40 goldens; none of
+them are reachable through `capture-goldens.mjs`'s vendored-prototype path
+either, for the same reason.
 
 As of the Phase 6 re-baseline, `tests/visual/goldens/` is captured directly
 from OUR implementation via:
@@ -93,11 +98,28 @@ different command line, an extra status-box row).
 
 ## Order of operations
 
+0. `page.addInitScript(...)` pre-seeds two sessionStorage keys before
+   navigation: the boot-skip flag and, as of Iteration 3 Phase 7, the
+   toast-seed key (`TOAST_SEED_STORAGE_KEY`, `recipes.ts`'s fixed
+   `TOAST_SEED`) — the dashboard's seeded 2-of-pool toast pick (Locked
+   decision #12) would otherwise read a live `Date.now()` and pick a
+   different, non-deterministic pair every capture. This matters for more
+   recipes than just `01-dashboard`: the dashboard WINDOW keeps its own id
+   (and Toasts stays mounted/visible) even once its running PROGRAM is a
+   shell (e.g. `16-shell`, reached via `:q`), so any recipe that ever
+   touches window 0 needs this pin.
 1. `page.clock.install({ time: '2026-08-15T23:34:00' })` — **before** navigation.
 2. `page.goto(url, { waitUntil: 'load' })`.
 3. `page.clock.runFor(RUN_FOR_MS)` (5000ms by default, from `recipes.ts`).
-4. Wait for the `SHEVINUM.DEV` plate (dashboard-only marker) to prove the
-   app mounted and its keydown listener is attached.
+4. Wait for the dashboard-mount marker to prove the app mounted and its
+   keydown listener is attached — `page.getByText("SHEVINUM.DEV").or(page
+   .locator('[data-testid="dashboard-wordmark"]'))`, an `.or()` of BOTH the
+   vendored prototype's literal plate text (still current for
+   `capture-goldens.mjs`'s historical/guarded path, which has no
+   `data-testid` attributes at all) and the real implementation's SPIDEY-HUB
+   wordmark testid (Iteration 3 Phase 2 retired the "SHEVINUM.DEV" title
+   text from the real dashboard entirely) — whichever side actually exists
+   resolves first, so this one function keeps serving both callers.
 5. Replay the recipe's key/type actions.
 6. `page.clock.runFor(RUN_FOR_MS)` again.
 7. Wait `document.fonts.ready`, then Playwright's `networkidle` load state.
@@ -234,3 +256,58 @@ from the committed goldens or from each other), do not chase it away with
 `--update-snapshots` again — root-cause the nondeterminism first (a
 missing mask, an un-flushed timer, a live measurement) the same way this
 file's Phase 1/Phase 6 sections both did.
+
+## Determinism check (Iteration 3 Phase 7 re-baseline)
+
+Phase 7 re-validated all 15 prior recipes against the accumulated Phase
+1–6 changes (real data/repos, the SPIDEY-HUB dashboard rebrand + blur +
+seeded toasts, the `?` HelpSearch palette replacing `?`→help, the in-window/
+host shell, real panes/layouts/choose-tree/sessions) and added 5 more
+(`16-shell` through `20-help-search`), bringing the total to 20 recipes / 40
+goldens. Two capture-pipeline gaps were found and fixed as part of this
+re-baseline, not after it:
+
+- The dashboard-mount wait selector (`page.getByText("SHEVINUM.DEV")`) was
+  stale — Phase 2 retired that title text from the real dashboard entirely
+  in favor of the SPIDEY-HUB wordmark (`[data-testid="dashboard-wordmark"]`).
+  Fixed with `.or()` so the same function still serves the vendored
+  prototype's frozen HTML too (see `pipeline.mjs`'s own comment).
+- The dashboard's seeded toast pick (Locked decision #12) was not pinned —
+  `captureState()`/`captureBootState()` now pre-seed
+  `TOAST_SEED_STORAGE_KEY` (recipes.ts's fixed `TOAST_SEED`) via
+  `addInitScript`, the same pattern as the boot-skip flag.
+
+After `pnpm build:fixtures && playwright test tests/visual/identical.spec.ts
+--update-snapshots` (run twice — once for the initial 20-recipe capture,
+once more after a `src/data/help.yaml` content addition changed `11-help`/
+`20-help-search`'s expected pixels), `pnpm test:visual` was run **three
+consecutive times** against the final committed goldens with no changes in
+between:
+
+- **Run 1: 40/40 passed. Run 2: 40/40 passed. Run 3: 40/40 passed.** Every
+  recipe at both viewports matched at `maxDiffPixels: 0` — the GPU
+  blur-rasterization jitter documented in the Phase 1 section above did not
+  reproduce in any of the three runs.
+- Every new/changed golden was inspected visually (not just byte-diffed):
+  the SPIDEY-HUB wordmark + blur + seeded Vim/Tmux toasts on `01-dashboard`/
+  `15-cmdline`/`16-shell`/`18-split`; the deterministic `neofetch` output
+  (`Uptime: 0 min`) and renamed `0:zsh*` window on `16-shell`; the dim
+  (non-blurred) radar + pre-seeded narrative + `[detached (from session
+  10.42.7.13)]` on `17-host-shell`; the 3-pane main-vertical layout on
+  `18-split`; the session/window tree + pane-program preview strip on
+  `19-choose-tree`; the fuzzy "kil" result list (kill-window + kill-pane
+  rows, no suggestion-list regression) on `20-help-search`; and the real
+  Help-window content on `11-help` (the golden's visible scroll position is
+  Global through the start of "tmux prefix" — unchanged from the prior
+  capture; the new "Shell builtins" section added to help.yaml lives
+  further down the same scrollable window and doesn't appear in this
+  particular golden's viewport, but was confirmed present via
+  `node --test`'s YAML-parse check and by scrolling the live app). None
+  showed rendering defects.
+- A byte-compare sweep (SHA-256 across every PNG per viewport) found zero
+  duplicate pairs at either viewport — the "every golden meaningfully
+  distinct" guard (Iteration 2's own convention, re-verified rather than
+  assumed per this file's "run them, don't trust them" lesson) holds for
+  all 20×2.
+- `RATIO_RELAXED` (identical.spec.ts) stays EMPTY — no recipe needed a
+  tolerance relaxation.

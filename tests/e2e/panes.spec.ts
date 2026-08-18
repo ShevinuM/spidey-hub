@@ -362,5 +362,18 @@ test.describe("layouts: Ctrl-b Space cycles the 7 presets (PLAN.md Iteration 3 P
     await page.keyboard.type("select-layout bogus-layout");
     await page.keyboard.press("Enter");
     await expect(page.locator('[data-testid="cmdline-error"]')).toHaveText("unknown layout: bogus-layout");
+    await page.keyboard.press("Escape");
+
+    // Bare `select-layout` (tmux.ts's reapplyLastLayout: "return if
+    // window.lastLayout is unset") on a window that has NEVER had a layout
+    // applied (no Space cycle, no named select-layout, no manual split) is a
+    // true no-op — the box closes cleanly with no error (onSubmit returns
+    // undefined, Cmdline.svelte's own close-on-undefined contract), and the
+    // window stays exactly as it was (still the single original pane).
+    await prefixed(page, ":");
+    await page.keyboard.type("select-layout");
+    await page.keyboard.press("Enter");
+    await expect(page.locator('[data-testid="cmdline-overlay"]')).not.toBeVisible();
+    await expect(panes(page)).toHaveCount(1);
   });
 });

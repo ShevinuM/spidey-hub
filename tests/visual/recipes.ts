@@ -98,7 +98,16 @@ export const recipes: Recipe[] = [
  * lists the fixture project markdown files.
  */
 export const extraRecipes: Recipe[] = [
-  { name: "11-help", actions: [{ key: "?" }] },
+  // PLAN.md Iteration 3 Phase 7 item 7.1: `?` is no longer the dashboard's
+  // Help-WINDOW hotkey (Locked decision #14 / Phase 3 item 3.4) — a bare
+  // `?` now opens the site-wide HelpSearch palette everywhere, including
+  // the dashboard. "20-help-search" below captures THAT state; this recipe
+  // stays "11-help" (the Help WINDOW, "Help — Keymap Reference") and is
+  // reached with `h`, the dashboard's own current Help hotkey
+  // (views.ts's HOTKEY_TO_VIEW, dashboard.yaml's `hotkey: "h"`) — verified
+  // empirically by actually running it, not by reading source alone
+  // (iteration-2's own lesson, restated in this file's header comment).
+  { name: "11-help", actions: [{ key: "h" }] },
   { name: "12-all-projects", actions: [{ key: "b" }, { key: "3" }, { key: "k" }, { key: "Enter" }] },
 ];
 
@@ -199,6 +208,112 @@ export const bootRecipes: BootRecipe[] = [
  */
 export const cmdlineRecipes: Recipe[] = [{ name: "15-cmdline", actions: [{ key: ":" }, { type: "bui" }] }];
 
+/**
+ * Iteration-3 recipes (PLAN.md Phase 7 item 7.1: "ADD five recipes") — kept
+ * in their OWN array for the same reason every other post-vendored-prototype
+ * array on this page is (`extraRecipes`/`bootRecipes`/`cmdlineRecipes`'s own
+ * header comments): these states (real pane splits, layouts, choose-tree,
+ * the in-window/host shell) did not exist even at the Phase-6 re-baseline,
+ * let alone in the vendored prototype `capture-goldens.mjs` replays against
+ * — that script must never be asked to attempt them. `identical.spec.ts` is
+ * the only consumer, via the same `captureState()` every recipe above (bar
+ * `bootRecipes`) already uses.
+ *
+ * Every keystroke sequence below was verified against the CURRENT
+ * implementation by tracing the actual dispatch code (Terminal.svelte's
+ * `handleKey`/`handlePrefixedKey`) and cross-checking against the ground-
+ * truth e2e specs that already exercise these exact sequences (panes.spec.ts,
+ * choose-tree.spec.ts, sessions.spec.ts, shell.spec.ts, help-search.spec.ts)
+ * — iteration-2's own lesson ("run them, don't trust them") applied by using
+ * sequences already proven live in a real browser, not freshly guessed ones.
+ *
+ * A tmux prefix chord is TWO separate key actions, not one: `Ctrl-b` arms
+ * the prefix (`{key: "Control+b"}`, Playwright's own down/press/up chord —
+ * functionally identical to the hand-rolled down("Control")/press("b")/
+ * up("Control") the e2e specs use, both producing the same single keydown
+ * with `ctrlKey: true, key: "b"` Terminal.svelte's listener reads), then the
+ * FOLLOWING key is pressed alone, unmodified, as its own action — real
+ * tmux's own "prefix, then a key" model. `handlePrefixedKey` disarms the
+ * prefix on every dispatch (Terminal.svelte), so repeating the same
+ * prefixed key (e.g. the 5 Space presses below) needs a fresh `Control+b`
+ * before EACH one, not just the first.
+ */
+export const iteration3Recipes: Recipe[] = [
+  // "16-shell": PLAN.md Locked decision #2 — the cmdline `q` command exits
+  // the dashboard's program to an in-window shell (verified sequence,
+  // shell.spec.ts's own `dropToShell()`: bare `:` opens site-mode Cmdline
+  // from the dashboard, typing `q` + Enter runs the `:q`-equivalent exit).
+  // `neofetch` (shell.ts's own builtin) is 100% data/clock-deterministic —
+  // fixed ASCII art + yaml-driven fields + an uptime in whole MINUTES
+  // (floors 10s of fake-clock advance to "0 min" every run) — unlike
+  // `tree`/`cat`/`ls` against the real repo-root fs-index, which drifts
+  // with every unrelated source-tree edit (PLAN.md 7.1's own warning).
+  {
+    name: "16-shell",
+    actions: [
+      { key: ":" },
+      { type: "q" },
+      { key: "Enter" },
+      { type: "neofetch" },
+      { key: "Enter" },
+    ],
+  },
+  // "17-host-shell": `Ctrl-b d` detach (Locked decision #3) from a fresh
+  // dashboard load — the pre-seeded host-shell narrative (shell.yaml's
+  // `host.narrative`, `{session}` substituted with the real default session
+  // name) plus the live-appended `[detached (from session …)]` line, shown
+  // fullscreen over the dimmed (brightness, not blur) radar with no status
+  // bar (sessions.spec.ts's own detach assertions).
+  { name: "17-host-shell", actions: [{ key: "Control+b" }, { key: "d" }] },
+  // "18-split": `Ctrl-b |` then `Ctrl-b -` reaches 3 panes (one full-height
+  // pane on the left, two stacked on the right — panes.spec.ts's own
+  // `makeThreePanes()`), then `Ctrl-b Space` cycled to main-vertical. A
+  // manually-split window's `lastLayout` is unset (tmux.ts: "-1"), so the
+  // FIRST bare Space lands on index 0 (even-horizontal) — reaching
+  // main-vertical (index 4 of the 7-preset cycle: even-horizontal(0),
+  // even-vertical(1), main-horizontal(2), main-horizontal-mirrored(3),
+  // main-vertical(4)) needs exactly 5 total Space presses, each its own
+  // freshly-armed `Ctrl-b` (verified directly against panes.spec.ts's own
+  // 7-press layout-cycle test, whose 5th press is the same main-vertical
+  // assertion this recipe targets).
+  {
+    name: "18-split",
+    actions: [
+      { key: "Control+b" },
+      { key: "|" },
+      { key: "Control+b" },
+      { key: "-" },
+      { key: "Control+b" },
+      { key: " " },
+      { key: "Control+b" },
+      { key: " " },
+      { key: "Control+b" },
+      { key: " " },
+      { key: "Control+b" },
+      { key: " " },
+      { key: "Control+b" },
+      { key: " " },
+    ],
+  },
+  // "19-choose-tree": `Ctrl-b w` from a window that already has a split —
+  // per PLAN.md 7.1 ("from a window with a split"), so the overlay's
+  // bottom preview strip has more than one pane program to actually
+  // describe. Choose-tree itself needs no split precondition to OPEN
+  // (choose-tree.spec.ts opens it from a plain single-pane `/builds` too),
+  // but this recipe deliberately gives it one for a more informative
+  // golden.
+  {
+    name: "19-choose-tree",
+    actions: [{ key: "Control+b" }, { key: "|" }, { key: "Control+b" }, { key: "w" }],
+  },
+  // "20-help-search": bare `?` opens the site-wide HelpSearch palette from
+  // the dashboard (Locked decision #14 — REPLACES the old `?`→help-window
+  // binding "11-help" used to exercise), then the "kil" fuzzy canary
+  // (help-search.spec.ts's own canary — surfaces both the kill-window and
+  // kill-pane keymap rows) captures a populated, non-empty result list.
+  { name: "20-help-search", actions: [{ key: "?" }, { type: "kil" }] },
+];
+
 export const viewports = [
   { name: "1512x945", width: 1512, height: 945 },
   { name: "1920x1080", width: 1920, height: 1080 },
@@ -219,3 +334,18 @@ export const CLOCK_TIME = "2026-08-15T23:34:00";
  * which will render the same text at this fixed instant.
  */
 export const RUN_FOR_MS = 5000;
+
+/**
+ * PLAN.md Iteration 3 Phase 7 item 7.1: the dashboard's seeded 2-of-pool
+ * toast pick (Locked decision #12, src/lib/notifications.ts's
+ * `resolveToastSeed()`/`pickToastPair()`) reads `Date.now()` in prod, which
+ * would make every recipe that ever touches the dashboard window (its `id`
+ * stays "dashboard" — and Toasts stays visible — even once its PROGRAM is
+ * `shell`, e.g. "16-shell") pick a different, non-deterministic pair every
+ * capture. `pipeline.mjs` pre-seeds `TOAST_SEED_STORAGE_KEY`
+ * (src/lib/notifications.ts) with this fixed value via `addInitScript`,
+ * mirroring tests/e2e/fixtures.ts's own `E2E_TOAST_SEED` pattern (a
+ * different arbitrary constant — the two suites don't share fixtures, so
+ * there is no requirement the values match, only that each is fixed).
+ */
+export const TOAST_SEED = 133742;

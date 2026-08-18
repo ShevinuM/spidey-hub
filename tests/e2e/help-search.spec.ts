@@ -150,6 +150,26 @@ test.describe("HelpSearch: gating — does NOT open in these contexts", () => {
     await expect(input(page)).toContainText("?");
     await expect(overlay(page)).toBeVisible();
   });
+
+  // PLAN.md Iteration 3 Phase 7 verifier follow-up (Phase 6): mirrors
+  // cmdline.spec.ts's "while the box is open, the prefix is inert" case —
+  // Terminal.svelte's combined `isPromptActive()/cmdlineRef.isOpen()/
+  // helpSearchRef.isOpen()` gate (checked BEFORE every prefixed branch,
+  // including `w`) already blocks `Ctrl-b w` from opening choose-tree while
+  // the help palette is up; this pins that with a live e2e probe instead of
+  // relying on the source comment alone.
+  test("Ctrl-b w does not open choose-tree while the help palette is open (window-chrome contract)", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press("?");
+    await expect(overlay(page)).toBeVisible();
+
+    await ctrlB(page);
+    await page.keyboard.press("w");
+    await expect(page.locator('[data-testid="choose-tree-overlay"]')).not.toBeVisible();
+    await expect(overlay(page)).toBeVisible();
+  });
 });
 
 test.describe("HelpSearch: empty-query listing + fuzzy filtering", () => {

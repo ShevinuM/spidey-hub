@@ -10,20 +10,22 @@
 // re-baseline (`playwright test tests/visual/identical.spec.ts
 // --update-snapshots`, see tests/visual/README-PIPELINE.md), the goldens in
 // tests/visual/goldens/ are SELF-baselines — captured from, and compared
-// against, our OWN implementation, at all 15 recipes (30 goldens; this
-// script's 10-recipe vendored-prototype path cannot even attempt the other
-// 5, which reach states — the help window, all-projects, the boot sequence,
-// the cmdline box — the prototype predates entirely). Running this script
-// would silently overwrite those self-baselines with screenshots of the
-// (frozen, unpatched) vendored PROTOTYPE instead, un-fixing the intentional
-// deviations documented throughout this codebase (e.g. the tracker
-// window-ordering bug fix) and reintroducing a structural mismatch that
-// tests/visual/identical.spec.ts would then fail against. `pnpm goldens`
-// is kept only as a historical record of how the ORIGINAL Phase 1 baseline
-// was produced — running it for real (rather than reading it) requires an
-// explicit override flag that names what it does, so nobody fat-fingers
-// `pnpm goldens` expecting a self-baseline refresh and silently regresses
-// the whole suite's authority.
+// against, our OWN implementation, at all 20 recipes (Iteration 3 Phase 7
+// added 5 more on top of Phase 6's 15 — 40 goldens total; this script's
+// 10-recipe vendored-prototype path cannot even attempt the other 10, which
+// reach states — the help window, all-projects, the boot sequence, the
+// cmdline box, real panes/layouts/choose-tree/sessions/shell, the `?`
+// HelpSearch palette — the prototype predates entirely). Running this
+// script would silently overwrite those self-baselines with screenshots of
+// the (frozen, unpatched) vendored PROTOTYPE instead, un-fixing the
+// intentional deviations documented throughout this codebase (e.g. the
+// tracker window-ordering bug fix) and reintroducing a structural mismatch
+// that tests/visual/identical.spec.ts would then fail against. `pnpm
+// goldens` is kept only as a historical record of how the ORIGINAL Phase 1
+// baseline was produced — running it for real (rather than reading it)
+// requires an explicit override flag that names what it does, so nobody
+// fat-fingers `pnpm goldens` expecting a self-baseline refresh and silently
+// regresses the whole suite's authority.
 import { chromium } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -47,11 +49,11 @@ async function main() {
     console.error(
       [
         "refusing to run: tests/visual/goldens/ is now self-baselined from our",
-        "own implementation (PLAN.md Phase 6 re-baseline, see this file's",
-        "header comment) — running this script overwrites those 30 self-",
+        "own implementation (PLAN.md Phase 6/7 re-baselines, see this file's",
+        "header comment) — running this script overwrites those 40 self-",
         "baselines with 20 screenshots of the frozen vendored prototype,",
         "un-fixing intentional deviations and desyncing tests/visual/",
-        "identical.spec.ts's 15-recipe suite.",
+        "identical.spec.ts's 20-recipe suite.",
         "",
         "To re-baseline for real (the normal path), run instead:",
         "  pnpm build:fixtures && playwright test tests/visual/identical.spec.ts --update-snapshots",

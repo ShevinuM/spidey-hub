@@ -38,8 +38,9 @@
 // recipes.ts) — comfortably under 60s, so the displayed minute stays
 // "23:34" throughout, matching the prototype's hardcoded text and (from
 // Phase 3) the implementation's live clock at this same fixed instant.
-import { BOOT_HARD_STOP_MS, CLOCK_TIME, RUN_FOR_MS } from "./recipes.ts";
+import { BOOT_HARD_STOP_MS, CLOCK_TIME, RUN_FOR_MS, TOAST_SEED } from "./recipes.ts";
 import { BOOT_SEEN_STORAGE_KEY } from "../../src/lib/bootState.ts";
+import { TOAST_SEED_STORAGE_KEY } from "../../src/lib/notifications.ts";
 
 /**
  * CSS selector for the SIGNAL footer's net-readout span (Profile view).
@@ -108,19 +109,43 @@ export async function captureState(page, url, recipe) {
   // prototype reference (capture-goldens.mjs's other caller): that page
   // has no sessionStorage-aware boot code at all, so the flag is simply
   // unread there.
-  await page.addInitScript((key) => {
-    try {
-      sessionStorage.setItem(key, "1");
-    } catch {
-      // ignore — same best-effort contract as src/lib/bootState.ts
-    }
-  }, BOOT_SEEN_STORAGE_KEY);
+  // PLAN.md Iteration 3 Phase 7 item 7.1: also pre-seed the toast-seed key
+  // (recipes.ts's TOAST_SEED, own header comment) alongside the boot-skip
+  // flag — same "set before any navigation via addInitScript" contract,
+  // same best-effort try/catch (mirrors tests/e2e/fixtures.ts's combined
+  // context.addInitScript for the two keys).
+  await page.addInitScript(
+    ({ bootKey, toastSeedKey, toastSeed }) => {
+      try {
+        sessionStorage.setItem(bootKey, "1");
+        sessionStorage.setItem(toastSeedKey, String(toastSeed));
+      } catch {
+        // ignore — same best-effort contract as src/lib/bootState.ts
+      }
+    },
+    { bootKey: BOOT_SEEN_STORAGE_KEY, toastSeedKey: TOAST_SEED_STORAGE_KEY, toastSeed: TOAST_SEED },
+  );
 
   await page.clock.install({ time: CLOCK_TIME });
   await page.goto(url, { waitUntil: "load" });
   await page.clock.runFor(RUN_FOR_MS);
 
-  await page.getByText("SHEVINUM.DEV").waitFor({ state: "visible", timeout: 15000 });
+  // PLAN.md Iteration 3 Phase 2 item 2.1 retired the "SHEVINUM.DEV" plate
+  // title text this marker used to wait on — the dashboard now shows the
+  // SPIDEY-HUB wordmark (`[data-testid="dashboard-wordmark"]`) instead. The
+  // vendored PROTOTYPE reference this same function also captures from
+  // (tests/visual/capture-goldens.mjs, historical/guarded — see its own
+  // header) is frozen, un-patched static HTML that still literally contains
+  // "SHEVINUM.DEV" and has no data-testid attributes at all, so the marker
+  // can't simply be swapped outright without breaking that path. `.or()`
+  // waits for whichever side actually exists to become visible, so this one
+  // function keeps working against both the real implementation and the
+  // frozen prototype, exactly like the boot-skip pre-seed above is
+  // "harmless (unread)" rather than broken against the prototype.
+  const dashboardMountMarker = page
+    .getByText("SHEVINUM.DEV")
+    .or(page.locator('[data-testid="dashboard-wordmark"]'));
+  await dashboardMountMarker.first().waitFor({ state: "visible", timeout: 15000 });
 
   for (const action of recipe.actions) {
     if ("key" in action) {
@@ -239,6 +264,23 @@ export async function captureState(page, url, recipe) {
  */
 export async function captureBootState(page, url, bootRecipe) {
   await page.route("**/api.github.com/**", (route) => route.abort());
+
+  // PLAN.md Iteration 3 Phase 7 item 7.1: "14-boot-ready" lands on the
+  // post-outro READY dashboard (window id "dashboard", Toasts visible —
+  // same reasoning as captureState()'s own toast-seed pre-seed above), so
+  // this capture path needs the exact same deterministic pin. No boot-seen
+  // pre-seed here (unchanged, deliberately — see this function's own header
+  // comment: "a boot golden's entire point is a genuine, unskipped boot").
+  await page.addInitScript(
+    ({ toastSeedKey, toastSeed }) => {
+      try {
+        sessionStorage.setItem(toastSeedKey, String(toastSeed));
+      } catch {
+        // ignore — same best-effort contract as src/lib/bootState.ts
+      }
+    },
+    { toastSeedKey: TOAST_SEED_STORAGE_KEY, toastSeed: TOAST_SEED },
+  );
 
   await page.clock.install({ time: CLOCK_TIME });
   const t0 = new Date(CLOCK_TIME).getTime();

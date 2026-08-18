@@ -5,33 +5,45 @@
 // (tests/visual/pipeline.mjs) used to produce tests/visual/goldens/, so the
 // two sides can never structurally drift apart.
 //
-// PLAN.md Phase 6 item 6.1 wires in all four recipe arrays from recipes.ts —
-// 15 recipes total, 30 goldens across both viewports:
+// PLAN.md Phase 6 item 6.1 wired in the first four recipe arrays from
+// recipes.ts; Iteration 3 Phase 7 item 7.1 adds a fifth — 20 recipes total,
+// 40 goldens across both viewports:
 //   - `recipes` (10): the original set, re-baselined against our OWN
 //     implementation as of Phase 6 (see recipes.ts's header comment for the
 //     three action-list fixes this required — "03-builds-j"/"05-personnel-
 //     l1"/"06-editor" — found by actually running them, not by inspection).
 //   - `extraRecipes` (2): "11-help", "12-all-projects" — states the
-//     vendored prototype never had.
-//   - `cmdlineRecipes` (1): "15-cmdline" — the Phase 5C floating command box.
+//     vendored prototype never had. "11-help" was re-validated at Iteration
+//     3 Phase 7 (its action changed from `?` to `h` — Locked decision #14
+//     freed `?` up for the HelpSearch palette, "20-help-search" below).
+//   - `cmdlineRecipes` (1): "15-cmdline" — the Phase 5C floating command box
+//     (Iteration 3 removed its suggestion list — same actions, new content).
 //   - `bootRecipes` (2): "13-boot-mid"/"14-boot-ready" — captured through a
 //     SEPARATE function (`captureBootState()`, not `captureState()`) because
 //     they need a different, boot-specific clock-control sequence to be
 //     deterministic — see that function's header comment in pipeline.mjs.
+//   - `iteration3Recipes` (5): "16-shell"/"17-host-shell"/"18-split"/
+//     "19-choose-tree"/"20-help-search" — states Iteration 3 (shell/
+//     sessions/panes/layouts/choose-tree/HelpSearch) added; see
+//     recipes.ts's own header comment on this array for the verified
+//     keystroke sequences.
 //
 // This suite is now the goldens' SOLE authority (PLAN.md 6.2's
 // `--update-snapshots` re-baseline): tests/visual/capture-goldens.mjs's
 // vendored-prototype path is retired to historical/guarded status (see its
 // own header comment) and is never run as part of normal development.
 import { expect, test } from "@playwright/test";
-import { bootRecipes, cmdlineRecipes, extraRecipes, recipes } from "./recipes.ts";
+import { bootRecipes, cmdlineRecipes, extraRecipes, iteration3Recipes, recipes } from "./recipes.ts";
 import { captureBootState, captureState } from "./pipeline.mjs";
 
-// The 13 standard (key/type replay) recipes, captured via captureState().
+// The 18 standard (key/type replay) recipes, captured via captureState().
 // bootRecipes are handled by their own describe block below via
 // captureBootState() instead — a different capture function, not just a
-// different recipe shape.
-const keyRecipes = [...recipes, ...extraRecipes, ...cmdlineRecipes];
+// different recipe shape. PLAN.md Iteration 3 Phase 7 item 7.1 adds
+// `iteration3Recipes` (16-shell/17-host-shell/18-split/19-choose-tree/
+// 20-help-search) to the union — 20 recipes total, 40 goldens across both
+// viewports.
+const keyRecipes = [...recipes, ...extraRecipes, ...cmdlineRecipes, ...iteration3Recipes];
 
 // PLAN.md "Visual-regression harness": "start maxDiffPixels: 0; if
 // antialiasing noise appears, an executor may relax to at most

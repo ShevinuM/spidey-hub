@@ -328,17 +328,39 @@ reattaches with prior window state intact.
 seven times returns to even-horizontal; `Ctrl-b w` from a split window switches sessions.
 
 ### Phase 7 — Visual re-baseline + acceptance
-- [ ] 7.1 Update recipes: existing 15 re-validated (01-dashboard now = wordmark + blur + seeded
+- [x] 7.1 Update recipes: existing 15 re-validated (01-dashboard now = wordmark + blur + seeded
   toasts; 15-cmdline without options); ADD: 16-shell (dashboard `:q` + `neofetch`), 17-host-shell
   (detached, mock scrollback), 18-split (3 panes, main-vertical), 19-choose-tree, 20-help-search
   (`?` + query `kil`). All recipes must produce meaningfully distinct PNGs (byte-compare guard
-  from iteration 2 applies).
-- [ ] 7.2 Re-baseline: `pnpm build:fixtures && playwright test tests/visual/identical.spec.ts
+  from iteration 2 applies). Also fixed two stale capture-pipeline hazards found while validating
+  01-dashboard/16-shell: pipeline.mjs's dashboard-mount-wait selector still targeted the retired
+  "SHEVINUM.DEV" text (fixed with `.or()` against the new `dashboard-wordmark` testid, kept working
+  for the vendored-prototype path too), and the seeded toast pick (Locked #12) was unpinned (now
+  pre-seeded via `TOAST_SEED_STORAGE_KEY` in both `captureState()` and `captureBootState()`).
+- [x] 7.2 Re-baseline: `pnpm build:fixtures && playwright test tests/visual/identical.spec.ts
   --update-snapshots`, then 3 consecutive clean runs (40 goldens, maxDiffPixels 0). Toast seed +
-  clock frozen via fixtures; fs/shell output deterministic by construction.
-- [ ] 7.3 help.yaml + README keymap tables updated for every new binding/command (window `[h]`,
-  `?` palette, splits, layouts, choose-tree, detach, sessions, shell builtins).
-- [ ] 7.4 Full acceptance sweep (verifier): all ACs below with live probes.
+  clock frozen via fixtures; fs/shell output deterministic by construction. Ran twice (once before,
+  once after the 7.3 help.yaml content addition changed 11-help/20-help-search's expected pixels)
+  per advisor guidance to avoid re-doing the 3-run gate; final 3 consecutive runs: 40/40, 40/40,
+  40/40 at maxDiffPixels 0, zero byte-identical duplicate goldens per viewport.
+- [x] 7.3 help.yaml + README keymap tables updated for every new binding/command (window `[h]`,
+  `?` palette, splits, layouts, choose-tree, detach, sessions, shell builtins). Added a new
+  "Shell builtins" section to help.yaml (cd/ls/cat/pwd/tree/clear/whoami/help/open/view-names/
+  neofetch/sudo/exit/reboot — previously undocumented); audited existing sections for gaps (Ctrl-b
+  `;` last-pane and `%`/`"` aliases were already present from earlier phases). Rewrote README.md's
+  entire Keymap reference section plus fixed other stale mentions found along the way (intro
+  paragraph, commands table, submodule count 3→8, personnel "3 levels deep"→depth-generic,
+  resume.pdf "placeholder"→real, visual-suite recipe/golden counts, Architecture section's
+  delegation order and generated-artifacts list) and tests/visual/README-PIPELINE.md /
+  capture-goldens.mjs's stale 15-recipe/30-golden counts. Also did the two cheap Phase 6
+  verifier follow-ups: added an e2e test pinning `Ctrl-b w` inert while the help palette is open
+  (help-search.spec.ts), and extended panes.spec.ts's mismatched-title select-layout test to
+  actually cover the bare-form no-op branch its title promised.
+- [ ] 7.4 Full acceptance sweep (verifier): all ACs below with live probes. Executor ran the full
+  gauntlet ahead of this (pnpm check 0 errors; 285/285 unit; 822 e2e across both viewport projects,
+  820 passed + 2 pre-existing environmental flakes reconfirmed green in isolation — see report; 3
+  consecutive clean visual runs; `pnpm generate` idempotent across 3 consecutive runs) — left unchecked
+  for the verifier's own independent live-probe sweep per the plan's process.
 
 ## Acceptance criteria (final verifier checklist)
 
