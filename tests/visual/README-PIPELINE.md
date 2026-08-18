@@ -105,9 +105,19 @@ different command line, an extra status-box row).
    decision #12) would otherwise read a live `Date.now()` and pick a
    different, non-deterministic pair every capture. This matters for more
    recipes than just `01-dashboard`: the dashboard WINDOW keeps its own id
-   (and Toasts stays mounted/visible) even once its running PROGRAM is a
-   shell (e.g. `16-shell`, reached via `:q`), so any recipe that ever
-   touches window 0 needs this pin.
+   (and Toasts stays mounted) even once its running PROGRAM is a shell
+   (e.g. `16-shell`, reached via `:q`), so any recipe that ever touches
+   window 0 needs this pin. **Iteration 4 update**: Toasts now auto-dismiss
+   after `TOAST_AUTO_DISMISS_MS` (4000ms, `src/lib/notifications.ts`), and
+   the pipeline's total fake-clock advance is `2 * RUN_FOR_MS` (10000ms,
+   see step 6 below) — comfortably past that window. So the seed no longer
+   controls what's *visible* in any committed golden (every capture now
+   happens well after the seeded pair has dismissed itself); it only pins
+   *which pair would have briefly rendered* mid-capture, keeping any
+   incidental layout/timing side effect deterministic. No goldens in this
+   repo show a toast on screen — that is expected, not a capture-pipeline
+   gap (see `tests/e2e/nav.spec.ts` for toast-visible/auto-dismiss coverage
+   under real, non-frozen timing instead).
 1. `page.clock.install({ time: '2026-08-15T23:34:00' })` — **before** navigation.
 2. `page.goto(url, { waitUntil: 'load' })`.
 3. `page.clock.runFor(RUN_FOR_MS)` (5000ms by default, from `recipes.ts`).
@@ -289,8 +299,11 @@ between:
   blur-rasterization jitter documented in the Phase 1 section above did not
   reproduce in any of the three runs.
 - Every new/changed golden was inspected visually (not just byte-diffed):
-  the SPIDEY-HUB wordmark + blur + seeded Vim/Tmux toasts on `01-dashboard`/
-  `15-cmdline`/`16-shell`/`18-split`; the deterministic `neofetch` output
+  the SPIDEY-HUB wordmark + blur on `01-dashboard`/`15-cmdline`/`16-shell`/
+  `18-split` (the seeded Vim/Tmux toast pair itself is NOT visible in any
+  of these — see the Iteration 4 note on step 0 above: toasts now
+  auto-dismiss well before the pipeline's capture point); the deterministic
+  `neofetch` output
   (`Uptime: 0 min`) and renamed `0:zsh*` window on `16-shell`; the dim
   (non-blurred) radar + pre-seeded narrative + `[detached (from session
   10.42.7.13)]` on `17-host-shell`; the 3-pane main-vertical layout on
@@ -311,3 +324,62 @@ between:
   all 20×2.
 - `RATIO_RELAXED` (identical.spec.ts) stays EMPTY — no recipe needed a
   tolerance relaxation.
+
+## Determinism check (Iteration 4 re-baseline)
+
+Iteration 4 landed a batch of 22 UI/UX fixes (blurred+darkened wallpaper
+behind flat edge-to-edge views with the outer window-card chrome removed,
+a plate-free white/red SPIDEY-HUB wordmark, a lazygit-style expanded Builds
+tree with `all-projects` pinned first and selected by default, an `ls -l`
+personnel preview with folder/file icons, a fixed-overlay auto-dismissing
+toast, a one-line editor statusline, and more — see PLAN.md's "Iteration 4"
+plan for the full list). After `pnpm build:fixtures && playwright test
+tests/visual/identical.spec.ts --update-snapshots`, 30 of the 40 goldens
+(15 of the 20 recipes, both viewports each) changed pixels; the other 5
+recipes — `06-editor`, `08-tracker`, `13-boot-mid`, `17-host-shell`,
+`19-choose-tree` — reach states where none of the batch's changes are
+visible in-frame, e.g. `08-tracker`/retina-v is explicitly exempt from the
+wallpaper blur/darken change.
+
+While re-baselining, one stale recipe was caught and fixed rather than
+blindly accepted: `"12-all-projects"` (`recipes.ts`) was written when the
+virtual `all-projects` repo was the LAST row in Builds' local-repositories
+list, and used `k`-wraparound from the default `selectedRepoIdx === 0` to
+reach it. Iteration 4 item 5 moved `all-projects` to be BOTH the first row
+AND the default selection — so the old `k` press now wraps backward to the
+last REAL repo instead, landing the golden on the wrong repo entirely (one
+whose tree fixture failed to load, visible as a bare "Failed to load repo
+index." string in panel [2] — an unmistakable tell that something was
+wrong, not a legitimate new golden). Fixed by dropping the now-unnecessary
+`k` and re-activating `all-projects` directly (`{key:"b"},{key:"3"},
+{key:"Enter"}`), which still keeps this golden meaningfully distinct from
+`"02-builds"` (that one leaves panel [3] unfocused, so no row is
+highlighted) while correctly exercising the all-projects state. See the
+recipe's own updated comment in `recipes.ts` for the full account.
+
+`pnpm test:visual` was then run **three consecutive times** against the
+final committed goldens with no changes in between:
+
+- **Run 1: 40/40 passed. Run 2: 40/40 passed. Run 3: 40/40 passed.** Every
+  recipe at both viewports matched at `maxDiffPixels: 0` — the GPU
+  blur-rasterization jitter documented in the Phase 1 section above did not
+  reproduce in any of the three runs, despite this iteration adding a real
+  CSS blur filter to the wallpaper behind most views (more blur surface
+  area than any prior iteration).
+- Every changed golden was inspected visually (not just byte-diffed): the
+  blurred+darkened wallpaper and edge-to-edge flat chrome on `01-dashboard`/
+  `02-builds`/`03-builds-j`/`04-personnel-l0`/`05-personnel-l1`/`11-help`/
+  `16-shell`/`18-split`; the plate-free white-fill/red-stroke SPIDEY-HUB
+  wordmark and absent `invert` cursor block on `01-dashboard`/`15-cmdline`/
+  `16-shell`/`18-split`; the `ls -l`-style personnel preview (permissions,
+  owner, date, name-last, folder/file icons, no `personnel-path`
+  breadcrumb) on `04-personnel-l0`/`05-personnel-l1`; the corrected
+  `12-all-projects` (all-projects row highlighted + activated, see above);
+  and the one-line editor statusline surviving unchanged on `06-editor`.
+  None showed rendering defects (no blank panels, no clipped text, no
+  missing overlays). No toast is visible on screen in any golden — expected
+  per the "Iteration 4 update" note under "Order of operations" step 0
+  above, since `TOAST_AUTO_DISMISS_MS` (4000ms) elapses well before the
+  pipeline's `2 * RUN_FOR_MS` (10000ms) capture point.
+- `RATIO_RELAXED` (identical.spec.ts) stays EMPTY — no recipe needed a
+  tolerance relaxation, including the newly-blurred wallpaper layer.

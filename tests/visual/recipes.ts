@@ -86,16 +86,23 @@ export const recipes: Recipe[] = [
  * refuse-by-default override flag (see that file's header comment).
  * identical.spec.ts is the only consumer.
  *
- * "12-all-projects": the virtual all-projects repo is always the LAST row
- * in panel [3]'s flat list (Builds.svelte's `flatRepos` derivation pushes
- * it after every real project repo) — `k` from the default `selectedRepoIdx
- * === 0` wraps to that last row (`selectRepo`'s `((idx + delta) % n + n) %
- * n` modulo arithmetic) without needing to hand-count how many real repos
- * precede it, so this recipe stays correct if the fixture project count
- * ever changes. `Enter` then activates it, loading its tree (the fixture
- * projects' own .md files) into panel [2]. Verified empirically: lands on
- * `/builds`, panel [2]'s subtitle reads "- all-projects", and its tree
- * lists the fixture project markdown files.
+ * "12-all-projects": PLAN.md Iteration 4 item 5 moved the virtual
+ * all-projects repo from the LAST row in panel [3]'s flat list to the
+ * FIRST, and made it the default selection (`selectedRepoIdx = $state(0)`
+ * in Builds.svelte) — so plain "02-builds" (`{key:"b"}`) already lands on
+ * the all-projects tree with panel [3] unfocused (no row highlighted).
+ * The OLD action list here (`{key:"3"},{key:"k"},{key:"Enter"}`) relied on
+ * wraparound from idx 0 to reach all-projects as the LAST row; with
+ * all-projects now AT idx 0, that same `k` instead wraps backward to the
+ * last REAL repo and activates that one — confirmed empirically to load
+ * the wrong repo (a distinct, unrelated repo's tree, not all-projects'
+ * fixture markdown files). Fixed to focus panel [3] (highlighting the
+ * all-projects row) and re-activate it with `Enter`, which keeps this
+ * golden meaningfully distinct from "02-builds" (that highlighted-row
+ * state) while still exercising all-projects explicitly rather than only
+ * via the page-load default. Verified empirically: lands on `/builds`,
+ * panel [2]'s subtitle reads "- all-projects", and its tree lists the
+ * fixture project markdown files.
  */
 export const extraRecipes: Recipe[] = [
   // PLAN.md Iteration 3 Phase 7 item 7.1: `?` is no longer the dashboard's
@@ -108,7 +115,7 @@ export const extraRecipes: Recipe[] = [
   // empirically by actually running it, not by reading source alone
   // (iteration-2's own lesson, restated in this file's header comment).
   { name: "11-help", actions: [{ key: "h" }] },
-  { name: "12-all-projects", actions: [{ key: "b" }, { key: "3" }, { key: "k" }, { key: "Enter" }] },
+  { name: "12-all-projects", actions: [{ key: "b" }, { key: "3" }, { key: "Enter" }] },
 ];
 
 /**

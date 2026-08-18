@@ -84,8 +84,8 @@ Land all 22 distinct fixes from the user's numbered list (items 1–25; 8=22, an
 
 ### Wave 3 — single executor
 
-- [ ] **3E. Test/goldens reconciliation** — fix any remaining red e2e specs (behavior changed in waves 1–2 that other specs assert), then re-baseline visual goldens: `pnpm build:fixtures && npx playwright test tests/visual/identical.spec.ts --update-snapshots`, then run the FULL suite: `pnpm check && pnpm test:unit && pnpm test:e2e && pnpm test:visual` — all green. Eyeball 3–4 updated goldens (dashboard, builds, personnel, help) to confirm they show the new look, not a blank/broken page.
-- [ ] **3V. Final verify** — verifier re-runs the full suite from a clean state and checks the acceptance criteria list below. On PASS: orchestrator commits (and refreshes generated indexes if scripts/generate.mjs output changed).
+- [x] **3E. Test/goldens reconciliation** (DONE 2026-08-18: no red e2e specs found — 898/898 green twice, no waves-1/2 fallout; re-baselined 30/40 goldens, caught+fixed a stale `12-all-projects` recipe broken by item 5's selection-order change; README-PIPELINE.md's toast-visibility note updated for auto-dismiss; 3 consecutive `pnpm test:visual` runs 40/40 with `RATIO_RELAXED` still empty; full suite green: check 0 errors, unit 298/298, e2e 898/898 (twice), visual 40/40) — fix any remaining red e2e specs (behavior changed in waves 1–2 that other specs assert), then re-baseline visual goldens: `pnpm build:fixtures && npx playwright test tests/visual/identical.spec.ts --update-snapshots`, then run the FULL suite: `pnpm check && pnpm test:unit && pnpm test:e2e && pnpm test:visual` — all green. Eyeball 3–4 updated goldens (dashboard, builds, personnel, help) to confirm they show the new look, not a blank/broken page.
+- [x] **3V. Final verify** — PASS 2026-08-18: check 0 errors, unit 298/298, e2e 897/898 + 1 confirmed worker-contention flake (green in isolation ×2 and on prior full runs), visual 40/40, RATIO_RELAXED empty, maxDiffPixels 0, no dependency changes, commit hygiene confirmed.
 
 ## Verification (per item, checkable)
 
@@ -115,9 +115,9 @@ Land all 22 distinct fixes from the user's numbered list (items 1–25; 8=22, an
 
 ## Acceptance criteria (stop conditions)
 
-- [ ] All 22 items pass their table checks above.
-- [ ] `pnpm check`, `pnpm test:unit`, `pnpm test:e2e`, `pnpm test:visual` all green from a clean tree.
-- [ ] Visual goldens re-baselined exactly once (wave 3); updated goldens eyeballed.
-- [ ] No scope beyond the 22 items (no refactors, no new features, no dependency changes except assets needed for item 10 — none expected since Webslinger is already bundled).
-- [ ] Work committed per wave, single-line messages, no Co-Authored-By.
+- [x] All 22 items pass their table checks above.
+- [x] `pnpm check`, `pnpm test:unit`, `pnpm test:e2e`, `pnpm test:visual` all green from a clean tree.
+- [x] Visual goldens re-baselined exactly once (wave 3); updated goldens eyeballed (all 40).
+- [x] No scope beyond the 22 items (no refactors, no new features, no dependency changes except assets needed for item 10 — none expected since Webslinger is already bundled).
+- [x] Work committed per wave, single-line messages, no Co-Authored-By.
 - Out of scope: Memorial role end dates, resume/contact launch gaps, deploy.
