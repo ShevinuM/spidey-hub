@@ -89,10 +89,16 @@
     labels: EditorLabels;
     breadcrumbLeft: string;
     breadcrumbRight: string;
+    /** PLAN.md Iteration 3 Phase 6 item 6.1 — see PaneTree.svelte's own
+     * header comment (multi-instance data-copy-source gating). Defaults to
+     * `true`: Builds/Personnel are this component's only two call sites and
+     * both always pass it explicitly, but a default keeps this file safe if
+     * a future caller doesn't. */
+    isFocused?: boolean;
     onClose: () => void;
   }
 
-  const { fileName, lines, labels, breadcrumbLeft, breadcrumbRight, onClose }: Props = $props();
+  const { fileName, lines, labels, breadcrumbLeft, breadcrumbRight, isFocused = true, onClose }: Props = $props();
 
   const rawLines = $derived(lines.map((l) => l.t));
 
@@ -293,7 +299,7 @@
   const SEARCH_PASTE_TARGET_ID = "editor-search";
 
   $effect(() => {
-    if (pending !== "search") return;
+    if (pending !== "search" || !isFocused) return;
     pushPasteTarget({
       id: SEARCH_PASTE_TARGET_ID,
       insert: (text: string) => {
@@ -820,7 +826,7 @@
        `paste-buffer` span below already uses — visually inert, still
        "rendered" for innerText purposes. -->
   <pre
-    data-copy-source
+    data-copy-source={isFocused ? "" : undefined}
     style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:pre;margin:0">{rawLines.join(
       "\n",
     )}</pre>

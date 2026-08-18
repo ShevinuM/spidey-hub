@@ -26,9 +26,12 @@
 
   interface Props {
     profile: ProfileData;
+    /** PLAN.md Iteration 3 Phase 6 item 6.1 — see PaneTree.svelte's own
+     * header comment (multi-instance data-copy-source gating). */
+    isFocused: boolean;
   }
 
-  const { profile }: Props = $props();
+  const { profile, isFocused }: Props = $props();
 
   function isMailto(href: string): boolean {
     return href.startsWith("mailto:");
@@ -117,7 +120,7 @@
         </div>
         <div
           data-testid="profile-summary"
-          data-copy-source
+          data-copy-source={isFocused ? "" : undefined}
           style="flex:1 1 auto;min-height:64px;overflow-y:auto;border:1px solid rgba(224,69,60,.35);padding:6px 10px;display:flex;flex-direction:column;gap:3px;font-size:12px;line-height:1.32;color:rgba(196,216,232,.75)"
         >
           <div style="color:rgba(217,176,74,.85);letter-spacing:.16em">{profile.summary.heading}</div>

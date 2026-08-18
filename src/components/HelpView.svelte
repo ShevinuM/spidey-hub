@@ -16,9 +16,12 @@
 
   interface Props {
     help: HelpData;
+    /** PLAN.md Iteration 3 Phase 6 item 6.1 — see PaneTree.svelte's own
+     * header comment (multi-instance data-copy-source gating). */
+    isFocused: boolean;
   }
 
-  const { help }: Props = $props();
+  const { help, isFocused }: Props = $props();
 
   let scrollerEl = $state<HTMLDivElement | null>(null);
 
@@ -51,7 +54,7 @@
     <div
       bind:this={scrollerEl}
       data-testid="help-scroller"
-      data-copy-source
+      data-copy-source={isFocused ? "" : undefined}
       class="help-scroller"
       style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:16px;padding-top:8px"
     >

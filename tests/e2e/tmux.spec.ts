@@ -145,14 +145,26 @@ test.describe("tmux prefix (Ctrl-b)", () => {
   // PLAN.md Locked decision #3 / Iteration 3 Phase 5 item 5.1: `d` is now
   // real tmux detach (see tests/e2e/sessions.spec.ts for its own coverage),
   // REPLACING the Phase 4 "go home" behavior this test used to assert for
-  // all three keys. `w`/`0` keep "go home" until Phase 6 wires choose-tree.
-  test("Ctrl-b w and Ctrl-b 0 both return to the dashboard", async ({ page }) => {
-    for (const key of ["w", "0"]) {
-      await gotoReady(page, "/builds");
-      await ctrlB(page);
-      await page.keyboard.press(key);
-      await expect(page).toHaveURL(/\/$/);
-    }
+  // all three keys.
+  test("Ctrl-b 0 returns to the dashboard", async ({ page }) => {
+    await gotoReady(page, "/builds");
+    await ctrlB(page);
+    await page.keyboard.press("0");
+    await expect(page).toHaveURL(/\/$/);
+  });
+
+  // PLAN.md Locked decision #3 / Iteration 3 Phase 6 item 6.5: `w` is now
+  // real tmux choose-tree, REBINDING the old "go home" behavior — see
+  // tests/e2e/choose-tree.spec.ts for its own dedicated coverage. This is
+  // just the rebind smoke test: opening does NOT navigate anywhere (the URL
+  // stays put — choose-tree is an overlay, not a window switch) until Enter
+  // picks something.
+  test("Ctrl-b w opens choose-tree instead of going home", async ({ page }) => {
+    await gotoReady(page, "/builds");
+    await ctrlB(page);
+    await page.keyboard.press("w");
+    await expect(page.locator('[data-testid="choose-tree-overlay"]')).toBeVisible();
+    await expect(page).toHaveURL(/\/builds$/);
   });
 
   test("prefix times out after 2s: pressing 2 afterward neither switches the view nor types anywhere", async ({
@@ -476,76 +488,33 @@ test.describe("Ctrl-b & kill-window (PLAN.md Phase 5 item 5.2)", () => {
   });
 });
 
-test.describe("Ctrl-b x kill-pane (PLAN.md Phase 5 item 5.2)", () => {
+// PLAN.md Iteration 3 Phase 6 item 6.3 / Locked decision #4: `Ctrl-b x` is
+// now REAL tmux kill-pane (Builds-internal panel-kill is REMOVED entirely —
+// see tests/e2e/panes.spec.ts for full split/kill/layout coverage; this
+// describe block only keeps the single-pane-window smoke test, UPDATED for
+// the new numeric-index prompt and real cascade, per the plan's explicit
+// "changed, not deleted" instruction).
+test.describe("Ctrl-b x kill-pane (PLAN.md Iteration 3 Phase 6 item 6.3)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("inside Builds with multiple panels, confirms and removes only the FOCUSED panel; it's back after Builds remounts", async ({
+  test("in a single-pane window, x ALWAYS prompts kill-pane (numeric index), and y cascades the window away", async ({
     page,
   }) => {
-    await gotoReady(page, "/builds");
-    await page.keyboard.press("2"); // focus panel [2] Files
-    await expect(page.locator('[data-testid="builds-panel-2"]')).toBeVisible();
-
-    await ctrlB(page);
-    await page.keyboard.press("x");
-    await expect(page.locator('[data-testid="status-confirm"]')).toContainText("kill-pane");
-    await page.keyboard.press("y");
-
-    await expect(page.locator('[data-testid="builds-panel-2"]')).toHaveCount(0);
-    // The other panels keep their positions — untouched by the removal.
-    await expect(page.locator('[data-testid="builds-panel-1"]')).toBeVisible();
-    await expect(page.locator('[data-testid="builds-panel-3"]')).toBeVisible();
-    await expect(page.locator('[data-testid="builds-panel-4"]')).toBeVisible();
-    await expect(page.locator('[data-testid="builds-panel-0"]')).toBeVisible();
-
-    // Leaving and re-entering Builds remounts it — the layout resets.
-    await page.locator('[data-testid="status-bar-window"][data-window-id="personnel"]').click();
-    await page.locator('[data-testid="status-bar-window"][data-window-id="builds"]').click();
-    await expect(page.locator('[data-testid="builds-panel-2"]')).toBeVisible();
-  });
-
-  test("in a single-pane view, x falls back to the exact same kill-window confirm as &", async ({ page }) => {
     await gotoReady(page, "/profile");
     await ctrlB(page);
     await page.keyboard.press("x");
-    await expect(page.locator('[data-testid="status-confirm"]')).toHaveText("kill-window profile? (y/n)");
+    await expect(page.locator('[data-testid="status-confirm"]')).toHaveText("kill-pane 0? (y/n)");
     await page.keyboard.press("n");
     await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
     await expect(page).toHaveURL(/\/profile$/);
-  });
-
-  // PLAN.md Phase 6 item 6.0: kill-pane confirm hardening. The confirm's
-  // target panel must be captured when the "kill-pane <name>? (y/n)" prompt
-  // OPENS, not re-read from whatever is CURRENTLY focused when `y` commits
-  // — mirroring the rename/kill-window hardening already covered by the
-  // "prompt keyboard ownership" describe block below. Before this fix,
-  // clicking a different panel's row while the confirm was still open
-  // moved `focusedPanel`, and pressing `y` killed that NEWLY focused panel
-  // instead of the one named in the prompt.
-  test("a mouse click on a different panel mid-confirm cannot redirect the kill — the ORIGINALLY named panel dies", async ({
-    page,
-  }) => {
-    await gotoReady(page, "/builds");
-    await page.keyboard.press("2"); // focus panel [2] Files
-    await expect(page.locator('[data-testid="builds-panel-2"]')).toBeVisible();
 
     await ctrlB(page);
     await page.keyboard.press("x");
-    await expect(page.locator('[data-testid="status-confirm"]')).toContainText("Files");
-
-    // Click the Repos panel's row while the confirm is still open — this
-    // moves focusedPanel to [3] without answering the prompt.
-    await page.locator('[data-testid="builds-repo-row"]').first().click();
-    await expect(page.locator('[data-testid="status-confirm"]')).toContainText("Files");
-
     await page.keyboard.press("y");
-
-    // The ORIGINALLY named panel (Files, [2]) is dead; the clicked one
-    // (Repos, [3]) survives untouched.
-    await expect(page.locator('[data-testid="builds-panel-2"]')).toHaveCount(0);
-    await expect(page.locator('[data-testid="builds-panel-3"]')).toBeVisible();
+    await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="profile"]')).toHaveCount(0);
   });
 });
 
@@ -587,7 +556,7 @@ test.describe("prompt keyboard ownership vs. the prefix system (verifier round 2
     await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
     await expect(prompt).toContainText("(rename-window) dashboard");
 
-    // x — would normally do the same (single-pane kill-window fallback).
+    // x — would normally pop a kill-pane confirm of its own.
     await ctrlB(page);
     await page.keyboard.press("x");
     await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();

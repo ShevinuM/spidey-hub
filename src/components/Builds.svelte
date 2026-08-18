@@ -50,10 +50,16 @@
     builds: BuildsData;
     projects: CollectionEntry<"projects">[];
     commitsByRepo: Record<string, Commit[]>;
+    /** PLAN.md Iteration 3 Phase 6 item 6.1 — see PaneTree.svelte's own
+     * header comment (multi-instance data-copy-source gating); ANDed with
+     * each panel's own `focusedPanel === N` check below (both must hold:
+     * this pane is the window's focused one, AND this is its focused
+     * panel). */
+    isFocused: boolean;
     onTracker: () => void;
   }
 
-  const { builds, projects, commitsByRepo, onTracker }: Props = $props();
+  const { builds, projects, commitsByRepo, isFocused, onTracker }: Props = $props();
 
   const sortedProjects = $derived([...projects].sort((a, b) => a.data.order - b.data.order));
 
@@ -99,71 +105,6 @@
   let selectedCommitIdx = $state(0);
   /** 0-4, matching the five panel numbers (0 = Changes, 1 = Status, etc.). */
   let focusedPanel = $state<0 | 1 | 2 | 3 | 4>(2);
-
-  // ---------------------------------------------------------------------
-  // Kill-pane (PLAN.md Phase 5 item 5.2, Ctrl-b x) — panels removed from the
-  // layout by number. Local component state only: since Builds.svelte only
-  // ever exists inside Terminal.svelte's `{:else if view === "builds"}`
-  // branch, switching away and back destroys and recreates this whole
-  // component, so "layout resets when Builds remounts" (PLAN.md's own
-  // wording) falls out for free — no explicit reset code needed anywhere.
-  // ---------------------------------------------------------------------
-
-  const ALL_PANELS = [0, 1, 2, 3, 4] as const;
-  let removedPanels = $state<Set<0 | 1 | 2 | 3 | 4>>(new Set());
-
-  const panelTitles = $derived({
-    0: builds.panels.changes.title,
-    1: builds.panels.status.title,
-    2: builds.panels.files.title,
-    3: builds.panels.repos.title,
-    4: builds.panels.commits.title,
-  });
-
-  /** Terminal.svelte's Ctrl-b x gate: falls back to the kill-window flow
-   * ("the only pane = the window") once a single panel remains. */
-  export function canKillPane(): boolean {
-    return ALL_PANELS.length - removedPanels.size > 1;
-  }
-
-  export function focusedPanelTitle(): string {
-    return panelTitles[focusedPanel];
-  }
-
-  /** PLAN.md Phase 6 item 6.0 hardening: the panel NUMBER focused right
-   * now, for Terminal.svelte's startKillPaneConfirm to capture at
-   * confirm-OPEN time (mirroring renameWindow/killWindow's "id captured at
-   * prompt-open time" pattern) rather than re-reading `focusedPanel` at
-   * confirm-execute time, when a mouse click on another panel's row in the
-   * meantime could have moved it. */
-  export function focusedPanelNumber(): 0 | 1 | 2 | 3 | 4 {
-    return focusedPanel;
-  }
-
-  /** Removes the currently-focused panel and moves focus to the first
-   * remaining one so a stray digit/j/k press afterward always lands
-   * somewhere visible. Used only by the immediate (no-confirm) `:kill-pane`
-   * cmdline command (PLAN.md 5C.1(c)), where there is no time window
-   * between "decide" and "act" for a click to redirect. */
-  export function killFocusedPane(): void {
-    killPane(focusedPanel);
-  }
-
-  /** PLAN.md Phase 6 item 6.0: kills the pane captured by NUMBER, not
-   * whatever happens to be focused when this runs. Terminal.svelte's
-   * kill-pane confirm flow captures the target panel number when the
-   * confirm dialog OPENS and always resolves through this function, so a
-   * mouse click on a different panel's row while the "kill-pane <name>?
-   * (y/n)" prompt is still open cannot redirect which panel actually dies
-   * — only the originally-named panel does; if the click also moved focus
-   * elsewhere, that panel remains focused afterward untouched. */
-  export function killPane(n: 0 | 1 | 2 | 3 | 4): void {
-    const next = new Set(removedPanels);
-    next.add(n);
-    removedPanels = next;
-    const remaining = ALL_PANELS.filter((x) => !next.has(x));
-    if (remaining.length && focusedPanel === n) focusedPanel = remaining[0];
-  }
 
   const selectedRepo = $derived(flatRepos[selectedRepoIdx]);
 
@@ -687,7 +628,7 @@
 
     if (e.key === "0" || e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4") {
       const n = Number(e.key) as 0 | 1 | 2 | 3 | 4;
-      if (!removedPanels.has(n)) focusedPanel = n;
+      focusedPanel = n;
       gPending = false;
       return true;
     }
@@ -793,6 +734,7 @@
     labels={builds.editor}
     breadcrumbLeft={editorFile.repoName}
     breadcrumbRight={editorFile.path}
+    {isFocused}
     onClose={closeEditor}
   />
 {:else}
@@ -802,10 +744,9 @@
     >
       <div style="width:38%;min-width:0;display:flex;flex-direction:column;gap:14px">
         <!-- [1] Status -->
-        {#if !removedPanels.has(1)}
         <div
           data-testid="builds-panel-1"
-          data-copy-source={focusedPanel === 1 ? "" : undefined}
+          data-copy-source={isFocused && focusedPanel === 1 ? "" : undefined}
           style="position:relative;flex:none;border:1px solid {panelBorder(1)};border-radius:4px;padding:10px 12px 9px"
         >
           <div
@@ -824,13 +765,11 @@
             >
           </div>
         </div>
-        {/if}
 
         <!-- [2] Files (tree browser) -->
-        {#if !removedPanels.has(2)}
         <div
           data-testid="builds-panel-2"
-          data-copy-source={focusedPanel === 2 ? "" : undefined}
+          data-copy-source={isFocused && focusedPanel === 2 ? "" : undefined}
           style="position:relative;flex:1.1;min-height:0;border:1px solid {panelBorder(
             2,
           )};border-radius:4px;padding:12px 12px 9px;display:flex;flex-direction:column"
@@ -878,13 +817,11 @@
             {/if}
           </div>
         </div>
-        {/if}
 
         <!-- [3] Local Repositories (flat list + all-projects) -->
-        {#if !removedPanels.has(3)}
         <div
           data-testid="builds-panel-3"
-          data-copy-source={focusedPanel === 3 ? "" : undefined}
+          data-copy-source={isFocused && focusedPanel === 3 ? "" : undefined}
           style="position:relative;flex:1;min-height:0;border:1px solid {panelBorder(
             3,
           )};border-radius:4px;padding:12px 12px 9px;display:flex;flex-direction:column"
@@ -933,13 +870,11 @@
             {/each}
           </div>
         </div>
-        {/if}
 
         <!-- [4] Commits (tracks ONLY the panel [3] selection) -->
-        {#if !removedPanels.has(4)}
         <div
           data-testid="builds-panel-4"
-          data-copy-source={focusedPanel === 4 ? "" : undefined}
+          data-copy-source={isFocused && focusedPanel === 4 ? "" : undefined}
           style="position:relative;flex:1.3;min-height:0;border:1px solid {panelBorder(
             4,
           )};border-radius:4px;padding:12px 12px 9px;display:flex;flex-direction:column"
@@ -983,15 +918,13 @@
             {/if}
           </div>
         </div>
-        {/if}
       </div>
 
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:14px">
         <!-- [0] Changes (preview) -->
-        {#if !removedPanels.has(0)}
         <div
           data-testid="builds-panel-0"
-          data-copy-source={focusedPanel === 0 ? "" : undefined}
+          data-copy-source={isFocused && focusedPanel === 0 ? "" : undefined}
           style="position:relative;flex:2.4;min-height:0;border:1px solid {panelBorder(
             0,
           )};border-radius:4px;padding:12px 14px 10px;display:flex;flex-direction:column"
@@ -1033,7 +966,6 @@
             {/if}
           </div>
         </div>
-        {/if}
 
         <!-- Command log -->
         <div

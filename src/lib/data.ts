@@ -30,6 +30,7 @@ import cmdlineRaw from "../data/cmdline.yaml?raw";
 import helpsearchRaw from "../data/helpsearch.yaml?raw";
 import notificationsRaw from "../data/notifications.yaml?raw";
 import shellRaw from "../data/shell.yaml?raw";
+import choosetreeRaw from "../data/choosetree.yaml?raw";
 
 const RAW: Record<string, string> = {
   "site.yaml": siteRaw,
@@ -46,6 +47,7 @@ const RAW: Record<string, string> = {
   "helpsearch.yaml": helpsearchRaw,
   "notifications.yaml": notificationsRaw,
   "shell.yaml": shellRaw,
+  "choosetree.yaml": choosetreeRaw,
 };
 
 const cache = new Map<string, unknown>();
@@ -522,6 +524,7 @@ export interface CmdlineErrors {
   usageRenameWindow: string;
   usageSelectWindow: string;
   noSuchWindowTemplate: string;
+  unknownLayoutTemplate: string;
 }
 
 export interface CmdlineData {
@@ -620,3 +623,26 @@ export interface ShellData {
 }
 
 export const getShell = (): ShellData => loadYaml<ShellData>("shell.yaml");
+
+// ---------------------------------------------------------------------------
+// choosetree.yaml (PLAN.md Iteration 3 Phase 6 item 6.5)
+// ---------------------------------------------------------------------------
+
+export interface ChooseTreeData {
+  titlePrefix: string;
+  titleTilde: string;
+  sessionTemplate: string;
+  sessionAttachedSuffix: string;
+  windowTemplate: string;
+  preview: {
+    windowPanesLabel: string;
+    windowLayoutLabel: string;
+    noLayoutText: string;
+    sessionWindowsTemplate: string;
+  };
+  hint: string;
+  killWindowPromptTemplate: string;
+  killSessionPromptTemplate: string;
+}
+
+export const getChooseTree = (): ChooseTreeData => loadYaml<ChooseTreeData>("choosetree.yaml");

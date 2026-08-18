@@ -49,9 +49,12 @@ statusBar:
     # "(rename-window) " prefix in front of the editable, prefilled window
     # name (Ctrl-b ,).
     renamePrefix: "(rename-window) "
-    # Ctrl-b & and the Builds single-pane Ctrl-b x fallback.
+    # Ctrl-b & (kill-window) — window kill still keyed by NAME.
     killWindowTemplate: "kill-window {name}? (y/n)"
-    # Ctrl-b x inside Builds, when more than one panel remains.
+    # Ctrl-b x (PLAN.md Iteration 3 Phase 6 item 6.3 / Locked decision #4) —
+    # REAL kill-pane: ALWAYS prompts, even on a single-pane window, keyed by
+    # the pane's stable `pane_index` (Window.paneOrder's own live-renumbered
+    # position), never a name — real tmux panes have no name.
     killPaneTemplate: "kill-pane {pane}? (y/n)"
     # Shown instead of removing the window when it's the only one left.
     killLastWindowMessage: "can't kill the only window"

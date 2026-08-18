@@ -1,0 +1,48 @@
+# choose-tree overlay (PLAN.md Iteration 3 Phase 6 item 6.5, `Ctrl-b w` —
+# REBINDS the old "go home" binding, Locked decision #3). One generic
+# always-mounted overlay (src/components/ChooseTree.svelte), same visual
+# family as GrepOverlay/CopyMode (bordered box, box-drawing inset title) but
+# a FULL window-content overlay (status bar stays visible below it, unlike
+# grep/copy-mode's own "leave room for the status bar" convention which this
+# one shares — see that component's own z-index/bottom-inset comment).
+#
+# Structural tree-drawing characters (├─ / └─ / the `*`/`-` window flags) are
+# NOT here — same convention as StatusBar.svelte's own `*`/`-` and
+# CopyMode's box-drawing title tilde: those are rendering detail, hardcoded
+# in the component, not "copy". Only actual English/template strings live in
+# this file.
+
+titlePrefix: "CHOOSE TREE "
+titleTilde: "~"
+
+# Session row: "{name}: {n} windows" (+ attachedSuffix when it's the
+# currently-ATTACHED session — PLAN.md tmux fidelity reference). Window row:
+# "{index}: {name}" — the `*`/`-` active/last-active flags are appended by
+# the component itself (same characters StatusBar.svelte already uses).
+sessionTemplate: "{name}: {n} windows"
+sessionAttachedSuffix: ", (attached)"
+windowTemplate: "{index}: {name}"
+
+# Bottom preview strip (PLAN.md: "describing the selection — for a window:
+# its pane programs + layout; for a session: its window count").
+preview:
+  windowPanesLabel: "panes:"
+  windowLayoutLabel: "layout:"
+  # "layout: (none applied)" — a window that has never had a preset
+  # explicitly applied (Window.lastLayout unset) has no named layout to show,
+  # even though it obviously still has SOME on-screen arrangement (a manual
+  # split, or the factory single pane).
+  noLayoutText: "(none applied)"
+  sessionWindowsTemplate: "{n} windows"
+
+hint: "j/k/↑/↓ move · h/← collapse · l/→ expand · Enter switch · x kill (y/n) · q/Esc close"
+
+# In-overlay kill confirm (PLAN.md tmux fidelity reference — note the
+# CAPITAL "Kill" and the WINDOW INDEX, not its name: this is a deliberately
+# different string shape from the status-line's own lowercase
+# `kill-window {name}? (y/n)` — real tmux's choose-tree prompt really is
+# capitalized and index-keyed, verified against the live binary). Confirm
+# itself is case-INSENSITIVE on `y`/`Y` (the real tmux quirk) — any other
+# key cancels just the sub-prompt, not the whole overlay.
+killWindowPromptTemplate: "Kill window {index}? (y/n)"
+killSessionPromptTemplate: "Kill session {name}? (y/n)"

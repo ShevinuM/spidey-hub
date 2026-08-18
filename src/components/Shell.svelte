@@ -79,6 +79,18 @@
     /** `open <view>` / `edith` — HOST mode only, same reasoning as
      * `onAttach`. */
     onAttachView?: (sessionId: string, view: string, windowExists: boolean) => void;
+    /** PLAN.md Iteration 3 Phase 6 item 6.1 — whether THIS pane is the
+     * window's currently-focused one (always `true` for the one host-mode
+     * instance, which has no siblings). Gates `data-copy-source` AND the
+     * `Ctrl-b ]` paste-target registration below: with splits, more than one
+     * shell pane can be mounted at once, each with its own stable paste-
+     * target id (`shell:${pane.id}`) — without this gate, whichever one
+     * mounted/re-ran its effect LAST would sit on top of the shared paste-
+     * target stack regardless of which pane is actually focused (advisor-
+     * caught multi-instance hazard). Defaults to `true` so the one
+     * call site that doesn't pass it explicitly (none today — both PaneTree
+     * and Terminal's host-mode instance always do) never silently breaks. */
+    isFocused?: boolean;
   }
 
   const {
@@ -95,6 +107,7 @@
     onAttach,
     onCreateAndAttach,
     onAttachView,
+    isFocused = true,
   }: Props = $props();
 
   let fsEntries = $state<FsEntry[] | null>(null);
@@ -255,6 +268,7 @@
 
   $effect(() => {
     const id = `shell:${pane.id}`;
+    if (!isFocused) return; // see `isFocused` prop's own doc comment
     pushPasteTarget({
       id,
       insert: (t: string) => {
@@ -286,7 +300,7 @@
   <div
     bind:this={scrollerEl}
     data-testid="shell-scroller"
-    data-copy-source
+    data-copy-source={isFocused ? "" : undefined}
     style="flex:1;min-height:0;overflow-y:auto;white-space:pre-wrap;word-break:break-word"
   >
     {#each pane.shell.lines as line, i (i)}

@@ -161,11 +161,32 @@ export function parseExCommand(cmd: string): ExCommand {
 // tmux command-prompt parsing (PLAN.md 5C.1(c) — `Ctrl-b :`).
 // ---------------------------------------------------------------------
 
+/** PLAN.md Iteration 3 Phase 6 item 6.4 — the 7 preset names `select-layout`
+ * accepts. Deliberately its OWN small literal list, not an import of
+ * src/lib/tmux.ts's `LAYOUT_NAMES` — mirrors src/lib/shell.ts's documented
+ * decoupling convention (that file's own `pickMostRecentUnattached` comment:
+ * these small pure modules stay independent of tmux.ts's shape, duplicating
+ * a short constant rather than adding a cross-module dependency). */
+const LAYOUT_NAMES = [
+  "even-horizontal",
+  "even-vertical",
+  "main-horizontal",
+  "main-horizontal-mirrored",
+  "main-vertical",
+  "main-vertical-mirrored",
+  "tiled",
+] as const;
+
 export type TmuxCommand =
   | { kind: "rename-window"; name: string }
   | { kind: "kill-window" }
   | { kind: "kill-pane" }
   | { kind: "select-window"; index: number }
+  /** `select-layout` with no argument — reapplies whatever was last applied
+   * (or no-ops if nothing has been, PLAN.md 6.4). */
+  | { kind: "select-layout"; name: undefined }
+  | { kind: "select-layout"; name: (typeof LAYOUT_NAMES)[number] }
+  | { kind: "select-layout-unknown"; name: string }
   | { kind: "usage"; command: "rename-window" | "select-window" }
   | { kind: "unknown" };
 
@@ -180,6 +201,13 @@ export function parseTmuxCommand(input: string): TmuxCommand {
   if (lower === "select-window") {
     if (!/^\d+$/.test(args)) return { kind: "usage", command: "select-window" };
     return { kind: "select-window", index: Number.parseInt(args, 10) };
+  }
+  if (lower === "select-layout") {
+    if (!args) return { kind: "select-layout", name: undefined };
+    if ((LAYOUT_NAMES as readonly string[]).includes(args)) {
+      return { kind: "select-layout", name: args as (typeof LAYOUT_NAMES)[number] };
+    }
+    return { kind: "select-layout-unknown", name: args };
   }
   return { kind: "unknown" };
 }

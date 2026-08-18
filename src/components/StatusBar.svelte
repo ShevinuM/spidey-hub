@@ -212,20 +212,23 @@
       return true;
     }
 
-    // confirm
-    const k = e.key.toLowerCase();
-    if (k === "y") {
+    // confirm — PLAN.md Iteration 3 Phase 6 item 6.3 / Locked decision #4
+    // tmux fidelity reference: "lowercase y confirms, ANY other key
+    // cancels" — an EXACT `e.key === "y"` check (not case-insensitive:
+    // uppercase Y does NOT confirm here, unlike choose-tree's own
+    // deliberately case-insensitive quirk), and every other key (not just
+    // "n") tears the prompt down rather than leaving it stuck open. Shared
+    // by kill-window's `&` confirm too — real tmux's own single-keystroke
+    // confirm-before behaves identically for both.
+    if (e.key === "y") {
       e.preventDefault();
       const onYes = prompt.onYes;
       prompt = { kind: "none" };
       onYes();
       return true;
     }
-    if (k === "n") {
-      e.preventDefault();
-      prompt = { kind: "none" };
-      return true;
-    }
+    e.preventDefault();
+    prompt = { kind: "none" };
     return true;
   }
 </script>

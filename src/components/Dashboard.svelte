@@ -6,10 +6,16 @@
 
   interface Props {
     dashboard: DashboardData;
+    /** PLAN.md Iteration 3 Phase 6 item 6.1 — whether THIS mounted instance
+     * is the window's focused pane (multiple panes can run "dashboard"
+     * simultaneously, Locked decision #5). Gates `data-copy-source` below so
+     * `Ctrl-b [`'s untargeted `document.querySelector` only ever finds the
+     * focused instance's own menu, never a non-focused sibling's. */
+    isFocused: boolean;
     onSelect: (view: ViewId) => void;
   }
 
-  const { dashboard, onSelect }: Props = $props();
+  const { dashboard, isFocused, onSelect }: Props = $props();
 
   function pick(menuId: string) {
     const view = menuIdToView(menuId);
@@ -65,7 +71,7 @@
       </div>
     </div>
 
-    <div data-copy-source style="width:min(560px,100%);display:flex;flex-direction:column;gap:2px">
+    <div data-copy-source={isFocused ? "" : undefined} style="width:min(560px,100%);display:flex;flex-direction:column;gap:2px">
       {#each dashboard.menu as item (item.id)}
         <div
           class="dash-row"

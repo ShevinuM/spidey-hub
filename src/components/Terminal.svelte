@@ -33,24 +33,38 @@
     CmdlineData,
     HelpSearchData,
     ShellData,
+    ChooseTreeData,
   } from "../lib/data";
   import type { Commit } from "../lib/commits";
   import type { ViewId } from "../lib/views";
   import { VIEW_ROUTES, hotkeyToView, pathToView, programToViewId, viewIdToProgram, windowIdToView } from "../lib/views";
-  import type { Client, ProgramName, Session } from "../lib/tmux";
+  import type { Client, ProgramName, Session, Window, LayoutName, PaneDirection } from "../lib/tmux";
   import {
     activeSessionOf,
     activeWindowOf,
+    allPanes,
+    applyLayout,
     attachSession,
     createFactoryClient,
     createSession,
+    cycleNextPane,
     detachClient,
     exitProgram,
+    focusDirectional,
     focusedPane,
+    focusLastPane,
+    isLayoutName,
+    killPaneInWindow,
+    killSession,
     killWindowCascade,
     launchProgram,
+    nextLayout,
+    paneIndexInWindow,
+    reapplyLastLayout,
     renameWindowManual,
     selectWindowIndex,
+    splitPane,
+    windowOfPane,
   } from "../lib/tmux";
   import type { SessionRosterEntry, ShellLineKind, ShellMode } from "../lib/shell";
   import { seedHostNarrative } from "../lib/shell";
@@ -66,6 +80,7 @@
   import Toasts from "./Toasts.svelte";
   import GrepOverlay from "./GrepOverlay.svelte";
   import CopyMode from "./CopyMode.svelte";
+  import ChooseTree from "./ChooseTree.svelte";
   import BootSequence from "./BootSequence.svelte";
   import Cmdline, { type CmdlineMode } from "./Cmdline.svelte";
   import HelpSearch from "./HelpSearch.svelte";
@@ -84,17 +99,17 @@
    * profileRef/helpRef), now that PaneTree.svelte's single ref registry
    * serves all of them through one lookup (PLAN.md "per-pane ref Map for
    * delegation"). Every field stays optional: Dashboard/retina-v export no
-   * ref at all, Profile/HelpView only ever export `handleKey`, and only
-   * Builds exports the kill-pane-related fields. */
+   * ref at all, Profile/HelpView only ever export `handleKey`.
+   *
+   * PLAN.md Iteration 3 Phase 6 item 6.3: the Builds-internal panel-kill
+   * fields this interface used to carry (`canKillPane`/`focusedPanelTitle`/
+   * `focusedPanelNumber`/`killFocusedPane`/`killPane`) are REMOVED entirely —
+   * `Ctrl-b x` now always kills the real tmux PANE (src/lib/tmux.ts), never
+   * a Builds-internal panel, per Locked decision #4. */
   interface ProgramRef {
     handleKey?: (e: KeyboardEvent) => boolean;
     isEditorOpen?: () => boolean;
     runEditorExCommand?: (cmd: string) => { recognized: boolean; error?: string };
-    canKillPane?: () => boolean;
-    focusedPanelTitle?: () => string;
-    killFocusedPane?: () => void;
-    focusedPanelNumber?: () => 0 | 1 | 2 | 3 | 4;
-    killPane?: (n: 0 | 1 | 2 | 3 | 4) => void;
   }
 
   interface Props {
@@ -113,6 +128,7 @@
     cmdline: CmdlineData;
     helpSearch: HelpSearchData;
     shell: ShellData;
+    chooseTree: ChooseTreeData;
     projects: CollectionEntry<"projects">[];
     personnelEntries: CollectionEntry<"personnel">[];
     commitsByRepo: Record<string, Commit[]>;
@@ -134,6 +150,7 @@
     cmdline,
     helpSearch,
     shell,
+    chooseTree,
     projects,
     personnelEntries,
     commitsByRepo,
@@ -150,15 +167,22 @@
    * see the template's `{#if activeSession}...{:else}...{/if}` split. */
   const SHELL_MODE: ShellMode = "pane";
 
-  /** PaneTree.svelte's own `bind:this` — its `getRef(paneId)` is the single
-   * lookup every one of this file's delegation checks below now goes
-   * through (PLAN.md "per-pane ref Map for delegation"), replacing the four
-   * separate buildsRef/personnelRef/profileRef/helpRef variables this file
-   * used to declare individually. Only ONE program is ever mounted at a
-   * time this phase (the active window's one pane — no splits yet), so
-   * `focusedRef()` below always resolves to whichever single component is
-   * currently on screen. */
-  let paneTreeRef = $state<{ getRef: (paneId: string) => unknown } | null>(null);
+  /** Shared, non-reactive pane-ref registry (PLAN.md Iteration 3 Phase 6
+   * item 6.1, advisor-caught) — created ONCE here and threaded down through
+   * every recursive `<PaneTree>`/`<svelte:self>` instance as a plain prop
+   * (never `$state`; consulted imperatively on keydown, never rendered
+   * through a template — same non-reactive convention PaneTree.svelte's own
+   * per-leaf registration effect already used). Phase 4's original design
+   * had PaneTree.svelte own a fresh `Map` PER COMPONENT INSTANCE with a
+   * `getRef(paneId)` export Terminal called on the ROOT instance only —
+   * that broke the moment splitting existed at all: the root becomes a
+   * split node, every leaf lives in a CHILD instance with its OWN map, and
+   * `getRef` on the root would only ever see whichever leaf happens to
+   * render at the root (never true post-split) — every other pane's ref
+   * silently vanished from delegation. One shared map threaded down as a
+   * prop sidesteps that entirely: every leaf, at any depth, registers into
+   * the exact same object. */
+  const paneRefs = new Map<string, unknown>();
 
   /** The one HOST-mode Shell instance (PLAN.md Iteration 3 Phase 5 item
    * 5.1) — rendered directly in the template below (never through
@@ -167,13 +191,13 @@
   let hostShellRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
 
   /** Returns the currently-focused pane's ref (if it exposes one) — see
-   * `paneTreeRef`'s own comment. Recomputed fresh on every call rather than
+   * `paneRefs`'s own comment. Recomputed fresh on every call rather than
    * cached, exactly like the old per-view ref reads it replaces. `undefined`
    * while detached (no pane is focused then) — see `activeRef()` below for
    * the delegation target that actually covers that case. */
   function focusedRef(): ProgramRef | undefined {
     if (!activePane) return undefined;
-    return paneTreeRef?.getRef(activePane.id) as ProgramRef | undefined;
+    return paneRefs.get(activePane.id) as ProgramRef | undefined;
   }
 
   /** PLAN.md Iteration 3 Phase 5 item 5.1 — "keyboard belongs to the host
@@ -267,6 +291,20 @@
   let helpSearchRef = $state<{
     isOpen: () => boolean;
     openPalette: () => void;
+    close: () => void;
+    handleKey: (e: KeyboardEvent) => boolean;
+  } | null>(null);
+
+  /** ChooseTree.svelte (PLAN.md Iteration 3 Phase 6 item 6.5, `Ctrl-b w`) —
+   * same always-mounted / bind:this / handleKey():boolean / isOpen()/close()
+   * contract as Cmdline/HelpSearch above. `openOverlay()` is called from
+   * the prefix `w` binding (REBOUND from "go home", Locked decision #3);
+   * `handleKey()` is consulted in its own documented slot (see ChooseTree.
+   * svelte's own header comment) — after copy-mode and the prefix system,
+   * before Cmdline/StatusBar/every view ref. */
+  let chooseTreeRef = $state<{
+    isOpen: () => boolean;
+    openOverlay: () => void;
     close: () => void;
     handleKey: (e: KeyboardEvent) => boolean;
   } | null>(null);
@@ -367,6 +405,12 @@
   const activeWindow = $derived(activeSession ? activeWindowOf(activeSession) : undefined);
   const activePane = $derived(activeWindow ? focusedPane(activeWindow) : undefined);
   const activeProgram = $derived(activePane?.program);
+
+  /** PLAN.md Iteration 3 Phase 6 item 6.1 — whether the active window has
+   * more than one pane right now; gates PaneTree's active-pane border
+   * accent (a single-pane window shows no border, matching real tmux — see
+   * PaneTree.svelte's own header comment). */
+  const multiPane = $derived(activeWindow ? allPanes(activeWindow.root).length > 1 : false);
 
   /** StatusBar's real tmux `-` flag (PLAN.md Iteration 3 Phase 4 item 4.3
    * tmux fidelity reference) — the session's previously-active window.
@@ -471,15 +515,21 @@
   // -----------------------------------------------------------------------
 
   /** Window-chrome contract (PLAN.md "close BEFORE the same-view early
-   * return") — closes grep/cmdline/help-palette unconditionally. Called at
-   * the top of every window-switch/kill/reboot path below, exactly like the
-   * old `setView` did, so an open overlay never survives ANY of them, even
-   * ones that end up no-op'ing (e.g. selecting the already-active window,
-   * or a kill that gets refused). */
+   * return") — closes grep/cmdline/help-palette/choose-tree unconditionally.
+   * Called at the top of every window-switch/kill/reboot path below,
+   * exactly like the old `setView` did, so an open overlay never survives
+   * ANY of them, even ones that end up no-op'ing (e.g. selecting the
+   * already-active window, or a kill that gets refused). PLAN.md Iteration 3
+   * Phase 6 item 6.5: choose-tree's own Enter-switch already calls its own
+   * `close()` directly, but every OTHER window-switch entry point (status-
+   * bar click, prefix digit/n/p, dashboard hotkeys, `Ctrl-b d` detach) goes
+   * through this helper — closing it here too means choose-tree never
+   * survives any of THOSE either. */
   function closeWindowChrome() {
     grepRef?.close?.();
     cmdlineRef?.close?.();
     helpSearchRef?.close?.();
+    chooseTreeRef?.close?.();
   }
 
   /** pushState only when the ACTIVE PANE's program is canonical (not
@@ -575,6 +625,7 @@
     copyModeRef?.close?.();
     cmdlineRef?.close?.();
     helpSearchRef?.close?.();
+    chooseTreeRef?.close?.();
     grepRef?.close?.();
     client = createFactoryClient({
       sessionId: DEFAULT_SESSION_ID,
@@ -697,15 +748,25 @@
   }
 
   /** Shell.svelte's `onExit` — the `exit` builtin (PLAN.md Architecture
-   * notes: "pane shell: closes pane → cascades like kill-pane"). Phase 4
-   * has no real splits yet, so "close this pane" is exactly "close this
-   * window" — `killWindowById` already refuses (status message) on the
-   * last remaining window, exactly like `Ctrl-b x`'s single-pane fallback.
-   * `paneId` is unused today (every window has exactly one pane, always the
-   * active one) but kept in the signature so Phase 6 can find the RIGHT
-   * pane's owning window without a signature change. */
-  function onExitPane(_paneId: string) {
-    killWindowById(activeWindow!.id);
+   * notes: "pane shell: closes pane → cascades like kill-pane"). PLAN.md
+   * Iteration 3 Phase 6: now that a window can have more than one pane,
+   * this resolves `paneId`'s OWN owning window (via `windowOfPane`, never
+   * assumed to be `activeWindow` — advisor-caught: `onExit` only ever fires
+   * from the FOCUSED pane in practice, but the window it lives in is found
+   * from the id, not hardcoded) and either removes just that pane (more than
+   * one pane in the window — `killPaneInWindow`) or falls back to the exact
+   * same window-kill cascade `Ctrl-b x`'s single-pane case uses. */
+  function onExitPane(paneId: string) {
+    const session = activeSession!;
+    const win = windowOfPane(session, paneId);
+    if (!win) return; // defensive — unreachable: onExit always fires from a live pane in THIS session
+    if (allPanes(win.root).length > 1) {
+      closeWindowChrome();
+      killPaneInWindow(win, paneId);
+      syncUrl();
+    } else {
+      killWindowById(win.id);
+    }
   }
 
   /** Site-mode `:q` / cmdline `q` (PLAN.md Locked decision #2, item 4.3) —
@@ -822,53 +883,52 @@
     window.location.reload();
   }
 
-  /** The actual "kill the focused pane, or the window if it's the only
-   * one" ACTION (as opposed to the interactive confirm-then-do flow below)
-   * — factored out so PLAN.md Phase 5C's `Ctrl-b :` "kill-pane" tmux
-   * command can call the exact same underlying behavior `Ctrl-b x`'s
-   * confirm dialog eventually calls, without a second copy of the "which
-   * pane, or fall back to kill-window" decision (PLAN.md 5C.1(c) "single
-   * source of behavior; no duplicated kill/rename logic"). Keyed off the
-   * focused ref's own `canKillPane` CAPABILITY rather than `view ===
-   * "builds"` identity (PLAN.md Iteration 3 Phase 4 item 4.1 simplification
-   * — only Builds' ref ever defines this method, so the outcome is
-   * identical, but this no longer needs to know Builds exists by name). */
+  /** The actual "kill the focused PANE, or the window if it's the only one"
+   * ACTION (PLAN.md Iteration 3 Phase 6 item 6.3 / Locked decision #4 — a
+   * REAL tmux pane kill now, not a Builds-internal panel one) — factored out
+   * so the NO-CONFIRM `Ctrl-b :` "kill-pane" tmux command can call the exact
+   * same underlying behavior `Ctrl-b x`'s own confirm dialog below
+   * eventually calls, without a second copy of the "which pane, or fall
+   * back to kill-window" decision (PLAN.md "single source of behavior; no
+   * duplicated kill/rename logic"). */
   function killPaneOrWindow() {
-    const ref = focusedRef();
-    if (ref?.canKillPane?.()) {
-      ref.killFocusedPane?.();
+    const win = activeWindow!;
+    const paneId = activePane!.id;
+    if (allPanes(win.root).length > 1) {
+      closeWindowChrome();
+      killPaneInWindow(win, paneId);
+      syncUrl();
     } else {
-      killWindowById(activeWindow!.id);
+      killWindowById(win.id);
     }
   }
 
-  /** Ctrl-b x — PLAN.md Phase 5 item 5.2: inside Builds with more than one
-   * panel visible, confirms removing the FOCUSED panel only; everywhere
-   * else (including Builds reduced to its last panel), "the only pane = the
-   * window", so it's the exact same confirm/flow as Ctrl-b &.
-   *
-   * PLAN.md Phase 6 item 6.0 hardening: the target panel NUMBER (and its
-   * title, for the prompt text) is captured HERE, at confirm-OPEN time —
-   * same "id captured at prompt-open time" pattern as
-   * startRenamePrompt/startKillWindowConfirm above. The committed closure
-   * always kills that captured number via `ref.killPane(n)`, never
-   * re-reading `ref.focusedPanelTitle()`/killFocusedPane() (which read
-   * whatever is CURRENTLY focused) at confirm-execute time — so a mouse
-   * click on a different panel's row while the "kill-pane <name>? (y/n)"
-   * confirm is still open cannot redirect the kill to the newly-clicked
-   * panel. */
+  /** Ctrl-b x (PLAN.md Iteration 3 Phase 6 item 6.3 / Locked decision #4) —
+   * REAL kill-pane: ALWAYS prompts `kill-pane {pane_index}? (y/n)`, even on
+   * a single-pane window — REPLACES the iteration-2 Builds-internal
+   * panel-kill behavior (canKillPane/focusedPanelNumber/killPane, now
+   * deleted from Builds.svelte entirely) with the real tmux semantic:
+   * destroying the last pane destroys the window by cascade, no separate
+   * "fall back to kill-window confirm" step. The target pane's id and its
+   * `pane_index` (for the prompt text — `Window.paneOrder`'s own live-
+   * renumbered position) are captured HERE, at confirm-OPEN time — same
+   * "captured at prompt-open time" pattern as startRenamePrompt/
+   * startKillWindowConfirm above, so a later focus change while the confirm
+   * is still open can't redirect which pane actually dies. */
   function startKillPaneConfirm() {
-    const ref = focusedRef();
-    if (ref?.canKillPane?.()) {
-      const pane = ref.focusedPanelTitle?.() ?? "";
-      const paneNumber = ref.focusedPanelNumber?.();
-      const text = site.statusBar.prompts.killPaneTemplate.replace("{pane}", pane);
-      statusBarRef?.startConfirm(text, () => {
-        if (paneNumber !== undefined) ref.killPane?.(paneNumber);
-      });
-      return;
-    }
-    startKillWindowConfirm();
+    const win = activeWindow!;
+    const paneId = activePane!.id;
+    const index = paneIndexInWindow(win, paneId);
+    const text = site.statusBar.prompts.killPaneTemplate.replace("{pane}", String(index));
+    statusBarRef?.startConfirm(text, () => {
+      if (allPanes(win.root).length > 1) {
+        closeWindowChrome();
+        killPaneInWindow(win, paneId);
+        syncUrl();
+      } else {
+        killWindowById(win.id);
+      }
+    });
   }
 
   /** Ctrl-b ] — PLAN.md Phase 5 item 5.3: inserts the shared paste buffer
@@ -884,6 +944,106 @@
       return;
     }
     statusBarRef?.showMessage(site.statusBar.prompts.pasteEmptyMessage);
+  }
+
+  // ---------------------------------------------------------------------
+  // Splits / pane nav / layouts (PLAN.md Iteration 3 Phase 6 items 6.1/6.2/
+  // 6.4) — every one of these operates on the ACTIVE window's own tree;
+  // none of them touch the URL (a split/nav/layout change never implies a
+  // different WINDOW, hence never a different route — `syncUrl()` isn't
+  // called from any of these, matching the "URL keyed off the active
+  // WINDOW's program, not its pane arrangement" rule the rest of this file
+  // already follows).
+  // ---------------------------------------------------------------------
+
+  /** `Ctrl-b |`/`%` (direction "row") and `Ctrl-b -`/`"` (direction
+   * "column") — splits the active window's focused pane 50/50 with a new
+   * shell pane, which becomes focused. */
+  function splitFocusedPane(direction: "row" | "column") {
+    splitPane(activeWindow!, direction);
+  }
+
+  /** Prefix `o` — next pane, cycling `paneOrder`. */
+  function cycleFocusedPane() {
+    cycleNextPane(activeWindow!);
+  }
+
+  /** Prefix `;` — jump back to whichever pane was focused immediately
+   * before the current one (toggles back and forth on repeated presses). */
+  function jumpToLastPane() {
+    focusLastPane(activeWindow!);
+  }
+
+  /** Prefix arrow keys — geometric directional pane nav. */
+  function navigateDirectional(dir: PaneDirection) {
+    focusDirectional(activeWindow!, dir);
+  }
+
+  /** `Ctrl-b Space` — next preset in the fidelity-verified cycle. */
+  function cycleLayout() {
+    nextLayout(activeWindow!);
+  }
+
+  /** `select-layout <name>` / bare `select-layout` (PLAN.md 6.4, `Ctrl-b :`
+   * tmux command-prompt mode) — applies the named preset, or reapplies
+   * whatever was last applied when no name is given (a silent no-op if none
+   * ever was). Unknown names are reported by the caller
+   * (`executeTmuxCommand` below), which already has the raw typed string. */
+  function applyNamedLayout(name: LayoutName | undefined) {
+    const win = activeWindow!;
+    if (name) applyLayout(win, name);
+    else reapplyLastLayout(win);
+  }
+
+  // ---------------------------------------------------------------------
+  // choose-tree (PLAN.md Iteration 3 Phase 6 item 6.5, `Ctrl-b w`) —
+  // ChooseTree.svelte's own callback props; every one of these is a WINDOW/
+  // SESSION-level change, so each funnels through the same helpers every
+  // other switch/kill path in this file already uses (switchToWindowById,
+  // killWindowCascade, killSession) rather than duplicating that logic here.
+  // ---------------------------------------------------------------------
+
+  /** Enter on a WINDOW row — attaches its session first if it isn't already
+   * the attached one (real tmux: choosing a window in a different session
+   * switches the client to it), then selects that window. */
+  function chooseTreeSelectWindow(sessionId: string, windowId: string) {
+    if (client.attachedSessionId !== sessionId) attachSession(client, sessionId);
+    const session = client.sessions.find((s) => s.id === sessionId);
+    if (!session) return; // defensive — the row this came from only exists for a live session
+    const idx = session.windows.findIndex((w) => w.id === windowId);
+    if (idx !== -1) selectWindowIndex(session, idx);
+    syncUrl();
+  }
+
+  /** Enter on a SESSION row — attaches it, staying on whichever window it
+   * already had active (real tmux: no window change implied). */
+  function chooseTreeSelectSession(sessionId: string) {
+    attachSession(client, sessionId);
+    syncUrl();
+  }
+
+  /** In-overlay `x` → case-insensitive `y` on a WINDOW row — reuses the
+   * exact same cascade `Ctrl-b &`/`Ctrl-b x`'s single-pane fallback already
+   * runs (window→session→`[exited]`), since a window dying is a window
+   * dying regardless of which UI asked for it. */
+  function chooseTreeKillWindow(sessionId: string, windowId: string) {
+    const session = client.sessions.find((s) => s.id === sessionId);
+    if (!session) return;
+    const result = killWindowCascade(client, session, windowId);
+    if (result.kind === "session-destroyed" && result.detachedToHost) {
+      appendHostLine(shell.host.exitedMessage);
+    }
+    syncUrl();
+  }
+
+  /** In-overlay `x` → case-insensitive `y` on a SESSION row (PLAN.md
+   * Locked decision #16: only the TYPED `kill-session` command is out of
+   * scope, not this overlay action) — kills every window in that session at
+   * once via tmux.ts's own `killSession`. */
+  function chooseTreeKillSession(sessionId: string) {
+    const result = killSession(client, sessionId);
+    if (result.detachedToHost) appendHostLine(shell.host.exitedMessage);
+    syncUrl();
   }
 
   // ---------------------------------------------------------------------
@@ -1001,6 +1161,13 @@
       switchToWindowById(target);
       return undefined;
     }
+    if (parsed.kind === "select-layout") {
+      applyNamedLayout(parsed.name);
+      return undefined;
+    }
+    if (parsed.kind === "select-layout-unknown") {
+      return cmdline.errors.unknownLayoutTemplate.replace("{name}", parsed.name);
+    }
     if (parsed.kind === "usage") {
       return parsed.command === "rename-window" ? cmdline.errors.usageRenameWindow : cmdline.errors.usageSelectWindow;
     }
@@ -1093,6 +1260,26 @@
     }
 
     const pk = e.key.toLowerCase();
+
+    // PLAN.md Iteration 3 Phase 6 item 6.5 (documented keyboard-slot choice,
+    // advisor-reviewed) — while choose-tree is open, it owns the keyboard
+    // for its OWN vocabulary via a LATER delegation slot (ChooseTree.svelte's
+    // own `handleKey`, consulted after this whole function returns). Four
+    // PREFIXED keys are gated OFF here specifically, though: `,`/`&`/`x`
+    // (status-bar rename/kill prompts) and `:` (the Cmdline box) would each
+    // pop a competing modal UNDERNEATH the overlay — since this component's
+    // handleKey runs BEFORE StatusBar's/Cmdline's in the dispatch chain, that
+    // prompt's own y/n/Enter keystrokes could never reach it, leaving it
+    // permanently starved (advisor-caught). Window-switch keys (digits, n/p)
+    // and detach (`d`) are deliberately NOT gated — both close the overlay
+    // for free (`closeWindowChrome()`/`detachSession()` already do), so
+    // there's nothing to starve.
+    const chooseTreeOpen = !!chooseTreeRef?.isOpen?.();
+    if (chooseTreeOpen && (e.key === "," || e.key === "&" || pk === "x" || e.key === ":")) {
+      if (e.key.length === 1) e.preventDefault();
+      return true;
+    }
+
     if (pk === "n") {
       e.preventDefault();
       cyclePrefixView(1);
@@ -1103,11 +1290,17 @@
       cyclePrefixView(-1);
       return true;
     }
-    if (pk === "w" || e.key === "0") {
-      // PLAN.md Locked decision #3: `w` keeps "go home" THIS PHASE — Phase 6
-      // rebinds it to choose-tree. `0` always selects window 0 (dashboard).
+    if (e.key === "0") {
       e.preventDefault();
       switchToProgram("dashboard");
+      return true;
+    }
+    if (pk === "w") {
+      // PLAN.md Locked decision #3 / Iteration 3 Phase 6 item 6.5 — `w` is
+      // now real tmux choose-tree, REPLACING the Phase 4/5 "go home"
+      // behavior (`0` still always selects window 0, unaffected).
+      e.preventDefault();
+      chooseTreeRef?.openOverlay();
       return true;
     }
     if (pk === "d") {
@@ -1146,11 +1339,48 @@
       // Ctrl-b : — PLAN.md 5C.1(c), real tmux's own "command-prompt"
       // binding: opens the SAME floating box in its third mode
       // (tmuxCommands only — rename-window/kill-window/kill-pane/
-      // select-window). The combined isPromptActive/cmdline-isOpen gate
-      // above already stops this from firing while either modal system is
-      // already up.
+      // select-window/select-layout). The combined isPromptActive/
+      // cmdline-isOpen gate above already stops this from firing while
+      // either modal system is already up.
       e.preventDefault();
       cmdlineRef?.openTmux();
+      return true;
+    }
+
+    // PLAN.md Iteration 3 Phase 6 item 6.1 — `|`/`%` split RIGHT (row),
+    // `-`/`"` split BELOW (column).
+    if (e.key === "|" || e.key === "%") {
+      e.preventDefault();
+      splitFocusedPane("row");
+      return true;
+    }
+    if (e.key === "-" || e.key === '"') {
+      e.preventDefault();
+      splitFocusedPane("column");
+      return true;
+    }
+    // Item 6.2 — prefix `o` next-pane, `;` last-pane, arrow keys directional.
+    if (pk === "o") {
+      e.preventDefault();
+      cycleFocusedPane();
+      return true;
+    }
+    if (e.key === ";") {
+      e.preventDefault();
+      jumpToLastPane();
+      return true;
+    }
+    if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      e.preventDefault();
+      const dir: PaneDirection =
+        e.key === "ArrowUp" ? "up" : e.key === "ArrowDown" ? "down" : e.key === "ArrowLeft" ? "left" : "right";
+      navigateDirectional(dir);
+      return true;
+    }
+    // Item 6.4 — prefix Space cycles the 7 preset layouts.
+    if (e.key === " ") {
+      e.preventDefault();
+      cycleLayout();
       return true;
     }
 
@@ -1253,6 +1483,28 @@
       armPrefix();
       return;
     }
+
+    // PLAN.md Iteration 3 Phase 6 item 6.5 (documented keyboard-slot choice)
+    // — choose-tree's own handleKey slot: right after copy-mode AND after
+    // the tmux prefix system has had its FULL turn (both dispatch of an
+    // armed prefix above, AND arming a bare Ctrl-b immediately above this),
+    // but before Cmdline/StatusBar/every view ref. Placing this AFTER the
+    // arm-check (not merely after the dispatch block) is load-bearing: a
+    // bare Ctrl-b keydown carries `ctrlKey: true`, which ChooseTree's own
+    // `handleKey` swallows unconditionally (it owns the keyboard while
+    // open) — if this check ran any earlier, a bare Ctrl-b could never even
+    // ARM while choose-tree is open, making `Ctrl-b d` (detach, which must
+    // still work per PLAN.md 6.5) unreachable. With the slot here, the arm
+    // above already returned by the time a plain Ctrl-b would reach this
+    // line, and the FOLLOWING prefixed key still dispatches through
+    // `handlePrefixedKey` first (same "if (prefixArmed)" block above) before
+    // ever reaching choose-tree — so `Ctrl-b d` detaches (closing the
+    // overlay via `detachSession()`'s own `closeWindowChrome()` call) and
+    // `Ctrl-b <digit>/n/p` switch windows (same free close), exactly as
+    // ChooseTree.svelte's own header comment describes. Every UNPREFIXED
+    // key (bare j/k/h/l/Enter/x/q/Esc — this component's own vocabulary)
+    // reaches it here since the prefix system above is a no-op for those.
+    if (chooseTreeRef?.handleKey(e)) return;
 
     // PLAN.md Phase 5 item 5.1: a status-line prompt (rename/confirm) OWNS
     // the keyboard once it's open — but ONLY AFTER the prefix system above
@@ -1500,8 +1752,10 @@
       />
 
       <PaneTree
-        bind:this={paneTreeRef}
         node={activeWindow!.root}
+        activePaneId={activeWindow!.activePaneId}
+        {multiPane}
+        refs={paneRefs}
         {dashboard}
         {builds}
         {personnel}
@@ -1561,4 +1815,13 @@
   <BootSequence bind:this={bootRef} {boot} {desktopMode} onReady={onBootReady} />
   <Cmdline bind:this={cmdlineRef} {cmdline} onSubmit={onCmdlineSubmit} />
   <HelpSearch bind:this={helpSearchRef} {helpSearch} {cmdline} {help} {shell} onExecute={onHelpSearchExecute} />
+  <ChooseTree
+    bind:this={chooseTreeRef}
+    {client}
+    {chooseTree}
+    onSelectWindow={chooseTreeSelectWindow}
+    onSelectSession={chooseTreeSelectSession}
+    onKillWindow={chooseTreeKillWindow}
+    onKillSession={chooseTreeKillSession}
+  />
 </div>

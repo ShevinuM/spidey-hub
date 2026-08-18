@@ -79,10 +79,14 @@
     personnel: PersonnelData;
     companies: CompanyEntry[];
     personnelEntries: RoleEntry[];
+    /** PLAN.md Iteration 3 Phase 6 item 6.1 — see PaneTree.svelte's own
+     * header comment (multi-instance data-copy-source/paste-target
+     * gating). */
+    isFocused: boolean;
     onDashboard: () => void;
   }
 
-  const { personnel, companies, personnelEntries, onDashboard }: Props = $props();
+  const { personnel, companies, personnelEntries, isFocused, onDashboard }: Props = $props();
 
   /** Directory segments straight off disk, relative to
    * `src/content/personnel/`, case-preserved — `entry.id` would normally be
@@ -325,7 +329,7 @@
   /** Ctrl-b ] paste-target registration — active only while the filter
    * prompt is actually accepting keystrokes. */
   $effect(() => {
-    if (!filterMode) return;
+    if (!filterMode || !isFocused) return;
     pushPasteTarget({
       id: FILTER_PASTE_TARGET_ID,
       insert: (text: string) => {
@@ -545,6 +549,7 @@
     labels={personnel.editor}
     breadcrumbLeft={editorBreadcrumbLeft}
     breadcrumbRight={editorFileName}
+    {isFocused}
     onClose={closeEditor}
   />
 {:else}
@@ -563,7 +568,7 @@
           {pathText}
         </div>
         <div
-          data-copy-source
+          data-copy-source={isFocused ? "" : undefined}
           style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:3px"
         >
           {#each filteredRows as row, i (row.name)}

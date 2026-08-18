@@ -106,9 +106,12 @@ tmuxCommands:
   - name: "kill-window"
     description: "kill the current window (refuses to kill the last one)"
   - name: "kill-pane"
-    description: "kill the focused Builds panel (or the window, if it's the only pane)"
+    description: "kill the focused pane, immediately (no confirm) — cascades to kill-window when it's the only pane in the window"
   - name: "select-window"
     description: "select-window <0-5> — jump straight to that window"
+    takesArgs: true
+  - name: "select-layout"
+    description: "select-layout <name> — apply a preset layout (even-horizontal, even-vertical, main-horizontal, main-horizontal-mirrored, main-vertical, main-vertical-mirrored, tiled); bare select-layout reapplies the last one"
     takesArgs: true
 
 # Error/usage strings the box itself renders (as opposed to the editor's own
@@ -125,3 +128,5 @@ errors:
   usageRenameWindow: "usage: rename-window <name>"
   usageSelectWindow: "usage: select-window <0-5>"
   noSuchWindowTemplate: "no such window: {arg}"
+  # PLAN.md Iteration 3 Phase 6 item 6.4 — `select-layout <garbage>`.
+  unknownLayoutTemplate: "unknown layout: {name}"
