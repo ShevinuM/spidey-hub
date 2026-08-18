@@ -634,16 +634,15 @@ test.describe("Personnel: filter mode (item 23b)", () => {
     await expect(page.locator('[data-testid="grep-overlay"]')).toHaveCount(0);
   });
 
-  test("KNOWN LIMITATION: '/' pressed BEFORE entering filter mode still opens the sitewide grep overlay", async ({
+  test("INTENDED: '/' pressed BEFORE entering filter mode opens the sitewide grep overlay", async ({
     page,
   }) => {
-    // Documented, not fixed: making "/" ITSELF an alternate filter-mode
-    // opener (alongside `f`) requires Terminal.svelte to consult the
-    // focused pane's ref ahead of GrepOverlay's own "/" opener even while
-    // NOT already in filter mode — a change to Terminal.svelte's dispatch
-    // order, which this executor does not own (see PLAN.md's file
-    // ownership split across wave-1 executors). Reported back to the
-    // orchestrator rather than worked around here.
+    // PLAN.md Iteration 4 item 23c (orchestrator decision after wave 1):
+    // making "/" ITSELF an alternate filter-mode opener (alongside `f`)
+    // would steal the sitewide grep binding on this view — a UX regression
+    // for a nicety nobody asked for. `f` (and clicking the `>` prompt) is
+    // the fixed, tested way to enter filter mode; outside of it, "/" keeps
+    // its ordinary sitewide meaning like on every other view.
     await openPersonnel(page);
     await page.keyboard.press("/");
     await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();

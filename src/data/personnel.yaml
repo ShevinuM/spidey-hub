@@ -86,5 +86,5 @@ editor:
   searchPromptGlyph: "/"
   cmdlinePromptGlyph: ":"
   readonlyBellMessage: "E21: Cannot make changes, 'modifiable' is off"
-  writeReadonlyMessage: "E45: 'readonly' option is set (add ! to override)"
+  writeReadonlyMessage: "E45: 'readonly' option is set"
   notAnEditorCommandTemplate: "E492: Not an editor command: {cmd}"

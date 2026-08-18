@@ -19,7 +19,7 @@ import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import YAML from "yaml";
 import { expect, test, E2E_TOAST_SEED, type Page } from "./fixtures.ts";
-import { pickToastPair } from "../../src/lib/notifications.ts";
+import { pickToastPair, TOAST_AUTO_DISMISS_MS } from "../../src/lib/notifications.ts";
 import type { NotificationEntry } from "../../src/lib/data.ts";
 // PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
@@ -250,42 +250,84 @@ test.describe("URL sync + back/forward", () => {
   });
 });
 
-test.describe("toast dismissal (seeded pool pick, PLAN.md Iteration 3 Phase 2 item 2.3/2.4)", () => {
+test.describe("toast notifications (seeded pool pick, PLAN.md Iteration 3 Phase 2 item 2.3/2.4; fixed-overlay/auto-dismiss presentation, PLAN.md Iteration 4 item 12)", () => {
   test("the pinned pair renders from the notifications pool", async ({ page }) => {
     await gotoReady(page, "/");
     await expect(page.locator('[data-testid="toast-0"]')).toContainText(pinnedToast0.text);
     await expect(page.locator('[data-testid="toast-1"]')).toContainText(pinnedToast1.text);
   });
 
-  test("dismissing toast 0 removes it (dashboard-only, in-memory)", async ({ page }) => {
+  // Item 12: tmux `display-message` never has a close control — messages
+  // only ever expire on their own. Both toast IDs are still rendered as
+  // plain content divs (see the pinned-pair test above), so this asserts
+  // the dismiss AFFORDANCE specifically is gone, not the toast itself.
+  test("no manual dismiss control exists on either toast", async ({ page }) => {
     await gotoReady(page, "/");
-    const toast0 = page.locator('[data-testid="toast-0"]');
-    await expect(toast0).toBeVisible();
-    await page.locator('[data-testid="toast-0-dismiss"]').click();
-    await expect(toast0).toHaveCount(0);
-    // toast 1 is untouched.
+    await expect(page.locator('[data-testid="toast-0"]')).toBeVisible();
     await expect(page.locator('[data-testid="toast-1"]')).toBeVisible();
+    await expect(page.locator('[data-testid="toast-0-dismiss"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="toast-1-dismiss"]')).toHaveCount(0);
   });
 
-  test("dismissing toast 1 removes it", async ({ page }) => {
-    await gotoReady(page, "/");
-    const toast1 = page.locator('[data-testid="toast-1"]');
-    await expect(toast1).toBeVisible();
-    await page.locator('[data-testid="toast-1-dismiss"]').click();
-    await expect(toast1).toHaveCount(0);
-  });
+  // Item 12: fixed overlay, not document flow — the toast stack must never
+  // push PaneTree/the dashboard content down when it appears or up when it
+  // disappears. `dashboard-wordmark`'s bounding box is a stable proxy for
+  // "did anything in the document-flow layout move".
+  //
+  // Uses the repo's own documented fake-clock idiom (`pauseAt` on an
+  // ABSOLUTE instant, not `runFor` — see the "live clock" describe block
+  // below for why: `runFor` lets real wall-clock time leak back in between
+  // calls, which flaked once under parallel-worker load; `pauseAt` freezes
+  // the clock genuinely still) to drive the ~4s auto-dismiss deterministically.
+  test("toast overlay is a fixed, non-layout-shifting stack that auto-dismisses without input", async ({ page }) => {
+    const CLOCK_TIME = "2026-08-15T23:34:00";
+    const t0 = new Date(CLOCK_TIME).getTime();
 
-  test("toasts do not resurrect after dismissal and leaving/returning to the dashboard", async ({ page }) => {
+    await page.clock.install({ time: CLOCK_TIME });
+    await page.clock.pauseAt(t0); // freeze immediately, before navigation
     await gotoReady(page, "/");
-    await page.locator('[data-testid="toast-0-dismiss"]').click();
+
+    const stack = page.locator('[data-testid="toast-stack"]');
+    await expect(stack).toBeVisible();
+    await expect(page.locator('[data-testid="toast-0"]')).toBeVisible();
+    await expect(page.locator('[data-testid="toast-1"]')).toBeVisible();
+
+    expect(await stack.evaluate((el) => getComputedStyle(el).position)).toBe("fixed");
+
+    const wordmark = page.locator('[data-testid="dashboard-wordmark"]');
+    const boxBefore = await wordmark.boundingBox();
+    expect(boxBefore).not.toBeNull();
+
+    await page.clock.pauseAt(t0 + TOAST_AUTO_DISMISS_MS + 250);
+
     await expect(page.locator('[data-testid="toast-0"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="toast-1"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="toast-stack"]')).toHaveCount(0);
+
+    const boxAfter = await wordmark.boundingBox();
+    expect(boxAfter).not.toBeNull();
+    expect(boxAfter).toEqual(boxBefore);
+  });
+
+  test("dismissed toasts do not resurrect after leaving/returning to the dashboard", async ({ page }) => {
+    const CLOCK_TIME = "2026-08-15T23:34:00";
+    const t0 = new Date(CLOCK_TIME).getTime();
+
+    await page.clock.install({ time: CLOCK_TIME });
+    await page.clock.pauseAt(t0);
+    await gotoReady(page, "/");
+    await expect(page.locator('[data-testid="toast-0"]')).toBeVisible();
+
+    await page.clock.pauseAt(t0 + TOAST_AUTO_DISMISS_MS + 250);
+    await expect(page.locator('[data-testid="toast-0"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="toast-1"]')).toHaveCount(0);
 
     await page.keyboard.press("b");
     await expect(page).toHaveURL(/\/builds$/);
     await goDashboard(page);
 
     await expect(page.locator('[data-testid="toast-0"]')).toHaveCount(0);
-    await expect(page.locator('[data-testid="toast-1"]')).toBeVisible();
+    await expect(page.locator('[data-testid="toast-1"]')).toHaveCount(0);
   });
 });
 
@@ -388,5 +430,68 @@ test.describe("live clock (bug fix 2)", () => {
 
     const after = await page.locator('[data-testid="status-bar-clock-time"]').innerText();
     expect(after).toBe("23:35");
+  });
+});
+
+test.describe("wallpaper blur/darken behind windowed views (PLAN.md Iteration 4 item 9)", () => {
+  async function wallpaperFilter(page: Page): Promise<string> {
+    return page.locator('[data-testid="wallpaper-layer"]').evaluate((el) => getComputedStyle(el).filter);
+  }
+
+  test("dashboard/builds/personnel views blur+darken the wallpaper", async ({ page }) => {
+    await gotoReady(page, "/");
+    let filter = await wallpaperFilter(page);
+    expect(filter).toContain("blur");
+    expect(filter).toMatch(/brightness/);
+
+    await gotoReady(page, "/builds");
+    filter = await wallpaperFilter(page);
+    expect(filter).toContain("blur");
+    expect(filter).toMatch(/brightness/);
+
+    await gotoReady(page, "/personnel");
+    filter = await wallpaperFilter(page);
+    expect(filter).toContain("blur");
+    expect(filter).toMatch(/brightness/);
+  });
+
+  test("retina-v leaves the wallpaper sharp (it IS the content)", async ({ page }) => {
+    await gotoReady(page, "/retina-v");
+    const filter = await wallpaperFilter(page);
+    expect(filter).toBe("none");
+  });
+});
+
+test.describe("dashboard wordmark restyle + outer chrome removal (PLAN.md Iteration 4 items 10/11)", () => {
+  test("SPIDEY-HUB wordmark is unplated: white fill + red stroke, no bordered plate wrapper", async ({ page }) => {
+    await gotoReady(page, "/");
+    const wordmark = page.locator('[data-testid="dashboard-wordmark"]');
+    await expect(wordmark).toBeVisible();
+
+    const style = await wordmark.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { color: cs.color, strokeWidth: cs.webkitTextStrokeWidth, strokeColor: cs.webkitTextStrokeColor };
+    });
+    expect(style.color).toBe("rgb(255, 255, 255)");
+    expect(style.strokeWidth).not.toBe("0px");
+    expect(style.strokeColor).not.toBe("");
+
+    // The old bordered plate wrapped the wordmark in its own bordered div;
+    // item 10 removes that wrapper entirely, so the wordmark's parent must
+    // carry no border of its own.
+    const parentBorder = await wordmark.evaluate((el) => getComputedStyle(el.parentElement as Element).borderStyle);
+    expect(parentBorder).toBe("none");
+  });
+
+  test("dashboard's outer window card has no background/border/shadow chrome (item 11)", async ({ page }) => {
+    await gotoReady(page, "/");
+    const card = page.locator('[data-testid="dashboard-wordmark"]').locator("xpath=ancestor::div[2]");
+    const style = await card.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { boxShadow: cs.boxShadow, backdropFilter: cs.backdropFilter, borderStyle: cs.borderStyle };
+    });
+    expect(style.boxShadow).toBe("none");
+    expect(style.backdropFilter === "none" || style.backdropFilter === "").toBe(true);
+    expect(style.borderStyle).toBe("none");
   });
 });

@@ -795,7 +795,7 @@
   >
     {#each lines as l (l.n)}
       {@const d = decorations.get(l.n)}
-      <div data-line={l.n} style="display:flex;gap:16px">
+      <div data-line={l.n} style="display:flex;gap:16px;white-space:pre">
         <span style="flex:none;width:26px;text-align:right;color:rgba(224,69,60,.4)">{l.n}</span
         >{#if !d}<span data-testid="editor-line-text" style={l.style}>{l.t}</span
         >{:else if d.kind === "full-select"}<span

@@ -845,6 +845,42 @@ export function createSession(client: Client, name: string, epoch: number): Sess
   return session;
 }
 
+/** `Ctrl-b c` (PLAN.md Iteration 4 item 16) — tmux new-window: appends a
+ * brand-new, auto-named `zsh` window running the in-window shell program to
+ * `session`, numbered one past the highest window number currently in the
+ * session (so it always coexists with whatever fixed digit targets a given
+ * caller has bound — the site's own six seed windows are numbered 0-5, so a
+ * fresh window here always lands at 6+ without colliding). Deliberately
+ * does NOT touch `activeWindowIdx`/`lastWindowIdx` itself — same "create,
+ * caller activates" split `createSession`/`attachSession` already use above
+ * — so the one function that owns that invariant (`selectWindowIndex`) is
+ * still the only place it's bookkept; the caller pairs this with
+ * `selectWindowIndex(session, session.windows.length - 1)` immediately
+ * after, matching real tmux's own "new window is created AND focused" combo
+ * the same way `tmux new -s name` is create-and-attach. Window ids stay
+ * deterministic (never a module-level counter or `Math.random()`,
+ * determinism rules) — a number can be reused after its window is killed
+ * and a new one created (the old window's state is fully gone by then), so
+ * `${session.id}#w${number}` never collides with anything still alive. */
+export function createWindow(session: Session): Window {
+  const highest = session.windows.reduce((max, w) => Math.max(max, w.number), -1);
+  const number = highest + 1;
+  const windowId = `${session.id}#w${number}`;
+  const pane = makePane(windowId, 0, "shell");
+  const window: Window = {
+    id: windowId,
+    number,
+    name: "zsh",
+    autoName: true,
+    root: { type: "leaf", pane },
+    activePaneId: pane.id,
+    paneOrder: [pane.id],
+    paneSeq: 1,
+  };
+  session.windows = [...session.windows, window];
+  return window;
+}
+
 export type KillWindowCascadeResult =
   | { kind: "window-removed" }
   /** `detachedToHost: true` — no sessions remain; the client is now fully

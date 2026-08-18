@@ -218,10 +218,10 @@ export interface ProfileData {
     retinaV: { alt: string; caption: string };
   };
   fields: ProfileField[];
-  summary: { heading: string; paragraphs: string[] };
   // PLAN.md Iteration 3 Phase 1 item 1.4: the data file's own "Agent
-  // Profile → Summary" bio, its own titled dossier block (distinct from
-  // `summary` above).
+  // Profile → Summary" bio. PLAN.md Iteration 4 item 21 removed the
+  // shorter, separate `summary` block this once sat "distinct from" — this
+  // dossier is the only bio block left.
   dossier: { heading: string; paragraphs: string[] };
   recordDatabase: { title: string; stats: { label: string; value: number }[] };
   cv: {
@@ -570,6 +570,9 @@ export interface ShellErrors {
   catNoSuchFileTemplate: string;
   catIsADirTemplate: string;
   catUnindexedTemplate: string;
+  vimMissingArgMessage: string;
+  vimNoSuchFileTemplate: string;
+  vimIsADirTemplate: string;
   nestedTmuxMessage: string;
   tmuxUnknownSubcommandTemplate: string;
 }
@@ -620,6 +623,10 @@ export interface ShellData {
     cantFindSessionTemplate: string;
   };
   host: ShellHostData;
+  /** PLAN.md Iteration 4 item 19 — labels for the read-only vim Editor the
+   * `vim`/`vi`/`nvim <file>` builtin opens over the shell pane; same shape
+   * builds.yaml's/personnel.yaml's own `editor:` blocks already use. */
+  editor: EditorLabels;
 }
 
 export const getShell = (): ShellData => loadYaml<ShellData>("shell.yaml");

@@ -11,6 +11,13 @@
  * BOOT_SEEN_STORAGE_KEY export. */
 export const TOAST_SEED_STORAGE_KEY = "edith:toast-seed";
 
+/** PLAN.md Iteration 4 item 12: tmux `display-message`-style auto-dismiss
+ * delay. Exported (not a Toasts.svelte-local constant) so tests/e2e/nav.spec.ts
+ * can drive `page.clock.runFor(TOAST_AUTO_DISMISS_MS + margin)` instead of
+ * hardcoding the duration a second time — same convention `E2E_TOAST_SEED`
+ * already established for the seed value. */
+export const TOAST_AUTO_DISMISS_MS = 4000;
+
 /** Parse a raw sessionStorage string into a valid uint32 seed, or null if
  * it's missing/unparseable. Pure (no storage access) so it's unit-testable
  * without a DOM/sessionStorage shim. */

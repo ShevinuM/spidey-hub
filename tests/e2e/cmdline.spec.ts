@@ -495,6 +495,20 @@ test.describe("Cmdline: editor ex-mode still works through the box (PLAN.md 5C.1
         await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
       });
 
+      // PLAN.md Iteration 4 items 8/22: "w!"/"wq!" used to fall through to
+      // the unknown-command E492 branch (a parser bug — bang variants of a
+      // recognized command reporting "not an editor command" reads as
+      // broken, not as "still readonly"); they now report the exact same
+      // E45 readonly error as their bang-less forms, never E492.
+      test(":wq! shows the E45 readonly error, not E492, and never closes the editor", async ({ page }) => {
+        await entry.open(page);
+        await page.keyboard.press(":");
+        await typeAndEnter(page, "wq!");
+        await expect(errorText(page)).toContainText("E45");
+        await expect(errorText(page)).not.toContainText("E492");
+        await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
+      });
+
       test(":<number> jumps to that line", async ({ page }) => {
         await entry.open(page);
         const totalLines = await page.locator("[data-line]").count();

@@ -152,7 +152,13 @@ export type ExCommand =
 
 export function parseExCommand(cmd: string): ExCommand {
   if (cmd === "q" || cmd === "q!") return { kind: "close" };
-  if (cmd === "w" || cmd === "wq") return { kind: "writeError" };
+  // PLAN.md Iteration 4 items 8/22: "w!"/"wq!" are treated exactly like
+  // "w"/"wq" — this viewer never writes regardless of the bang, so there is
+  // no distinct "force" behavior to implement; the bang variants existed in
+  // real vim only to override the readonly refusal `writeError` already
+  // reports, and previously fell through to the `unknown`/E492 branch below
+  // instead, which read as a parser bug rather than "still readonly".
+  if (cmd === "w" || cmd === "wq" || cmd === "w!" || cmd === "wq!") return { kind: "writeError" };
   if (/^\d+$/.test(cmd)) return { kind: "jump", line: Number.parseInt(cmd, 10) };
   return { kind: "unknown" };
 }

@@ -45,6 +45,8 @@
   import { loadFsIndex, loadGrepFiles, loadRepoFiles } from "../lib/shellIndex";
   import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
   import { resolvePageEpoch } from "../lib/clock";
+  import { classifyDoc, colorFor, docColors } from "../lib/docline";
+  import Editor, { type EditorLine } from "./Editor.svelte";
 
   interface Props {
     shell: ShellData;
@@ -152,6 +154,64 @@
     else if (effect.kind === "attach") onAttach?.(effect.sessionId);
     else if (effect.kind === "create-and-attach") onCreateAndAttach?.(effect.name);
     else if (effect.kind === "attach-view") onAttachView?.(effect.sessionId, effect.view, effect.windowExists);
+    else if (effect.kind === "open-editor") {
+      editorFile = { path: effect.path, content: effect.content };
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // `vim`/`vi`/`nvim <file>` (PLAN.md Iteration 4 item 19) — reuses the
+  // exact same "editorFile local state + embedded <Editor>" pattern
+  // Builds.svelte/Personnel.svelte already use for the read-only file
+  // viewer, so it gets the SAME site-wide Cmdline ex-mode / Ctrl-d/u/f/b
+  // scroll-chord integration those two already have for free (Terminal.
+  // svelte's generic per-pane ref registry only needs `isEditorOpen`/
+  // `runEditorExCommand` exported below, same capability-check contract
+  // every other pane program's ref already follows).
+  // -----------------------------------------------------------------------
+
+  interface EditorFileState {
+    path: string;
+    content: string;
+  }
+  let editorFile = $state<EditorFileState | null>(null);
+  let editorRef = $state<{
+    handleKey: (e: KeyboardEvent) => boolean;
+    runExCommand: (cmd: string) => { recognized: boolean; error?: string };
+  } | null>(null);
+
+  const editorLines = $derived.by((): EditorLine[] => {
+    if (!editorFile) return [];
+    const lines = editorFile.content.split("\n");
+    const isMd = editorFile.path.toLowerCase().endsWith(".md");
+    if (isMd) {
+      const kinds = classifyDoc(lines, "project");
+      return lines.map((raw, i) => ({ n: i + 1, t: raw === "" ? " " : raw, style: colorFor(kinds[i], "project") }));
+    }
+    return lines.map((raw, i) => ({ n: i + 1, t: raw === "" ? " " : raw, style: docColors.p }));
+  });
+
+  const editorFileName = $derived(editorFile ? editorFile.path.split("/").pop()! : "");
+
+  function closeEditor() {
+    editorFile = null;
+    editorRef = null;
+  }
+
+  /** Exposed for Terminal.svelte's generic per-pane ref registry — same
+   * capability-check contract Builds.svelte/Personnel.svelte's own
+   * `isEditorOpen` already provides (gates the Ctrl-d/u/f/b scroll chords
+   * and picks ex-mode vs. site-mode for the bare `:` fallback opener). */
+  export function isEditorOpen(): boolean {
+    return !!editorFile;
+  }
+
+  /** Forwards to the embedded Editor's own `runExCommand` — Terminal.
+   * svelte's site-wide Cmdline box calls this when its ex-mode Enter fires
+   * (`:q` here drops back to this shell, never killing the pane). */
+  export function runEditorExCommand(cmd: string): { recognized: boolean; error?: string } {
+    if (!editorFile || !editorRef) return { recognized: false };
+    return editorRef.runExCommand(cmd);
   }
 
   // Enter-key submission is fire-and-forget from handleKey's own
@@ -189,7 +249,7 @@
     const entries = await ensureFsEntries();
     const { cmd, args } = parseLine(raw);
     let resolveContent: (t: CatTarget) => string | undefined = () => undefined;
-    if (cmd === "cat" && args[0]) {
+    if ((cmd === "cat" || cmd === "vim" || cmd === "vi" || cmd === "nvim") && args[0]) {
       const target = resolveCatTarget(entries, pane.shell.cwd, args[0]);
       resolveContent = await buildResolveContent(target);
     }
@@ -236,6 +296,10 @@
    * character. Modifier chords (Ctrl-b prefix, etc.) fall through
    * untouched, same convention every other ref uses. */
   export function handleKey(e: KeyboardEvent): boolean {
+    if (editorFile) {
+      return editorRef ? editorRef.handleKey(e) : false;
+    }
+
     if (e.metaKey || e.ctrlKey || e.altKey) return false;
 
     if (e.key === "Enter") {
@@ -293,32 +357,45 @@
   const promptText = $derived(formatPrompt(mode, shell, pane.shell.cwd));
 </script>
 
-<div
-  data-shell-mode={mode}
-  style="flex:1;min-height:0;display:flex;flex-direction:column;padding:10px 14px;font-size:13px;line-height:1.5;color:#c9d1d9"
->
+{#if editorFile}
+  <Editor
+    bind:this={editorRef}
+    fileName={editorFileName}
+    lines={editorLines}
+    labels={shell.editor}
+    breadcrumbLeft={mode === "host" ? "host" : "shell"}
+    breadcrumbRight={editorFile.path}
+    {isFocused}
+    onClose={closeEditor}
+  />
+{:else}
   <div
-    bind:this={scrollerEl}
-    data-testid="shell-scroller"
-    data-copy-source={isFocused ? "" : undefined}
-    style="flex:1;min-height:0;overflow-y:auto;white-space:pre-wrap;word-break:break-word"
+    data-shell-mode={mode}
+    style="flex:1;min-height:0;display:flex;flex-direction:column;padding:10px 14px;font-size:13px;line-height:1.5;color:#c9d1d9"
   >
-    {#each pane.shell.lines as line, i (i)}
-      <div
-        data-testid="shell-line"
-        style={line.kind === "error"
-          ? "color:#e0453c"
-          : line.kind === "input"
-            ? "color:#5fc6b4"
-            : "color:#c9d1d9"}
-      >{line.text}</div>
-    {/each}
-    <div style="display:flex;align-items:baseline;white-space:pre">
-      <span data-testid="shell-prompt" style="color:#5fc6b4">{promptText}</span
-      ><span data-testid="shell-input">{pane.shell.input}</span
-      ><span
-        style="display:inline-block;width:7px;height:13px;margin-left:1px;vertical-align:-2px;background:#5fc6b4;animation:blk 1.1s steps(1) infinite"
-      ></span>
+    <div
+      bind:this={scrollerEl}
+      data-testid="shell-scroller"
+      data-copy-source={isFocused ? "" : undefined}
+      style="flex:1;min-height:0;overflow-y:auto;white-space:pre-wrap;word-break:break-word"
+    >
+      {#each pane.shell.lines as line, i (i)}
+        <div
+          data-testid="shell-line"
+          style={line.kind === "error"
+            ? "color:#e0453c"
+            : line.kind === "input"
+              ? "color:#5fc6b4"
+              : "color:#c9d1d9"}
+        >{line.text}</div>
+      {/each}
+      <div style="display:flex;align-items:baseline;white-space:pre">
+        <span data-testid="shell-prompt" style="color:#5fc6b4">{promptText}</span
+        ><span data-testid="shell-input">{pane.shell.input}</span
+        ><span
+          style="display:inline-block;width:7px;height:13px;margin-left:1px;vertical-align:-2px;background:#5fc6b4;animation:blk 1.1s steps(1) infinite"
+        ></span>
+      </div>
     </div>
   </div>
-</div>
+{/if}

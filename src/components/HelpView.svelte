@@ -41,9 +41,9 @@
   }
 </script>
 
-<div style="flex:1;min-height:0;display:flex;padding:18px 22px 14px">
+<div style="flex:1;min-height:0;display:flex">
   <div
-    style="position:relative;flex:1;min-width:0;display:flex;flex-direction:column;background:rgba(9,13,18,.6);backdrop-filter:blur(3px);border:1px solid rgba(224,69,60,.35);border-radius:6px;padding:16px 18px 12px;font-size:13px;box-shadow:0 24px 80px rgba(0,0,0,.5)"
+    style="position:relative;flex:1;min-width:0;display:flex;flex-direction:column;border:1px solid rgba(224,69,60,.35);border-radius:4px;padding:16px 18px 12px;font-size:13px"
   >
     <div
       style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#0a0e13;padding:0 10px;color:#e0453c;letter-spacing:.14em"

@@ -373,6 +373,17 @@ for (const entry of entryPoints) {
       await expect(scroller(page)).toBeVisible();
     });
 
+    // PLAN.md Iteration 4 items 8/22: the bang variants now report the same
+    // E45 readonly error as their bang-less forms — previously they fell
+    // through to the unknown-command E492 branch instead.
+    test(":wq! shows the E45 readonly error, not E492, and never closes the editor", async ({ page }) => {
+      await entry.open(page);
+      await typeCmdline(page, "wq!");
+      await expect(cmdlineError(page)).toContainText("E45");
+      await expect(cmdlineError(page)).not.toContainText("E492");
+      await expect(scroller(page)).toBeVisible();
+    });
+
     test("an unknown ex command shows an E492-style message IN THE BOX", async ({ page }) => {
       await entry.open(page);
       await typeCmdline(page, "bogus");

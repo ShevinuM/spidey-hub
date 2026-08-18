@@ -712,10 +712,8 @@
     onClose={closeEditor}
   />
 {:else}
-  <div style="flex:1;min-height:0;display:flex;padding:18px 22px 14px">
-    <div
-      style="flex:1;min-height:0;display:flex;gap:16px;background:rgba(9,13,18,.6);backdrop-filter:blur(3px);border:1px solid rgba(224,69,60,.35);border-radius:6px;padding:16px;font-size:13px;box-shadow:0 24px 80px rgba(0,0,0,.5)"
-    >
+  <div style="flex:1;min-height:0;display:flex">
+    <div style="flex:1;min-height:0;display:flex;gap:16px;padding:16px;font-size:13px">
       <!-- File Browser -->
       <div
         style="position:relative;flex:1;min-width:0;border:1px solid rgba(224,69,60,.35);border-radius:4px;padding:14px 12px 10px;display:flex;flex-direction:column"

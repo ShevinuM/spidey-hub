@@ -35,12 +35,10 @@ fields:
   - label: "Education:"
     value: "Memorial University of Newfoundland"
 
-summary:
-  heading: "─ SUMMARY"
-  paragraphs:
-    - "Recruited into software in 2021 and never left the terminal. Builds platforms end to end — APIs, pipelines, and the tooling teams live in."
-    - "Full time at Enaimco, where a 15-minute deploy became under one. Off-hours: a signature tracker, an anomaly watcher, and this site."
-
+# PLAN.md Iteration 4 item 21 removed the shorter "SUMMARY" block that used
+# to sit here (Profile.svelte's own `profile-summary` box) — dossier below
+# is the only bio block left.
+#
 # PLAN.md Iteration 3 Phase 1 item 1.4: the "Agent Profile → Summary" bio
 # from the user's data file, surfaced near-verbatim (light punctuation-only
 # trims, no rewriting of voice — this is the authoritative first-person

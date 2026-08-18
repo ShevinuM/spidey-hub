@@ -15,7 +15,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 import { listDir, renderTree, type FsEntry } from "../../src/lib/shell.ts";
-import { pickToastPair } from "../../src/lib/notifications.ts";
+import { pickToastPair, TOAST_AUTO_DISMISS_MS } from "../../src/lib/notifications.ts";
 import type { NotificationEntry } from "../../src/lib/data.ts";
 
 const ROOT = join(import.meta.dirname, "../..");
@@ -47,6 +47,8 @@ interface ShellYaml {
   errors: {
     cdNoSuchDirTemplate: string;
     catMissingArgMessage: string;
+    vimMissingArgMessage: string;
+    vimNoSuchFileTemplate: string;
   };
   sudo: { message: string };
   whoami: string;
@@ -287,6 +289,65 @@ test.describe("shell builtins (PLAN.md Architecture notes)", () => {
   });
 });
 
+// PLAN.md Iteration 4 item 19 — `vim <file>` (and `vi`/`nvim` aliases) shell
+// builtin: resolves the path against the same fs index/content sources
+// `cat` already uses, opens the read-only Editor over the shell pane
+// (Builds/Personnel's own `editorFile` local-state pattern, reused inside
+// Shell.svelte), and `:q` drops back to the shell (never killing the pane).
+test.describe("vim / vi / nvim (PLAN.md Iteration 4 item 19)", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  test("vim package.json opens the real site file read-only, and :q returns to the shell", async ({ page }) => {
+    await dropToShell(page);
+    await runInShell(page, "vim package.json");
+    const files = loadGrepFiles();
+    const pkg = files.find((f) => f.path === "package.json");
+    test.skip(!pkg, "package.json missing from the real grep index");
+
+    await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
+    await expect(page.locator('[data-testid="editor-line-text"]').first()).toHaveText(pkg!.lines[0]);
+    await expect(shellPrompt(page)).toHaveCount(0);
+
+    await page.keyboard.press(":");
+    await page.keyboard.type("q");
+    await page.keyboard.press("Enter");
+    await expect(page.locator('[data-testid="editor-scroller"]')).not.toBeVisible();
+    await expect(shellPrompt(page)).toBeVisible();
+  });
+
+  test("vi and nvim are accepted aliases for vim", async ({ page }) => {
+    await dropToShell(page);
+    await runInShell(page, "vi package.json");
+    await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
+    await page.keyboard.press(":");
+    await page.keyboard.type("q");
+    await page.keyboard.press("Enter");
+    await expect(shellPrompt(page)).toBeVisible();
+
+    await runInShell(page, "nvim package.json");
+    await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
+  });
+
+  test("vim <nonexistent file> reports a vim-style error line and stays in the shell", async ({ page }) => {
+    await dropToShell(page);
+    await runInShell(page, "vim nonexistent-file-xyz.md");
+    await expect(scroller(page)).toContainText(
+      shellYaml.errors.vimNoSuchFileTemplate.replace("{path}", "nonexistent-file-xyz.md"),
+    );
+    await expect(page.locator('[data-testid="editor-scroller"]')).toHaveCount(0);
+    await expect(shellPrompt(page)).toBeVisible();
+  });
+
+  test("bare vim (no argument) reports a usage error", async ({ page }) => {
+    await dropToShell(page);
+    await runInShell(page, "vim");
+    await expect(scroller(page)).toContainText(shellYaml.errors.vimMissingArgMessage);
+    await expect(page.locator('[data-testid="editor-scroller"]')).toHaveCount(0);
+  });
+});
+
 test.describe("shell history (Up/Down arrows)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
@@ -357,12 +418,21 @@ test.describe("reboot factory-resets the tmux client AND every pane's shell stat
   test("reboot also clears toast dismissals (PLAN.md item 4.4's own 'and clears toast dismissals')", async ({
     page,
   }) => {
+    // PLAN.md Iteration 4 item 12 replaced the manual per-toast ✕ dismiss
+    // with a single tmux `display-message`-style auto-dismiss timer that
+    // clears BOTH toasts together (no more independent per-toast dismiss
+    // state to exercise one at a time) — this test now reaches "dismissed"
+    // state by letting that timer fire instead of clicking a control that
+    // no longer exists, but still asserts the same underlying contract:
+    // reboot factory-resets the in-memory dismissal state.
     await page.clock.install({ time: CLOCK_TIME });
     await gotoReady(page, "/");
     await expect(page.locator('[data-testid="toast-0"]')).toContainText(pinnedToast0.text);
-    await page.locator('[data-testid="toast-0-dismiss"]').click();
-    await expect(page.locator('[data-testid="toast-0"]')).toHaveCount(0);
     await expect(page.locator('[data-testid="toast-1"]')).toContainText(pinnedToast1.text);
+
+    await page.clock.runFor(TOAST_AUTO_DISMISS_MS + 100);
+    await expect(page.locator('[data-testid="toast-0"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="toast-1"]')).toHaveCount(0);
 
     await page.locator('[data-testid="status-bar-reboot"]').click();
     await expect(page.locator('[data-testid="boot-sequence"]')).toBeVisible();

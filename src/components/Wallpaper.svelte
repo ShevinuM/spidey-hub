@@ -39,13 +39,15 @@
   // equivalent control in the real site, so off-tracker opacity is the
   // flat 0.72 the knob defaults to.
   const wallOpacity = $derived(dim ? 0.14 : view === "retina-v" ? 1 : 0.72);
-  // PLAN.md Iteration 3 Phase 2 item 2.2 / Locked decision #15: the whole
-  // wallpaper blurs behind the dashboard window only — every other view
-  // (including retina-v, which stays sharp at full opacity above) is
-  // unaffected. PLAN.md Phase 5 item 5.1: the detached host shell darkens
-  // it further still (brightness, not blur — the mock reads as a dimmed
-  // radar, not an out-of-focus one).
-  const wallFilter = $derived(dim ? "brightness(0.35)" : view === "home" ? "blur(3px)" : "none");
+  // PLAN.md Iteration 4 item 9: the wallpaper blurs AND darkens behind
+  // EVERY windowed view now (not just the dashboard) so each view's own
+  // chrome removal (item 11) still reads clearly over the wallpaper instead
+  // of the map competing for attention — except retina-v, where the map IS
+  // the content and must stay sharp at full opacity (handled by wallOpacity
+  // above). PLAN.md Phase 5 item 5.1: the detached host shell darkens it
+  // further still (brightness, not blur — the mock reads as a dimmed radar,
+  // not an out-of-focus one) and takes precedence over the per-view blur.
+  const wallFilter = $derived(dim ? "brightness(0.35)" : view === "retina-v" ? "none" : "blur(6px) brightness(.45)");
 
   const MAP_W = "min(1100px,92vw)";
   const MAP_H = "min(600px,calc(100vh - 340px))";

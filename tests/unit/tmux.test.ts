@@ -17,6 +17,7 @@ import {
   computePaneRects,
   createFactoryClient,
   createSession,
+  createWindow,
   cycleNextPane,
   cycleWindow,
   detachClient,
@@ -372,6 +373,48 @@ test("createSession adds a new session with one auto-named zsh window (window 0)
   assert.equal(session.createdAt, 5000);
   assert.equal(session.lastAttachedSeq, 0);
   assert.equal(client.attachedSessionId, before); // unchanged — createSession never attaches on its own
+});
+
+// ---------------------------------------------------------------------
+// createWindow (PLAN.md Iteration 4 item 16, `Ctrl-b c`)
+// ---------------------------------------------------------------------
+
+test("createWindow appends a new auto-named zsh window numbered one past the current highest, without touching activeWindowIdx", () => {
+  const client = freshClient();
+  const session = activeSessionOf(client)!;
+  const before = session.activeWindowIdx;
+  const win = createWindow(session);
+  assert.equal(session.windows.length, 7);
+  assert.equal(win.number, 6);
+  assert.equal(win.name, "zsh");
+  assert.equal(win.autoName, true);
+  assert.equal(focusedPane(win).program, "shell");
+  assert.equal(session.activeWindowIdx, before); // caller activates, not this function
+});
+
+test("createWindow twice in a row never collides — numbers 6 then 7, distinct ids", () => {
+  const client = freshClient();
+  const session = activeSessionOf(client)!;
+  const first = createWindow(session);
+  const second = createWindow(session);
+  assert.equal(first.number, 6);
+  assert.equal(second.number, 7);
+  assert.notEqual(first.id, second.id);
+});
+
+test("createWindow reuses the freed number (and its deterministic id) after a kill-then-create — the dead window's state is fully gone, so this is harmless (determinism rules: ids are a pure function of session id + number, never a counter)", () => {
+  const client = freshClient();
+  const session = activeSessionOf(client)!;
+  const first = createWindow(session);
+  assert.equal(first.number, 6);
+  killWindow(session, first.id);
+  const second = createWindow(session);
+  assert.equal(second.number, 6);
+  assert.equal(second.id, first.id);
+  // The killed window is gone from the array (not merely shadowed) — this
+  // is a brand-new 7th entry that happens to reuse the freed number/id, not
+  // the old one coming back to life.
+  assert.equal(session.windows.length, 7);
 });
 
 test("attachSession switches the client and bumps the session's recency counter", () => {

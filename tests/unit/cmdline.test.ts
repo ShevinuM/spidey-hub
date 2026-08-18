@@ -213,6 +213,11 @@ test("parseExCommand recognizes w and wq as writeError", () => {
   assert.deepEqual(parseExCommand("wq"), { kind: "writeError" });
 });
 
+test("parseExCommand recognizes w! and wq! as writeError too (Iteration 4 items 8/22 — no distinct force behavior)", () => {
+  assert.deepEqual(parseExCommand("w!"), { kind: "writeError" });
+  assert.deepEqual(parseExCommand("wq!"), { kind: "writeError" });
+});
+
 test("parseExCommand recognizes a bare number as a jump", () => {
   assert.deepEqual(parseExCommand("42"), { kind: "jump", line: 42 });
   assert.deepEqual(parseExCommand("0"), { kind: "jump", line: 0 });

@@ -47,28 +47,18 @@
   );
 </script>
 
-<div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:20px 40px 20px 40px">
+<div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">
   <div
-    style="width:min(940px,100%);background:rgba(9,13,18,.6);backdrop-filter:blur(3px);border:1px solid rgba(255,255,255,.05);border-radius:6px;box-sizing:border-box;padding:clamp(14px,4vh,54px) 46px clamp(10px,2.6vh,34px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,2.6vh,38px);max-height:100%;min-height:min(100%,560px);overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.45)"
+    style="width:min(940px,100%);box-sizing:border-box;padding:clamp(14px,4vh,54px) 46px clamp(10px,2.6vh,34px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(10px,2.6vh,38px);max-height:100%;min-height:min(100%,560px);overflow:hidden"
   >
-    <div style="display:flex;align-items:stretch;gap:10px">
-      <div
-        style="border:1.5px solid #e0453c;border-radius:10px;background:rgba(9,13,18,.8);padding:clamp(10px,2.6vh,18px) 34px;text-align:center;display:flex;flex-direction:column;gap:6px"
-      >
-        <div
-          data-testid="dashboard-wordmark"
-          aria-label={dashboard.plate.title}
-          style="font-family:'Webslinger','JetBrains Mono',ui-monospace,monospace;font-size:clamp(20px,4.2vh,30px);font-weight:700;letter-spacing:.03em;color:#e0453c;display:flex;justify-content:center;padding-top:6px;text-shadow:0 1px 0 rgba(0,0,0,.35),0 0 18px rgba(224,69,60,.32)"
-        >
-          {#each wordmarkChars as { ch, style }, i (i)}
-            <span aria-hidden="true" style="display:inline-block;{style}">{ch}</span>
-          {/each}
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;justify-content:space-between;padding:4px 0">
-        <div style="width:2px;height:22px;background:rgba(224,69,60,.85)"></div>
-        <div style="width:2px;height:22px;background:rgba(224,69,60,.55)"></div>
-      </div>
+    <div
+      data-testid="dashboard-wordmark"
+      aria-label={dashboard.plate.title}
+      style="font-family:'Webslinger','JetBrains Mono',ui-monospace,monospace;font-size:clamp(26px,5.2vh,38px);font-weight:700;letter-spacing:.03em;color:#fff;-webkit-text-stroke:1.75px #e0453c;display:flex;justify-content:center;padding-top:6px;text-shadow:2px 3px 0 rgba(0,0,0,.55)"
+    >
+      {#each wordmarkChars as { ch, style }, i (i)}
+        <span aria-hidden="true" style="display:inline-block;{style}">{ch}</span>
+      {/each}
     </div>
 
     <div data-copy-source={isFocused ? "" : undefined} style="width:min(560px,100%);display:flex;flex-direction:column;gap:2px">

@@ -1,16 +1,23 @@
 <script lang="ts">
-  // Dashboard-only toast stack (design/Homepage.dc.html lines 120-141).
-  // Dismissal state (offToast0/offToast1) is owned by Terminal.svelte for
-  // the whole session, not by this component — Toasts stays mounted across
-  // every view switch, and local $state would forget the dismissal and
-  // resurrect the toast on the next visit (see Component.state in the
-  // prototype: offDanger/offInfo lived at the top level for the same
-  // reason; renamed here since the two slots no longer carry fixed
-  // danger/tracker content — PLAN.md Iteration 3 Phase 2 item 2.3).
+  // Dashboard-only notification overlay (design/Homepage.dc.html lines
+  // 120-141 originally; PLAN.md Iteration 4 item 12 rewrote the PRESENTATION
+  // to be tmux `display-message`-faithful: a fixed overlay anchored just
+  // above the status bar, right-aligned, stacked upward, one-line
+  // amber-background strips with dark mono text, no manual dismiss — real
+  // tmux messages auto-expire, they are never clicked away).
   //
-  // Content is now a seeded 2-of-pool pick (Locked decision #12) instead of
-  // 2 fixed toasts: on mount, pick() below draws 2 DISTINCT entries from
-  // the >=48-entry src/data/notifications.yaml pool via mulberry32
+  // Dismissal state (offToast0/offToast1) is still owned by Terminal.svelte
+  // for the whole session, not by this component — Toasts stays mounted
+  // across every view switch, and local $state would forget the dismissal
+  // and resurrect the toast on the next visit (see Component.state in the
+  // prototype: offDanger/offInfo lived at the top level for the same
+  // reason). Item 12 just changes WHO calls onHideToast0/onHideToast1 (an
+  // internal auto-dismiss timer instead of a click handler) — the props
+  // contract Terminal.svelte mounts this with is untouched.
+  //
+  // Content is a seeded 2-of-pool pick (Locked decision #12) instead of 2
+  // fixed toasts: on mount, pick() below draws 2 DISTINCT entries from the
+  // >=48-entry src/data/notifications.yaml pool via mulberry32
   // (src/lib/notifications.ts), seeded from Date.now() in prod or
   // sessionStorage's edith:toast-seed key (test fixtures). The pick
   // deliberately happens in onMount, not a $state initializer or top-level
@@ -22,10 +29,15 @@
   // data-terminal-ready already accounts for that same hydration gap.
   import type { DashboardData, NotificationEntry, NotificationsData } from "../lib/data";
   import type { ViewId } from "../lib/views";
-  import { onMount } from "svelte";
-  import { pickToastPair, resolveToastSeed } from "../lib/notifications";
+  import { onDestroy, onMount } from "svelte";
+  import { pickToastPair, resolveToastSeed, TOAST_AUTO_DISMISS_MS } from "../lib/notifications";
+  import { STATUS_BAR_HEIGHT_PX } from "../lib/layout";
 
   interface Props {
+    // `toasts` (the old closeIcon glyph) is unused now that item 12 removed
+    // the manual ✕ dismiss button, but stays in the prop contract so
+    // Terminal.svelte's mount call site (owned by a different executor's
+    // region this wave) needs no edit.
     toasts: DashboardData["toasts"];
     notifications: NotificationsData;
     view: ViewId;
@@ -35,7 +47,7 @@
     onHideToast1: () => void;
   }
 
-  const { toasts, notifications, view, offToast0, offToast1, onHideToast0, onHideToast1 }: Props = $props();
+  const { notifications, view, offToast0, offToast1, onHideToast0, onHideToast1 }: Props = $props();
 
   let pair = $state<[NotificationEntry, NotificationEntry] | null>(null);
 
@@ -44,83 +56,61 @@
   });
 
   const alertsVisible = $derived(view === "home" && pair !== null && !(offToast0 && offToast1));
+
+  // Auto-dismiss (PLAN.md item 12): arms a SINGLE `setTimeout` the first
+  // time the pair actually becomes visible (not a bare `onMount` — this
+  // component mounts on every view, not just "home", so an onMount timer
+  // could expire before the user ever lands on the dashboard to see it).
+  // Plain `setTimeout` (not a rAF loop) is what makes this work under
+  // Playwright's `page.clock` fake timers, same contract every other
+  // faked-time e2e spec in this repo relies on. Once armed, the timer keeps
+  // running even if the user navigates to another view before it fires —
+  // real tmux messages expire on their own schedule regardless of what's
+  // focused, they don't pause.
+  let armed = false;
+  let dismissTimer: ReturnType<typeof setTimeout> | undefined;
+
+  $effect(() => {
+    if (alertsVisible && !armed) {
+      armed = true;
+      dismissTimer = setTimeout(() => {
+        onHideToast0();
+        onHideToast1();
+      }, TOAST_AUTO_DISMISS_MS);
+    }
+  });
+
+  onDestroy(() => {
+    if (dismissTimer !== undefined) clearTimeout(dismissTimer);
+  });
+
+  const TOAST_MARGIN_PX = 10;
 </script>
 
 {#if alertsVisible && pair}
   <div
-    style="flex:none;display:flex;flex-direction:column;align-items:stretch;gap:14px;width:min(420px,calc(100% - 44px));margin:clamp(12px,2.5vh,22px) 22px 0 auto"
+    data-testid="toast-stack"
+    style="position:fixed;right:16px;bottom:{STATUS_BAR_HEIGHT_PX +
+      TOAST_MARGIN_PX}px;z-index:30;display:flex;flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none"
   >
     {#if !offToast0}
       <div
         data-testid="toast-0"
-        style="position:relative;min-width:0;box-sizing:border-box;border:1.5px solid #e5484d;border-radius:9px;background:rgba(11,16,22,.92);padding:14px 34px 12px 20px"
+        style="box-sizing:border-box;width:min(420px,calc(100vw - 32px));background:#e8b34d;color:#1a1408;padding:4px 12px;font-size:12px;line-height:1.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600"
       >
-        <div
-          style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:#0b0f14;padding:0 10px;font-size:14px;color:#e5484d"
-        >
-          <span
-            style="width:16px;height:16px;border-radius:50%;background:#e5484d;color:#0b0f14;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700"
-            >{pair[0].icon}</span
-          >{pair[0].badge}
-        </div>
-        <span
-          onclick={onHideToast0}
-          onkeydown={(e) => {
-            if (e.key === "Enter" || e.key === " ") onHideToast0();
-          }}
-          role="button"
-          tabindex="0"
-          data-testid="toast-0-dismiss"
-          class="toast-close toast-close--danger"
-          style="position:absolute;top:8px;right:10px;cursor:pointer;font-size:12px;line-height:1"
-          >{toasts.closeIcon}</span
-        >
-        <div style="font-size:14px;line-height:1.5;color:#e8e0dc">{pair[0].text}</div>
+        <span style="font-weight:700">{pair[0].icon} {pair[0].badge}:</span>
+        {pair[0].text}
       </div>
     {/if}
 
     {#if !offToast1}
       <div
         data-testid="toast-1"
-        style="position:relative;min-width:0;box-sizing:border-box;border:1.5px solid #4a9fe0;border-radius:9px;background:rgba(11,16,22,.92);padding:14px 34px 12px 20px"
+        style="box-sizing:border-box;width:min(420px,calc(100vw - 32px));background:#e8b34d;color:#1a1408;padding:4px 12px;font-size:12px;line-height:1.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600"
       >
-        <div
-          style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:#0b0f14;padding:0 10px;font-size:14px;color:#4a9fe0"
-        >
-          <span
-            style="width:16px;height:16px;border-radius:50%;background:#4a9fe0;color:#0b0f14;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700"
-            >{pair[1].icon}</span
-          >{pair[1].badge}
-        </div>
-        <span
-          onclick={onHideToast1}
-          onkeydown={(e) => {
-            if (e.key === "Enter" || e.key === " ") onHideToast1();
-          }}
-          role="button"
-          tabindex="0"
-          data-testid="toast-1-dismiss"
-          class="toast-close toast-close--info"
-          style="position:absolute;top:8px;right:10px;cursor:pointer;font-size:12px;line-height:1"
-          >{toasts.closeIcon}</span
-        >
-        <div style="font-size:14px;line-height:1.5;color:#cfd8de">{pair[1].text}</div>
+        <span style="font-weight:700">{pair[1].icon} {pair[1].badge}:</span>
+        {pair[1].text}
       </div>
     {/if}
   </div>
 {/if}
-
-<style>
-  .toast-close--danger {
-    color: rgba(232, 224, 220, 0.45);
-  }
-  .toast-close--danger:hover {
-    color: #ff6b6f;
-  }
-  .toast-close--info {
-    color: rgba(207, 216, 222, 0.45);
-  }
-  .toast-close--info:hover {
-    color: #8fc7f0;
-  }
-</style>

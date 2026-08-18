@@ -350,7 +350,16 @@ export type ShellEffect =
    * instead of a hard navigation when it doesn't (that window was killed
    * at some point) — same "attach + message per your judgment" allowance
    * PLAN.md leaves to the executor. */
-  | { kind: "attach-view"; sessionId: string; view: string; windowExists: boolean };
+  | { kind: "attach-view"; sessionId: string; view: string; windowExists: boolean }
+  /** PLAN.md Iteration 4 item 19 — `vim`/`vi`/`nvim <file>`: `path` is the
+   * fully-resolved (cwd-joined) display path, `content` its already-
+   * fetched text (the caller resolved `resolveCatTarget` and fetched it
+   * BEFORE calling `runCommand`, same "pre-warm, then call" convention
+   * `cat` already uses). The (impure) caller opens a read-only Editor over
+   * this pane, reusing the exact same `editorFile` local-state pattern
+   * Builds.svelte/Personnel.svelte already use — `:q` there drops back to
+   * this shell, never killing the pane. */
+  | { kind: "open-editor"; path: string; content: string };
 
 export interface RunOutcome {
   state: ShellState;
@@ -453,6 +462,23 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
       const content = ctx.resolveContent(target);
       if (content === undefined) return out([errLine(ctx.shell.errors.catUnindexedTemplate.replace("{path}", args[0]))]);
       return out(content.split("\n").map(outLine));
+    }
+
+    // PLAN.md Iteration 4 item 19 — `vim`/`vi`/`nvim <file>`: reuses `cat`'s
+    // own path-resolution and content-fetch machinery (same fs index,
+    // same `resolveCatTarget`/`ctx.resolveContent` pre-warm convention) —
+    // this viewer never writes, so there is nothing else to resolve.
+    case "vim":
+    case "vi":
+    case "nvim": {
+      if (!args[0]) return out([errLine(ctx.shell.errors.vimMissingArgMessage)]);
+      const target = resolveCatTarget(ctx.fsEntries, base.cwd, args[0]);
+      if (target.kind === "missing") return out([errLine(ctx.shell.errors.vimNoSuchFileTemplate.replace("{path}", args[0]))]);
+      if (target.kind === "dir") return out([errLine(ctx.shell.errors.vimIsADirTemplate.replace("{path}", args[0]))]);
+      const content = ctx.resolveContent(target);
+      if (content === undefined) return out([errLine(ctx.shell.errors.catUnindexedTemplate.replace("{path}", args[0]))]);
+      const path = joinPath(resolveSegments(base.cwd, args[0]));
+      return { state: base, effect: { kind: "open-editor", path, content } };
     }
 
     case "pwd": {

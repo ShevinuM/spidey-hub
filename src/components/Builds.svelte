@@ -756,10 +756,8 @@
     onClose={closeEditor}
   />
 {:else}
-  <div style="flex:1;min-height:0;display:flex;padding:18px 22px 14px">
-    <div
-      style="flex:1;min-height:0;display:flex;gap:12px;background:rgba(9,13,18,.6);backdrop-filter:blur(3px);border:1px solid rgba(224,69,60,.35);border-radius:6px;padding:16px 16px 14px;font-size:13px;box-shadow:0 24px 80px rgba(0,0,0,.5)"
-    >
+  <div style="flex:1;min-height:0;display:flex">
+    <div style="flex:1;min-height:0;display:flex;gap:12px;padding:16px 16px 14px;font-size:13px">
       <div style="width:38%;min-width:0;display:flex;flex-direction:column;gap:14px">
         <!-- [1] Status -->
         <div

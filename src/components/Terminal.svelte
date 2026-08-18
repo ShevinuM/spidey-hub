@@ -47,6 +47,7 @@
     attachSession,
     createFactoryClient,
     createSession,
+    createWindow,
     cycleNextPane,
     detachClient,
     exitProgram,
@@ -488,24 +489,26 @@
   /** Digit/`?` prefix targets, recomputed from the live window list so a
    * killed window's digit stops doing anything (tmux-faithful: an unbound
    * prefixed key is silently swallowed) — same shape as before Phase 4,
-   * just holding window ids instead of ViewIds (the two agree for every one
-   * of these five windows; see NUMBER_TO_ID below). Empty while detached —
-   * the prefix is inert then anyway (`armPrefix()`'s own gate), so this is
-   * never consulted, but must still not throw. */
-  const NUMBER_TO_ID: Record<string, string> = {
-    "1": "builds",
-    "2": "personnel",
-    "3": "retina-v",
-    "4": "profile",
-    "5": "help",
-  };
+   * just holding window ids instead of ViewIds. Fully generic over each
+   * window's own `number` field (PLAN.md Iteration 4 item 16, `Ctrl-b c`)
+   * rather than a hardcoded 1-5 map — behavior-identical for the six fixed
+   * seed windows (every one of them has `number === its own fixed digit`,
+   * present-gated either way) AND the only way a window `createWindow()`
+   * appends later (numbered 6+, see that function's own comment) gets a
+   * digit slot of its own for free, without this needing to know that any
+   * such window exists. `0`'s own dedicated handling (both the plain
+   * `e.key === "0"` branch below and `executeTmuxCommand`'s `select-window
+   * 0` special case) is untouched by this — dashboard's window always has
+   * `number === 0` too, so including it here would just be a redundant,
+   * behavior-identical second path to the exact same result. Empty while
+   * detached — the prefix is inert then anyway (`armPrefix()`'s own gate),
+   * so this is never consulted, but must still not throw. */
   const prefixTargets = $derived.by((): Partial<Record<string, string>> => {
-    const present = new Set(statusWindows.map((w) => w.id));
     const targets: Partial<Record<string, string>> = {};
-    for (const [digit, id] of Object.entries(NUMBER_TO_ID)) {
-      if (present.has(id)) targets[digit] = id;
+    for (const w of statusWindows) {
+      if (w.number >= 1 && w.number <= 9) targets[String(w.number)] = w.id;
     }
-    if (present.has("help")) targets["?"] = "help";
+    if (statusWindows.some((w) => w.id === "help")) targets["?"] = "help";
     return targets;
   });
 
@@ -995,6 +998,28 @@
     else reapplyLastLayout(win);
   }
 
+  /** `Ctrl-b c` (PLAN.md Iteration 4 item 16) — tmux new-window: creates a
+   * new window running the in-window shell program and switches focus to it
+   * immediately (real tmux's own combined "create and select" behavior for
+   * this binding — distinct from `createSession`'s create-only split, which
+   * a SEPARATE `attachSession()` call finishes; here `selectWindowIndex` is
+   * that second call, run right after `createWindow` appends it). Closes
+   * window chrome first, same convention every other window-affecting
+   * action follows (`switchActiveWindow`, `killWindowById`, `detachSession`)
+   * — including choose-tree, which is not otherwise gated for this key
+   * (PLAN.md 6.5: same free-close treatment as the digit/n/p window-switch
+   * keys, nothing to starve). `syncUrl()` no-ops for the newly-shelled
+   * window exactly like `:q`'s `exitActiveProgram` does (`programToViewId
+   * ("shell")` is null) — the URL freezes wherever it already was. */
+  function createWindowInSession() {
+    closeWindowChrome();
+    const session = activeSession;
+    if (!session) return;
+    createWindow(session);
+    selectWindowIndex(session, session.windows.length - 1);
+    syncUrl();
+  }
+
   // ---------------------------------------------------------------------
   // choose-tree (PLAN.md Iteration 3 Phase 6 item 6.5, `Ctrl-b w`) —
   // ChooseTree.svelte's own callback props; every one of these is a WINDOW/
@@ -1302,6 +1327,14 @@
     if (e.key === "0") {
       e.preventDefault();
       switchToProgram("dashboard");
+      return true;
+    }
+    if (pk === "c") {
+      // PLAN.md Iteration 4 item 16 — `c` is tmux new-window: creates a
+      // fresh window running the in-window shell program and switches to it
+      // immediately (see `createWindowInSession`'s own comment).
+      e.preventDefault();
+      createWindowInSession();
       return true;
     }
     if (pk === "w") {

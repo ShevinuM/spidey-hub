@@ -30,6 +30,12 @@ errors:
   # the fs tree but has no captured text content (outside the size cap, a
   # binary file, or simply not walked into either generated index).
   catUnindexedTemplate: "cat: {path}: binary or unindexed"
+  # PLAN.md Iteration 4 item 19 — `vim`/`vi`/`nvim <file>` shell builtin,
+  # vim-style wording (this viewer never writes, so there's no "create a new
+  # buffer" behavior to offer for a missing path — an error instead).
+  vimMissingArgMessage: "vim: missing file operand"
+  vimNoSuchFileTemplate: "vim: {path}: No such file or directory"
+  vimIsADirTemplate: "vim: {path}: Is a directory"
   # PLAN.md tmux fidelity reference: `tmux new`/`tmux a` inside a pane shell
   # always refuse with this exact string, regardless of argument.
   nestedTmuxMessage: "sessions should be nested with care, unset $TMUX to force"
@@ -111,6 +117,8 @@ help:
       description: "show this list"
     - cmd: "open <view>"
       description: "launch a program in this pane"
+    - cmd: "vim <file>"
+      description: "open a file read-only in the vim editor (vi/nvim work too)"
     - cmd: "view-names"
       description: "list the launchable programs"
     - cmd: "neofetch"
@@ -161,3 +169,28 @@ tmux:
   noSessionsMessage: "no sessions"
   duplicateSessionTemplate: "duplicate session: {name}"
   cantFindSessionTemplate: "can't find session: {name}"
+
+# PLAN.md Iteration 4 item 19 — labels for the read-only vim Editor the
+# `vim`/`vi`/`nvim <file>` builtin opens over the shell pane. Byte-for-byte
+# the same block builds.yaml's/personnel.yaml's own `editor:` sections
+# carry (Homepage.dc.html lines 317-336: "NORMAL", "⑂ main") — kept here
+# too, in this file, rather than imported, because it's the exact same
+# reproduced prototype markup, not shared storage (same convention those two
+# files' own comments already document against each other).
+editor:
+  modeLabel: "NORMAL"
+  modeVisualLabel: "VISUAL"
+  modeVisualLineLabel: "VISUAL LINE"
+  branch: "⑂ main"
+  breadcrumbSeparator: "›"
+  closePillLabel: "[:q]"
+  tabIcon: "▤"
+  topLabel: "Top"
+  bottomLabel: "Bot"
+  percentTemplate: "{n}%"
+  positionTemplate: "{line}:{col}"
+  searchPromptGlyph: "/"
+  cmdlinePromptGlyph: ":"
+  readonlyBellMessage: "E21: Cannot make changes, 'modifiable' is off"
+  writeReadonlyMessage: "E45: 'readonly' option is set"
+  notAnEditorCommandTemplate: "E492: Not an editor command: {cmd}"

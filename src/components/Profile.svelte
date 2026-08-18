@@ -50,10 +50,8 @@
   }
 </script>
 
-<div style="flex:1;min-height:0;display:flex;padding:16px 22px 12px">
-  <div
-    style="flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;background:rgba(9,13,18,.6);backdrop-filter:blur(3px);border:1px solid rgba(224,69,60,.4);border-radius:5px;padding:12px 14px;font-size:12px;box-shadow:0 24px 80px rgba(0,0,0,.5)"
-  >
+<div style="flex:1;min-height:0;display:flex">
+  <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:14px 16px 10px;font-size:12px">
     <div style="flex:none;display:flex;align-items:center;gap:12px">
       <div
         style="display:flex;align-items:center;gap:8px;background:rgba(224,69,60,.16);border:1px solid rgba(224,69,60,.5);padding:4px 10px;clip-path:polygon(0 0,100% 0,calc(100% - 10px) 100%,0 100%)"
@@ -119,18 +117,9 @@
           {/each}
         </div>
         <div
-          data-testid="profile-summary"
-          data-copy-source={isFocused ? "" : undefined}
-          style="flex:1 1 auto;min-height:64px;overflow-y:auto;border:1px solid rgba(224,69,60,.35);padding:6px 10px;display:flex;flex-direction:column;gap:3px;font-size:12px;line-height:1.32;color:rgba(196,216,232,.75)"
-        >
-          <div style="color:rgba(217,176,74,.85);letter-spacing:.16em">{profile.summary.heading}</div>
-          {#each profile.summary.paragraphs as p (p)}
-            <div>{p}</div>
-          {/each}
-        </div>
-        <div
           data-testid="profile-dossier"
-          style="flex:1.4 1 auto;min-height:84px;overflow-y:auto;border:1px solid rgba(224,69,60,.35);padding:6px 10px;display:flex;flex-direction:column;gap:5px;font-size:11.5px;line-height:1.34;color:rgba(196,216,232,.75)"
+          data-copy-source={isFocused ? "" : undefined}
+          style="flex:1 1 auto;min-height:84px;overflow-y:auto;border:1px solid rgba(224,69,60,.35);padding:6px 10px;display:flex;flex-direction:column;gap:12px;font-size:11.5px;line-height:1.34;color:rgba(196,216,232,.75)"
         >
           <div style="color:rgba(217,176,74,.85);letter-spacing:.16em">{profile.dossier.heading}</div>
           {#each profile.dossier.paragraphs as p (p)}

@@ -162,13 +162,12 @@ test.describe("Profile: live meter (SIGNAL row)", () => {
   });
 });
 
-test.describe("Profile: SUMMARY panel", () => {
-  test("scrolls (overflow-y: auto)", async ({ page }) => {
+// PLAN.md Iteration 4 item 21 removed the separate SUMMARY box entirely —
+// the dossier below is the only bio block left.
+test.describe("Profile: summary section removed (Iteration 4 item 21)", () => {
+  test("profile-summary testid no longer exists", async ({ page }) => {
     await openProfile(page);
-    const summary = page.locator('[data-testid="profile-summary"]');
-    await expect(summary).toBeVisible();
-    const overflowY = await summary.evaluate((el) => getComputedStyle(el).overflowY);
-    expect(overflowY).toBe("auto");
+    await expect(page.locator('[data-testid="profile-summary"]')).toHaveCount(0);
   });
 });
 
@@ -190,6 +189,16 @@ test.describe("Profile: DOSSIER panel (PLAN.md Iteration 3 Phase 1 item 1.4)", (
     const dossier = page.locator('[data-testid="profile-dossier"]');
     const overflowY = await dossier.evaluate((el) => getComputedStyle(el).overflowY);
     expect(overflowY).toBe("auto");
+  });
+
+  // PLAN.md Iteration 4 item 21: the paragraphs used to render with no
+  // visible gap between them (a 5px flex `gap`, easy to mistake for line-
+  // height) — bumped to a clearly-visible 12px.
+  test("paragraphs have visible spacing between them", async ({ page }) => {
+    await openProfile(page);
+    const dossier = page.locator('[data-testid="profile-dossier"]');
+    const rowGap = await dossier.evaluate((el) => parseFloat(getComputedStyle(el).rowGap));
+    expect(rowGap).toBeGreaterThanOrEqual(10);
   });
 });
 

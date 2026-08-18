@@ -55,6 +55,9 @@ const SHELL: ShellData = {
     catNoSuchFileTemplate: "cat: {path}: No such file or directory",
     catIsADirTemplate: "cat: {path}: Is a directory",
     catUnindexedTemplate: "cat: {path}: binary or unindexed",
+    vimMissingArgMessage: "vim: missing file operand",
+    vimNoSuchFileTemplate: "vim: {path}: No such file or directory",
+    vimIsADirTemplate: "vim: {path}: Is a directory",
     nestedTmuxMessage: "sessions should be nested with care, unset $TMUX to force",
     tmuxUnknownSubcommandTemplate: "usage: tmux {cmd}",
   },
@@ -85,6 +88,24 @@ const SHELL: ShellData = {
     logoutMessage: "logout",
     notAttachedMessage: "not attached — try: tmux a",
     windowGoneTemplate: "{view} window not found — attached to session {name}",
+  },
+  editor: {
+    modeLabel: "NORMAL",
+    modeVisualLabel: "VISUAL",
+    modeVisualLineLabel: "VISUAL LINE",
+    branch: "⑂ main",
+    breadcrumbSeparator: "›",
+    closePillLabel: "[:q]",
+    tabIcon: "▤",
+    topLabel: "Top",
+    bottomLabel: "Bot",
+    percentTemplate: "{n}%",
+    positionTemplate: "{line}:{col}",
+    searchPromptGlyph: "/",
+    cmdlinePromptGlyph: ":",
+    readonlyBellMessage: "E21: Cannot make changes, 'modifiable' is off",
+    writeReadonlyMessage: "E45: 'readonly' option is set",
+    notAnEditorCommandTemplate: "E492: Not an editor command: {cmd}",
   },
 };
 
@@ -357,6 +378,47 @@ test("runCommand: cat reports missing/dir/unindexed distinctly", () => {
   assert.match(run(s, "cat src").state.lines.at(-1)!.text, /Is a directory/);
   assert.match(run(s, "cat package.json").state.lines.at(-1)!.text, /binary or unindexed/);
   assert.equal(run(s, "cat").state.lines.at(-1)!.text, "cat: missing operand");
+});
+
+// ---------------------------------------------------------------------
+// vim / vi / nvim (PLAN.md Iteration 4 item 19)
+// ---------------------------------------------------------------------
+
+test("runCommand: vim <existing file> emits an open-editor effect with the resolved path and fetched content", () => {
+  const s = createShellState();
+  const { state, effect } = run(s, "vim package.json", {
+    resolveContent: (t) => (t.kind === "site" && t.path === "package.json" ? "line one\nline two" : undefined),
+  });
+  assert.deepEqual(effect, { kind: "open-editor", path: "package.json", content: "line one\nline two" });
+  // Still echoes the typed command like every other builtin, just no extra
+  // printed lines (the content goes to the effect, not the scrollback).
+  assert.equal(state.lines.length, 1);
+});
+
+test("runCommand: vi/nvim are accepted aliases for vim", () => {
+  const s = createShellState();
+  const resolveContent = () => "hi";
+  assert.equal(run(s, "vi package.json", { resolveContent }).effect.kind, "open-editor");
+  assert.equal(run(s, "nvim package.json", { resolveContent }).effect.kind, "open-editor");
+});
+
+test("runCommand: vim reports missing/dir/unindexed distinctly, and a bare vim reports a usage error — none of them emit an effect", () => {
+  const s = createShellState();
+  const missing = run(s, "vim nope");
+  assert.match(missing.state.lines.at(-1)!.text, /No such file or directory/);
+  assert.equal(missing.effect.kind, "none");
+
+  const dir = run(s, "vim src");
+  assert.match(dir.state.lines.at(-1)!.text, /Is a directory/);
+  assert.equal(dir.effect.kind, "none");
+
+  const unindexed = run(s, "vim package.json");
+  assert.match(unindexed.state.lines.at(-1)!.text, /binary or unindexed/);
+  assert.equal(unindexed.effect.kind, "none");
+
+  const noArg = run(s, "vim");
+  assert.equal(noArg.state.lines.at(-1)!.text, "vim: missing file operand");
+  assert.equal(noArg.effect.kind, "none");
 });
 
 test("runCommand: tree renders from the cwd", () => {

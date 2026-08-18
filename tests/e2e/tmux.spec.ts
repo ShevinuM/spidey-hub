@@ -493,6 +493,77 @@ test.describe("Ctrl-b & kill-window (PLAN.md Phase 5 item 5.2)", () => {
   });
 });
 
+// PLAN.md Iteration 4 item 16: `Ctrl-b c` is tmux new-window — creates a
+// window running the in-window shell program, switches to it immediately,
+// and it coexists with the six fixed digit targets (0:dashboard..5:help)
+// rather than colliding with any of them.
+test.describe("Ctrl-b c new-window (PLAN.md Iteration 4 item 16)", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  test("creates a new window running the shell, switches to it, and it shows up in the status bar as window 6", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press("c");
+
+    await expect(page.locator('[data-testid="shell-prompt"]')).toBeVisible();
+    expect(await statusBarText(page)).toBe(
+      "0:dashboard- 1:builds 2:personnel 3:retina-v 4:profile 5:help 6:zsh*",
+    );
+    // A pane program switch never navigates — the URL freezes wherever it
+    // was, exactly like `:q`'s own exitActiveProgram (same `programToViewId
+    // ("shell") === null` no-op).
+    await expect(page).toHaveURL(/\/$/);
+  });
+
+  test("the new window's own prefix digit (6) reaches it, coexisting with the fixed 0-5 targets", async ({ page }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press("c");
+
+    await ctrlB(page);
+    await page.keyboard.press("1");
+    await expect(page).toHaveURL(/\/builds$/);
+
+    await ctrlB(page);
+    await page.keyboard.press("6");
+    await expect(page.locator('[data-testid="shell-prompt"]')).toBeVisible();
+    expect(await statusBarText(page)).toContain("6:zsh*");
+  });
+
+  test("is reachable via choose-tree (Ctrl-b w)", async ({ page }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press("c");
+
+    await ctrlB(page);
+    await page.keyboard.press("w");
+    await expect(page.locator('[data-testid="choose-tree-overlay"]')).toBeVisible();
+    await expect(page.locator('[data-testid="choose-tree-window-row"]', { hasText: "6: zsh" })).toBeVisible();
+  });
+
+  test("Ctrl-b & kills it cleanly, falling back to a sane active window", async ({ page }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press("c");
+
+    await ctrlB(page);
+    await page.keyboard.press("&");
+    await expect(page.locator('[data-testid="status-confirm"]')).toHaveText("kill-window zsh? (y/n)");
+    await page.keyboard.press("y");
+
+    await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
+    expect(await statusBarText(page)).not.toContain("zsh");
+    // The new window was appended last, so the fallback formula
+    // (`remaining[idx] ?? remaining[0]`, same one `Ctrl-b &`'s bare-six-
+    // window test above already exercises) lands back on the first window.
+    await expect(page).toHaveURL(/\/$/);
+  });
+});
+
 // PLAN.md Iteration 3 Phase 6 item 6.3 / Locked decision #4: `Ctrl-b x` is
 // now REAL tmux kill-pane (Builds-internal panel-kill is REMOVED entirely —
 // see tests/e2e/panes.spec.ts for full split/kill/layout coverage; this
