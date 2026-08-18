@@ -114,7 +114,7 @@ test.describe("Personnel: root directory listing", () => {
   test("clicking the ../ row returns to the dashboard", async ({ page }) => {
     await openPersonnel(page);
     await upRow(page).click();
-    await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
+    await expect(page.locator('[data-testid="dashboard-wordmark"]')).toBeVisible();
   });
 
   test("Enter, l, and ArrowRight all descend into enaimco/", async ({ page }) => {
@@ -588,6 +588,6 @@ test.describe("Personnel: mouse-only walkthrough", () => {
     await expect(rowLocator(page, "enaimco/")).toBeVisible();
 
     await upRow(page).click(); // root -> dashboard
-    await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
+    await expect(page.locator('[data-testid="dashboard-wordmark"]')).toBeVisible();
   });
 });

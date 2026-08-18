@@ -212,18 +212,18 @@ data file exactly (co-op May 2024 – Sep 2025; part-time Sep 2025 – Jul 2026;
 Present).
 
 ### Phase 2 — Dashboard branding: wordmark, welcome removal, blur, notifications
-- [ ] 2.1 Webslinger woff2 subset in `public/fonts/` + `@font-face`; dashboard plate title becomes
+- [x] 2.1 Webslinger woff2 subset in `public/fonts/` + `@font-face`; dashboard plate title becomes
   the SPIDEY-HUB wordmark (arched/red styling evoking the reference, own rendering); remove
   `welcomePrefix` line + inline spidey glyph from the plate. dashboard.yaml drives all strings.
-- [ ] 2.2 Wallpaper: `wallFilter = blur(3px)` when the dashboard window is active (knob at
+- [x] 2.2 Wallpaper: `wallFilter = blur(3px)` when the dashboard window is active (knob at
   Wallpaper.svelte:84); unchanged elsewhere.
-- [ ] 2.3 `src/data/notifications.yaml` with ≥48 entries across: tmux tips, vim tips,
+- [x] 2.3 `src/data/notifications.yaml` with ≥48 entries across: tmux tips, vim tips,
   site-navigation tips, real facts about Shevinu (from the data file's Summary — travel/Mexico,
   hiking, reading, psychology, board-game competitiveness, systems-design goal), and
   Spider-Man/Doomsday/Secret Wars flavor written for a Spider-Man who has LOST HIS MEMORY and is
   in Battleworld (amnesia framing, no pre-Battleworld self-knowledge). Toasts.svelte: seeded
   2-distinct pick per Locked #12, dismissal behavior unchanged; dashboard-only.
-- [ ] 2.4 Unit tests: seeded picker (same seed → same pair, distinctness, full-pool reachability);
+- [x] 2.4 Unit tests: seeded picker (same seed → same pair, distinctness, full-pool reachability);
   e2e: fixtures set `edith:toast-seed`, assert the pinned pair renders + dismissal; nav.spec toast
   tests updated.
 

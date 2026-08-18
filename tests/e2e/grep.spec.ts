@@ -139,7 +139,7 @@ test.describe("Grep overlay", () => {
     await expect(page.locator('[data-testid="grep-empty"]')).toBeVisible();
     await page.keyboard.press("Enter");
     await expect(overlay(page)).not.toBeVisible();
-    await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
+    await expect(page.locator('[data-testid="dashboard-wordmark"]')).toBeVisible();
   });
 
   test("Ctrl-u clears the query; counter returns to the file-count total", async ({ page }) => {

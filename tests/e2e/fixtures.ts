@@ -22,18 +22,35 @@
 // tests/e2e/boot.spec.ts deliberately imports the raw `@playwright/test`
 // instead of this module — it exists to exercise the real (non-skipped)
 // boot sequence.
+//
+// PLAN.md Iteration 3 Phase 2 item 2.4: also pre-seeds
+// TOAST_SEED_STORAGE_KEY (src/lib/notifications.ts) so the dashboard's
+// seeded 2-of-pool toast pick (Locked decision #12) is pinned to a known
+// value for every test importing this module — Toasts.svelte reads the key
+// at pick time (onMount), same "set before any navigation" contract as the
+// boot-seen flag above. `E2E_TOAST_SEED` is exported so specs can compute
+// the expected pinned pair themselves via `pickToastPair(pool, E2E_TOAST_SEED)`
+// instead of hardcoding toast copy (content-purity: no notification string
+// lives in a test file either).
 import { test as base, expect, type Page, type BrowserContext } from "@playwright/test";
 import { BOOT_SEEN_STORAGE_KEY } from "../../src/lib/bootState.ts";
+import { TOAST_SEED_STORAGE_KEY } from "../../src/lib/notifications.ts";
+
+export const E2E_TOAST_SEED = 424242;
 
 export const test = base.extend<{ context: BrowserContext }>({
   context: async ({ context }, use) => {
-    await context.addInitScript((key) => {
-      try {
-        sessionStorage.setItem(key, "1");
-      } catch {
-        // ignore — same best-effort contract as src/lib/bootState.ts
-      }
-    }, BOOT_SEEN_STORAGE_KEY);
+    await context.addInitScript(
+      ({ bootKey, toastSeedKey, toastSeed }) => {
+        try {
+          sessionStorage.setItem(bootKey, "1");
+          sessionStorage.setItem(toastSeedKey, String(toastSeed));
+        } catch {
+          // ignore — same best-effort contract as src/lib/bootState.ts
+        }
+      },
+      { bootKey: BOOT_SEEN_STORAGE_KEY, toastSeedKey: TOAST_SEED_STORAGE_KEY, toastSeed: E2E_TOAST_SEED },
+    );
     await use(context);
   },
 });

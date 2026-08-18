@@ -1,0 +1,248 @@
+# Dashboard toast notification pool (PLAN.md Iteration 3 Phase 2 item 2.3 /
+# Locked decision #12). On hydration, Toasts.svelte seeded-picks 2 DISTINCT
+# entries from this pool (mulberry32 PRNG; src/lib/notifications.ts) and
+# renders them in the two toast slots — dismissal + dashboard-only
+# visibility are otherwise unchanged from the old fixed danger/tracker
+# toasts. Every entry renders in one small toast card, so keep `text` short.
+#
+# Five categories, mixed in one flat pool (the picker doesn't care about
+# category — it's here only for authoring organization):
+#   tmux   — real-world tmux trivia/tips (general knowledge, not a promise
+#            the site itself implements every binding mentioned)
+#   vim    — real-world vim trivia/tips (same caveat)
+#   nav    — site-navigation tips restricted to bindings that exist in the
+#            app TODAY (cross-checked against src/lib/views.ts + help.yaml
+#            as of Iteration 3 Phase 2 — no Phase 3-6 features)
+#   signal — real facts about Shevinu, sourced only from the "Agent Profile
+#            -> Summary" section of /Users/shev/Desktop/Portfolio-Website-Data.md
+#   tracker — Spider-Man flavor text written from the amnesiac,
+#            Battleworld/Secret-Wars-era voice: tracker notices and
+#            half-remembered instinct only, never a claim of
+#            pre-Battleworld self-knowledge.
+
+pool:
+  # --- tmux -------------------------------------------------------------
+  - id: tmux-detach
+    icon: "T"
+    badge: "Tmux"
+    text: "tmux: Ctrl-b d detaches your session without killing anything inside it."
+  - id: tmux-splits
+    icon: "T"
+    badge: "Tmux"
+    text: 'tmux: Ctrl-b % splits a pane right, Ctrl-b " splits it below.'
+  - id: tmux-zoom
+    icon: "T"
+    badge: "Tmux"
+    text: "tmux: Ctrl-b z zooms the active pane to fill the whole window, temporarily."
+  - id: tmux-choose-tree
+    icon: "T"
+    badge: "Tmux"
+    text: "tmux: Ctrl-b w opens choose-tree, a live map of every session and window."
+  - id: tmux-rename
+    icon: "T"
+    badge: "Tmux"
+    text: "tmux: Ctrl-b , renames the current window on the fly."
+  - id: tmux-copy-mode
+    icon: "T"
+    badge: "Tmux"
+    text: "tmux: Ctrl-b [ enters copy-mode so you can scroll back and yank text."
+  - id: tmux-survives-drop
+    icon: "T"
+    badge: "Tmux"
+    text: "tmux: sessions survive an SSH drop. That's the entire point of the tool."
+  - id: tmux-ls
+    icon: "T"
+    badge: "Tmux"
+    text: "tmux: tmux ls lists every running session, attached or not."
+  - id: tmux-prefix-history
+    icon: "T"
+    badge: "Tmux"
+    text: "tmux: the prefix defaults to Ctrl-b, a holdover from GNU screen."
+  - id: tmux-layout-cycle
+    icon: "T"
+    badge: "Tmux"
+    text: "tmux: Ctrl-b space cycles through the built-in pane layouts."
+  - id: tmux-nested
+    icon: "T"
+    badge: "Tmux"
+    text: "tmux: nesting tmux inside tmux works, but it fights you for every prefix keystroke."
+  - id: tmux-named-sessions
+    icon: "T"
+    badge: "Tmux"
+    text: "tmux: named sessions (tmux new -s work) beat trying to remember session numbers."
+
+  # --- vim ----------------------------------------------------------------
+  - id: vim-wq
+    icon: "V"
+    badge: "Vim"
+    text: "vim: :wq saves and quits. :q! quits and discards everything."
+  - id: vim-dd-yy
+    icon: "V"
+    badge: "Vim"
+    text: "vim: dd deletes a line, yy yanks one, p puts it back."
+  - id: vim-gg-g
+    icon: "V"
+    badge: "Vim"
+    text: "vim: gg jumps to the top of the file, G to the bottom."
+  - id: vim-visual-block
+    icon: "V"
+    badge: "Vim"
+    text: "vim: visual-block mode (Ctrl-v) edits a column across many lines at once."
+  - id: vim-dot-repeat
+    icon: "V"
+    badge: "Vim"
+    text: "vim: the . key repeats your last change. Most underrated key on the board."
+  - id: vim-search
+    icon: "V"
+    badge: "Vim"
+    text: "vim: /pattern then n / N steps forward and backward through matches."
+  - id: vim-ci-quote
+    icon: "V"
+    badge: "Vim"
+    text: 'vim: ci" changes everything inside the nearest quotes, cursor included.'
+  - id: vim-registers
+    icon: "V"
+    badge: "Vim"
+    text: 'vim: registers ("ayy, "ap) give you more than one clipboard at a time.'
+  - id: vim-jumplist
+    icon: "V"
+    badge: "Vim"
+    text: "vim: Ctrl-o / Ctrl-i walk backward and forward through your jump history."
+  - id: vim-help
+    icon: "V"
+    badge: "Vim"
+    text: "vim: there's no shame in :help. Everyone still reads it."
+
+  # --- site navigation (today's bindings only) ----------------------------
+  - id: nav-builds
+    icon: "→"
+    badge: "Nav"
+    text: "Press b or p from the dashboard to jump into Builds."
+  - id: nav-personnel-profile
+    icon: "→"
+    badge: "Nav"
+    text: "Press x from the dashboard for Personnel Files, i for Profile."
+  - id: nav-retina-v
+    icon: "→"
+    badge: "Nav"
+    text: "Press t any time to check E.D.I.T.H: Retina-V."
+  - id: nav-grep
+    icon: "→"
+    badge: "Nav"
+    text: "/ opens grep from any window. Search the whole site at once."
+  - id: nav-cmdline
+    icon: "→"
+    badge: "Nav"
+    text: "Colon opens the Cmdline. Try :builds, :personnel, or :reboot."
+  - id: nav-window-cycle
+    icon: "→"
+    badge: "Nav"
+    text: "Ctrl-b n / Ctrl-b p cycle windows forward and back."
+  - id: nav-personnel-filter
+    icon: "→"
+    badge: "Nav"
+    text: "In Personnel, press f to filter the list by name."
+  - id: nav-builds-github
+    icon: "→"
+    badge: "Nav"
+    text: "In Builds, press o on a selected commit to open it on GitHub."
+  - id: nav-gg-g
+    icon: "→"
+    badge: "Nav"
+    text: "gg / G jump to the top or bottom of whatever list or file is open."
+  - id: nav-resume
+    icon: "→"
+    badge: "Nav"
+    text: "On Profile, press r to pull down the resume PDF."
+
+  # --- signal (real facts, from the data file's Summary) ------------------
+  - id: signal-mexico
+    icon: "i"
+    badge: "Signal"
+    text: "Spent a big chunk of 2026 solo traveling through Mexico. The memories still land hard."
+  - id: signal-cycles
+    icon: "i"
+    badge: "Signal"
+    text: "Runs in cycles: years of heads-down building, then a long stretch of solo travel."
+  - id: signal-hiking-reading
+    icon: "i"
+    badge: "Signal"
+    text: "Outside of code: hiking, the outdoors, and a reading stack that's mostly fantasy and psychology."
+  - id: signal-jung-briggs
+    icon: "i"
+    badge: "Signal"
+    text: "Jung and Briggs never get old. Cognitive psychology is a genuine hobby here, not a buzzword."
+  - id: signal-board-games
+    icon: "i"
+    badge: "Signal"
+    text: "Board games bring out an aggressively competitive streak. Ask anyone who's played with him."
+  - id: signal-architecture-goal
+    icon: "i"
+    badge: "Signal"
+    text: "Long-term goal: systems architecture and design. Ambitious, and openly so."
+  - id: signal-mcu-return
+    icon: "i"
+    badge: "Signal"
+    text: "Fell off the MCU after Phase 4. Brand New Day and Doomsday pulled him right back in."
+  - id: signal-secret-wars
+    icon: "i"
+    badge: "Signal"
+    text: "Hickman's Secret Wars is the reason the MCU is back on the watchlist."
+  - id: signal-scratch-own-itch
+    icon: "i"
+    badge: "Signal"
+    text: "Most projects here started as solutions to problems he ran into himself first."
+  - id: signal-problem-solving
+    icon: "i"
+    badge: "Signal"
+    text: "Problem-solving, finding the fix and architecting it, is what he loves most about the work."
+
+  # --- tracker (amnesiac Spider-Man, Battleworld / Secret Wars era) -------
+  - id: tracker-responds-to-name
+    icon: "!"
+    badge: "Tracker"
+    text: "Tracker note: subject responds to 'Spider-Man' but can't say why it fits."
+  - id: tracker-wrist-twitch
+    icon: "!"
+    badge: "Tracker"
+    text: "Half-remembered instinct: hands twitch toward a wrist that used to hold something."
+  - id: tracker-no-record
+    icon: "!"
+    badge: "Tracker"
+    text: "Battleworld log: no record of a life before the barons. Every domain looks like someone else's memory."
+  - id: tracker-enhanced-reflexes
+    icon: "!"
+    badge: "Tracker"
+    text: "Diagnostic: reflexes flagged 'enhanced.' Origin unknown. Subject also unknown, to himself."
+  - id: tracker-body-remembers
+    icon: "!"
+    badge: "Tracker"
+    text: "Field note: he ducks incoming debris before he consciously sees it. The body remembers what the mind doesn't."
+  - id: tracker-no-next-of-kin
+    icon: "!"
+    badge: "Tracker"
+    text: "Tracker: no next-of-kin on file, no hometown. Just a signal moving through Battleworld, alone."
+  - id: tracker-humming-jingle
+    icon: "!"
+    badge: "Tracker"
+    text: "Log entry: found humming a jingle he can't place, to a city he's never heard of."
+  - id: tracker-uncle-flinch
+    icon: "!"
+    badge: "Tracker"
+    text: "Anomaly: subject flinched at the word 'Uncle.' No further data available."
+  - id: tracker-doomed-timelines
+    icon: "!"
+    badge: "Tracker"
+    text: "Battleworld bulletin: doomed timelines converge here. He's one more variable nobody explained to him."
+  - id: tracker-rooftop-habit
+    icon: "!"
+    badge: "Tracker"
+    text: "Tracker: he keeps eyeing rooftops like he's checking an exit route he can't remember learning."
+  - id: tracker-heroes-dont-forget
+    icon: "!"
+    badge: "Tracker"
+    text: "Signal note: something in him insists heroes don't get to forget. He's testing that theory daily."
+  - id: tracker-mask-only
+    icon: "!"
+    badge: "Tracker"
+    text: "Field log: no badge, no dossier, no name tag. Just the mask, and the muscle memory underneath it."

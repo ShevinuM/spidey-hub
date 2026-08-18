@@ -185,7 +185,7 @@ test.describe("fresh boot", () => {
     // overlay unmounts and the dashboard beneath is now interactive.
     await page.clock.runFor(OUT_MS + 100);
     await expect(page.locator(BOOT_SEQUENCE)).toHaveCount(0);
-    await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
+    await expect(page.locator('[data-testid="dashboard-wordmark"]')).toBeVisible();
 
     await page.keyboard.press("b");
     await expect(page).toHaveURL(/\/builds$/);
@@ -196,7 +196,7 @@ test.describe("session-once skip", () => {
   test("sessionStorage flag skips boot entirely on a same-tab reload", async ({ page }) => {
     await skipToReady(page);
     await expect(page.locator(BOOT_SEQUENCE)).toHaveCount(0);
-    await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
+    await expect(page.locator('[data-testid="dashboard-wordmark"]')).toBeVisible();
 
     // No fake-clock advance needed at all — the dashboard is immediately
     // interactive, proving the skip is functional, not merely "eventually
@@ -263,7 +263,7 @@ test.describe("replay", () => {
 
     await page.clock.runFor(HARD_STOP_MS + OUT_MS + 100);
     await expect(page.locator(BOOT_SEQUENCE)).toHaveCount(0);
-    await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
+    await expect(page.locator('[data-testid="dashboard-wordmark"]')).toBeVisible();
   });
 
   test("reboot cancels an open status-bar prompt first", async ({ page }) => {
@@ -303,6 +303,6 @@ test.describe("replay", () => {
 
     await page.clock.runFor(HARD_STOP_MS + OUT_MS + 100);
     await expect(page.locator('[data-testid="copy-mode-overlay"]')).toHaveCount(0);
-    await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
+    await expect(page.locator('[data-testid="dashboard-wordmark"]')).toBeVisible();
   });
 });

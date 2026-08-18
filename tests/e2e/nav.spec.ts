@@ -15,13 +15,35 @@
 // test below that used to drive navigation with "q" now uses a status-bar
 // click instead (see `goDashboard()`), and the dedicated q/Esc describe
 // block is inverted to assert NO navigation happens, in every view.
-import { expect, test, type Page } from "./fixtures.ts";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
+import YAML from "yaml";
+import { expect, test, E2E_TOAST_SEED, type Page } from "./fixtures.ts";
+import { pickToastPair } from "../../src/lib/notifications.ts";
+import type { NotificationEntry } from "../../src/lib/data.ts";
 // PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's
 // ~4.6s unskippable sequence never runs for these tests — see that
 // file's header comment for why this is a context-fixture override
-// rather than a per-goto-helper change.
+// rather than a per-goto-helper change. It ALSO pre-seeds the toast-seed
+// key (PLAN.md Iteration 3 Phase 2 item 2.4) to `E2E_TOAST_SEED`, so the
+// toast-dismissal tests below can compute the exact pinned pair themselves
+// (parsing the real notifications.yaml + the real picker) instead of
+// hardcoding any notification copy.
+
+const NOTIFICATIONS_YAML_PATH = fileURLToPath(
+  new URL("../../src/data/notifications.yaml", import.meta.url),
+);
+
+function loadNotificationPool(): NotificationEntry[] {
+  const doc = YAML.parse(fs.readFileSync(NOTIFICATIONS_YAML_PATH, "utf8")) as {
+    pool: NotificationEntry[];
+  };
+  return doc.pool;
+}
+
+const [pinnedToast0, pinnedToast1] = pickToastPair(loadNotificationPool(), E2E_TOAST_SEED);
 
 const STATUS_BAR = '[data-testid="status-bar-windows"]';
 
@@ -40,7 +62,7 @@ function winText(activeId: string): string {
 /**
  * Navigate and wait until Terminal.svelte's real keydown/popstate listeners
  * are attached (`[data-terminal-ready="true"]`) before returning. The SSR'd
- * markup (e.g. "SHEVINUM.DEV", the status bar) is already visible before
+ * markup (e.g. the dashboard wordmark, the status bar) is already visible before
  * hydration completes, so it is not by itself proof the app can handle a
  * keypress yet — under real (non-faked) timers this is a genuine race, not
  * a hypothetical one (observed flakily failing without this wait).
@@ -62,7 +84,7 @@ async function goDashboard(page: Page) {
 test.describe("view switching + status bar (bug fix 1: numeric order)", () => {
   test("dashboard shows dashboard active", async ({ page }) => {
     await gotoReady(page, "/");
-    await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
+    await expect(page.locator('[data-testid="dashboard-wordmark"]')).toBeVisible();
     expect(await statusBarText(page)).toBe(winText("dashboard"));
   });
 
@@ -213,36 +235,42 @@ test.describe("URL sync + back/forward", () => {
   });
 });
 
-test.describe("toast dismissal", () => {
-  test("dismissing the danger toast removes it (dashboard-only, in-memory)", async ({ page }) => {
+test.describe("toast dismissal (seeded pool pick, PLAN.md Iteration 3 Phase 2 item 2.3/2.4)", () => {
+  test("the pinned pair renders from the notifications pool", async ({ page }) => {
     await gotoReady(page, "/");
-    const danger = page.locator('[data-testid="toast-danger"]');
-    await expect(danger).toBeVisible();
-    await page.locator('[data-testid="toast-danger-dismiss"]').click();
-    await expect(danger).toHaveCount(0);
-    // The tracker/info toast is untouched.
-    await expect(page.locator('[data-testid="toast-tracker"]')).toBeVisible();
+    await expect(page.locator('[data-testid="toast-0"]')).toContainText(pinnedToast0.text);
+    await expect(page.locator('[data-testid="toast-1"]')).toContainText(pinnedToast1.text);
   });
 
-  test("dismissing the tracker toast removes it", async ({ page }) => {
+  test("dismissing toast 0 removes it (dashboard-only, in-memory)", async ({ page }) => {
     await gotoReady(page, "/");
-    const tracker = page.locator('[data-testid="toast-tracker"]');
-    await expect(tracker).toBeVisible();
-    await page.locator('[data-testid="toast-tracker-dismiss"]').click();
-    await expect(tracker).toHaveCount(0);
+    const toast0 = page.locator('[data-testid="toast-0"]');
+    await expect(toast0).toBeVisible();
+    await page.locator('[data-testid="toast-0-dismiss"]').click();
+    await expect(toast0).toHaveCount(0);
+    // toast 1 is untouched.
+    await expect(page.locator('[data-testid="toast-1"]')).toBeVisible();
+  });
+
+  test("dismissing toast 1 removes it", async ({ page }) => {
+    await gotoReady(page, "/");
+    const toast1 = page.locator('[data-testid="toast-1"]');
+    await expect(toast1).toBeVisible();
+    await page.locator('[data-testid="toast-1-dismiss"]').click();
+    await expect(toast1).toHaveCount(0);
   });
 
   test("toasts do not resurrect after dismissal and leaving/returning to the dashboard", async ({ page }) => {
     await gotoReady(page, "/");
-    await page.locator('[data-testid="toast-danger-dismiss"]').click();
-    await expect(page.locator('[data-testid="toast-danger"]')).toHaveCount(0);
+    await page.locator('[data-testid="toast-0-dismiss"]').click();
+    await expect(page.locator('[data-testid="toast-0"]')).toHaveCount(0);
 
     await page.keyboard.press("b");
     await expect(page).toHaveURL(/\/builds$/);
     await goDashboard(page);
 
-    await expect(page.locator('[data-testid="toast-danger"]')).toHaveCount(0);
-    await expect(page.locator('[data-testid="toast-tracker"]')).toBeVisible();
+    await expect(page.locator('[data-testid="toast-0"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="toast-1"]')).toBeVisible();
   });
 });
 
@@ -334,7 +362,7 @@ test.describe("live clock (bug fix 2)", () => {
     await page.clock.pauseAt(t0); // freeze immediately, before navigation
     await page.goto("/");
     await page.clock.pauseAt(t0 + 5000);
-    await expect(page.getByText("SHEVINUM.DEV")).toBeVisible();
+    await expect(page.locator('[data-testid="dashboard-wordmark"]')).toBeVisible();
 
     const before = await page.locator('[data-testid="status-bar-clock-time"]').innerText();
     expect(before).toBe("23:34");

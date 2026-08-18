@@ -21,7 +21,11 @@
   // equivalent control in the real site, so off-tracker opacity is the
   // flat 0.72 the knob defaults to.
   const wallOpacity = $derived(view === "retina-v" ? 1 : 0.72);
-  const wallFilter = "none";
+  // PLAN.md Iteration 3 Phase 2 item 2.2 / Locked decision #15: the whole
+  // wallpaper blurs behind the dashboard window only — every other view
+  // (including retina-v, which stays sharp at full opacity above) is
+  // unaffected.
+  const wallFilter = $derived(view === "home" ? "blur(3px)" : "none");
 
   const MAP_W = "min(1100px,92vw)";
   const MAP_H = "min(600px,calc(100vh - 340px))";

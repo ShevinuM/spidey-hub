@@ -1,17 +1,23 @@
 # Dashboard (home) view copy.
 # Source: design/Homepage.dc.html lines 130-154 (plate, menu, footer),
 # lines 104-124 (toasts).
+#
+# PLAN.md Iteration 3 Phase 2 item 2.1: plate rebrands from "SHEVINUM.DEV" +
+# a "welcome back" line to a SPIDEY-HUB wordmark (own arched rendering in
+# Dashboard.svelte using the self-hosted Webslinger font — see
+# src/styles/global.css's @font-face — never Marvel's actual logo artwork).
+# The old welcome line + inline spider-mask glyph are removed outright, not
+# replaced.
 
 plate:
-  title: "SHEVINUM.DEV"
-  welcomePrefix: "welcome back, shev! "
+  title: "SPIDEY-HUB"
 
 # Menu rows, top to bottom. `invert` marks the single leading character
 # rendered with the inverted background:color swap (only "Builds", where the
 # "B" is inverted — design/Homepage.dc.html line 142). `icon` is either a
 # glyph character or the literal token "spider-mask" meaning: render the
 # spiderman.svg CSS mask (never an <img>) instead of a text glyph, exactly
-# like the "E.D.I.T.H: Retina-V" row and the plate's welcome-line glyph.
+# like the "E.D.I.T.H: Retina-V" row.
 menu:
   - id: projects
     icon: "▤"
@@ -46,21 +52,9 @@ footer:
 
 toasts:
   # Shared "✕" dismiss glyph (design/Homepage.dc.html lines 127, 136) — one
-  # glyph, both toasts, kept in data alongside the badge icons above for
-  # the same reason (no toast iconography hardcoded in src/components).
+  # glyph, both toast slots, kept in data (no toast iconography hardcoded in
+  # src/components). The two fixed toasts (Flerken/Latveria copy) that used
+  # to live here are gone — PLAN.md Iteration 3 Phase 2 item 2.3 replaces
+  # them with 2 entries seeded-picked at hydration from the ≥48-entry pool
+  # in src/data/notifications.yaml (see src/lib/notifications.ts).
   closeIcon: "✕"
-  danger:
-    # "!" glyph inside the round badge circle (design/Homepage.dc.html line
-    # 126) — kept in data (not hardcoded in the component) so no toast
-    # copy/iconography lives in src/components.
-    icon: "!"
-    badge: "Danger"
-    prefix: "Flerken Detected. Threat Level "
-    emphasis: "High"
-    suffix: "."
-  tracker:
-    icon: "i"
-    badge: "Tracker"
-    prefix: "Location Identified : "
-    emphasis: "Latveria"
-    suffix: ""

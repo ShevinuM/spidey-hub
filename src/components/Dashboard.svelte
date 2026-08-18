@@ -15,6 +15,30 @@
     const view = menuIdToView(menuId);
     if (view) onSelect(view);
   }
+
+  // PLAN.md Iteration 3 Phase 2 item 2.1: SPIDEY-HUB wordmark, own arched
+  // rendering (never Marvel's actual logo artwork) — each character gets a
+  // small rotation + vertical rise so the word bows like a dome, tallest at
+  // the middle letter and tilting outward toward the ends, evoking the
+  // classic arched Spider-Man wordmark without copying it. Purely
+  // presentational (content-purity: the letters themselves still come from
+  // dashboard.plate.title, nothing is hardcoded here) — `aria-hidden` on
+  // each letter span + a single `aria-label` on the container keeps this
+  // accessible/testable as one string despite the per-character markup
+  // (getByText on the split text would otherwise see "S P I D E Y..." with
+  // stray whitespace from the each-block).
+  const WORDMARK_MAX_ANGLE = 16; // degrees the outermost letters tilt
+  const WORDMARK_ARCH_PX = 10; // dome rise at the center letter
+
+  const wordmarkChars = $derived(
+    dashboard.plate.title.split("").map((ch, i, arr) => {
+      const n = arr.length;
+      const t = n > 1 ? (i - (n - 1) / 2) / ((n - 1) / 2) : 0; // -1..1 across the word
+      const angle = t * WORDMARK_MAX_ANGLE;
+      const rise = (1 - t * t) * WORDMARK_ARCH_PX;
+      return { ch, style: `transform:translateY(${(-rise).toFixed(2)}px) rotate(${angle.toFixed(2)}deg)` };
+    }),
+  );
 </script>
 
 <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:20px 40px 20px 40px">
@@ -23,15 +47,16 @@
   >
     <div style="display:flex;align-items:stretch;gap:10px">
       <div
-        style="border:1.5px solid #e0453c;border-radius:10px;background:rgba(9,13,18,.8);padding:clamp(8px,2vh,14px) 34px;text-align:center;display:flex;flex-direction:column;gap:6px"
+        style="border:1.5px solid #e0453c;border-radius:10px;background:rgba(9,13,18,.8);padding:clamp(10px,2.6vh,18px) 34px;text-align:center;display:flex;flex-direction:column;gap:6px"
       >
-        <div style="font-size:clamp(15px,3.2vh,21px);font-weight:700;letter-spacing:.42em;color:#e0453c">
-          {dashboard.plate.title}
-        </div>
-        <div style="font-size:clamp(12px,2.4vh,15px);color:#e0453c">
-          {dashboard.plate.welcomePrefix}<span
-            style="width:13px;height:19px;background:#ff4a4a;mask:url(/assets/spiderman.svg) center/contain no-repeat;-webkit-mask:url(/assets/spiderman.svg) center/contain no-repeat;display:inline-block;vertical-align:-4px"
-          ></span>
+        <div
+          data-testid="dashboard-wordmark"
+          aria-label={dashboard.plate.title}
+          style="font-family:'Webslinger','JetBrains Mono',ui-monospace,monospace;font-size:clamp(20px,4.2vh,30px);font-weight:700;letter-spacing:.03em;color:#e0453c;display:flex;justify-content:center;padding-top:6px;text-shadow:0 1px 0 rgba(0,0,0,.35),0 0 18px rgba(224,69,60,.32)"
+        >
+          {#each wordmarkChars as { ch, style }, i (i)}
+            <span aria-hidden="true" style="display:inline-block;{style}">{ch}</span>
+          {/each}
         </div>
       </div>
       <div style="display:flex;flex-direction:column;justify-content:space-between;padding:4px 0">

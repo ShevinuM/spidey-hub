@@ -14,6 +14,20 @@
 @import "@fontsource/jetbrains-mono/500.css";
 @import "@fontsource/jetbrains-mono/700.css";
 
+/* "Webslinger" by Quinn Davis Type (fontspace.com/webslinger-2-font-f71972),
+   Public Domain per the designer's FontSpace listing (no credit/permission
+   required) and the license.txt bundled in the download. Self-hosted as a
+   subset woff2 (glyphs: A-Z + hyphen only — everything the dashboard's
+   "SPIDEY-HUB" wordmark needs, PLAN.md Locked decision #11) — applied ONLY
+   to that wordmark (Dashboard.svelte), never site-wide. */
+@font-face {
+  font-family: "Webslinger";
+  src: url("/fonts/webslinger-subset.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Design tokens — see design_handoff_shevinum_dev/README.md "Design tokens". */
 @theme {
   --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;

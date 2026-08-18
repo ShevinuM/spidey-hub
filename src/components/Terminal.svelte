@@ -13,6 +13,7 @@
   import type {
     SiteData,
     DashboardData,
+    NotificationsData,
     TrackerData,
     ProfileData,
     BuildsData,
@@ -48,6 +49,7 @@
     initialView: ViewId;
     site: SiteData;
     dashboard: DashboardData;
+    notifications: NotificationsData;
     tracker: TrackerData;
     profile: ProfileData;
     builds: BuildsData;
@@ -66,6 +68,7 @@
     initialView,
     site,
     dashboard,
+    notifications,
     tracker,
     profile,
     builds,
@@ -215,8 +218,8 @@
   // intentional here.)
   // svelte-ignore state_referenced_locally
   let view = $state<ViewId>(initialView);
-  let offDanger = $state(false);
-  let offInfo = $state(false);
+  let offToast0 = $state(false);
+  let offToast1 = $state(false);
 
   // Mobile-block JS guard (README "Mobile policy"): listeners/timers only
   // attach while the viewport is desktop-sized with a fine pointer. The
@@ -228,7 +231,7 @@
   // Under real (non-faked) timers, hydration + the mobile-guard effects
   // are asynchronous relative to the initial SSR paint, so e2e tests wait
   // on `[data-terminal-ready="true"]` before dispatching any key — the SSR
-  // markup itself (e.g. "SHEVINUM.DEV") is visible well before that and is
+  // markup itself (e.g. the dashboard wordmark) is visible well before that and is
   // not a reliable "the app can handle input now" signal by itself.
   let keysReady = $state(false);
 
@@ -995,11 +998,12 @@
   <div style="position:relative;z-index:2;height:100vh;overflow:hidden;display:flex;flex-direction:column">
     <Toasts
       toasts={dashboard.toasts}
+      {notifications}
       {view}
-      {offDanger}
-      {offInfo}
-      onHideDanger={() => (offDanger = true)}
-      onHideInfo={() => (offInfo = true)}
+      {offToast0}
+      {offToast1}
+      onHideToast0={() => (offToast0 = true)}
+      onHideToast1={() => (offToast1 = true)}
     />
 
     {#if view === "home"}

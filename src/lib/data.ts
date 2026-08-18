@@ -27,6 +27,7 @@ import companiesRaw from "../data/companies.yaml?raw";
 import helpRaw from "../data/help.yaml?raw";
 import bootRaw from "../data/boot.yaml?raw";
 import cmdlineRaw from "../data/cmdline.yaml?raw";
+import notificationsRaw from "../data/notifications.yaml?raw";
 
 const RAW: Record<string, string> = {
   "site.yaml": siteRaw,
@@ -40,6 +41,7 @@ const RAW: Record<string, string> = {
   "help.yaml": helpRaw,
   "boot.yaml": bootRaw,
   "cmdline.yaml": cmdlineRaw,
+  "notifications.yaml": notificationsRaw,
 };
 
 const cache = new Map<string, unknown>();
@@ -111,22 +113,31 @@ export interface MenuEntry {
   hotkey: string;
 }
 
-export interface ToastCopy {
-  icon: string;
-  badge: string;
-  prefix: string;
-  emphasis: string;
-  suffix: string;
-}
-
 export interface DashboardData {
-  plate: { title: string; welcomePrefix: string };
+  plate: { title: string };
   menu: MenuEntry[];
   footer: { syncLine: string; switchingTemplate: string };
-  toasts: { closeIcon: string; danger: ToastCopy; tracker: ToastCopy };
+  toasts: { closeIcon: string };
 }
 
 export const getDashboard = (): DashboardData => loadYaml<DashboardData>("dashboard.yaml");
+
+// ---------------------------------------------------------------------------
+// notifications.yaml
+// ---------------------------------------------------------------------------
+
+export interface NotificationEntry {
+  id: string;
+  icon: string;
+  badge: string;
+  text: string;
+}
+
+export interface NotificationsData {
+  pool: NotificationEntry[];
+}
+
+export const getNotifications = (): NotificationsData => loadYaml<NotificationsData>("notifications.yaml");
 
 // ---------------------------------------------------------------------------
 // tracker.yaml

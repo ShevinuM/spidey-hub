@@ -3,11 +3,12 @@
 import Shell from "../layouts/Shell.astro";
 import Terminal from "../components/Terminal.svelte";
 import { getCollection } from "astro:content";
-import { getSite, getDashboard, getTracker, getProfile, getBuilds, getPersonnel, getCompanies, getGrep, getHelp, getBoot, getCmdline } from "../lib/data";
+import { getSite, getDashboard, getNotifications, getTracker, getProfile, getBuilds, getPersonnel, getCompanies, getGrep, getHelp, getBoot, getCmdline } from "../lib/data";
 import { getCommitsByRepo } from "../lib/commits";
 
 const site = getSite();
 const dashboard = getDashboard();
+const notifications = getNotifications();
 const tracker = getTracker();
 const profile = getProfile();
 const builds = getBuilds();
@@ -28,6 +29,7 @@ const commitsByRepo = getCommitsByRepo(projects);
     initialView="builds"
     {site}
     {dashboard}
+    {notifications}
     {tracker}
     {profile}
     {builds}
