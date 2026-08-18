@@ -114,7 +114,15 @@ test.describe("Grep overlay", () => {
     );
     await page.keyboard.press("Enter");
     await expect(overlay(page)).not.toBeVisible();
-    await expect(page.locator('[data-testid="personnel-path"]')).toBeVisible();
+    // PLAN.md Iteration 4 item 7 deleted the `personnel-path` breadcrumb
+    // this used to assert on. GrepOverlay's own routing (`grepPathToView`,
+    // src/lib/views.ts) is coarse — it only switches the active VIEW to
+    // "personnel", it never deep-links to the specific directory the hit
+    // lives in — so the original assertion's real claim was just "we
+    // landed on the personnel view", never anything path-specific;
+    // `personnel-preview` (unconditionally rendered by the Personnel view)
+    // is the equivalent-strength anchor for that same claim.
+    await expect(page.locator('[data-testid="personnel-preview"]')).toBeVisible();
   });
 
   test("Enter on a Builds.svelte hit lands in the builds view", async ({ page }) => {
@@ -249,16 +257,27 @@ test.describe("Grep overlay", () => {
     await expect(page.locator('[data-testid="editor-mode"]')).toHaveText("NORMAL");
   });
 
-  test("/ preventDefaults and wins over personnel filter-mode typing", async ({ page }) => {
+  test("/ while personnel filter mode is active appends to the query; grep must NOT open", async ({ page }) => {
+    // PLAN.md Iteration 4 item 23b (1A): the old behavior asserted here —
+    // "/" preventDefaults and opens grep even while the personnel filter
+    // prompt is actively typing — was itself the bug report ("search box
+    // doesn't type"). Fixed by having Personnel's `isEditorOpen()` also
+    // report `true` while `filterMode` is active, which makes Terminal's
+    // greedy-pane gate give the filter prompt first refusal over grep's own
+    // "/" opener (see tests/e2e/personnel.spec.ts's "REPRO + FIX" test for
+    // the root-cause trace). Note: "/" pressed BEFORE entering filter mode
+    // still opens grep unconditionally — an intentional, documented
+    // limitation of this wave (personnel.spec.ts's own "KNOWN LIMITATION"
+    // test), not something this test exercises.
     await gotoReady(page, "/personnel");
     await page.keyboard.press("Enter"); // -> enaimco/ (single child: software-developer/)
     await page.keyboard.press("f"); // -> filter mode
     await expect(page.locator('[data-testid="personnel-prompt"]')).toBeVisible();
 
     await page.keyboard.press("/");
-    await expect(overlay(page)).toBeVisible();
-    // "/" must not have been typed into the personnel filter prompt.
-    await expect(page.locator('[data-testid="personnel-prompt"]')).not.toContainText("/");
+    await expect(overlay(page)).not.toBeVisible();
+    // "/" was typed into the active personnel filter query, not swallowed.
+    await expect(page.locator('[data-testid="personnel-prompt"]')).toContainText("/");
   });
 
   test("overlay list row count matches this viewport's own computed fit", async ({ page }) => {

@@ -27,21 +27,21 @@
   // memorial-university) are ordered by companies.yaml instead, since
   // there's no role file order to fall back to at that level.
   //
-  // `../` fidelity: the prototype appends a synthetic `../` entry to the
-  // rendered list but — crucially — EXCLUDES it from the j/k selection
-  // cycle (`list` never includes it), and hardcodes its `sel` to `false`.
-  // Its click handler (`go`) is what actually performs "up one level, or
-  // dashboard at the top" — clicking it always fires immediately (never a
-  // "select first" step) precisely because `sel` can never be true for it.
-  // This component reproduces that: `../` is rendered but never part of
-  // the current directory's selection cycle, reachable only by mouse (its
-  // own onclick) or by the equivalent keyboard actions (h/Backspace/
-  // ArrowLeft = up one level only, never dashboard — dashboard is
-  // mouse-only via `../`'s click or the global chrome, see the q/Esc note
-  // below). PLAN.md Locked #3 explicitly asks for a mouse-navigable `../`
-  // at EVERY level, including one that reaches the dashboard from the
-  // root directory listing — items 15/16 (Iteration 2) ban the `q`/Esc
-  // KEYS for navigation, not click affordances.
+  // `../` fidelity: PLAN.md Iteration 4 item 23a revised this from the
+  // original prototype behavior (which excluded `../` from the j/k
+  // selection cycle entirely). `../` is now a REAL first entry in
+  // `displayRows` whenever `pathSegments` is non-empty (item 6 keeps it out
+  // of the root listing) — j/k reaches it like any other row, and
+  // Enter/l/ArrowRight/click all activate it via `activateRow`'s "up"
+  // branch, which calls the same `upOrDashboard()` the click handler always
+  // called. `h`/Backspace/ArrowLeft remain a SEPARATE "up one level only,
+  // never dashboard" action (`upOneLevel`) — the two paths only coincide in
+  // practice because `../` is never rendered at the root, where the
+  // dashboard-vs-ascend distinction would otherwise matter. PLAN.md Locked
+  // #3's "mouse-navigable `../` at every level, including one that reaches
+  // the dashboard from the root" still holds; items 15/16 (Iteration 2) ban
+  // the `q`/Esc KEYS for navigation, not click/Enter affordances on `../`
+  // itself.
   //
   // q/Esc: bare q/Esc are not navigation anywhere in this browser (only
   // the editor's own q/Esc, special-cased below, still closes something:
@@ -237,44 +237,80 @@
     return dir;
   });
 
+  /** PLAN.md Iteration 4 item 23a: `../` is now a REAL row inside the
+   * selectable array rather than a hardcoded, keyboard-unreachable extra
+   * markup block. `kind` distinguishes it from real tree rows (`node` is
+   * null for it) — `displayRows` below always puts it at index 0 whenever
+   * one exists (i.e. whenever `pathSegments` is non-empty; PLAN.md item 6
+   * keeps it OUT of the root listing entirely). */
   interface Row {
     name: string;
     meta: string;
-    node: TreeNode;
+    kind: "up" | "dir" | "file";
+    node: TreeNode | null;
   }
 
   function roleCount(node: TreeNode): number {
     return leavesOf(node).length;
   }
 
-  const rows = $derived(
+  /** The current directory's own dir/file rows — never includes `../`, and
+   * never filtered (filtering is applied separately below so `../` can
+   * always be spliced back in regardless of the query, matching the
+   * file-header comment's "`../` is always kept" contract). */
+  const contentRows = $derived(
     currentDir.children.map((node): Row => {
       if (node.kind === "file") {
-        return { name: node.name, meta: node.entry.data.dates, node };
+        return { name: node.name, meta: node.entry.data.dates, node, kind: "file" };
       }
       const n = roleCount(node);
-      const meta = personnel.roleCountTemplate
-        .replace("{n}", String(n))
-        .replace("{word}", n > 1 ? personnel.roleWordPlural : personnel.roleWordSingular);
-      return { name: `${node.name}/`, meta, node };
+      const meta = personnel.roleCountTemplate.replace("{n}", String(n));
+      return { name: `${node.name}/`, meta, node, kind: "dir" };
     }),
   );
 
-  const filteredRows = $derived(
-    filterQuery ? rows.filter((r) => r.name.toLowerCase().includes(filterQuery.toLowerCase())) : rows,
+  const filteredContentRows = $derived(
+    filterQuery
+      ? contentRows.filter((r) => r.name.toLowerCase().includes(filterQuery.toLowerCase()))
+      : contentRows,
   );
-  const selectedRow = $derived(filteredRows[sel] ?? null);
+
+  /** Whenever we're below the root, `../` is a real first row. */
+  const upRowVisible = $derived(pathSegments.length > 0);
+  const upRow: Row = { name: personnel.upEntry.name, meta: "", node: null, kind: "up" };
+
+  /** What's actually rendered AND what `sel`/keyboard navigation index
+   * into — `../` (when present) is always index 0, ahead of every content
+   * row, so k from the first content row lands on it and wraps naturally. */
+  const displayRows = $derived(upRowVisible ? [upRow, ...filteredContentRows] : filteredContentRows);
+
+  /** The index of the first CONTENT row (skipping `../` when present) —
+   * every "reset selection" site below (descending into a fresh directory,
+   * typing/backspacing/pasting into the filter query, gg) lands here
+   * rather than on `../` itself, so existing "freshly entered/filtered
+   * directory selects its first real entry" behavior is unchanged. Falls
+   * back to `../` itself (index 0) on the degenerate case of an empty
+   * directory/filter result with `../` still visible. */
+  function firstContentSel(): number {
+    if (filteredContentRows.length > 0) return upRowVisible ? 1 : 0;
+    return 0;
+  }
+
+  const selectedRow = $derived(displayRows[sel] ?? null);
   const selectedNode = $derived(selectedRow?.node ?? null);
   const selectedIsFile = $derived(selectedNode?.kind === "file");
   const activeRoleEntry = $derived(
     selectedNode && selectedNode.kind === "file" ? selectedNode.entry : null,
   );
 
-  const posN = $derived(filteredRows.length === 0 ? 0 : Math.min(sel, filteredRows.length - 1) + 1);
-  const posText = $derived(personnel.posTemplate.replace("{n}", String(posN)).replace("{total}", String(filteredRows.length)));
-
-  const pathText = $derived(
-    pathSegments.length > 0 ? `${personnel.pathPrefix}${pathSegments.join("/")}/` : personnel.pathPrefix,
+  /** Position indicator counts CONTENT rows only — `../` isn't "an entry"
+   * for "n / total" purposes, so selecting it shows "0 / total" (same
+   * convention the empty-filtered-list case already used: "0 / 0"). */
+  const posN = $derived(
+    !selectedRow || selectedRow.kind === "up" ? 0 : sel - (upRowVisible ? 1 : 0) + 1,
+  );
+  const posText = $derived(
+    personnel.posTemplate.replace("{n}", String(posN)).replace("{total}", String(filteredContentRows.length)),
   );
 
   const hintText = $derived.by(() => {
@@ -286,15 +322,65 @@
     return template.replace("{dir}", selectedNode.name);
   });
 
-  /** Preview pane, generalized: a selected DIRECTORY previews the roles
-   * table of every role file nested beneath it (root selection == that
-   * whole company's roles, a leaf-level type directory == just its one
-   * role — the old level-0/level-1 behaviors collapse into this single
-   * rule); a selected FILE shows its own doc. */
-  const previewRoles = $derived(selectedNode && selectedNode.kind === "dir" ? leavesOf(selectedNode) : []);
+  /** PLAN.md Iteration 4 item 2: a selected DIRECTORY's preview is now an
+   * `ls -l`-style listing of its IMMEDIATE children only (not every leaf
+   * role nested arbitrarily deep beneath it) — `permissions  shev  date
+   * name` per row, name last, dirs get `drwxr-xr-x` + a trailing `/`,
+   * files get `.rw-r--r--` (assumption 3). A selected FILE still shows its
+   * own doc (`previewDoc` below), unchanged. */
+  interface LsRow {
+    isDir: boolean;
+    name: string;
+    date: string;
+  }
 
+  /** Role `dates` frontmatter reads e.g. "May 2024 – Present" — the start
+   * date (everything before the en dash) is what an `ls -l` "date" column
+   * plausibly shows for a role FILE. */
+  function startDateOf(dates: string): string {
+    return dates.split("–")[0].trim();
+  }
+
+  /** A directory has no `dates` field of its own, so its listing date is
+   * "plausible": the start date of whichever nested leaf role has the
+   * lowest `order` (== most recent, the same convention `computeDirOrders`
+   * already uses to give the directory itself an order). */
+  function dirPlausibleDate(node: DirNode): string {
+    const leaves = leavesOf(node);
+    if (leaves.length === 0) return "";
+    const mostRecent = leaves.reduce((a, b) => (a.data.order <= b.data.order ? a : b));
+    return startDateOf(mostRecent.data.dates);
+  }
+
+  const previewLsRows = $derived.by((): LsRow[] => {
+    if (!selectedNode || selectedNode.kind !== "dir") return [];
+    return selectedNode.children.map((child): LsRow =>
+      child.kind === "file"
+        ? { isDir: false, name: child.name, date: startDateOf(child.entry.data.dates) }
+        : { isDir: true, name: `${child.name}/`, date: dirPlausibleDate(child) },
+    );
+  });
+
+  /** One padded, monospace-alignable string per row rather than separate
+   * grid cells — PLAN.md item 3 requires each preview row render as a
+   * single line, and building one string (rather than several flex/grid
+   * cells whose concatenated `textContent` would run permissions/owner/
+   * date/name together with no separators) is what lets an e2e assertion
+   * regex-match the rendered text directly. `shev`/date are both fixed-
+   * width (4 and 8 chars respectively, since every `dates` start reads
+   * "Mmm YYYY"), so two-space separators alone keep columns aligned. */
+  function lsLine(row: LsRow): string {
+    const perm = row.isDir ? "drwxr-xr-x" : ".rw-r--r--";
+    return `${perm}  shev  ${row.date}  ${row.name}`;
+  }
+
+  /** PLAN.md item 3: every preview row (this doc pane included) is strictly
+   * one line — appended to each line's own color style from `colorFor`. */
+  const ONE_LINE_STYLE = "white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0";
   const docLines = $derived(activeRoleEntry ? classifyBody(activeRoleEntry.body ?? "", "personnel") : []);
-  const previewDoc = $derived(docLines.map((l) => ({ t: l.t, style: colorFor(l.kind, "personnel") })));
+  const previewDoc = $derived(
+    docLines.map((l) => ({ t: l.t, style: `${colorFor(l.kind, "personnel")};${ONE_LINE_STYLE}` })),
+  );
   const editorLines = $derived.by((): EditorLine[] =>
     docLines.map((l, i) => ({ n: i + 1, t: l.t, style: colorFor(l.kind, "personnel") })),
   );
@@ -334,52 +420,60 @@
       id: FILTER_PASTE_TARGET_ID,
       insert: (text: string) => {
         filterQuery += text;
-        sel = 0;
+        sel = firstContentSel();
       },
     });
     return () => removePasteTarget(FILTER_PASTE_TARGET_ID);
   });
 
   function moveSelection(dir: number) {
-    const n = filteredRows.length;
+    const n = displayRows.length;
     if (n === 0) return;
     sel = ((sel + dir) % n + n) % n;
   }
 
-  /** gg/G — jump to the first/last row of `filteredRows` (filtered-list
+  /** gg/G — jump to the first/last row of `displayRows` (filtered-list
    * aware: jumps within the filtered set, not the full unfiltered
-   * directory listing). Nav-mode only (not while `filterMode` is active —
-   * see handleKey(), where typed characters including "g"/"G" go straight
-   * into the filter query instead, same as every other letter). */
+   * directory listing). `../`, when present, sits at index 0 ahead of every
+   * content row, so "first" deliberately skips it (`firstContentSel()`) —
+   * "last" never needs the same treatment since `../` is never last. Nav-
+   * mode only (not while `filterMode` is active — see handleKey(), where
+   * typed characters including "g"/"G" go straight into the filter query
+   * instead, same as every other letter). */
   function jumpFirst() {
-    if (filteredRows.length === 0) return;
-    sel = 0;
+    if (displayRows.length === 0) return;
+    sel = firstContentSel();
   }
   function jumpLast() {
-    const n = filteredRows.length;
+    const n = displayRows.length;
     if (n === 0) return;
     sel = n - 1;
   }
 
-  /** Descend into a directory (push the current selection so returning via
-   * `upOneLevel`/`upOrDashboard` restores it, then enter with a fresh
-   * selection) or open a role file in the editor. Reads the row directly
-   * off `filteredRows[i]` rather than relying on `sel` having already been
-   * set — this is what lets a single click on ANY row (not just the
-   * currently-selected one) activate immediately, for both mouse and
-   * keyboard callers, without any same-tick derived-read subtlety. */
+  /** Descend into a directory, ascend via the `../` row, or open a role
+   * file in the editor. Reads the row directly off `displayRows[i]` rather
+   * than relying on `sel` having already been set — this is what lets a
+   * single click on ANY row (not just the currently-selected one) activate
+   * immediately, for both mouse and keyboard callers, without any same-tick
+   * derived-read subtlety. PLAN.md item 23a: the `../` row is now handled
+   * right here, ahead of the dir/file branches, since it's a real member of
+   * `displayRows` — no separate click handler needed anymore. */
   function activateRow(i: number) {
-    const row = filteredRows[i];
+    const row = displayRows[i];
     if (!row) return;
-    if (row.node.kind === "file") {
+    if (row.kind === "up") {
+      upOrDashboard();
+      return;
+    }
+    if (row.node!.kind === "file") {
       sel = i;
       editorOpen = true;
       return;
     }
     selStack.push(sel);
-    pathSegments = [...pathSegments, row.node.name];
-    sel = 0;
+    pathSegments = [...pathSegments, row.node!.name];
     clearFilter();
+    sel = firstContentSel();
   }
 
   /** Enter/l/ArrowRight — `xpEnter()` (Homepage.dc.html line 905) — and the
@@ -399,11 +493,15 @@
     clearFilter();
   }
 
-  /** The `../` row's own click action (Homepage.dc.html line 1031's `go`):
-   * up one level, or the dashboard at the root. Only reachable by clicking
-   * `../` (or the keyboard actions above for the "up one level" half) —
-   * never via keyboard selection, since `../` is never part of the j/k
-   * cycle (see file header comment). */
+  /** The `../` row's own activation (Homepage.dc.html line 1031's `go`):
+   * up one level, or the dashboard at the root. PLAN.md item 23a: `../` is
+   * now a real, keyboard-reachable row via `activateRow`'s "up" branch
+   * (Enter/l/ArrowRight on it call this same function) as well as its own
+   * click handler — mouse and keyboard funnel through the same place. The
+   * dashboard half only ever fires from the root's OWN click/Enter on
+   * `../`, since PLAN.md item 6 means `../` is never rendered at the root
+   * in the first place (`upRowVisible` is false there) — kept here as a
+   * defensive fallback, not a reachable path in practice. */
   function upOrDashboard() {
     if (pathSegments.length === 0) {
       onDashboard();
@@ -429,9 +527,22 @@
   // ---------------------------------------------------------------------
 
   /** Exposed for Terminal.svelte's delegation-order flip — same contract as
-   * Builds.svelte's `isEditorOpen()`. */
+   * Builds.svelte's `isEditorOpen()`. PLAN.md Iteration 4 item 23b: this
+   * export's name predates filter mode, but its actual CONTRACT with
+   * Terminal.svelte is broader than "is the vim Editor open" — it's really
+   * "does this pane currently own its own text input, ahead of the
+   * grep-overlay `/`-opener and the editor-scroll-chord gate" (see
+   * Terminal.svelte's `paneIsGreedy`/`tryFocusedRef`). Filter mode is
+   * exactly that: while `filterMode` is true every keystroke (including
+   * "/") must reach `handleKey` below and land in the query, never open
+   * GrepOverlay out from under it — which is the root cause this executor
+   * traced for the "search box doesn't type" report (see
+   * tests/e2e/personnel.spec.ts's "filter mode" describe block). Returning
+   * `true` here during filter mode makes Personnel "greedy" the same way
+   * an open vim Editor already is, without Terminal.svelte needing any
+   * changes of its own. */
   export function isEditorOpen(): boolean {
-    return editorOpen;
+    return editorOpen || filterMode;
   }
 
   /** Same forwarding contract as Builds.svelte's own `runEditorExCommand`
@@ -454,7 +565,7 @@
     if (filterMode) {
       if (e.key === "Escape") {
         clearFilter();
-        sel = 0;
+        sel = firstContentSel();
         return true;
       }
       if (e.key === "Enter") {
@@ -463,7 +574,7 @@
       }
       if (e.key === "Backspace") {
         filterQuery = filterQuery.slice(0, -1);
-        sel = 0;
+        sel = firstContentSel();
         return true;
       }
       if (e.key === "ArrowDown") {
@@ -484,7 +595,7 @@
       }
       if (e.key.length === 1) {
         filterQuery += e.key;
-        sel = 0;
+        sel = firstContentSel();
         return true;
       }
       return false;
@@ -541,6 +652,54 @@
   }
 </script>
 
+{#snippet folderIcon()}
+  <svg
+    data-icon="folder"
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+    ><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" /></svg
+  >
+{/snippet}
+
+{#snippet fileIcon()}
+  <svg
+    data-icon="file"
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+    ><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" /><path d="M14 2v5h5" /></svg
+  >
+{/snippet}
+
+{#snippet upIcon()}
+  <svg
+    data-icon="up"
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+    ><path d="M9 14 4 9l5-5" /><path d="M4 9h10a5 5 0 0 1 5 5v6" /></svg
+  >
+{/snippet}
+
 {#if editorOpen}
   <Editor
     bind:this={editorRef}
@@ -562,21 +721,15 @@
         style="position:relative;flex:1;min-width:0;border:1px solid rgba(224,69,60,.35);border-radius:4px;padding:14px 12px 10px;display:flex;flex-direction:column"
       >
         <div
-          data-testid="personnel-path"
-          style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#0a0e13;padding:0 10px;font-size:12px;color:rgba(224,69,60,.9);white-space:nowrap"
-        >
-          {pathText}
-        </div>
-        <div
           data-copy-source={isFocused ? "" : undefined}
           style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:3px"
         >
-          {#each filteredRows as row, i (row.name)}
+          {#each displayRows as row, i (row.name)}
             <div
               role="button"
               tabindex="0"
               class="personnel-row"
-              data-testid="personnel-row"
+              data-testid={row.kind === "up" ? "personnel-up-row" : "personnel-row"}
               data-row-name={row.name}
               onclick={() => clickRow(i)}
               onkeydown={(ev) => {
@@ -584,28 +737,13 @@
               }}
               style={rowStyle(i === sel)}
             >
-              <span style="width:14px;flex:none;color:rgba(196,216,232,.55)"
-                >{row.node.kind === "file" ? personnel.roleRowIcon : personnel.companyRowIcon}</span
-              >
+              <span style="width:14px;flex:none;color:rgba(196,216,232,.55);display:inline-flex">
+                {#if row.kind === "file"}{@render fileIcon()}{:else if row.kind === "dir"}{@render folderIcon()}{:else}{@render upIcon()}{/if}
+              </span>
               <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{row.name}</span>
               <span style="flex:none;white-space:nowrap;color:rgba(95,198,180,.75)">{row.meta}</span>
             </div>
           {/each}
-          <div
-            role="button"
-            tabindex="0"
-            class="personnel-row"
-            data-testid="personnel-up-row"
-            onclick={upOrDashboard}
-            onkeydown={(ev) => {
-              if (ev.key === "Enter" || ev.key === " ") upOrDashboard();
-            }}
-            style={rowStyle(false)}
-          >
-            <span style="width:14px;flex:none;color:rgba(196,216,232,.55)">{personnel.upEntry.icon}</span>
-            <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{personnel.upEntry.name}</span>
-            <span style="flex:none;white-space:nowrap;color:rgba(95,198,180,.75)"></span>
-          </div>
         </div>
         <div
           style="position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:#0a0e13;padding:0 10px;font-size:12px;color:rgba(224,69,60,.9)"
@@ -622,9 +760,10 @@
               if (ev.key === "Enter" || ev.key === " ") enterFilterMode();
             }}
             style="cursor:pointer;color:#5fc6b4"
-            >{personnel.promptIcon} {filterQuery}<span
-              style="display:inline-block;width:7px;height:13px;vertical-align:-2px;background:#5fc6b4;animation:blk 1.1s steps(1) infinite"
-            ></span></span
+            >{personnel.promptIcon} {filterQuery}{#if filterMode}<span
+                data-testid="personnel-filter-cursor"
+                style="display:inline-block;width:7px;height:13px;vertical-align:-2px;background:#5fc6b4;animation:blk 1.1s steps(1) infinite"
+              ></span>{/if}</span
           >
           <span data-testid="personnel-pos">{posText}</span>
         </div>
@@ -641,19 +780,15 @@
         </div>
         <div data-testid="personnel-preview" style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:4px">
           {#if !selectedIsFile}
-            {#each previewRoles as r (r.id)}
+            {#each previewLsRows as r, i (i)}
               <div
-                data-testid="personnel-role-table-row"
-                style="display:grid;grid-template-columns:minmax(0,1fr) 170px 100px;gap:8px;align-items:baseline"
-              >
-                <span style="color:rgba(196,216,232,.85);text-wrap:pretty">{r.data.role}</span>
-                <span style="color:rgba(217,176,74,.85);white-space:nowrap">{r.data.dates}</span>
-                <span style="color:rgba(196,216,232,.5)">{r.data.loc}</span>
-              </div>
+                data-testid="personnel-ls-row"
+                style="white-space:pre;overflow:hidden;text-overflow:ellipsis;min-width:0;font-family:inherit;color:rgba(196,216,232,.85)"
+              >{lsLine(r)}</div>
             {/each}
           {:else}
             {#each previewDoc as l, i (i)}
-              <div style={l.style}>{l.t}</div>
+              <div data-testid="personnel-doc-line" style={l.style}>{l.t}</div>
             {/each}
           {/if}
         </div>

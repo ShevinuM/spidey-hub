@@ -830,24 +830,33 @@
     style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:pre;margin:0">{rawLines.join(
       "\n",
     )}</pre>
-  <div style="flex:none;display:flex;align-items:center;background:#0e1a20;font-size:12px">
-    <span data-testid="editor-mode" style="background:#e0453c;color:#0b0f14;font-weight:700;padding:3px 12px"
-      >{modeOrPromptText}</span
+  <div
+    data-testid="editor-statusline"
+    style="flex:none;flex-wrap:nowrap;display:flex;align-items:center;background:#0e1a20;font-size:12px"
+  >
+    <span
+      data-testid="editor-mode"
+      style="flex:none;background:#e0453c;color:#0b0f14;font-weight:700;padding:3px 12px">{modeOrPromptText}</span
     >
-    <span style="background:rgba(224,69,60,.22);color:#f0d9d4;padding:3px 12px">{labels.branch}</span>
-    <span style="color:rgba(196,216,232,.6);padding:3px 12px"
+    <span style="flex:none;background:rgba(224,69,60,.22);color:#f0d9d4;padding:3px 12px">{labels.branch}</span>
+    <span
+      style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(196,216,232,.6);padding:3px 12px"
       >{breadcrumbLeft} {labels.breadcrumbSeparator} {breadcrumbRight}</span
     >
     {#if message}
-      <span data-testid="editor-message" style="color:#e0453c;padding:3px 12px">{message}</span>
+      <span data-testid="editor-message" style="flex:none;white-space:nowrap;color:#e0453c;padding:3px 12px"
+        >{message}</span
+      >
     {/if}
-    <span style="flex:1"></span>
-    <span data-testid="editor-position" style="color:#5fc6b4;padding:3px 12px">{scrollLabel} {positionText}</span>
+    <span style="flex:1;min-width:0"></span>
+    <span data-testid="editor-position" style="flex:none;white-space:nowrap;color:#5fc6b4;padding:3px 12px"
+      >{scrollLabel} {positionText}</span
+    >
     <button
       type="button"
       onclick={onClose}
       data-testid="editor-close-pill"
-      style="background:rgba(95,198,180,.2);color:#5fc6b4;padding:3px 12px;border:none;font:inherit;cursor:pointer"
+      style="flex:none;white-space:nowrap;background:rgba(95,198,180,.2);color:#5fc6b4;padding:3px 12px;border:none;font:inherit;cursor:pointer"
       >{labels.closePillLabel}</button
     >
     <span

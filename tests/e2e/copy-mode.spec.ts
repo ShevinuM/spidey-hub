@@ -141,8 +141,12 @@ test.describe("Copy mode (Ctrl-b [)", () => {
   }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await gotoReady(page, "/builds");
-    await page.keyboard.press("3");
-    await page.keyboard.press("Enter");
+    // PLAN.md Iteration 4 items 4/5: the default-highlighted panel [3] repo
+    // is now the virtual "all-projects" entry (no README.md in its flat
+    // .md-only tree) — click transcript-tts's own row directly (selects AND
+    // loads its tree, same as before) instead of relying on the old
+    // press("3")+Enter default-repo path.
+    await page.locator('[data-testid="builds-repo-row"][data-repo-name="transcript-tts"]').click();
     await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
     await page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]').click();
     await page.keyboard.press("2");

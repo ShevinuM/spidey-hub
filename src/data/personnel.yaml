@@ -26,7 +26,7 @@ promptIcon: ">"
 # Backspace never do anything, same as the old atCompanyLevel hint).
 # {dir}/{file} are interpolated with the selected row's own name.
 hints:
-  atRoot: "enter opens {dir}/ · j/k moves · Ctrl-b ? for help"
+  atRoot: "enter opens {dir}/ · Ctrl-b ? for help"
   atDir: "enter opens {dir}/ · h goes back · Ctrl-b ? for help"
   atFile: "enter opens {file} in nvim · h goes back · Ctrl-b ? for help"
 
@@ -34,13 +34,21 @@ upEntry:
   icon: "▸"
   name: "../"
 
+# PLAN.md Iteration 4 item 1: row icons are now inline SVGs keyed off row
+# kind directly in Personnel.svelte's template (nvim-tree/lazygit-style
+# folder/file glyphs, since Nerd Fonts aren't bundled) — these two glyph
+# strings (and `upEntry.icon` above) are no longer read by the row markup.
+# Left in place rather than pruned from `PersonnelData` (src/lib/data.ts),
+# which this executor does not own.
 companyRowIcon: "▸"
 roleRowIcon: "▤"
 
-# Directory row meta at ANY depth, e.g. "3 roles" / "1 role" — the count of
-# role files nested anywhere beneath that directory (Component.renderVals()
-# line 1030: `c.roles.length + (c.roles.length > 1 ? " roles" : " role")`).
-roleCountTemplate: "{n} {word}"
+# Directory row meta at ANY depth: the bare count of role files nested
+# anywhere beneath that directory (PLAN.md Iteration 4 item 25 — drop the
+# "role(s)" word, ls-l-style listings show a bare number here). `roleWord*`
+# below are now unused by Personnel.svelte's row template but kept in the
+# schema (src/lib/data.ts's PersonnelData) rather than pruned out of scope.
+roleCountTemplate: "{n}"
 roleWordSingular: "role"
 roleWordPlural: "roles"
 

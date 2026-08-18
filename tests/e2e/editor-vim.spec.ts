@@ -59,8 +59,18 @@ const entryPoints: EntryPoint[] = [
     name: "Builds",
     async open(page) {
       await gotoReady(page, "/builds");
-      await page.keyboard.press("3"); // focus panel [3], Local Repositories
-      await page.keyboard.press("Enter"); // load the active repo's tree at root into panel [2]
+      // PLAN.md Iteration 4 items 4/5 changed two things this entry point
+      // used to rely on: (1) the default-highlighted panel [3] repo is now
+      // the virtual "all-projects" entry, not a real repo, so pressing
+      // Enter on the default highlight no longer loads a real repo's tree;
+      // (2) the Files pane renders the FULL nested tree at once (no more
+      // cwd-style single-level view), and daily-tech-digest genuinely has
+      // two files named "README.md" (root + "site/README.md") simultaneously
+      // visible in that tree, which would make the locator below ambiguous.
+      // transcript-tts has exactly one README.md and no nested duplicate, so
+      // clicking its panel [3] row directly (which both selects it AND loads
+      // its tree, same as before) sidesteps both issues.
+      await page.locator('[data-testid="builds-repo-row"][data-repo-name="transcript-tts"]').click();
       await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
       // Clicking a file previews it in panel [0] but does NOT open the
       // editor (PLAN.md Phase 4 item 3 — click-selects/Enter-opens split);
@@ -84,9 +94,19 @@ const entryPoints: EntryPoint[] = [
       await expect(scroller(page)).toBeVisible();
     },
     async assertParentVisible(page) {
-      await expect(page.locator('[data-testid="personnel-path"]')).toHaveText(
-        "/Users/Shev/Experience/enaimco/software-developer/",
-      );
+      // PLAN.md Iteration 4 item 7 deleted the `personnel-path` breadcrumb
+      // this used to assert on. The equivalent anchor (same convention
+      // personnel.spec.ts's own `rowLocator` uses): confirm we're back at
+      // the exact enaimco/software-developer/ listing, not merely "some"
+      // personnel view — role.md is the row this entry point opened, and
+      // full-time/ is a sibling directory unique to this exact listing (no
+      // other company/role directory is named "full-time").
+      await expect(
+        page.locator('[data-testid="personnel-row"][data-row-name="role.md"]'),
+      ).toBeVisible();
+      await expect(
+        page.locator('[data-testid="personnel-row"][data-row-name="full-time/"]'),
+      ).toBeVisible();
     },
   },
 ];

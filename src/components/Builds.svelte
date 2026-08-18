@@ -41,7 +41,14 @@
   import type { Commit } from "../lib/commits";
   import { untrack } from "svelte";
   import { classifyBody, classifyDoc, colorFor, docColors } from "../lib/docline";
-  import { listDir, findFile, joinPath, type RepoFile, type RepoIndex } from "../lib/repoTree";
+  import {
+    findFile,
+    buildTree,
+    flattenVisible,
+    type RepoFile,
+    type RepoIndex,
+    type FlatTreeRow,
+  } from "../lib/repoTree";
   import { fetchLiveCommits } from "../lib/githubCommits";
   import { fetchCommitTree, fetchCommitFileContent } from "../lib/githubTrees";
   import Editor, { type EditorLine } from "./Editor.svelte";
@@ -90,14 +97,19 @@
     isAllProjects: boolean;
   }
 
+  // PLAN.md Iteration 4 item 5: all-projects is pinned FIRST (not appended
+  // last) and is the default selection (`selectedRepoIdx = $state(0)` below
+  // now points at it) — the Files pane loads its tree on mount too (see the
+  // mount effect further down).
   const flatRepos = $derived.by((): RepoRow[] => {
-    const rows: RepoRow[] = [];
+    const rows: RepoRow[] = [
+      { key: builds.allProjects.name, branch: builds.allProjects.branch, mark: "•", isAllProjects: true },
+    ];
     for (const p of sortedProjects) {
       p.data.repos.forEach((r, i) => {
         rows.push({ key: r.name, branch: r.branch, mark: i === 0 ? "*" : "•", isAllProjects: false });
       });
     }
-    rows.push({ key: builds.allProjects.name, branch: builds.allProjects.branch, mark: "•", isAllProjects: true });
     return rows;
   });
 
@@ -171,9 +183,16 @@
     | { kind: "working"; repoName: string }
     | { kind: "commit"; repoName: string; sha: string; sha8: string; paths: string[] };
 
+  // PLAN.md Iteration 4 item 4: the Files pane is now a lazygit-style tree —
+  // the FULL nested tree renders at once (no more cwd-style `path` descent),
+  // ALL dirs expanded by default, and collapse state is opt-in per dir path
+  // (`collapsedDirs`, cloned-on-write to stay a fresh Set for Svelte's
+  // reactivity, matching this file's existing `{...spread}` convention for
+  // plain objects). `selectedIdx` indexes into the FLATTENED visible-rows
+  // list (`currentRows` below), not any one directory's children.
   interface RepoTreeState {
     source: TreeSource;
-    path: string[];
+    collapsedDirs: Set<string>;
     selectedIdx: number;
   }
   let repoTree = $state<RepoTreeState | null>(null);
@@ -184,12 +203,6 @@
    * a one-off status line in panel [0], not a panel takeover). Cleared at
    * the start of the next commit-tree attempt. */
   let commitFetchError = $state<string | null>(null);
-
-  interface TreeRow {
-    type: "up" | "dir" | "file";
-    name: string;
-    path: string;
-  }
 
   const currentFiles = $derived.by((): RepoFile[] | null => {
     if (!repoTree) return null;
@@ -212,14 +225,13 @@
     return st.status;
   });
 
-  const currentEntries = $derived.by((): TreeRow[] => {
-    if (!repoTree || !currentFiles) return [];
-    const dirPath = joinPath(repoTree.path);
-    const listed: TreeRow[] = listDir(currentFiles, dirPath).map((e) => ({ type: e.type, name: e.name, path: e.path }));
-    if (repoTree.path.length > 0) {
-      return [{ type: "up", name: builds.repoBrowser.upEntry.name, path: "" }, ...listed];
-    }
-    return listed;
+  // Split into two deriveds (rather than one that rebuilds+flattens
+  // together) so toggling a single dir's collapse state re-flattens without
+  // rebuilding the whole tree from the flat file list.
+  const currentTree = $derived(currentFiles ? buildTree(currentFiles) : null);
+  const currentRows = $derived.by((): FlatTreeRow[] => {
+    if (!repoTree || !currentTree) return [];
+    return flattenVisible(currentTree, repoTree.collapsedDirs);
   });
 
   const filesSubtitleValue = $derived(
@@ -252,18 +264,9 @@
    * tree into panel [2] (PLAN.md Phase 4 item 2 — no more separate
    * select-then-open step). */
   function openRepo(r: RepoRow) {
-    repoTree = { source: { kind: "working", repoName: r.key }, path: [], selectedIdx: 0 };
+    repoTree = { source: { kind: "working", repoName: r.key }, collapsedDirs: new Set(), selectedIdx: 0 };
     commitFetchError = null;
     void ensureRepoIndex(r.key);
-  }
-
-  function goUpDir() {
-    if (!repoTree) return;
-    if (repoTree.path.length === 0) {
-      repoTree = null;
-      return;
-    }
-    repoTree = { ...repoTree, path: repoTree.path.slice(0, -1), selectedIdx: 0 };
   }
 
   /**
@@ -284,7 +287,7 @@
     }
     repoTree = {
       source: { kind: "commit", repoName, sha: commit.sha ?? commit.sha8, sha8: commit.sha8, paths },
-      path: [],
+      collapsedDirs: new Set(),
       selectedIdx: 0,
     };
   }
@@ -307,7 +310,7 @@
       preview = null;
       return;
     }
-    const entry = currentEntries[repoTree.selectedIdx];
+    const entry = currentRows[repoTree.selectedIdx];
     if (!entry || entry.type !== "file") {
       preview = null;
       return;
@@ -377,7 +380,7 @@
     runExCommand: (cmd: string) => { recognized: boolean; error?: string };
   } | null>(null);
 
-  async function openFileInEditor(entry: TreeRow) {
+  async function openFileInEditor(entry: FlatTreeRow) {
     if (!repoTree || entry.type !== "file") return;
     const source = repoTree.source;
     const repoName = source.repoName;
@@ -412,22 +415,24 @@
     }
   }
 
-  function activateEntry(entry: TreeRow, opts: { openEditor: boolean }) {
+  /** Enter/click on a dir toggles its collapse state (PLAN.md Iteration 4
+   * item 4); Enter/click on a file previews/opens it, exactly as before.
+   * There is no more "up" entry type — the whole tree renders at once. */
+  function activateEntry(entry: FlatTreeRow, opts: { openEditor: boolean }) {
     if (!repoTree) return;
-    if (entry.type === "up") {
-      goUpDir();
-      return;
-    }
     if (entry.type === "dir") {
-      repoTree = { ...repoTree, path: [...repoTree.path, entry.name], selectedIdx: 0 };
+      toggleCollapse(entry.path);
       return;
     }
     if (opts.openEditor) void openFileInEditor(entry);
   }
 
-  function iconFor(entry: TreeRow): string {
-    if (entry.type === "up") return builds.repoBrowser.upEntry.icon;
-    return entry.type === "file" ? builds.repoBrowser.fileIcon : builds.repoBrowser.dirIcon;
+  function toggleCollapse(dirPath: string) {
+    if (!repoTree) return;
+    const next = new Set(repoTree.collapsedDirs);
+    if (next.has(dirPath)) next.delete(dirPath);
+    else next.add(dirPath);
+    repoTree = { ...repoTree, collapsedDirs: next };
   }
 
   const editorLines = $derived.by((): EditorLine[] => {
@@ -470,6 +475,20 @@
     openRepo(r);
   }
 
+  // PLAN.md Iteration 4 item 5: all-projects is pinned first AND selected by
+  // default, so the Files pane must show its tree on mount rather than
+  // waiting for a click/Enter on panel [3]. `untrack()` (this file already
+  // relies on it for beginFetch/endFetch above) keeps this a one-shot
+  // mount-time effect with no tracked dependencies — it must not re-fire
+  // every time `flatRepos` is recomputed. Runs client-side only (an
+  // `$effect`, not top-level script) since this is an Astro island and a
+  // top-level `fetch("/generated/...")` call would execute during SSR.
+  $effect(() => {
+    untrack(() => {
+      activateRepo(0);
+    });
+  });
+
   /** Panel [4] tracks ONLY this — the repo highlighted in panel [3] — never
    * anything from panel [2]/[0]'s own navigation (PLAN.md Phase 4 item 4,
    * fixing the "commits change while browsing files" bug report). */
@@ -505,18 +524,18 @@
 
   function moveTreeSelection(delta: number) {
     if (!repoTree) return;
-    const n = currentEntries.length;
+    const n = currentRows.length;
     if (n === 0) return;
     repoTree = { ...repoTree, selectedIdx: ((repoTree.selectedIdx + delta) % n + n) % n };
   }
 
   function jumpTreeTop() {
-    if (!repoTree || currentEntries.length === 0) return;
+    if (!repoTree || currentRows.length === 0) return;
     repoTree = { ...repoTree, selectedIdx: 0 };
   }
   function jumpTreeBottom() {
-    if (!repoTree || currentEntries.length === 0) return;
-    repoTree = { ...repoTree, selectedIdx: currentEntries.length - 1 };
+    if (!repoTree || currentRows.length === 0) return;
+    repoTree = { ...repoTree, selectedIdx: currentRows.length - 1 };
   }
 
   // ---------------------------------------------------------------------
@@ -672,16 +691,15 @@
         return true;
       }
       if (e.key === "Enter") {
-        const entry = currentEntries[repoTree.selectedIdx];
+        const entry = currentRows[repoTree.selectedIdx];
         if (entry) activateEntry(entry, { openEditor: true });
         gPending = false;
         return true;
       }
-      if (k === "h" || e.key === "Backspace" || e.key === "ArrowLeft") {
-        goUpDir();
-        gPending = false;
-        return true;
-      }
+      // PLAN.md Iteration 4 item 4 retired cwd-style navigation entirely (the
+      // whole tree renders at once, expand/collapse in place) — h/Backspace/
+      // ArrowLeft no longer have a "go up a level" to perform, so they're
+      // retired along with `goUpDir()` rather than repurposed.
       gPending = false;
       return false;
     }
@@ -790,7 +808,7 @@
             {:else if workingTreeStatus === "error"}
               <div style="color:#e0453c">{builds.repoBrowser.errorText}</div>
             {:else}
-              {#each currentEntries as entry, i (entry.type + ":" + entry.path)}
+              {#each currentRows as entry, i (entry.type + ":" + entry.path)}
                 <div
                   role="button"
                   tabindex="0"
@@ -798,6 +816,8 @@
                   data-testid="builds-tree-row"
                   data-entry-type={entry.type}
                   data-entry-name={entry.name}
+                  data-depth={entry.depth}
+                  data-expanded={entry.type === "dir" ? String(entry.expanded) : undefined}
                   onclick={() => {
                     if (!repoTree) return;
                     repoTree = { ...repoTree, selectedIdx: i };
@@ -806,12 +826,42 @@
                   onkeydown={(e) => {
                     if (e.key === "Enter" || e.key === " ") activateEntry(entry, { openEditor: true });
                   }}
-                  style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 4px;border-radius:2px;{i ===
-                  repoTree.selectedIdx
+                  style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 4px 1px {4 +
+                    entry.depth * 14}px;border-radius:2px;{i === repoTree.selectedIdx
                     ? 'background:rgba(224,69,60,.18);color:#f0e7e4'
                     : 'color:rgba(196,216,232,.7)'}"
                 >
-                  <span style="color:#5fc6b4">{iconFor(entry)}</span> {entry.name}
+                  {#if entry.type === "dir"}
+                    <span class="builds-caret" data-testid="builds-tree-caret" aria-hidden="true"
+                      >{entry.expanded ? "▾" : "▸"}</span
+                    >
+                    <span class="builds-icon" data-testid="builds-tree-icon" style="color:#5fc6b4" aria-hidden="true">
+                      <svg width="12" height="12" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"
+                        ><path
+                          d="M1.5 3.5a1 1 0 0 1 1-1h3.379a1 1 0 0 1 .707.293L7.914 4.12a1 1 0 0 0 .707.293H13.5a1 1 0 0 1 1 1v7.086a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V3.5Z"
+                          fill="currentColor"
+                        /></svg
+                      >
+                    </span>
+                  {:else}
+                    <span class="builds-caret builds-caret-spacer" aria-hidden="true"></span>
+                    <span class="builds-icon" data-testid="builds-tree-icon" style="color:#5fc6b4" aria-hidden="true">
+                      <svg width="12" height="12" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"
+                        ><path
+                          d="M4 1.5h5.379a1 1 0 0 1 .707.293l2.121 2.121a1 1 0 0 1 .293.707V13.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1Z"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.1"
+                        /><path
+                          d="M9.5 1.7V4a1 1 0 0 0 1 1h2.3"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="1.1"
+                        /></svg
+                      >
+                    </span>
+                  {/if}
+                  {entry.name}
                 </div>
               {/each}
             {/if}
@@ -1014,5 +1064,19 @@
   }
   .builds-row:hover {
     background: rgba(224, 69, 60, 0.12);
+  }
+  /* PLAN.md Iteration 4 item 1 (builds part): fixed-width caret slot so
+     dir/file rows' icons+names line up in a column regardless of whether a
+     row is a dir (▾/▸) or a file (blank spacer of the same width). */
+  .builds-caret {
+    display: inline-block;
+    width: 10px;
+    text-align: center;
+  }
+  .builds-icon {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 3px 0 1px;
+    vertical-align: -1px;
   }
 </style>

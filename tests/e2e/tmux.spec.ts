@@ -216,8 +216,13 @@ test.describe("tmux prefix (Ctrl-b)", () => {
   test("Ctrl-b Ctrl-b pages back in the open vim editor (send-prefix reaches vim's Ctrl-b)", async ({ page }) => {
     await page.route("**/api.github.com/**", (route) => route.abort());
     await gotoReady(page, "/builds");
-    await page.keyboard.press("3");
-    await page.keyboard.press("Enter");
+    // PLAN.md Iteration 4 items 4/5: the default-highlighted panel [3] repo
+    // is now the virtual "all-projects" entry (no README.md in its flat
+    // .md-only tree) — click transcript-tts's own row directly (selects AND
+    // loads its tree, same as before; its README.md is 56 lines, still well
+    // over this test's 8-line floor) instead of relying on the old
+    // press("3")+Enter default-repo path.
+    await page.locator('[data-testid="builds-repo-row"][data-repo-name="transcript-tts"]').click();
     await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
     await page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]').click();
     await page.keyboard.press("2");

@@ -12,17 +12,16 @@
 plate:
   title: "SPIDEY-HUB"
 
-# Menu rows, top to bottom. `invert` marks the single leading character
-# rendered with the inverted background:color swap (only "Builds", where the
-# "B" is inverted — design/Homepage.dc.html line 142). `icon` is either a
-# glyph character or the literal token "spider-mask" meaning: render the
-# spiderman.svg CSS mask (never an <img>) instead of a text glyph, exactly
-# like the "E.D.I.T.H: Retina-V" row.
+# Menu rows, top to bottom. PLAN.md Iteration 4 item 20 removed the old
+# `invert` key (the single-leading-character inverted-background cursor on
+# "Builds" — design/Homepage.dc.html line 142); every row now renders its
+# plain label. `icon` is either a glyph character or the literal token
+# "spider-mask" meaning: render the spiderman.svg CSS mask (never an <img>)
+# instead of a text glyph, exactly like the "E.D.I.T.H: Retina-V" row.
 menu:
   - id: projects
     icon: "▤"
     label: "Builds"
-    invert: "B"
     hotkey: "b"
   - id: xp
     icon: "◆"

@@ -10,7 +10,15 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { listDir, findFile, joinPath, type RepoIndex } from "../../src/lib/repoTree.ts";
+import {
+  listDir,
+  findFile,
+  joinPath,
+  buildTree,
+  flattenVisible,
+  type RepoFile,
+  type RepoIndex,
+} from "../../src/lib/repoTree.ts";
 
 const ROOT = join(import.meta.dirname, "../..");
 const dailyTechDigest = JSON.parse(
@@ -63,4 +71,97 @@ test("findFile returns the exact file record; joinPath round-trips a path's segm
   const segments = anyFile.path.split("/");
   assert.equal(joinPath(segments), anyFile.path);
   assert.equal(joinPath([]), "");
+});
+
+// ---------------------------------------------------------------------------
+// buildTree / flattenVisible (PLAN.md Iteration 4 item 4 — lazygit-style
+// Files panel: nested tree, all dirs expanded by default, no `../` entry).
+// A small hand-rolled fixture makes the collapse-behavior assertions
+// deterministic; the real daily-tech-digest index (genuine nested dirs, e.g.
+// site/src/content/digests/) exercises the build/flatten round-trip against
+// real data, same convention as the listDir tests above.
+// ---------------------------------------------------------------------------
+
+const fixtureFiles: RepoFile[] = [
+  { path: "README.md", lines: [] },
+  { path: "src/index.ts", lines: [] },
+  { path: "src/lib/a.ts", lines: [] },
+  { path: "src/lib/b.ts", lines: [] },
+  { path: "package.json", lines: [] },
+];
+
+test("buildTree: root children are dirs-before-files, case-insensitive by name", () => {
+  const tree = buildTree(fixtureFiles);
+  assert.equal(tree.type, "dir");
+  assert.equal(tree.path, "");
+  const names = tree.children!.map((c) => `${c.type}:${c.name}`);
+  assert.deepEqual(names, ["dir:src", "file:package.json", "file:README.md"]);
+});
+
+test("buildTree: nested dirs are synthesized with correct full paths and no duplicates", () => {
+  const tree = buildTree(fixtureFiles);
+  const src = tree.children!.find((c) => c.name === "src")!;
+  assert.equal(src.type, "dir");
+  assert.equal(src.path, "src");
+  const srcChildNames = src.children!.map((c) => `${c.type}:${c.name}`);
+  assert.deepEqual(srcChildNames, ["dir:lib", "file:index.ts"]);
+
+  const lib = src.children!.find((c) => c.name === "lib")!;
+  assert.equal(lib.path, "src/lib");
+  assert.deepEqual(
+    lib.children!.map((c) => c.name),
+    ["a.ts", "b.ts"],
+  );
+});
+
+test("flattenVisible: with an empty collapsed set, every dir is expanded and every file appears", () => {
+  const tree = buildTree(fixtureFiles);
+  const rows = flattenVisible(tree, new Set());
+  assert.deepEqual(
+    rows.map((r) => ({ type: r.type, path: r.path, depth: r.depth })),
+    [
+      { type: "dir", path: "src", depth: 0 },
+      { type: "dir", path: "src/lib", depth: 1 },
+      { type: "file", path: "src/lib/a.ts", depth: 2 },
+      { type: "file", path: "src/lib/b.ts", depth: 2 },
+      { type: "file", path: "src/index.ts", depth: 1 },
+      { type: "file", path: "package.json", depth: 0 },
+      { type: "file", path: "README.md", depth: 0 },
+    ],
+  );
+  // No row is ever synthesized for "go up a level" — there is no `../` concept
+  // in a fully-expanded tree.
+  assert.ok(rows.every((r) => r.type === "dir" || r.type === "file"));
+});
+
+test("flattenVisible: collapsing a dir hides its descendants but keeps its own row, marked expanded:false", () => {
+  const tree = buildTree(fixtureFiles);
+  const rows = flattenVisible(tree, new Set(["src"]));
+  assert.deepEqual(
+    rows.map((r) => r.path),
+    ["src", "package.json", "README.md"],
+  );
+  const srcRow = rows.find((r) => r.path === "src")!;
+  assert.equal(srcRow.expanded, false);
+});
+
+test("flattenVisible: collapsing a nested dir only hides ITS descendants, not its siblings or ancestor's other children", () => {
+  const tree = buildTree(fixtureFiles);
+  const rows = flattenVisible(tree, new Set(["src/lib"]));
+  assert.deepEqual(
+    rows.map((r) => r.path),
+    ["src", "src/lib", "src/index.ts", "package.json", "README.md"],
+  );
+  const libRow = rows.find((r) => r.path === "src/lib")!;
+  assert.equal(libRow.expanded, false);
+  const srcRow = rows.find((r) => r.path === "src")!;
+  assert.equal(srcRow.expanded, true);
+});
+
+test("buildTree/flattenVisible round-trip against the real daily-tech-digest index has no lost or duplicated files", () => {
+  const tree = buildTree(dailyTechDigest.files);
+  const rows = flattenVisible(tree, new Set());
+  const filePaths = rows.filter((r) => r.type === "file").map((r) => r.path).sort();
+  const expected = dailyTechDigest.files.map((f) => f.path).sort();
+  assert.deepEqual(filePaths, expected);
 });

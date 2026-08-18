@@ -93,9 +93,7 @@
             <span style="opacity:.85">{item.icon}</span>
           {/if}
           <span>
-            {#if item.invert}<span style="background:#e0453c;color:#0b0f14"
-                >{item.label.slice(0, item.invert.length)}</span
-              >{item.label.slice(item.invert.length)}{:else}{item.label}{/if}
+            {item.label}
           </span>
           <span style="color:#5fc6b4">{item.hotkey}</span>
         </div>

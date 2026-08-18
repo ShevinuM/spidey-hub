@@ -75,11 +75,11 @@ commandLog:
 # prototype markup exists for either), but every user-visible string they
 # render still lives here, not inlined in Builds.svelte / Editor.svelte.
 repoBrowser:
-  upEntry:
-    icon: "▸"
-    name: "../"
-  dirIcon: "▸"
-  fileIcon: "▤"
+  # PLAN.md Iteration 4 items 1/4: the Files pane is a lazygit-style tree now
+  # (Builds.svelte renders inline SVG folder/file icons + a ▾/▸ caret keyed
+  # off each row's own type/expand-state, not a yaml glyph) and there is no
+  # more `../` row to navigate to (the whole tree renders at once) — both
+  # `upEntry` and the `dirIcon`/`fileIcon` glyphs are retired.
   loadingText: "Loading repo index…"
   errorText: "Failed to load repo index."
   emptyText: "Select a repo in panel [3] to browse its files."

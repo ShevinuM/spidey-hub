@@ -71,3 +71,97 @@ export function findFile(files: RepoFile[], path: string): RepoFile | undefined 
 export function joinPath(segments: string[]): string {
   return segments.join("/");
 }
+
+// ---------------------------------------------------------------------------
+// Nested tree + flatten-visible helpers (PLAN.md Iteration 4 item 4: the
+// Files panel becomes a lazygit-style tree — ALL dirs expanded by default,
+// Enter/click on a dir toggles collapse, no `../` entry, j/k walks the
+// FLATTENED list of currently-visible rows). Pure and unit-testable: no
+// Svelte state here, Builds.svelte owns the collapsed-set and selection.
+// ---------------------------------------------------------------------------
+
+export interface TreeNode {
+  type: TreeEntryType;
+  /** Segment name only, e.g. "lib" or "grep.ts" ("" for the synthetic root). */
+  name: string;
+  /** Full posix path from the repo root ("" for the synthetic root). */
+  path: string;
+  /** Only present on dirs (including the root); absent on files. */
+  children?: TreeNode[];
+}
+
+/**
+ * Build the full nested tree from a repo's flat file list. Mirrors
+ * `listDir`'s sort convention (dirs before files, case-insensitive name) at
+ * every level, applied recursively.
+ */
+export function buildTree(files: RepoFile[]): TreeNode {
+  const root: TreeNode = { type: "dir", name: "", path: "", children: [] };
+  const dirs = new Map<string, TreeNode>([["", root]]);
+
+  function ensureDir(path: string, name: string, parentPath: string): TreeNode {
+    const existing = dirs.get(path);
+    if (existing) return existing;
+    const node: TreeNode = { type: "dir", name, path, children: [] };
+    dirs.set(path, node);
+    dirs.get(parentPath)!.children!.push(node);
+    return node;
+  }
+
+  for (const f of files) {
+    const segments = f.path.split("/");
+    let parentPath = "";
+    for (let i = 0; i < segments.length - 1; i++) {
+      const seg = segments[i];
+      const path = parentPath === "" ? seg : `${parentPath}/${seg}`;
+      ensureDir(path, seg, parentPath);
+      parentPath = path;
+    }
+    const name = segments[segments.length - 1];
+    dirs.get(parentPath)!.children!.push({ type: "file", name, path: f.path });
+  }
+
+  sortChildrenRecursive(root);
+  return root;
+}
+
+function sortChildrenRecursive(node: TreeNode): void {
+  if (!node.children) return;
+  node.children.sort((a, b) => {
+    if (a.type !== b.type) return a.type === "dir" ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+  for (const child of node.children) sortChildrenRecursive(child);
+}
+
+/** One row of the flattened, currently-visible tree — what the Files panel
+ * actually renders and what j/k walks. */
+export interface FlatTreeRow {
+  type: TreeEntryType;
+  name: string;
+  path: string;
+  /** 0 = top-level entry (direct child of the repo root). */
+  depth: number;
+  /** Only meaningful for dirs. */
+  expanded?: boolean;
+}
+
+/**
+ * Flatten a tree into the rows currently visible given a `collapsedDirs`
+ * set (dir paths whose children are hidden). ALL dirs are expanded by
+ * default — pass an empty set for that starting state; collapse is opt-in
+ * per path, so a tree with no collapsed paths shows every descendant.
+ */
+export function flattenVisible(root: TreeNode, collapsedDirs: ReadonlySet<string>, depth = 0): FlatTreeRow[] {
+  const rows: FlatTreeRow[] = [];
+  for (const child of root.children ?? []) {
+    if (child.type === "dir") {
+      const expanded = !collapsedDirs.has(child.path);
+      rows.push({ type: "dir", name: child.name, path: child.path, depth, expanded });
+      if (expanded) rows.push(...flattenVisible(child, collapsedDirs, depth + 1));
+    } else {
+      rows.push({ type: "file", name: child.name, path: child.path, depth });
+    }
+  }
+  return rows;
+}

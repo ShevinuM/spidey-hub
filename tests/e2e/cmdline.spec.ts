@@ -405,8 +405,17 @@ test.describe("Cmdline: editor ex-mode still works through the box (PLAN.md 5C.1
       name: "Builds",
       async open(page) {
         await gotoReady(page, "/builds");
-        await page.keyboard.press("3");
-        await page.keyboard.press("Enter");
+        // PLAN.md Iteration 4 items 4/5: the default-highlighted panel [3]
+        // repo is now the virtual "all-projects" entry (no README.md in its
+        // flat .md-only tree), and the Files pane renders the FULL nested
+        // tree at once — daily-tech-digest genuinely has two files named
+        // "README.md" (root + "site/README.md") simultaneously visible,
+        // which would make the locator below ambiguous. transcript-tts has
+        // exactly one README.md and no nested duplicate, so clicking its
+        // panel [3] row directly (selects AND loads its tree, same as
+        // before) sidesteps both issues — same fix as editor-vim.spec.ts's
+        // Builds entry point.
+        await page.locator('[data-testid="builds-repo-row"][data-repo-name="transcript-tts"]').click();
         await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
         await page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]').click();
         await page.keyboard.press("2");
@@ -427,9 +436,19 @@ test.describe("Cmdline: editor ex-mode still works through the box (PLAN.md 5C.1
         await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
       },
       async assertParentVisible(page) {
-        await expect(page.locator('[data-testid="personnel-path"]')).toHaveText(
-          "/Users/Shev/Experience/enaimco/software-developer/",
-        );
+        // PLAN.md Iteration 4 item 7 deleted the `personnel-path` breadcrumb
+        // this used to assert on. Equivalent anchor (same replacement used
+        // in editor-vim.spec.ts's Personnel entry point): role.md is the
+        // row this entry point opened, and full-time/ is a sibling
+        // directory unique to the enaimco/software-developer/ listing —
+        // together they confirm we're back at the exact same listing, not
+        // merely "some" personnel view.
+        await expect(
+          page.locator('[data-testid="personnel-row"][data-row-name="role.md"]'),
+        ).toBeVisible();
+        await expect(
+          page.locator('[data-testid="personnel-row"][data-row-name="full-time/"]'),
+        ).toBeVisible();
       },
     },
   ];
