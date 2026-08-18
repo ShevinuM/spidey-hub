@@ -356,7 +356,9 @@ seven times returns to even-horizontal; `Ctrl-b w` from a split window switches 
   verifier follow-ups: added an e2e test pinning `Ctrl-b w` inert while the help palette is open
   (help-search.spec.ts), and extended panes.spec.ts's mismatched-title select-layout test to
   actually cover the bare-form no-op branch its title promised.
-- [ ] 7.4 Full acceptance sweep (verifier): all ACs below with live probes. Executor ran the full
+- [x] 7.4 Full acceptance sweep (verifier): ALL AC1–11 PASS at HEAD 197a3b9 (independent verifier:
+  822/822 e2e twice zero-flake, 285/285 unit, 40/40 visual ×2, generate idempotent, live probes on
+  every AC, resume.pdf hash-identical, tree clean). Iteration 3 COMPLETE. Executor ran the full
   gauntlet ahead of this (pnpm check 0 errors; 285/285 unit; 822 e2e across both viewport projects,
   820 passed + 2 pre-existing environmental flakes reconfirmed green in isolation — see report; 3
   consecutive clean visual runs; `pnpm generate` idempotent across 3 consecutive runs) — left unchecked
