@@ -43,6 +43,7 @@
   } from "../lib/shell";
   import { loadFsIndex, loadGrepFiles, loadRepoFiles } from "../lib/shellIndex";
   import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
+  import { resolvePageEpoch } from "../lib/clock";
 
   interface Props {
     shell: ShellData;
@@ -103,8 +104,38 @@
     else if (effect.kind === "reboot") onReboot();
   }
 
-  async function submit() {
+  // Enter-key submission is fire-and-forget from handleKey's own
+  // perspective (a keydown handler can't be awaited by its caller), but its
+  // OWN work — warming the fs/grep/repo index caches, and for `cat`,
+  // fetching whatever content that implies — is genuinely async. Left as a
+  // single `await`-laden function called directly on every Enter, a user
+  // (or, more reliably, a fast scripted test) typing a SECOND command
+  // before the FIRST command's fetch resolves would race: the next
+  // keystrokes land in `pane.shell.input` while it's still holding the
+  // first command's un-cleared text, garbling the two together, and by the
+  // time either `runCommand` call finally reads `pane.shell` its history/
+  // lines/cwd may already reflect the OTHER command's not-yet-applied (or
+  // already-applied-out-of-order) effects.
+  //
+  // Fixed with two changes: (1) `submit()` itself is synchronous and
+  // clears `pane.shell.input` (and the history-browsing fields) IMMEDIATELY
+  // on Enter, before any fetch even starts — nothing can ever type into or
+  // re-observe the command that was just submitted; (2) the actual async
+  // work (`runOneCommand`) is chained onto `pendingSubmit`, a standing
+  // promise queue — so however fast Enter is pressed again, each
+  // submission's `runCommand` call only ever runs after the previous one
+  // has fully applied its result to `pane.shell`, preserving real-shell
+  // ordering (echo/output always appends in the order commands were
+  // submitted, never interleaved or dropped).
+  let pendingSubmit: Promise<unknown> = Promise.resolve();
+
+  function submit() {
     const raw = pane.shell.input;
+    pane.shell = { ...pane.shell, input: "", historyIndex: null, draftBeforeHistory: "" };
+    pendingSubmit = pendingSubmit.then(() => runOneCommand(raw));
+  }
+
+  async function runOneCommand(raw: string) {
     const entries = await ensureFsEntries();
     const { cmd, args } = parseLine(raw);
     let resolveContent: (t: CatTarget) => string | undefined = () => undefined;
@@ -116,12 +147,34 @@
       fsEntries: entries,
       resolveContent,
       mode,
-      nowMs: Date.now(),
+      // Determinism rules (PLAN.md Iteration 3 Phase 4): "neofetch uptime
+      // derives from the clock module" — NOT a raw Date.now() read. With a
+      // test-pinned CLOCK_EPOCH_STORAGE_KEY, this resolves to the exact same
+      // value as the session's own `createdAt` (also `resolvePageEpoch()`,
+      // read once at client-factory/reboot time), so uptime is always "0
+      // min" under a frozen page clock — deterministic, not a live tick.
+      nowMs: resolvePageEpoch(),
       session,
       shell,
       viewNames,
     });
-    pane.shell = outcome.state;
+    // `runCommand` always forces `input`/`historyIndex`/`draftBeforeHistory`
+    // back to their "just submitted" values (""/null/"") as part of
+    // building its own result — correct for the command IT was given, but
+    // this call only reaches here after an `await` (warming the fs/repo
+    // index caches), during which the user may already have typed the
+    // START of their NEXT command into `pane.shell.input`. Blindly taking
+    // `outcome.state` wholesale would silently erase those already-typed
+    // characters the instant this (delayed) result lands. `pane.shell` is
+    // read fresh here — nothing async separates this line from
+    // `runCommand`'s own read of it above, so it reflects the exact same
+    // live input `runCommand` was just called with, harmlessly re-applied.
+    pane.shell = {
+      ...outcome.state,
+      input: pane.shell.input,
+      historyIndex: pane.shell.historyIndex,
+      draftBeforeHistory: pane.shell.draftBeforeHistory,
+    };
     applyEffect(outcome.effect);
   }
 
@@ -135,7 +188,7 @@
 
     if (e.key === "Enter") {
       e.preventDefault();
-      void submit();
+      submit();
       return true;
     }
     if (e.key === "Backspace") {

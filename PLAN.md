@@ -270,9 +270,9 @@ opens Help window; cmdline/palette close on window switch (e2e).
 - [x] 4.3 `:q`/`q` cmdline command → exitProgram(focused pane) per Locked #2; window auto-rename
   (program name ↔ `zsh`, manual rename wins); status bar shows renames live + `-` flag for last
   window.
-- [ ] 4.4 Reboot reset now also rebuilds the client to factory (sessions/windows/panes/programs/
+- [x] 4.4 Reboot reset now also rebuilds the client to factory (sessions/windows/panes/programs/
   shell buffers) and clears toast dismissals — single factory() in tmux.ts.
-- [ ] 4.5 Tests: unit tmux.ts (model ops) + shell.ts (parser, cd/cat/tree against a fixture index);
+- [x] 4.5 Tests: unit tmux.ts (model ops) + shell.ts (parser, cd/cat/tree against a fixture index);
   e2e shell.spec (`:q` from dashboard → prompt; typing `dashboard` relaunches; cat/cd/pwd/tree/
   neofetch/sudo/whoami/help outputs; window renamed dashboard→zsh→dashboard in status bar; reboot
   factory-resets); cmdline.spec `:q` updates; tmux.spec updates for auto-rename.

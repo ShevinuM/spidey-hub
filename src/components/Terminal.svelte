@@ -473,16 +473,35 @@
    * freshly-replayed boot). `switchToProgram` already closes a stray grep/
    * cmdline/help-palette overlay.
    *
-   * PLAN.md Phase 4 item 4.4 will extend this to also rebuild `client` to
-   * factory state (new windows/panes/shell buffers) — this step only
-   * preserves today's exact "go home + replay boot" behavior against the
-   * new model. */
+   * PLAN.md Locked decision #6 / Phase 4 item 4.4: "reboot (all triggers) =
+   * factory state + boot replay" — REPLACES `client` wholesale with a fresh
+   * `createFactoryClient()` call (the exact same shape the initial `$state`
+   * seed above uses) rather than merely switching the EXISTING client back
+   * to the dashboard window (this function's interim Phase 4.1-4.3 form) —
+   * every window/pane/program/shell buffer resets, not just the active
+   * one. Toast dismissals (`offToast0`/`offToast1`) are the other half of
+   * "factory state" this phase's Locked decision covers (in-memory, no
+   * persistence) and reset alongside it. `grepRef` is closed explicitly
+   * here (unlike every other window-switch entry point, which gets it for
+   * free from `switchActiveWindow`'s own `closeWindowChrome()` — reboot no
+   * longer routes through that helper now that it rebuilds `client`
+   * directly instead of switching the old one). */
   function reboot() {
     statusBarRef?.cancelPrompt?.();
     copyModeRef?.close?.();
     cmdlineRef?.close?.();
     helpSearchRef?.close?.();
-    switchToProgram("dashboard");
+    grepRef?.close?.();
+    client = createFactoryClient({
+      sessionId: DEFAULT_SESSION_ID,
+      sessionName: DEFAULT_SESSION_NAME,
+      windows: site.statusBar.windows,
+      epoch: resolvePageEpoch(),
+      activeWindowId: "dashboard",
+    });
+    offToast0 = false;
+    offToast1 = false;
+    syncUrl();
     bootRef?.replay();
   }
 

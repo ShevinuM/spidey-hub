@@ -263,9 +263,25 @@
           class="status-bar-window"
           data-testid="status-bar-window"
           data-window-id={win.id}
-          onclick={() => onSelect(win.id)}
+          onclick={(e) => {
+            onSelect(win.id);
+            // A mouse click focuses this span (native behavior for a
+            // focusable element) — left focused, it would keep intercepting
+            // every LATER, unrelated Enter/Space keydown at this element
+            // itself (bubble phase fires here before it ever reaches
+            // Terminal.svelte's window-level listener), e.g. swallowing the
+            // Enter that submits a cmdline command typed sometime after this
+            // click. Blurring immediately after handling restores normal
+            // "the click did its one job" button semantics (found while
+            // testing PLAN.md Iteration 3 Phase 4's reboot-then-shell
+            // workflow — a pre-existing latent bug, not introduced there).
+            (e.currentTarget as HTMLElement).blur();
+          }}
           onkeydown={(e) => {
-            if (e.key === "Enter" || e.key === " ") onSelect(win.id);
+            if (e.key === "Enter" || e.key === " ") {
+              onSelect(win.id);
+              (e.currentTarget as HTMLElement).blur();
+            }
           }}
           style={win.id === activeWindowId ? "cursor:pointer;background:#e0453c;color:#0b0f14;padding:0 6px" : "cursor:pointer"}
         >
@@ -280,9 +296,18 @@
       role="button"
       tabindex="0"
       data-testid="status-bar-reboot"
-      onclick={onReboot}
+      onclick={(e) => {
+        onReboot();
+        // See the status-bar-window span's own onclick comment above — same
+        // "don't leave a clicked control focused to hijack a later Enter"
+        // fix, same discovery context (reboot-then-shell).
+        (e.currentTarget as HTMLElement).blur();
+      }}
       onkeydown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onReboot();
+        if (e.key === "Enter" || e.key === " ") {
+          onReboot();
+          (e.currentTarget as HTMLElement).blur();
+        }
       }}
       style="cursor:pointer;color:rgba(217,176,74,.8)"
       class="status-bar-reboot"
