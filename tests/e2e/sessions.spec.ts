@@ -144,6 +144,19 @@ test.describe("Ctrl-b d detaches to the host shell (PLAN.md Iteration 3 Phase 5 
     await expect(shellInput(page)).toHaveText("1");
     await expect(statusBarWindows(page)).not.toBeVisible(); // did not attach
   });
+
+  // PLAN.md Locked decision #14 / Architecture notes: "?" opens the
+  // HelpSearch palette EXCEPT while a shell pane is focused (types "?") —
+  // the host shell is exactly such a pane (Shell.svelte's own handleKey
+  // claims every printable character before the bare-"?" fallback opener
+  // ever runs), so the palette must never appear over the host shell.
+  test("? types a literal ? into the host shell input and does NOT open the HelpSearch palette", async ({ page }) => {
+    await gotoReady(page, "/");
+    await detach(page);
+    await page.keyboard.press("?");
+    await expect(page.locator('[data-testid="help-search-overlay"]')).not.toBeVisible();
+    await expect(shellInput(page)).toHaveText("?");
+  });
 });
 
 test.describe("tmux ls (PLAN.md tmux fidelity reference)", () => {
@@ -177,6 +190,50 @@ test.describe("tmux ls (PLAN.md tmux fidelity reference)", () => {
         .replace("{n}", "6")
         .replace("{ctime}", formatCtime(new Date(Date.parse(CLOCK_TIME)))) + shellYaml.tmux.lsAttachedSuffix;
     await expect(page.locator('[data-testid="shell-line"]').last()).toHaveText(expectedRow);
+  });
+
+  test("lists EVERY session while detached — two rows, correct formats, NO (attached) suffix on either", async ({
+    page,
+  }) => {
+    await page.clock.install({ time: CLOCK_TIME });
+    await gotoReady(page, "/");
+    await detach(page);
+    await runInShell(page, "tmux new -s test"); // creates + attaches "test"
+    await expect(sessionLabel(page)).toHaveText("Session: test");
+    await detach(page); // both sessions now exist, NEITHER attached
+
+    await runInShell(page, "tmux ls");
+    const ctime = formatCtime(new Date(Date.parse(CLOCK_TIME)));
+    const rows = (await page.locator('[data-testid="shell-line"]').allTextContents()).slice(-2);
+    expect(rows).toHaveLength(2);
+    expect(rows).toEqual([
+      shellYaml.tmux.lsRowTemplate.replace("{name}", DEFAULT_SESSION_NAME).replace("{n}", "6").replace("{ctime}", ctime),
+      shellYaml.tmux.lsRowTemplate.replace("{name}", "test").replace("{n}", "1").replace("{ctime}", ctime),
+    ]);
+    for (const row of rows) expect(row).not.toContain(shellYaml.tmux.lsAttachedSuffix);
+  });
+});
+
+test.describe("nested tmux refusal inside a pane (PLAN.md tmux fidelity reference)", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  test("`:q` then `tmux new -s x` in the resulting pane shell refuses with the exact nesting message", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press(":");
+    await runInShell(page, "q");
+    await expect(shellPrompt(page)).toBeVisible();
+
+    await runInShell(page, "tmux new -s x");
+    await expect(page.locator('[data-testid="shell-line"]').last()).toHaveText(
+      "sessions should be nested with care, unset $TMUX to force",
+    );
+    // Refused, not created — still attached to the default session only.
+    await expect(statusBarWindows(page)).toBeVisible();
+    await expect(sessionLabel(page)).toHaveText(`Session: ${DEFAULT_SESSION_NAME}`);
   });
 });
 
