@@ -33,8 +33,6 @@
   // `message` state does NOT own the keyboard (it's purely informational and
   // auto-clears on its own), so `handleKey()` returns `false` for it.
   import type { SiteData, WindowEntry } from "../lib/data";
-  import type { ViewId } from "../lib/views";
-  import { activeWindowId, windowIdToView } from "../lib/views";
   import { formatClockDate, formatClockTime, msUntilNextMinute } from "../lib/clock";
   import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
   import { STATUS_BAR_HEIGHT_PX } from "../lib/layout";
@@ -42,8 +40,19 @@
   interface Props {
     site: SiteData;
     windows: WindowEntry[];
-    view: ViewId;
-    onSelect: (view: ViewId) => void;
+    /** PLAN.md Iteration 3 Phase 4 item 4.1: the tmux model's own active
+     * window id, passed straight through rather than derived here from a
+     * `view`/ViewId — a window's id and the PROGRAM its pane currently runs
+     * are no longer the same thing once a pane can run any program (or a
+     * shell) in any window (Locked decision #5), so this component must be
+     * told directly which window is active rather than reconstructing it
+     * from the visible program. */
+    activeWindowId: string;
+    /** Passed the clicked window's own `id` (a site.yaml window id, e.g.
+     * "builds") — no ViewId translation happens in this component; the
+     * caller (Terminal.svelte) owns turning a window id into a window
+     * switch. */
+    onSelect: (windowId: string) => void;
     /** ↻ reboot (PLAN.md Phase 5B item 5B.3) — always rendered in the
      * right-hand cluster (unlike the window list, which the rename/confirm
      * prompt states below replace), so it must stay clickable regardless
@@ -52,9 +61,7 @@
     onReboot: () => void;
   }
 
-  const { site, windows, view, onSelect, onReboot }: Props = $props();
-
-  const active = $derived(activeWindowId(view));
+  const { site, windows, activeWindowId, onSelect, onReboot }: Props = $props();
 
   let clockTime = $state("");
   let clockDate = $state("");
@@ -250,13 +257,13 @@
           class="status-bar-window"
           data-testid="status-bar-window"
           data-window-id={win.id}
-          onclick={() => onSelect(windowIdToView(win.id))}
+          onclick={() => onSelect(win.id)}
           onkeydown={(e) => {
-            if (e.key === "Enter" || e.key === " ") onSelect(windowIdToView(win.id));
+            if (e.key === "Enter" || e.key === " ") onSelect(win.id);
           }}
-          style={win.id === active ? "cursor:pointer;background:#e0453c;color:#0b0f14;padding:0 6px" : "cursor:pointer"}
+          style={win.id === activeWindowId ? "cursor:pointer;background:#e0453c;color:#0b0f14;padding:0 6px" : "cursor:pointer"}
         >
-          {win.number}:{win.name}{win.id === active ? "*" : ""}
+          {win.number}:{win.name}{win.id === activeWindowId ? "*" : ""}
         </span>
       {/each}
     </div>

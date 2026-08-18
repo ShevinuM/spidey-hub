@@ -257,7 +257,7 @@ iteration 2's exact-recreation mandate — orchestrator-ruled in scope to keep).
 opens Help window; cmdline/palette close on window switch (e2e).
 
 ### Phase 4 — Programs & the in-window shell (`:q` → shell, relaunch, auto-rename)
-- [ ] 4.1 `src/lib/tmux.ts` model (single-pane windows this phase) + Terminal refactor: client
+- [x] 4.1 `src/lib/tmux.ts` model (single-pane windows this phase) + Terminal refactor: client
   $state {sessions, attachedSessionId}; windows own panes owning programs; PaneTree renderer;
   delegation via focused-pane ref map; URL sync per Architecture notes; popstate routed through
   selectWindow. All existing behavior (switching, rename, kill-window, prefix cycle, status bar

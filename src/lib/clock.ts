@@ -44,3 +44,44 @@ export function formatClockDate(d: Date): string {
 export function msUntilNextMinute(d: Date): number {
   return 60000 - (d.getSeconds() * 1000 + d.getMilliseconds());
 }
+
+// ---------------------------------------------------------------------------
+// Frozen page clock (PLAN.md Iteration 3 Phase 4 "Determinism rules": "no
+// wall-clock timestamps except via the frozen page clock helpers in
+// src/lib/clock.ts" — tmux session `createdAt`, `tmux ls`'s "created {ctime}"
+// column, and neofetch's uptime line all read this ONE epoch, resolved once
+// per page load/reboot, rather than calling `Date.now()` repeatedly at
+// render time. Same sessionStorage-override-with-Date.now()-fallback shape
+// as src/lib/notifications.ts's TOAST_SEED_STORAGE_KEY/resolveToastSeed()
+// and src/lib/bootState.ts's BOOT_SEEN_STORAGE_KEY — a test fixture pins the
+// key, production falls through to the real clock.
+// ---------------------------------------------------------------------------
+
+/** sessionStorage key a test fixture can set to pin the page epoch (ms since
+ * Unix epoch, as a decimal string) — read once at client-factory time (initial
+ * mount AND every `reboot`), same pattern as TOAST_SEED_STORAGE_KEY. */
+export const CLOCK_EPOCH_STORAGE_KEY = "edith:clock-epoch";
+
+/** Parse a raw sessionStorage string into a valid epoch-ms number, or null if
+ * missing/unparseable — pure, no storage access, unit-testable without a
+ * DOM/sessionStorage shim (mirrors parseToastSeed's own shape). */
+export function parseClockEpoch(raw: string | null | undefined): number | null {
+  if (raw === null || raw === undefined || raw === "") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Epoch = Date.now() in prod, overridable via sessionStorage. Guarded for
+ * SSR/privacy-mode the same way bootState.ts/notifications.ts guard their
+ * own sessionStorage access — falls back to Date.now() on any failure. */
+export function resolvePageEpoch(): number {
+  try {
+    if (typeof sessionStorage !== "undefined") {
+      const parsed = parseClockEpoch(sessionStorage.getItem(CLOCK_EPOCH_STORAGE_KEY));
+      if (parsed !== null) return parsed;
+    }
+  } catch {
+    // ignore — same best-effort contract as bootState.ts/notifications.ts
+  }
+  return Date.now();
+}

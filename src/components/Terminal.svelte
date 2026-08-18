@@ -1,14 +1,21 @@
 <script lang="ts">
   // Single Svelte island mounted by every route page (PLAN.md "Routing
-  // assumption"): owns the view state machine, the global keymap, and
-  // pushState/popstate URL sync. Astro SSRs this island with `initialView`
-  // so the first paint matches the route with no client-side flash; all
-  // view switches after that are client-side only.
+  // assumption"): owns the tmux client/session/window/pane model
+  // (src/lib/tmux.ts), the global keymap, and pushState/popstate URL sync.
+  // Astro SSRs this island with `initialView` so the first paint matches the
+  // route with no client-side flash; all window switches after that are
+  // client-side only.
   //
-  // Later-phase views (builds/personnel/profile) render as empty
-  // placeholders behind their view flag for now (PLAN.md Phase 3: "dashboard,
-  // wallpaper, status bar, toasts, tracker-wallpaper opacity logic must be
-  // COMPLETE" — the rest lands in Phases 4-7).
+  // PLAN.md Iteration 3 Phase 4 item 4.1: this file used to own a single
+  // `view: ViewId` $state var driving a `{#if view === "home"}...` chain
+  // directly. That's replaced by one `client: Client` $state object
+  // (src/lib/tmux.ts) — sessions own windows, windows own a pane tree, panes
+  // own a running program — rendered through <PaneTree>. `view`/
+  // `activeWindowId` below are now DERIVED read models over that client,
+  // kept only because Wallpaper's opacity/blur knob and the dashboard-only
+  // hotkey gate are keyed off "which WINDOW (screen) is on-screen", a concept
+  // distinct from "which PROGRAM its pane happens to be running" once a pane
+  // can run any program (or a shell) in any window (Locked decision #5).
   import type { CollectionEntry } from "astro:content";
   import type {
     SiteData,
@@ -24,28 +31,53 @@
     BootData,
     CmdlineData,
     HelpSearchData,
-    WindowEntry,
   } from "../lib/data";
   import type { Commit } from "../lib/commits";
   import type { ViewId } from "../lib/views";
-  import { VIEW_ROUTES, activeWindowId, hotkeyToView, pathToView, windowIdToView } from "../lib/views";
+  import { VIEW_ROUTES, hotkeyToView, pathToView, programToViewId, viewIdToProgram, windowIdToView } from "../lib/views";
+  import type { Client, ProgramName, Session } from "../lib/tmux";
+  import { activeSessionOf, activeWindowOf, createFactoryClient, focusedPane, killWindow, renameWindowManual, selectWindowIndex } from "../lib/tmux";
+  import { resolvePageEpoch } from "../lib/clock";
   import { getPasteBuffer } from "../lib/pasteBuffer";
   import { getActivePasteTarget } from "../lib/pasteTargets";
   import { parseInput, parseTmuxCommand, resolveCommand } from "../lib/cmdline";
   import { downloadResume } from "../lib/resume";
   import Wallpaper from "./Wallpaper.svelte";
   import StatusBar from "./StatusBar.svelte";
-  import Dashboard from "./Dashboard.svelte";
+  import PaneTree from "./PaneTree.svelte";
   import Toasts from "./Toasts.svelte";
-  import Builds from "./Builds.svelte";
-  import Personnel from "./Personnel.svelte";
-  import Profile from "./Profile.svelte";
-  import HelpView from "./HelpView.svelte";
   import GrepOverlay from "./GrepOverlay.svelte";
   import CopyMode from "./CopyMode.svelte";
   import BootSequence from "./BootSequence.svelte";
   import Cmdline, { type CmdlineMode } from "./Cmdline.svelte";
   import HelpSearch from "./HelpSearch.svelte";
+
+  /** The default (and, this phase, only) session's stable identity — a
+   * synthetic internal id, distinct from its user-visible NAME
+   * ("10.42.7.13", still a bare literal here per PLAN.md advisor guidance:
+   * formalizing it as data is a Phase 5 question, when `tmux ls`/multiple
+   * sessions actually need it). */
+  const DEFAULT_SESSION_ID = "default";
+  const DEFAULT_SESSION_NAME = "10.42.7.13";
+
+  /** Unified optional-methods contract every mounted program component's
+   * `bind:this` ref may expose — a superset of the four separate ref shapes
+   * this file used to declare individually (buildsRef/personnelRef/
+   * profileRef/helpRef), now that PaneTree.svelte's single ref registry
+   * serves all of them through one lookup (PLAN.md "per-pane ref Map for
+   * delegation"). Every field stays optional: Dashboard/retina-v export no
+   * ref at all, Profile/HelpView only ever export `handleKey`, and only
+   * Builds exports the kill-pane-related fields. */
+  interface ProgramRef {
+    handleKey?: (e: KeyboardEvent) => boolean;
+    isEditorOpen?: () => boolean;
+    runEditorExCommand?: (cmd: string) => { recognized: boolean; error?: string };
+    canKillPane?: () => boolean;
+    focusedPanelTitle?: () => string;
+    killFocusedPane?: () => void;
+    focusedPanelNumber?: () => 0 | 1 | 2 | 3 | 4;
+    killPane?: (n: 0 | 1 | 2 | 3 | 4) => void;
+  }
 
   interface Props {
     initialView: ViewId;
@@ -87,49 +119,23 @@
     commitsByRepo,
   }: Props = $props();
 
-  /** Set by Builds.svelte's `bind:this` while `view === "builds"` — see
-   * handleKey() below for the delegation contract (PLAN.md Phase 5).
-   * `isEditorOpen` (PLAN.md Phase 3 item 10) reports whether its embedded
-   * vim Editor is currently open, so this component's own handleKey can be
-   * given a turn BEFORE GrepOverlay's — vim-faithful: `/` searches the
-   * open buffer, not the site. */
-  let buildsRef = $state<{
-    handleKey: (e: KeyboardEvent) => boolean;
-    isEditorOpen?: () => boolean;
-    /** PLAN.md Phase 5 item 5.2 "Ctrl-b x" — kill-pane wiring: whether more
-     * than one Builds panel is currently visible (if not, `x` falls back to
-     * the kill-window flow instead — "in single-pane views, the only pane =
-     * the window"), the focused panel's own title (for the confirm
-     * prompt's `{pane}` text), and the actual removal. */
-    canKillPane?: () => boolean;
-    focusedPanelTitle?: () => string;
-    killFocusedPane?: () => void;
-    /** PLAN.md Phase 6 item 6.0 hardening — see startKillPaneConfirm below:
-     * the panel number captured at confirm-open time, and the kill that
-     * always targets a captured number rather than "whatever is focused
-     * now". */
-    focusedPanelNumber?: () => 0 | 1 | 2 | 3 | 4;
-    killPane?: (n: 0 | 1 | 2 | 3 | 4) => void;
-    /** PLAN.md Phase 5C — forwards to the embedded Editor's own
-     * `runExCommand` (the lifted Phase-3 ex-command state machine) while
-     * one is open; `{ recognized: false }` otherwise. */
-    runEditorExCommand?: (cmd: string) => { recognized: boolean; error?: string };
-  } | null>(null);
-  /** Same `bind:this` + `handleKey(): boolean` + `isEditorOpen()` +
-   * `runEditorExCommand()` contract, one level down — Personnel.svelte's
-   * own embedded Editor (PLAN.md Phase 6, vim engine PLAN.md Phase 3). */
-  let personnelRef = $state<{
-    handleKey: (e: KeyboardEvent) => boolean;
-    isEditorOpen?: () => boolean;
-    runEditorExCommand?: (cmd: string) => { recognized: boolean; error?: string };
-  } | null>(null);
-  /** Same contract again — Profile.svelte only ever claims `r` (resume
-   * download); everything else (including q/Esc) falls through to the
-   * generic handling below (PLAN.md Phase 7). */
-  let profileRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
-  /** Same contract again — HelpView.svelte only ever claims j/k scrolling
-   * (PLAN.md Phase 1 item 13); everything else falls through unchanged. */
-  let helpRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
+  /** PaneTree.svelte's own `bind:this` — its `getRef(paneId)` is the single
+   * lookup every one of this file's delegation checks below now goes
+   * through (PLAN.md "per-pane ref Map for delegation"), replacing the four
+   * separate buildsRef/personnelRef/profileRef/helpRef variables this file
+   * used to declare individually. Only ONE program is ever mounted at a
+   * time this phase (the active window's one pane — no splits yet), so
+   * `focusedRef()` below always resolves to whichever single component is
+   * currently on screen. */
+  let paneTreeRef = $state<{ getRef: (paneId: string) => unknown } | null>(null);
+
+  /** Returns the currently-focused pane's ref (if it exposes one) — see
+   * `paneTreeRef`'s own comment. Recomputed fresh on every call rather than
+   * cached, exactly like the old per-view ref reads it replaces. */
+  function focusedRef(): ProgramRef | undefined {
+    return paneTreeRef?.getRef(activePane.id) as ProgramRef | undefined;
+  }
+
   /** GrepOverlay.svelte (PLAN.md Phase 8) — always mounted (see that file's
    * header comment), consulted ahead of every other ref above EXCEPT the
    * active view's own vim Editor when one is open (PLAN.md Phase 3's
@@ -194,9 +200,10 @@
     openTmux: () => void;
     handleKey: (e: KeyboardEvent) => boolean;
     /** PLAN.md Iteration 3 Phase 3 item 3.2: window-chrome contract, same
-     * shape as GrepOverlay/CopyMode's own `close()` — called from setView()
-     * (and therefore reboot(), which always calls setView) so an open box
-     * never survives a window switch, a program launch, or a detach. */
+     * shape as GrepOverlay/CopyMode's own `close()` — called from
+     * `closeWindowChrome()` (and therefore every window switch/kill/reboot,
+     * all of which call it) so an open box never survives a window switch,
+     * a program launch, or a detach. */
     close: () => void;
   } | null>(null);
 
@@ -238,7 +245,15 @@
   // the documented pattern for uncontrolled initial values and is
   // intentional here.)
   // svelte-ignore state_referenced_locally
-  let view = $state<ViewId>(initialView);
+  let client = $state<Client>(
+    createFactoryClient({
+      sessionId: DEFAULT_SESSION_ID,
+      sessionName: DEFAULT_SESSION_NAME,
+      windows: site.statusBar.windows,
+      epoch: resolvePageEpoch(),
+      activeWindowId: viewIdToProgram(initialView),
+    }),
+  );
   let offToast0 = $state(false);
   let offToast1 = $state(false);
 
@@ -283,42 +298,147 @@
     };
   });
 
-  /** Live, mutable window list (PLAN.md Phase 5 items 5.1/5.2) — seeded from
-   * `site.statusBar.windows` but no longer read from it directly once
-   * mounted: `Ctrl-b ,` mutates a window's `name` in place, `Ctrl-b &`
-   * removes one entirely. In-memory only, exactly like a fresh tmux session
-   * — a reload always starts back at the full 0-5 list from site.yaml. Each
-   * entry is its own shallow clone so mutating one never touches the
-   * original `site` prop object. */
-  let windows = $state<WindowEntry[]>(site.statusBar.windows.map((w) => ({ ...w })));
+  // -----------------------------------------------------------------------
+  // Derived read models over `client` (PLAN.md Iteration 3 Phase 4 item 4.1)
+  // -----------------------------------------------------------------------
 
-  /** Closing the grep overlay is now folded into every view switch (PLAN.md
-   * Phase 5 item 5.5: "grep is WINDOW chrome" — switching windows while
-   * grep is open always closes it, whether the switch came from a
-   * status-bar click, a prefix digit/n/p/d/w/0, or a kill-window that
-   * happened to evict the current view). A no-op when grep isn't open. */
-  function setView(next: ViewId) {
+  /** Phase 4 always has exactly one, attached, session — the non-null
+   * assertion is safe here (Phase 5's detach is what first makes this
+   * legitimately undefined; every call site added this phase runs only
+   * while attached). */
+  const activeSession = $derived(activeSessionOf(client)!);
+  const activeWindow = $derived(activeWindowOf(activeSession));
+  const activePane = $derived(focusedPane(activeWindow));
+  const activeProgram = $derived(activePane.program);
+
+  /** "Which WINDOW (screen) is on-screen" — keyed off the window's own
+   * stable id, NOT the program its pane currently runs (see this file's own
+   * header comment on why those differ once Locked decision #5 applies).
+   * Drives Wallpaper's opacity/blur knob and the dashboard-only hotkey gate
+   * below, exactly like the old `view` var did before a pane could run
+   * anything other than its window's own namesake program. */
+  const view = $derived(windowIdToView(activeWindow.id));
+
+  /** Status bar's own window list, re-derived from the live model on every
+   * change — same shape (`{number, id, name}`) StatusBar.svelte has always
+   * taken, just sourced from `client` instead of a separate `windows` $state
+   * array. */
+  const statusWindows = $derived(activeSession.windows.map((w) => ({ number: w.number, id: w.id, name: w.name })));
+
+  /** Digit/`?` prefix targets, recomputed from the live window list so a
+   * killed window's digit stops doing anything (tmux-faithful: an unbound
+   * prefixed key is silently swallowed) — same shape as before Phase 4,
+   * just holding window ids instead of ViewIds (the two agree for every one
+   * of these five windows; see NUMBER_TO_ID below). */
+  const NUMBER_TO_ID: Record<string, string> = {
+    "1": "builds",
+    "2": "personnel",
+    "3": "retina-v",
+    "4": "profile",
+    "5": "help",
+  };
+  const prefixTargets = $derived.by((): Partial<Record<string, string>> => {
+    const present = new Set(statusWindows.map((w) => w.id));
+    const targets: Partial<Record<string, string>> = {};
+    for (const [digit, id] of Object.entries(NUMBER_TO_ID)) {
+      if (present.has(id)) targets[digit] = id;
+    }
+    if (present.has("help")) targets["?"] = "help";
+    return targets;
+  });
+
+  // -----------------------------------------------------------------------
+  // Window switching (PLAN.md Iteration 3 Phase 4 item 4.1 — replaces the
+  // old single `setView(next: ViewId)`)
+  // -----------------------------------------------------------------------
+
+  /** Window-chrome contract (PLAN.md "close BEFORE the same-view early
+   * return") — closes grep/cmdline/help-palette unconditionally. Called at
+   * the top of every window-switch/kill/reboot path below, exactly like the
+   * old `setView` did, so an open overlay never survives ANY of them, even
+   * ones that end up no-op'ing (e.g. selecting the already-active window,
+   * or a kill that gets refused). */
+  function closeWindowChrome() {
     grepRef?.close?.();
     cmdlineRef?.close?.();
     helpSearchRef?.close?.();
-    if (next === view) return;
-    view = next;
-    history.pushState(null, "", VIEW_ROUTES[next]);
+  }
+
+  /** pushState only when the ACTIVE PANE's program is canonical (not
+   * "shell") AND the default session is attached (PLAN.md Architecture
+   * notes) — a shelled-in pane freezes the URL wherever it already was.
+   * Idempotent: a no-op when the route already matches (true for every
+   * within-session switch that lands back on a window it started on, and
+   * for popstate, which has already updated `location.pathname` itself). */
+  function syncUrl() {
+    if (client.attachedSessionId !== DEFAULT_SESSION_ID) return;
+    const vid = programToViewId(activeProgram);
+    if (!vid) return;
+    if (location.pathname !== VIEW_ROUTES[vid]) {
+      history.pushState(null, "", VIEW_ROUTES[vid]);
+    }
+  }
+
+  /** Shared plumbing under every "switch the active window" entry point
+   * (status-bar click, prefix digit/n/p/d/w/0, dashboard menu/hotkeys,
+   * `select-window`, popstate) — closes chrome first (unconditionally, even
+   * if `pickIndex` turns out to be a no-op), then applies the index
+   * `pickIndex` computes from the CURRENT session, then syncs the URL.
+   * `selectWindowIndex` itself already no-ops for an out-of-range or
+   * already-active index, so this never needs its own guard for either. */
+  function switchActiveWindow(pickIndex: (session: Session) => number) {
+    closeWindowChrome();
+    const session = activeSession;
+    selectWindowIndex(session, pickIndex(session));
+    syncUrl();
+  }
+
+  function switchToWindowById(id: string) {
+    switchActiveWindow((session) => session.windows.findIndex((w) => w.id === id));
+  }
+
+  /** Every one of the six windows' own id equals its canonical program name
+   * in this (the only, default) session — see tmux.ts's `FactorySeed`
+   * comment — so "switch to the window that runs program X" is just
+   * `switchToWindowById(program)`. Used by the dashboard menu/hotkeys,
+   * Builds' "onTracker", Personnel's "onDashboard", GrepOverlay's Enter-
+   * routing, and Cmdline/HelpSearch's `view:*` actions — every one of them
+   * a WINDOW switch, never a program launch into the current pane. */
+  function switchToProgram(program: ProgramName) {
+    switchToWindowById(program);
+  }
+
+  function switchToView(v: ViewId) {
+    switchToProgram(viewIdToProgram(v));
+  }
+
+  /** Ctrl-b n/p. */
+  function cyclePrefixView(dir: 1 | -1) {
+    switchActiveWindow((session) => {
+      const len = session.windows.length;
+      return len === 0 ? -1 : (session.activeWindowIdx + dir + len) % len;
+    });
   }
 
   /** Status-bar ↻ reboot control (PLAN.md Phase 5B item 5B.3) — replays
-   * boot from ANY view by first switching home. Cancels a stray status-bar
-   * prompt and a stray copy-mode overlay first (both hazards the plan
-   * calls out explicitly: a rename/confirm prompt would otherwise survive
-   * the switch bound to the old window, and copy-mode's own z-index sits
-   * above the status bar so it would occlude the freshly-replayed boot).
-   * `setView` already closes a stray grep overlay. */
+   * boot from ANY window by first switching to the dashboard. Cancels a
+   * stray status-bar prompt and a stray copy-mode overlay first (both
+   * hazards the plan calls out explicitly: a rename/confirm prompt would
+   * otherwise survive the switch bound to the old window, and copy-mode's
+   * own z-index sits above the status bar so it would occlude the
+   * freshly-replayed boot). `switchToProgram` already closes a stray grep/
+   * cmdline/help-palette overlay.
+   *
+   * PLAN.md Phase 4 item 4.4 will extend this to also rebuild `client` to
+   * factory state (new windows/panes/shell buffers) — this step only
+   * preserves today's exact "go home + replay boot" behavior against the
+   * new model. */
   function reboot() {
     statusBarRef?.cancelPrompt?.();
     copyModeRef?.close?.();
     cmdlineRef?.close?.();
     helpSearchRef?.close?.();
-    setView("home");
+    switchToProgram("dashboard");
     bootRef?.replay();
   }
 
@@ -341,33 +461,7 @@
   // digit/n/p/d/w/0 targets, since they're all "the single key following an
   // armed Ctrl-b" in exactly the same way.
   // ---------------------------------------------------------------------
-  const NUMBER_TO_VIEW: Record<string, ViewId> = {
-    "1": "builds",
-    "2": "personnel",
-    "3": "retina-v",
-    "4": "profile",
-    "5": "help",
-  };
   const PREFIX_TIMEOUT_MS = 2000;
-
-  /** n/p cycle order — the still-present windows, in their current (always
-   * numeric, never reordered) order. A killed window simply drops out of
-   * the cycle; nothing else about the ordering changes. */
-  const prefixCycle = $derived(windows.map((w) => windowIdToView(w.id)));
-
-  /** Digit/`?` targets, recomputed from the live `windows` list so a killed
-   * window's digit stops doing anything (tmux-faithful: an unbound prefixed
-   * key is silently swallowed) without needing a separate "is this window
-   * still alive" check at every call site. */
-  const prefixTargets = $derived.by((): Partial<Record<string, ViewId>> => {
-    const present = new Set(windows.map((w) => w.id));
-    const targets: Partial<Record<string, ViewId>> = {};
-    for (const [digit, target] of Object.entries(NUMBER_TO_VIEW)) {
-      if (present.has(target)) targets[digit] = target;
-    }
-    if (present.has("help")) targets["?"] = "help";
-    return targets;
-  });
 
   let prefixArmed = $state(false);
   let prefixTimer: ReturnType<typeof setTimeout> | undefined;
@@ -385,72 +479,53 @@
     clearTimeout(prefixTimer);
   }
 
-  /** n/p — next/prev window. Every window (including the dashboard, now a
-   * real "0:dashboard" entry — PLAN.md Phase 1) is a `ViewId` in
-   * `prefixCycle`, so this indexes `view` directly with no id-translation
-   * layer needed. */
-  function cyclePrefixView(dir: 1 | -1) {
-    const cycle = prefixCycle;
-    const idx = cycle.indexOf(view);
-    const base = idx === -1 ? 0 : idx;
-    const next = cycle[(base + dir + cycle.length) % cycle.length];
-    if (next) setView(next);
-  }
-
   /** The active window's own display name, for the rename prompt's
    * prefilled text and the kill-window/kill-pane confirm templates'
    * `{name}` substitution. */
   function currentWindowName(): string {
-    const id = activeWindowId(view);
-    return windows.find((w) => w.id === id)?.name ?? "";
-  }
-
-  /** Ctrl-b , — PLAN.md Phase 5 item 5.2. Takes the target window's id as an
-   * explicit argument (captured by `startRenamePrompt` at PROMPT-OPEN time)
-   * rather than re-deriving it from `view` here at commit time — defense in
-   * depth (verifier round 2) so this can never rename the wrong window even
-   * if some future delegation change let `view` drift while the prompt was
-   * still open; today's `handlePrefixedKey` prompt-active gate already
-   * makes that drift impossible, but this closure doesn't depend on that
-   * invariant holding elsewhere. */
-  function renameWindow(id: string, name: string) {
-    windows = windows.map((w) => (w.id === id ? { ...w, name } : w));
+    return activeWindow.name;
   }
 
   /** Ctrl-b & (and the Builds single-pane Ctrl-b x fallback, and a
    * kill-pane that emptied the last Builds panel) — PLAN.md Phase 5 item
-   * 5.2. Same "id captured at prompt-open time" hardening as `renameWindow`
-   * above. Refuses (a status message, no removal) when only one window is
-   * left; otherwise removes the target window and, if it was the one on
-   * screen when the confirm opened, switches to whatever now sits at its
-   * old index (i.e. the window that used to be right after it —
-   * `remaining[idx]` — or wraps to the first remaining window if it was
-   * last). Single source of behavior: every "kill this window" path in the
-   * app funnels through here. */
-  function killWindow(id: string) {
-    if (windows.length <= 1) {
+   * 5.2, now backed by tmux.ts's own `killWindow` op (see its header
+   * comment for the exact fallback-index formula, ported verbatim from what
+   * used to live here). Refuses (a status message, no removal) when only
+   * one window is left; closes window chrome and syncs the URL exactly like
+   * every other window-switching path even though the fallback selection
+   * happens as a side effect of the tmux.ts op itself rather than a second
+   * explicit `switchActiveWindow` call. */
+  function killWindowById(id: string) {
+    closeWindowChrome();
+    const result = killWindow(activeSession, id);
+    if (!result.ok) {
       statusBarRef?.showMessage(site.statusBar.prompts.killLastWindowMessage);
       return;
     }
-    const idx = windows.findIndex((w) => w.id === id);
-    const wasActive = idx !== -1;
-    const remaining = windows.filter((w) => w.id !== id);
-    windows = remaining;
-    if (wasActive) {
-      const fallback = remaining[idx] ?? remaining[0];
-      if (fallback) setView(windowIdToView(fallback.id));
-    }
+    syncUrl();
+  }
+
+  /** Ctrl-b , — PLAN.md Phase 5 item 5.2. Takes the target window's id as an
+   * explicit argument (captured by `startRenamePrompt` at PROMPT-OPEN time)
+   * rather than re-deriving it from `activeWindow` here at commit time —
+   * defense in depth (verifier round 2) so this can never rename the wrong
+   * window even if some future delegation change let the active window
+   * drift while the prompt was still open; today's `handlePrefixedKey`
+   * prompt-active gate already makes that drift impossible, but this
+   * closure doesn't depend on that invariant holding elsewhere. */
+  function renameWindowById(id: string, name: string) {
+    renameWindowManual(activeSession, id, name);
   }
 
   function startRenamePrompt() {
-    const id = activeWindowId(view);
-    statusBarRef?.startRename(currentWindowName(), (name) => renameWindow(id, name));
+    const id = activeWindow.id;
+    statusBarRef?.startRename(currentWindowName(), (name) => renameWindowById(id, name));
   }
 
   function startKillWindowConfirm() {
-    const id = activeWindowId(view);
+    const id = activeWindow.id;
     const text = site.statusBar.prompts.killWindowTemplate.replace("{name}", currentWindowName());
-    statusBarRef?.startConfirm(text, () => killWindow(id));
+    statusBarRef?.startConfirm(text, () => killWindowById(id));
   }
 
   /** The actual "kill the focused pane, or the window if it's the only
@@ -459,12 +534,17 @@
    * command can call the exact same underlying behavior `Ctrl-b x`'s
    * confirm dialog eventually calls, without a second copy of the "which
    * pane, or fall back to kill-window" decision (PLAN.md 5C.1(c) "single
-   * source of behavior; no duplicated kill/rename logic"). */
+   * source of behavior; no duplicated kill/rename logic"). Keyed off the
+   * focused ref's own `canKillPane` CAPABILITY rather than `view ===
+   * "builds"` identity (PLAN.md Iteration 3 Phase 4 item 4.1 simplification
+   * — only Builds' ref ever defines this method, so the outcome is
+   * identical, but this no longer needs to know Builds exists by name). */
   function killPaneOrWindow() {
-    if (view === "builds" && buildsRef?.canKillPane?.()) {
-      buildsRef.killFocusedPane?.();
+    const ref = focusedRef();
+    if (ref?.canKillPane?.()) {
+      ref.killFocusedPane?.();
     } else {
-      killWindow(activeWindowId(view));
+      killWindowById(activeWindow.id);
     }
   }
 
@@ -477,19 +557,20 @@
    * title, for the prompt text) is captured HERE, at confirm-OPEN time —
    * same "id captured at prompt-open time" pattern as
    * startRenamePrompt/startKillWindowConfirm above. The committed closure
-   * always kills that captured number via `buildsRef.killPane(n)`, never
-   * re-reading `buildsRef.focusedPanelTitle()`/killFocusedPane() (which
-   * read whatever is CURRENTLY focused) at confirm-execute time — so a
-   * mouse click on a different panel's row while the "kill-pane <name>?
-   * (y/n)" confirm is still open cannot redirect the kill to the
-   * newly-clicked panel. */
+   * always kills that captured number via `ref.killPane(n)`, never
+   * re-reading `ref.focusedPanelTitle()`/killFocusedPane() (which read
+   * whatever is CURRENTLY focused) at confirm-execute time — so a mouse
+   * click on a different panel's row while the "kill-pane <name>? (y/n)"
+   * confirm is still open cannot redirect the kill to the newly-clicked
+   * panel. */
   function startKillPaneConfirm() {
-    if (view === "builds" && buildsRef?.canKillPane?.()) {
-      const pane = buildsRef.focusedPanelTitle?.() ?? "";
-      const paneNumber = buildsRef.focusedPanelNumber?.();
+    const ref = focusedRef();
+    if (ref?.canKillPane?.()) {
+      const pane = ref.focusedPanelTitle?.() ?? "";
+      const paneNumber = ref.focusedPanelNumber?.();
       const text = site.statusBar.prompts.killPaneTemplate.replace("{pane}", pane);
       statusBarRef?.startConfirm(text, () => {
-        if (paneNumber !== undefined) buildsRef?.killPane?.(paneNumber);
+        if (paneNumber !== undefined) ref.killPane?.(paneNumber);
       });
       return;
     }
@@ -516,19 +597,20 @@
   // is dumb about execution (see that component's own header comment);
   // every side effect a `:`/`Ctrl-b :` command implies lives here, reusing
   // the exact same functions the rest of this file already uses for the
-  // equivalent bound key (setView, killWindow, killPaneOrWindow,
-  // renameWindow, reboot, grepRef, downloadResume) — "single source of
+  // equivalent bound key (switchToProgram, killWindowById, killPaneOrWindow,
+  // renameWindowById, reboot, grepRef, downloadResume) — "single source of
   // behavior, no duplicated kill/rename logic" (PLAN.md 5C.1(c)).
   // ---------------------------------------------------------------------
 
-  /** Forwards to whichever view's embedded Editor is actually open (if
-   * any) — the ex-mode entry context (PLAN.md 5C.1(a)) always tries this
-   * FIRST; only a command it doesn't recognize falls through to the
-   * site-wide `commands` list below ("editor context wins"). */
+  /** Forwards to the focused pane's own embedded Editor if it's actually
+   * open (if any) — the ex-mode entry context (PLAN.md 5C.1(a)) always
+   * tries this FIRST; only a command it doesn't recognize falls through to
+   * the site-wide `commands` list below ("editor context wins"). Keyed off
+   * the focused ref's own capability (same simplification as
+   * killPaneOrWindow above) rather than `view === "builds"/"personnel"`
+   * identity — only those two ever export `runEditorExCommand`. */
   function runEditorExCommand(cmd: string): { recognized: boolean; error?: string } {
-    if (view === "builds") return buildsRef?.runEditorExCommand?.(cmd) ?? { recognized: false };
-    if (view === "personnel") return personnelRef?.runEditorExCommand?.(cmd) ?? { recognized: false };
-    return { recognized: false };
+    return focusedRef()?.runEditorExCommand?.(cmd) ?? { recognized: false };
   }
 
   function formatUnknownCommand(cmd: string): string {
@@ -543,22 +625,22 @@
   function executeSiteAction(action: string | undefined, args: string): string | undefined {
     switch (action) {
       case "view:home":
-        setView("home");
+        switchToProgram("dashboard");
         return undefined;
       case "view:builds":
-        setView("builds");
+        switchToProgram("builds");
         return undefined;
       case "view:personnel":
-        setView("personnel");
+        switchToProgram("personnel");
         return undefined;
       case "view:profile":
-        setView("profile");
+        switchToProgram("profile");
         return undefined;
       case "view:retina-v":
-        setView("retina-v");
+        switchToProgram("retina-v");
         return undefined;
       case "view:help":
-        setView("help");
+        switchToProgram("help");
         return undefined;
       case "grep":
         grepRef?.openWithQuery?.(args);
@@ -571,9 +653,9 @@
         return undefined;
       case "kill-window":
         // Last-window refusal surfaces as the usual status-bar message via
-        // killWindow() itself — never intercepted into the box (PLAN.md
+        // killWindowById() itself — never intercepted into the box (PLAN.md
         // 5C.2 "last-window refusal applies").
-        killWindow(activeWindowId(view));
+        killWindowById(activeWindow.id);
         return undefined;
       default:
         return undefined;
@@ -604,11 +686,11 @@
   function executeTmuxCommand(trimmed: string): string | undefined {
     const parsed = parseTmuxCommand(trimmed);
     if (parsed.kind === "rename-window") {
-      renameWindow(activeWindowId(view), parsed.name);
+      renameWindowById(activeWindow.id, parsed.name);
       return undefined;
     }
     if (parsed.kind === "kill-window") {
-      killWindow(activeWindowId(view));
+      killWindowById(activeWindow.id);
       return undefined;
     }
     if (parsed.kind === "kill-pane") {
@@ -617,12 +699,12 @@
     }
     if (parsed.kind === "select-window") {
       if (parsed.index === 0) {
-        setView("home");
+        switchToProgram("dashboard");
         return undefined;
       }
       const target = prefixTargets[String(parsed.index)];
       if (!target) return cmdline.errors.noSuchWindowTemplate.replace("{arg}", String(parsed.index));
-      setView(target);
+      switchToWindowById(target);
       return undefined;
     }
     if (parsed.kind === "usage") {
@@ -712,7 +794,7 @@
     const target = prefixTargets[e.key];
     if (target) {
       e.preventDefault();
-      setView(target);
+      switchToWindowById(target);
       return true;
     }
 
@@ -728,8 +810,11 @@
       return true;
     }
     if (pk === "d" || pk === "w" || e.key === "0") {
+      // PLAN.md Locked decision #3 / this task's mandatory sequencing:
+      // Ctrl-b d/w keep their CURRENT "go home" behavior THIS PHASE — Phase
+      // 5 rebinds d to detach and w to choose-tree.
       e.preventDefault();
-      setView("home");
+      switchToProgram("dashboard");
       return true;
     }
     if (e.key === ",") {
@@ -910,28 +995,31 @@
       !e.altKey &&
       (e.key === "d" || e.key === "D" || e.key === "u" || e.key === "U" || e.key === "f" || e.key === "F" || e.key === "b" || e.key === "B");
 
-    /** Tries the active view's own ref (Builds/Personnel/Profile/Help),
-     * subject to the same "no bare modifier combos except the editor
-     * scroll chord" gate every ref has always used. Returns whether the
-     * key was consumed. */
-    function tryActiveViewRef(): boolean {
-      if (view === "builds" && buildsRef && (isEditorScrollChord || !(e.metaKey || e.ctrlKey || e.altKey))) {
-        if (buildsRef.handleKey(e)) {
-          e.preventDefault();
-          return true;
-        }
-      }
-      if (view === "personnel" && personnelRef && (isEditorScrollChord || !(e.metaKey || e.ctrlKey || e.altKey))) {
-        if (personnelRef.handleKey(e)) {
-          e.preventDefault();
-          return true;
-        }
+    /** Tries the FOCUSED pane's own ref (PLAN.md "editor gate consults the
+     * FOCUSED pane only" — replaces the old per-view buildsRef/personnelRef/
+     * profileRef/helpRef branches with one generic lookup through
+     * PaneTree's ref registry), subject to the same "no bare modifier
+     * combos except the editor scroll chord" gate every ref has always
+     * used. Whether the widened (scroll-chord-permitting) gate applies is
+     * now a CAPABILITY check (does this ref export `isEditorOpen` at all?)
+     * rather than an identity check (`view === "builds"/"personnel"`) —
+     * only Builds/Personnel ever do, so the outcome is identical to before
+     * this file's Phase 4 refactor. Returns whether the key was consumed. */
+    function tryFocusedRef(): boolean {
+      const ref = focusedRef();
+      if (!ref?.handleKey) return false;
+      const supportsScrollChord = typeof ref.isEditorOpen === "function";
+      const modifierOk = (supportsScrollChord && isEditorScrollChord) || !(e.metaKey || e.ctrlKey || e.altKey);
+      if (!modifierOk) return false;
+      if (ref.handleKey(e)) {
+        e.preventDefault();
+        return true;
       }
       return false;
     }
 
-    // PLAN.md Phase 3 "delegation flip": while the active view's vim Editor
-    // is open, it must get first refusal ahead of GrepOverlay so `/`
+    // PLAN.md Phase 3 "delegation flip": while the focused pane's vim
+    // Editor is open, it must get first refusal ahead of GrepOverlay so `/`
     // searches the open buffer instead of opening grep — vim-faithful.
     // Everywhere else (no editor open), the original order holds: grep is
     // consulted first, exactly mirroring the prototype's own dispatch order
@@ -939,10 +1027,9 @@
     // return; }` runs before any view-specific handling), except that the
     // tmux prefix (above) now runs ahead of it per the retired "prefix
     // inert while grep open" rule.
-    const editorIsOpen =
-      (view === "builds" && !!buildsRef?.isEditorOpen?.()) || (view === "personnel" && !!personnelRef?.isEditorOpen?.());
+    const editorIsOpen = !!focusedRef()?.isEditorOpen?.();
 
-    if (editorIsOpen && tryActiveViewRef()) {
+    if (editorIsOpen && tryFocusedRef()) {
       return;
     }
 
@@ -951,28 +1038,18 @@
     // where the prototype's grepKey() does (see that file's header
     // comment) — never here — so an unrecognized modifier combo held while
     // the overlay is open (e.g. Cmd+L) still reaches the browser, it just
-    // never reaches buildsRef/personnelRef/profileRef/helpRef or the
-    // view-switch keys below.
+    // never reaches the focused pane's ref or the view-switch keys below.
     if (grepRef?.handleKey(e)) {
       return;
     }
 
-    if (!editorIsOpen && tryActiveViewRef()) {
+    // Covers Builds/Personnel's non-editor handling (e.g. Builds' j/k repo
+    // navigation) AND Profile's `r`/HelpView's j/k (which used to be two
+    // separate unconditional blocks here — both refs simply never export
+    // `isEditorOpen`, so `editorIsOpen` is already false for them and this
+    // one call reaches them in exactly the same relative position).
+    if (!editorIsOpen && tryFocusedRef()) {
       return;
-    }
-
-    if (view === "profile" && profileRef && !(e.metaKey || e.ctrlKey || e.altKey)) {
-      if (profileRef.handleKey(e)) {
-        e.preventDefault();
-        return;
-      }
-    }
-
-    if (view === "help" && helpRef && !(e.metaKey || e.ctrlKey || e.altKey)) {
-      if (helpRef.handleKey(e)) {
-        e.preventDefault();
-        return;
-      }
     }
 
     // PLAN.md Phase 5C item 5C.1(b) fallback opener: a bare `:` that
@@ -1040,18 +1117,30 @@
     // construction here `view === "home"` already implies boot isn't
     // active, since the top-of-function gate above returns early while it
     // is). No conflict with Profile's own `r` (resume download): that's a
-    // different view, handled by profileRef further up this function.
+    // different window, handled by its own ref further up this function.
     if (k === "r") {
       bootRef?.replay();
       return;
     }
 
     const target = hotkeyToView(k);
-    if (target) setView(target);
+    if (target) switchToProgram(viewIdToProgram(target));
   }
 
+  /** PLAN.md Risks note "popstate bypasses the switch pipeline today; route
+   * it through selectWindow in Phase 4" — unlike the pre-Phase-4 version
+   * (which just reassigned `view` directly, skipping window-chrome
+   * close-on-switch entirely), this now goes through the exact same
+   * `switchToWindowById` every other window-switch path uses: closes grep/
+   * cmdline/help-palette, then selects the DEFAULT session's window whose id
+   * matches the popped route (a browser back/forward always lands on one of
+   * the six canonical routes, never a mid-shell state) — "maps route ->
+   * session 0 window if present, else no-op" (Architecture notes); no-op is
+   * automatic here since `switchToWindowById` already no-ops for a missing
+   * id. `syncUrl()` inside it never re-pushes: the browser has already
+   * updated `location.pathname` to match by the time this fires. */
   function onPopState() {
-    view = pathToView(location.pathname);
+    switchToWindowById(viewIdToProgram(pathToView(location.pathname)));
   }
 </script>
 
@@ -1074,37 +1163,32 @@
       onHideToast1={() => (offToast1 = true)}
     />
 
-    {#if view === "home"}
-      <Dashboard {dashboard} onSelect={setView} />
-    {:else if view === "retina-v"}
-      <!-- The full-opacity map/HUD is Wallpaper's own `view`-gated opacity
-           (rendered once, behind every view, above) — PLAN.md Phase 1 items
-           15/16 removed this view's only other content (the "[q] back to
-           dashboard" pill); navigation is status-bar clicks / the tmux
-           prefix / the dashboard menu now, so this branch is otherwise
-           empty. The filler div keeps the flex column's layout identical to
-           every other view (StatusBar still pinned to the bottom). -->
-      <div style="flex:1;min-height:0"></div>
-    {:else if view === "builds"}
-      <Builds bind:this={buildsRef} {builds} {projects} {commitsByRepo} onTracker={() => setView("retina-v")} />
-    {:else if view === "personnel"}
-      <Personnel
-        bind:this={personnelRef}
-        {personnel}
-        {companies}
-        {personnelEntries}
-        onDashboard={() => setView("home")}
-      />
-    {:else if view === "help"}
-      <HelpView bind:this={helpRef} {help} />
-    {:else}
-      <Profile bind:this={profileRef} {profile} />
-    {/if}
+    <PaneTree
+      bind:this={paneTreeRef}
+      node={activeWindow.root}
+      {dashboard}
+      {builds}
+      {personnel}
+      {profile}
+      {help}
+      {companies}
+      {projects}
+      {personnelEntries}
+      {commitsByRepo}
+      onWindowSwitch={switchToProgram}
+    />
 
-    <StatusBar bind:this={statusBarRef} {site} {windows} {view} onSelect={setView} onReboot={reboot} />
+    <StatusBar
+      bind:this={statusBarRef}
+      {site}
+      windows={statusWindows}
+      activeWindowId={activeWindow.id}
+      onSelect={switchToWindowById}
+      onReboot={reboot}
+    />
   </div>
 
-  <GrepOverlay bind:this={grepRef} {grep} onNavigate={setView} />
+  <GrepOverlay bind:this={grepRef} {grep} onNavigate={switchToView} />
   <CopyMode bind:this={copyModeRef} copyMode={site.copyMode} />
   <BootSequence bind:this={bootRef} {boot} {desktopMode} onReady={onBootReady} />
   <Cmdline bind:this={cmdlineRef} {cmdline} onSubmit={onCmdlineSubmit} />

@@ -1,6 +1,8 @@
 // View-id plumbing shared by the router pages and Terminal.svelte. Not
 // copy — these are internal identifiers (route paths, dashboard.yaml menu
 // ids, site.yaml status-bar window ids), never rendered as text directly.
+import type { ProgramName } from "./tmux";
+
 export type ViewId = "home" | "builds" | "personnel" | "retina-v" | "profile" | "help";
 
 /** Route path for each view id — used for pushState + popstate parsing. */
@@ -73,6 +75,27 @@ export function activeWindowId(view: ViewId): string {
  * profile/help). */
 export function windowIdToView(id: string): ViewId {
   return id === "dashboard" ? "home" : (id as ViewId);
+}
+
+// ---------------------------------------------------------------------------
+// tmux.ts <-> ViewId bridge (PLAN.md Iteration 3 Phase 4 item 4.1) — the two
+// vocabularies meet here, same as every other translation in this file.
+// `ProgramName` (src/lib/tmux.ts) is what a PANE is currently running;
+// `ViewId` is a ROUTE. They agree on every string except "home"/"dashboard"
+// (same asymmetry activeWindowId/windowIdToView above already carry) and
+// "shell" itself, which is not a route at all — a shelled-in pane freezes
+// the URL wherever it already was (PLAN.md Architecture notes: "pushState
+// only when the active window ... is a canonical program window").
+// ---------------------------------------------------------------------------
+
+export function viewIdToProgram(view: ViewId): ProgramName {
+  return view === "home" ? "dashboard" : (view as ProgramName);
+}
+
+/** `null` for "shell" — the one ProgramName with no corresponding route. */
+export function programToViewId(program: ProgramName): ViewId | null {
+  if (program === "shell") return null;
+  return program === "dashboard" ? "home" : (program as ViewId);
 }
 
 /**
