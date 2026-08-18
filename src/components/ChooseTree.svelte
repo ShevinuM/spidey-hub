@@ -237,12 +237,12 @@
       close();
       return true;
     }
-    if (e.key === "j" || e.key === "ArrowDown") {
+    if (e.key === "ArrowDown") {
       e.preventDefault();
       move(1);
       return true;
     }
-    if (e.key === "k" || e.key === "ArrowUp") {
+    if (e.key === "ArrowUp") {
       e.preventDefault();
       move(-1);
       return true;

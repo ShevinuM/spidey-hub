@@ -37,7 +37,7 @@
   } from "../lib/data";
   import type { Commit } from "../lib/commits";
   import type { ViewId } from "../lib/views";
-  import { VIEW_ROUTES, hotkeyToView, pathToView, programToViewId, viewIdToProgram, windowIdToView } from "../lib/views";
+  import { VIEW_ROUTES, pathToView, programToViewId, viewIdToProgram, windowIdToView } from "../lib/views";
   import type { Client, ProgramName, Session, Window, LayoutName, PaneDirection } from "../lib/tmux";
   import {
     activeSessionOf,
@@ -440,6 +440,17 @@
    * the template). */
   const statusWindows = $derived(activeSession ? activeSession.windows.map((w) => ({ number: w.number, id: w.id, name: w.name })) : []);
 
+  /** Window id (a `ProgramName`) -> its live tmux window number — the
+   * dashboard menu's hotkey column reads this so it always shows the real
+   * `C-b N` binding for a view instead of a fixed table, even if window
+   * numbers ever shift (a window closing, a future reorder). Empty while
+   * detached, same as `statusWindows` above. */
+  const windowNumberById = $derived.by((): Record<string, number> => {
+    const m: Record<string, number> = {};
+    for (const w of statusWindows) m[w.id] = w.number;
+    return m;
+  });
+
   /** Shell.svelte's own `session` prop (PLAN.md Iteration 3 Phase 4 item
    * 4.2's `tmux ls`) — every IN-PANE shell's anchor session (its own).
    * Falls back to a harmless zero-value shape while detached (unreachable
@@ -581,10 +592,10 @@
   /** Every one of the six windows' own id equals its canonical program name
    * in this (the only, default) session — see tmux.ts's `FactorySeed`
    * comment — so "switch to the window that runs program X" is just
-   * `switchToWindowById(program)`. Used by the dashboard menu/hotkeys,
-   * Builds' "onTracker", Personnel's "onDashboard", GrepOverlay's Enter-
-   * routing, and Cmdline/HelpSearch's `view:*` actions — every one of them
-   * a WINDOW switch, never a program launch into the current pane. */
+   * `switchToWindowById(program)`. Used by the dashboard menu, Personnel's
+   * "onDashboard", GrepOverlay's Enter-routing, and Cmdline/HelpSearch's
+   * `view:*` actions — every one of them a WINDOW switch, never a program
+   * launch into the current pane. */
   function switchToProgram(program: ProgramName) {
     switchToWindowById(program);
   }
@@ -1727,36 +1738,21 @@
     }
 
     // Modifier combos fall through untouched — never preventDefault them,
-    // regardless of which view is active (PLAN.md keymap: "modifier-held
-    // keys fall through untouched").
+    // regardless of which view is active (global keymap rule: modifier-held
+    // keys fall through untouched).
     if (e.metaKey || e.ctrlKey || e.altKey) return;
 
     const k = e.key.toLowerCase();
 
-    // PLAN.md Phase 1 items 15/16: bare q/Esc never switch views anywhere,
-    // sitewide — navigation is tmux-prefix, status-bar clicks, or the
-    // dashboard menu only. Esc is still handled above, but only as a
-    // modal-exit key owned by grep/filter/prefix — never here. This
-    // `return` still matters with the old q/Esc branch gone: it's what
-    // keeps the dashboard-only hotkeys below from firing from any other
-    // view.
-    if (view !== "home") {
-      return;
-    }
-
-    // PLAN.md Phase 5B item 5B.3: `r` on the ready dashboard replays boot
-    // (mock's own `componentDidMount`'s `phase === "ready"` guard — by
-    // construction here `view === "home"` already implies boot isn't
-    // active, since the top-of-function gate above returns early while it
-    // is). No conflict with Profile's own `r` (resume download): that's a
-    // different window, handled by its own ref further up this function.
+    // Global reboot backstop: a bare `r` reboots from anywhere, but only
+    // once every pane/overlay/input above has refused it — a view whose
+    // focused pane already binds `r` itself (e.g. Profile's resume
+    // download, consumed by `tryFocusedRef()` earlier in this function)
+    // never reaches this branch for that key.
     if (k === "r") {
-      bootRef?.replay();
+      reboot();
       return;
     }
-
-    const target = hotkeyToView(k);
-    if (target) switchToProgram(viewIdToProgram(target));
   }
 
   /** PLAN.md Risks note "popstate bypasses the switch pipeline today; route
@@ -1805,6 +1801,7 @@
         {multiPane}
         refs={paneRefs}
         {dashboard}
+        {windowNumberById}
         {builds}
         {personnel}
         {profile}

@@ -1,123 +1,130 @@
-# PLAN — Iteration 4: batch of 22 small UI/UX fixes
+# PLAN.md — Iteration 5
 
 ## Objective
 
-Land all 22 distinct fixes from the user's numbered list (items 1–25; 8=22, and several merge) across the tmux-style portfolio site, batched into 3 execution waves, with the full test suite (check, unit, e2e, visual) green and goldens re-baselined at the end.
+Ship iteration 5 of the SpideyHub portfolio: per-extension SVG file icons, generate-time syntax highlighting, reduced wallpaper translucency, full Help page redesign (mockup + plain-language copy rewrite), vim-motion scope reduction (editor/copy-mode only), tmux-only window navigation, the notification system + UI from the notifications mockup (localStorage-backed), dashboard red glow + renames, Personnel filter fixes, YAML→Markdown content migration with a `.claude/checklist.md` conventions file, and a repo-wide jargon-comment purge.
 
 ## Context
 
-- Stack: Astro 7 + Svelte 5 (runes), Tailwind 4, Playwright e2e + pixel-identical visual goldens (`tests/visual/identical.spec.ts`, re-baselined via `--update-snapshots`).
-- Research (2 researcher reports, file:line-verified at HEAD af83aeb) mapped every item. Key facts:
-  - Personnel rows: `Personnel.svelte:574-593`; icons/`{n} roles` template from `src/data/personnel.yaml` (`companyRowIcon: "▸"`, `roleCountTemplate: "{n} {word}"`).
-  - `../` row is hardcoded OUTSIDE the selectable `filteredRows` (`Personnel.svelte:594-608`) → keyboard can never reach it. Filter box wiring looks coherent (enter via `f` or click); defect must be reproduced at runtime.
-  - Personnel full-path breadcrumb: `data-testid="personnel-path"` at `Personnel.svelte:564-569` (`/Users/Shev/Experience/...`).
-  - Preview-of-directory renders leaf roles in a 3-col grid that wraps (`Personnel.svelte:644-653`).
-  - Builds Files pane is cwd-based (`repoTree.ts:40-63`, `Builds.svelte:174-179, 215-223, 415-426`), with `../` entry; NOT an expand/collapse tree.
-  - Local Repositories: `all-projects` appended LAST (`Builds.svelte:93-102`), `selectedRepoIdx=0` selects first real repo.
-  - Dashboard "B" block cursor: data-driven `invert: "B"` in `src/data/dashboard.yaml:22-26`, rendered `Dashboard.svelte:96-98`.
-  - Editor statusline breadcrumb span (`Editor.svelte:833-857`) has no nowrap/truncation → wraps to 2 lines.
-  - Page chrome: each view renders its own outer "window card" (border+radius+shadow): `Dashboard.svelte:52`, `Builds.svelte:743`, `Personnel.svelte:558`, `HelpView.svelte:46`, `Profile.svelte:55`. Wallpaper blur/darken knobs: `Wallpaper.svelte:41,48` (`wallOpacity`, `wallFilter`); status bar is a 30px sibling (`layout.ts:7`).
-  - SPIDEY-HUB: per-char arched text in self-hosted "Webslinger" font (the classic Spider-Man font, `global.css:17-29`), red fill, inside a bordered plate (`Dashboard.svelte:55-66`).
-  - Toasts: inline in flex flow (push content down), manual ✕ only, no auto-dismiss (`Toasts.svelte:49-106`, mounted `Terminal.svelte:1759-1767`).
-  - "add ! to override": copy-only, `src/data/builds.yaml:155` + `src/data/personnel.yaml:81`; `w!`/`wq!` fall through to E492 unknown (`cmdline.ts:153-158`).
-  - Help content is pure data `src/data/help.yaml` (18 sections); long paragraph rows at lines ~93,103,105,123,132,308,312,322,327.
-  - `Ctrl-b c` is unhandled (`Terminal.svelte:1264-1406`); `tmux.ts` has `createSession` but no `createWindow`.
-  - Shell has no `vim` command (`shell.ts:404-571`); Builds/Personnel open the Editor via local component state.
-  - Profile: separate `profile-summary` and `profile-dossier` boxes (`Profile.svelte:122-139`); dossier already has 4 paragraph divs (spacing likely missing visually).
+- Stack: Astro 7.2 + Svelte 5 runes + Tailwind 4 + TS strict; pnpm; tests = `pnpm test:unit` (node --test), `pnpm test:e2e` (Playwright, 18 specs), `pnpm test:visual` (self-baseline goldens, 20 recipes × 2 viewports), `pnpm check`.
+- Keybinding dispatcher: single `handleKey` in `src/components/Terminal.svelte` (L1442+). Dashboard hotkeys map: `src/lib/views.ts` `HOTKEY_TO_VIEW` (b/p/x/i/t/h). `r` reboot handled separately at Terminal.svelte:1753, gated `view !== "home"`. tmux prefix vocabulary in `handlePrefixedKey` (L1250-1440); digits 1-9 jump windows already.
+- Builds `t` → retina-v: `Builds.svelte:657-660` (unconditional). j/k/gg/G live in: Builds panels [2]/[3]/[4], Personnel browser, HelpView (j/k scroll), plus Editor (vim.ts), CopyMode, GrepOverlay, ChooseTree.
+- Help: `HelpView.svelte` renders `src/data/help.yaml` verbatim; `?` palette = `HelpSearch.svelte` + `helpsearch.yaml` + `src/lib/helpSearch.ts`. Jargon leaks in help.yaml lines 133/150/185 and rows flagged below.
+- Mockup A (Help): `/Users/shev/Downloads/spideyhub-help-page-redesign/project/SpideyHub Help.dc.html` — full spec extracted (colors, skewed chips, 230px sidebar tabs, filter input, section rows `grid-template-columns:1fr 300px`, radial background gradient `radial-gradient(90% 70% at 85% 0%, rgba(87,226,201,.10), transparent 55%), radial-gradient(80% 60% at 0% 100%, rgba(255,59,78,.10), transparent 60%)`). Style comes from the HTML, NOT the plain-text screenshots in its uploads/ folder. No border-radius, no transitions (instant hover), Chakra Petch for headings/labels + JetBrains Mono elsewhere.
+- Mockup B (Notifications): `/Users/shev/Downloads/spideyhub-notification-revamp/project/SpideyHub Notifications.dc.html` — bell (44px, pulse ring `senseRing 1.9s`), panel (452px, `panelIn .18s`, header sweep `sweep 3.6s`, tabs inbox/alerts/archive/web·trap), rows (severity bar/chip/glyph, read dims to .62 + weight 400), toasts (bottom-right, `toastIn .34s cubic-bezier(.2,1.35,.4,1)`, web-strand `strand .3s`, progress `drain` = exact duration, hover pauses CSS animation AND JS timer, min 400ms remainder, stack cap 4, alert 10s / warn 5s / info 3s), footer `mark all read`. Severity palette: alert `#ff5c66`, warn `#e8b04b`, info `#4fd1c5`; brand red `#e5484d`. Central red glow to borrow for dashboard: `radial-gradient(900px 520px at 50% 42%, rgba(229,72,77,.10), transparent 70%), radial-gradient(700px 400px at 82% 78%, rgba(79,209,197,.05), transparent 70%)`. Sim buttons (bottom-left) and auto-demo `emit()` calls must NOT ship. Dismiss semantics: inbox → move to archive + read; other tabs → delete. `alerts` tab is a derived filter of inbox.
+- Wallpaper translucency: `Wallpaper.svelte` `wallOpacity` (0.72 non-tracker) and `wallFilter` (`blur(6px) brightness(.45)`). No centralized translucency system; `--color-pane-fill`/`--color-deep-bg` in `global.css` are dead tokens.
+- File content pipeline: `scripts/generate.mjs` → `public/generated/repos/<name>.json` ({path, lines}) fetched lazily by Builds; `grep-index.json` for site files (shell cat/vim via `shellIndex.ts`); `fs-index.json` is structure-only. Editor renders `EditorLine {n, t, style}` — ONE style per line; docline.ts colors .md lines by kind; all other extensions flat `docColors.p`.
+- Icons today: Builds/Personnel trees use single hardcoded folder/file SVGs; GrepOverlay uses `grep.yaml.fileKinds` glyph map.
+- Dashboard: menu from `dashboard.yaml` (grid `26px 1fr auto`, hotkey col), `E.D.I.T.H: Retina-V` at dashboard.yaml:36, footer `syncLine: "⚡ tracker synced 8/8 panes in 48.23ms"` (hardcoded flavor — 8 is fake). Old toasts: `Toasts.svelte` amber strips, 2 random picks from `notifications.yaml` pool, dashboard-only, 4s.
+- Personnel filter: `f` enters filter mode; the prompt span already has `onclick` (verify it actually works & enlarge target); NO border/box around the filter row (regression — restore a bordered filter row with `> ` prompt and `N / N` count like the screenshot).
+- Content inventory: 17 files in `src/data/*.yaml` (see researcher table); content collections `projects` + `personnel` already Markdown+zod. `companies.yaml` is order-only data derived from personnel dirs. `scripts/generate.mjs` wired via predev/prebuild.
+- Jargon: 480 `PLAN.md` matches across 61 src/scripts files; "Iteration" in 39; "Locked decision" in 19. Three help.yaml section titles are user-visible jargon.
+- Syntax highlighting decision: Shiki at generate time (`shiki/core` + `createJavaScriptRegexEngine` + per-lang `@shikijs/langs/*`), `codeToTokensBase` → per-line token arrays with palette-index dedupe, custom terminal theme mapped to site palette vars. Markdown keeps docline.ts coloring. Editor gains token rendering (`{#each}` spans, no `{@html}`).
+- File icons decision: `material-file-icons` (npm, zero deps, `getIcon(filename) → {svg}`, same set as VS Code Material Icon Theme = the reference screenshot's look). Resolve at generate time into a small generated ext→svg map so the client bundle only carries used icons.
+- Commit style (user rule): one-line imperative, no body, no Co-Authored-By. One commit per phase.
+- Visual goldens are re-baselined ONCE at the end (Phase 8) per `tests/visual/README-PIPELINE.md` (update-snapshots, then 3× consecutive clean runs, manual PNG inspection). Per-phase verification uses unit/e2e/check + targeted screenshots, not goldens.
 
-### Assumptions (stated so they can be checked, not improvised around)
+### Decisions (locked for this iteration)
 
-1. Item 7 "full path above" = the `personnel-path` breadcrumb label. Remove it.
-2. Item 14 "bar cannot flow into two lines" = the Editor statusline; item 20 "cursor on builds" = the `invert: "B"` block on the Dashboard menu (screenshots were swapped in the recovered list; both fixes are wanted regardless).
-3. Item 2's `ls -l` columns: `permissions  owner(shev)  date  name` with name LAST (rightmost column), `/`-suffixed dirs, `drwxr-xr-x` for dirs and `.rw-r--r--` for files; date = role start date (or plausible fixed date for dirs). Preview of a directory lists its immediate children, like the reference image.
-4. Item 11 "floating window" = the OUTER window-card chrome (border, radius, drop shadow, inset margins) on the five view components. Inner tmux-pane borders/titles stay.
-5. Item 12: notifications become a fixed overlay anchored bottom-right just above the status bar, tmux `display-message` styling (amber bg, dark text, one-line strip), auto-dismiss ~4s, no ✕, no layout shift.
-6. Item 16: `Ctrl-b c` = tmux new-window semantics — creates a new window in the current session running the in-window shell program.
-7. Item 24: remove the "j/k moves" hint text from personnel hints and the j/k row from help's personnel section. j/k keyboard behavior itself stays.
-8. Item 13 (vim cursor disappears): no static-analysis defect found; executor must reproduce at runtime (Playwright) before fixing; if irreproducible, report with evidence rather than guess-fix.
-9. Item 9: wallpaper behind windowed views gets blur + darken on ALL views except retina-v (where the map IS the content); status bar unaffected.
-10. Commits: single-line messages, no body, no Co-Authored-By (user's standing preference). Orchestrator commits after each verified wave.
+1. Vim motions (j/k/gg/G) remain ONLY in the Editor (vim.ts) and CopyMode (tmux vi copy-mode — that's authentic tmux). Removed from: Builds panels, Personnel browser, HelpView, ChooseTree, GrepOverlay. Arrow keys must work everywhere lists/trees are navigable (add where missing).
+2. Dashboard single-key nav (b/p/x/i/t/h) removed entirely; windows open via `C-b 1..5` (and clicks). Dashboard menu hotkey column shows the real tmux binding (e.g. `C-b 1`). `r` reboot becomes global (any view where a bare key isn't consumed by a focused pane/overlay/input); help says "reboot", not "replays the boot sequence".
+3. Builds `t` shortcut removed.
+4. Help page: rebuild HelpView per Mockup A, but page background stays translucent over the wallpaper (keep the mockup's radial gradient layer on top of that); no duplicated footer status bar (site already has one); padding around all 4 corners of the page. Filter input is clickable + `f` NOT bound (mockup uses click/type); `?` HelpSearch palette unchanged as a feature.
+5. Help copy: rewritten for a first-time visitor with zero context. Concrete kills: "(from the dashboard)" rows replaced by tmux bindings; "reboot ... replays the boot sequence" → "reboot"; "any view" → "anywhere"; held-modifier row removed; "every directory starts expanded" removed; Builds `t` row and Builds tree `gg / G` row removed; `| / %` described as "split vertically" wording per user (chip `| / %` → "split vertically — new pane to the right", `- / "` → "split horizontally — new pane below"); "anything else — silently swallowed" removed; all PLAN.md/shell.yaml/iteration references removed; `whoami` row drops "(shev)". Every description must fit ONE line at 1512×945 and 1920×1080 (no wrapping) — enforced by copy length + layout, verified by DOM measurement.
+6. Notifications: bell + panel + toasts on the dashboard view only, exactly per Mockup B design/animations. Deviations (functional spec > mockup): add a mark-as-spam row action (web·trap) since persistence spec requires it; footer hint shows only truthful keys (`n toggle · esc close`; no unwired `x`). No sim buttons, no auto-demo emits. State in localStorage (`spideyhub.notifications.v1`): `{items: [{id, sev, title, body, src, ts, read, folder}]}`; pool of notification definitions is content (see Phase 6); on each visit inject 2 pool entries not already in localStorage (by id), toast them (severity-timed dismissal); if pool exhausted, inject none. Unread badge = inbox unread count. Old amber Toasts.svelte design retired.
+7. Dashboard: borrow Mockup B's central red glow radial gradient (exact values above) behind dashboard content; DO NOT change fonts. Rename menu row to `Retina-V`. Footer sync line becomes `⚡ synced N/N panes in 48.23ms` where N = real pane count from the tmux model (no "tracker" word).
+8. Translucency: `Wallpaper.svelte` non-tracker values change to `wallOpacity = 0.85` and `wallFilter = "blur(6px) brightness(.55)"` (more tracker visible, still darkened + blurred). Values become named constants.
+9. Syntax highlighting + icons per research decisions above. GrepOverlay's glyph map replaced by the same SVG icons. Shell `ls` output stays plain text (terminal realism).
+10. Content migration criterion: "would a human edit this?" → Markdown in `src/content` (zod-validated); machine-generated/derived → generated JSON or stays YAML written by scripts; `companies.yaml` deleted and derived from personnel content. Structured-but-human-authored lists (help sections, notification pool) become Markdown files with typed frontmatter (one file per section / per notification) under `src/content`.
+11. Comments: a comment must state a current constraint; anything citing PLAN.md, iterations, phases, "Locked decision", or old-design comparisons is removed or rewritten as a constraint. New code in all phases follows this rule from the start.
 
 ## Steps
 
-### Wave 1 — two parallel executors, disjoint files
+### Phase 1 — Keybindings & motion scope
+- [x] 1.1 Remove `HOTKEY_TO_VIEW` dashboard hotkeys (b/p/x/i/t/h) from `src/lib/views.ts` and the dashboard bare-key section of `Terminal.svelte`; keep click nav and `C-b` digits. Dashboard menu hotkey column shows the real tmux binding, DERIVED from the actual tmux window index for each view in the tmux model (`0:dashboard 1:builds 2:personnel 3:retina-v 4:profile 5:help`) — never hardcoded by menu position.
+- [x] 1.2 Make `r` reboot global: move from the `view === "home"` gate to the global bare-key backstop (still after all pane/overlay/input consumers; modifier-held guard stays).
+- [x] 1.3 Remove `t` → retina-v in `Builds.svelte`.
+- [x] 1.4 Remove j/k/gg/G handling from `Builds.svelte` (panels [2]/[3]/[4]), `Personnel.svelte`, `HelpView.svelte`, `ChooseTree.svelte`, `GrepOverlay.svelte`; ensure ArrowUp/ArrowDown (and existing Ctrl-n/p where present) cover the same navigation; Editor (vim.ts) and CopyMode untouched.
+- [x] 1.5 Update every e2e spec that used the removed keys (nav, builds, personnel, help, choose-tree, grep specs) to arrows/clicks/C-b; update unit tests touching removed handlers.
+- [x] 1.6 Interim help.yaml/data fix ONLY as needed to keep e2e truthful (full rewrite is Phase 2).
 
-- [x] **1A. Personnel view** (owns: `src/components/Personnel.svelte`, `src/data/personnel.yaml`, `tests/e2e/personnel.spec.ts`)
-  - Item 1: dir rows get a folder icon, role rows a file icon (nvim-tree/lazygit look). Nerd fonts are NOT bundled — use inline SVG icons (crisp, colorable) keyed off row type; keep yaml-driven text fallback out of the row.
-  - Item 2: preview-of-directory becomes `ls -l`-style listing of the selected dir's immediate children: `drwxr-xr-x  shev  <date>  <name>/` per row (assumption 3), monospace-aligned columns.
-  - Item 3: every personnel row (list + preview) is strictly one line: `white-space:nowrap` + `overflow:hidden;text-overflow:ellipsis` on flexible cells.
-  - Item 6: no `../` row at root (root = company list level).
-  - Item 7: delete the `personnel-path` breadcrumb label.
-  - Item 23a: in subdirectories, `../` becomes a real first row in the selectable rows array — j/k reaches it, Enter goes up one level.
-  - Item 23b: reproduce the filter box defect with Playwright (`pnpm build:fixtures` + preview, or dev server); fix it; typing after `f` (and clicking the prompt) must filter rows live. Also accept `/` to enter filter mode.
-  - Item 24 (hint part): remove "j/k moves" from `personnel.yaml` hints templates.
-  - Item 25: `roleCountTemplate: "{n}"` (drop the word).
-  - Update `tests/e2e/personnel.spec.ts` to encode ALL the above (breadcrumb gone, `../` selectable in subdir + absent at root, one-line rows, `{n}` meta, filter works, ls-l preview shape).
-- [x] **1B. Builds view + dashboard cursor + statusline** (owns: `src/components/Builds.svelte`, `src/lib/repoTree.ts`, `src/data/builds.yaml` [repoBrowser icons only], `src/data/dashboard.yaml`, `src/components/Dashboard.svelte` [invert rendering only], `src/components/Editor.svelte` [statusline block only], `tests/e2e/builds.spec.ts`, `tests/unit/*` for repoTree)
-  - Item 4: rewrite the [2]-Files pane as a lazygit-style tree: full repo tree rendered nested with indentation, ALL dirs expanded by default, Enter (and click) on a dir toggles collapse/expand, Enter on a file opens the editor (unchanged), NO `../` entry. `repoTree.ts` gains a tree-build + flatten-visible helper (unit-testable, pure).
-  - Item 1 (builds part): dirs get folder icon + ▾/▸ caret by expand state; files get file icon (same SVG set as 1A — duplicate the tiny snippet, do NOT share a new module to avoid cross-executor coupling).
-  - Item 5: `all-projects` pinned FIRST in Local Repositories and selected by default (`selectedRepoIdx` default points at it; downstream Files pane must load all-projects tree on mount).
-  - Item 20: remove `invert` key from `dashboard.yaml` and the `item.invert` branch in `Dashboard.svelte:96-98`.
-  - Item 14: Editor statusline strictly one line — breadcrumb span gets `min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis` (truncate from the left is fine), statusline row `flex-wrap:nowrap`.
-  - Update `tests/e2e/builds.spec.ts`: tree expanded by default, Enter toggles, no `../`, all-projects first+default, statusline single line (assert `clientHeight` of statusline < 2 lines or nowrap style).
-- [x] **1V. Verify wave 1** (PASS 2026-08-18: check 0 errors, unit 291/291, e2e 862/862, diff inspection all items confirmed) — verifier runs `pnpm check`, `pnpm test:unit`, `pnpm build && npx playwright test tests/e2e/personnel.spec.ts tests/e2e/builds.spec.ts tests/e2e/editor-vim.spec.ts tests/e2e/nav.spec.ts` and greps the diff for each item's acceptance below. On PASS: orchestrator commits (single line).
+Verification: `pnpm check` clean; `pnpm test:unit` green; `pnpm test:e2e` green. Manual probe script (Playwright): on dashboard press `b` → view unchanged; press `C-b 1` → builds; on builds press `t` → view unchanged; press `j` in builds tree → selection unchanged, `ArrowDown` → moves; on builds press `r` → boot replays. Commit.
 
-### Wave 2 — two parallel executors (shared-file protocol: Terminal.svelte edits must be surgical `Edit` calls in the stated distinct regions; never `Write` the whole file)
+### Phase 2 — Help page redesign + copy rewrite
+- [ ] 2.1 Rewrite help content per Decision 5 into the (still-YAML for now) help data with mockup A's scope grouping: Global / Windows (mouse) / tmux prefix / Builds / …. AUTHORITY ORDER: the 12 kill-items and actual post-Phase-1 behavior override the mockup's `data()` copy wherever they conflict (the mockup carries copy from the old site, including some of the exact lines the user rejected). Every row: plain language, one-line description, kbd keys array. Customer-product test (verifier criteria): no file paths or repo references; no implementation mechanics ("replays", "swallowed", "falls through", "source of truth"); no personal names; consistent product naming (Retina-V everywhere); every description answers "what happens when I press this" in plain words; terminal vocabulary (pane/window/prefix) allowed; section headers carry a plain gloss (e.g. "choose-tree" → "Session picker (Ctrl-b w)"); panel numbers like "[2]" only if visibly on screen in that view.
+- [ ] 2.2 Rebuild `HelpView.svelte` to Mockup A: header (skew ticks, "Need some help?" Chakra Petch title, skewed teal filter input + "N shown" counter), 230px scope sidebar with active red accent + counts, section rows (1fr/300px grid, kbd chips right-aligned, hover teal left-bar), empty state, legend block. Background: translucent over wallpaper + mockup's radial gradient layer + optional scanlines; outer padding on all 4 corners. Load Chakra Petch via @fontsource (pnpm, no CDN). No border-radius, instant hover.
+- [ ] 2.3 Filter input: click-to-focus, typing filters name+desc+keys substring (case-insensitive); doesn't fight the global key dispatcher (input-focused guard). Keep `?` HelpSearch palette working against the rewritten content.
+- [ ] 2.4 Update helpsearch.yaml copy if it references removed concepts; update help/helpsearch e2e + unit tests.
+- [ ] 2.5 No-wrap check: Playwright probe at 1512×945 and 1920×1080 asserting single-line rendering for EVERY row's name, description, AND key chips — simplest: each row's rendered height equals the single-line row height.
 
-- [x] **2C. Chrome/visual** (owns: `src/components/Wallpaper.svelte`, `Terminal.svelte` [render-tree region ~1746-1826 only], `Toasts.svelte`, `src/lib/notifications.ts`, `src/data/notifications.yaml` [if needed], `Dashboard.svelte`, outer-card blocks of `Builds.svelte`/`Personnel.svelte`/`HelpView.svelte`, `Editor.svelte`+`CopyMode.svelte` [item 13 only], `tests/e2e/nav.spec.ts` toast assertions)
-  - Item 9: wallpaper blurred AND darkened behind all views except retina-v (e.g. `wallFilter: blur(6px) brightness(.45)`); status bar stays crisp.
-  - Item 11: remove the outer window-card chrome (border, border-radius, big drop shadow, inset margins) from Dashboard, Builds, Personnel, HelpView (Profile's card is 2D's). Views fill the pane edge-to-edge; inner pane borders/titles unchanged.
-  - Item 10: remove the bordered plate around SPIDEY-HUB; restyle the wordmark to match the classic logo: white fill, red outline/stroke, dark offset shadow, keep Webslinger font + arch.
-  - Item 12: notifications → fixed overlay, right-aligned, anchored just above the status bar (`bottom: STATUS_BAR_HEIGHT_PX + margin`), stacked upward; tmux display-message styling (amber bg, dark mono text, one-line strip); NO ✕ button; auto-dismiss after ~4s (respect fake-timer test compatibility: use `setTimeout` so Playwright `page.clock` can drive it); zero layout shift (PaneTree height must not change when toasts show/hide).
-  - Item 13: attempt runtime repro of "j/k makes vim cursor disappear" across editor + copy-mode + views (Playwright). Fix root cause if found; if irreproducible after a genuine attempt, document exactly what was tried in the executor report.
-  - Update/extend e2e: toast auto-dismiss + no dismiss button + overlay positioning (nav.spec.ts), dashboard wordmark plate gone.
-- [x] **2D. Cmdline/help/tmux/shell/profile** (owns: `src/lib/cmdline.ts`, `src/data/builds.yaml`+`personnel.yaml` [E45 lines only], `src/data/help.yaml`, `src/lib/helpSearch.ts` [only if needed], `src/lib/tmux.ts`, `Terminal.svelte` [handlePrefixedKey region ~1264-1406 only], `src/lib/shell.ts`, `src/data/shell.yaml`, `Shell.svelte`, `Profile.svelte`, `src/data/profile.yaml`, `tests/e2e/cmdline.spec.ts`, `editor-vim.spec.ts`, `tmux.spec.ts`, `shell.spec.ts`, `sessions.spec.ts`, `help.spec.ts`, `profile.spec.ts`)
-  - Items 8/22: `writeReadonlyMessage` → `"E45: 'readonly' option is set"` (both yaml files); `parseExCommand` treats `w!`/`wq!` like `w`/`wq` (writeError) so no E492 confusion. No "add !" text remains anywhere (`grep -ri "override" src/` clean for this phrase).
-  - Item 15: sweep `src/data/help.yaml` — every row description ≤ 1 concise line (e.g. detach → "detach tmux session"). For each row ask: is this a keymap? If not, is it genuinely useful? Drop pure prose rows. Keep `status: planned` rows as-is unless verbose.
-  - Item 24 (help part): remove the j/k row from the personnel section of help.yaml.
-  - Item 16: implement `Ctrl-b c` = new-window running the shell program: `createWindow()` in `tmux.ts` (pattern-match `splitPane`/`killWindow`), dispatch branch in `handlePrefixedKey`, window appears in status bar + choose-tree, add a 1-line help.yaml row. e2e test in tmux.spec.ts or sessions.spec.ts.
-  - Item 19: `vim <file>` (accept `vi`/`nvim` aliases) shell builtin: resolves path against the shell fs index; opens the read-only Editor over the shell pane (reuse the Builds/Personnel local-state pattern inside Shell.svelte); `:q` returns to shell; missing file → vim-style error line; no arg → usage error. e2e test in shell.spec.ts.
-  - Item 21: delete the summary section from `Profile.svelte` (and its yaml block if now unused); dossier paragraphs get visible spacing (margin between paragraph divs). Update profile.spec.ts.
-  - Item 23c: DROPPED (orchestrator decision after wave 1). Making `/` enter filter mode would steal the sitewide grep binding on the Personnel view — a UX regression for a nicety the user never asked for. `f` + click filter entry is fixed and tested. 2D only retitles the "KNOWN LIMITATION" test in `personnel.spec.ts` (~:637) to assert this as INTENDED behavior ("/" outside filter mode opens sitewide grep) and removes its escalation comment. (The other collateral spec fixes listed here previously were already landed by 1B's follow-up and verified in 1V.)
-  - Update all owned specs for changed copy/behavior.
-- [x] **2V. Verify wave 2** (PASS 2026-08-18: check clean, unit 298/298, full e2e 898/898 on clean re-run — 4 first-run worker-contention flakes cleared in isolation; item 13 root-caused as missing white-space:pre; deviations accepted) — verifier runs `pnpm check`, `pnpm test:unit`, `pnpm build && npx playwright test tests/e2e/` (full e2e — cheap enough once built), plus greps: no "add ! to override" anywhere; no multi-sentence help rows (spot check the named lines). On PASS: orchestrator commits.
+Verification: `pnpm check`, `pnpm test:unit`, `pnpm test:e2e` green; no-wrap probe passes at both viewports; grep of built help data for forbidden strings (`PLAN.md`, `Iteration`, `shell.yaml`, `(shev)`, `any view`, `silently swallowed`, `boot sequence`, `dashboard only`, `every directory`, `from the dashboard`, `falls through`) returns nothing; header/title not clipped and no truncated text at either viewport (closes the user's bug screenshot); screenshot of /help at both viewports for eyeball vs mockup. Commit.
 
-### Wave 3 — single executor
+### Phase 3 — Notifications + dashboard glow/renames
+- [ ] 3.1 Notification pool content: replace `notifications.yaml` pool with notification definitions matching the new model (id, sev alert|warn|info, title, body, src) — in-universe SpideyHub flavor; ≥24 entries. (Stays YAML this phase; migrates to content collection in Phase 6.)
+- [ ] 3.2 `src/lib/notificationStore.ts` (svelte 5 runes class or module): localStorage load/save (`spideyhub.notifications.v1`), inject-2-per-visit chosen RANDOMLY among unseen pool entries, toggleRead, dismiss (inbox→archive+read; else delete), markAllRead (inbox only), markSpam, derived counts (inbox/alerts/archive/spam, unread badge), relative "ago" from ts. Unit tests for all transitions incl. pool exhaustion + corrupted-storage fallback.
+- [ ] 3.2b Determinism hooks for tests/goldens: a fixture/test mechanism (e.g. query param or fixture-build flag, consistent with how PORTFOLIO_FIXTURES already works) that pre-seeds a fixed notification state, suppresses per-visit injection and toasts, and freezes/disables the infinite animations (senseRing, sweep, drain) during golden capture. Executor must check how the amber toasts are kept out of today's `01-dashboard` golden recipe and replicate/strengthen that mechanism.
+- [ ] 3.3 `Notifications.svelte`: bell + panel + tabs + rows + footer exactly per Mockup B spec (all 7 keyframes with exact timings/easings; sweep header; senseRing pulse only when unread; panelIn; tab active/hover states; row severity bars/chips/dim; spam banner; empty states). `n` toggles panel, Esc closes (wired through Terminal.svelte dispatcher, input-safe). Dashboard view only. Mark-as-spam action added per Decision 6.
+- [ ] 3.4 Toast layer per mockup: bottom-right, column-reverse, cap 4, toastIn + strand + drain with severity durations (alert 10s / warn 5s / info 3s), hover pauses drain AND timer (min 400ms), no exit animation. New-visit injected notifications appear as toasts. Retire the amber strip design in `Toasts.svelte` (replace/rename component).
+- [ ] 3.5 Dashboard: add Mockup B central red glow layer (exact gradient), rename `E.D.I.T.H: Retina-V` → `Retina-V`, footer line `⚡ synced N/N panes in 48.23ms` with N = live pane count from tmux model. Fonts unchanged.
+- [ ] 3.6 e2e: new notifications spec (bell badge, open/close via n/Esc/click, tab switching, mark read/unread/spam persistence across reload via localStorage, dismiss semantics per folder, mark-all-read, 2-new-per-visit, toast auto-dismiss via a test hook that shortens durations — Playwright can't fake page timers cleanly); update dashboard/nav specs for renames + footer.
 
-- [x] **3E. Test/goldens reconciliation** (DONE 2026-08-18: no red e2e specs found — 898/898 green twice, no waves-1/2 fallout; re-baselined 30/40 goldens, caught+fixed a stale `12-all-projects` recipe broken by item 5's selection-order change; README-PIPELINE.md's toast-visibility note updated for auto-dismiss; 3 consecutive `pnpm test:visual` runs 40/40 with `RATIO_RELAXED` still empty; full suite green: check 0 errors, unit 298/298, e2e 898/898 (twice), visual 40/40) — fix any remaining red e2e specs (behavior changed in waves 1–2 that other specs assert), then re-baseline visual goldens: `pnpm build:fixtures && npx playwright test tests/visual/identical.spec.ts --update-snapshots`, then run the FULL suite: `pnpm check && pnpm test:unit && pnpm test:e2e && pnpm test:visual` — all green. Eyeball 3–4 updated goldens (dashboard, builds, personnel, help) to confirm they show the new look, not a blank/broken page.
-- [x] **3V. Final verify** — PASS 2026-08-18: check 0 errors, unit 298/298, e2e 897/898 + 1 confirmed worker-contention flake (green in isolation ×2 and on prior full runs), visual 40/40, RATIO_RELAXED empty, maxDiffPixels 0, no dependency changes, commit hygiene confirmed.
+Verification: `pnpm check`, unit, e2e green; screenshot pass at both viewports comparing panel/toasts to mockup; verifier confirms sim buttons/auto-emit absent; localStorage persistence proven by reload test. Commit.
 
-## Verification (per item, checkable)
+### Phase 4 — File icons + syntax highlighting
+- [ ] 4.1 `pnpm add -D shiki material-file-icons` (+ needed `@shikijs/langs/*`/theme helpers if separate).
+- [ ] 4.2 generate.mjs: build ext→icon map (`material-file-icons.getIcon`) over all extensions/filenames present in fs-index, repos indexes, and site grep-index → write `src/generated/file-icons.json` (only used icons). Folder/caret icons stay as-is.
+- [ ] 4.3 Icons wired into Builds tree rows, Personnel browser rows, GrepOverlay rows (replacing `grep.yaml` fileKinds glyphs). Sized to current row metrics; `aria-hidden`.
+- [ ] 4.4 generate.mjs: Shiki `createHighlighterCore` + JS regex engine + per-language grammars for every TEXT_EXTENSIONS language; custom terminal theme mapped to site palette; `codeToTokensBase` per file → per-line token arrays `[ [colorIndex, text], … ]` + one palette array per repo JSON; skip files > existing SIZE_CAP (flat fallback). Markdown NOT tokenized (docline path kept).
+- [ ] 4.5 `Editor.svelte`: `EditorLine.t: string | tokens`; token render path via `{#each}` spans (no `{@html}`). `Builds.svelte` editorLines derivation + the shell `vim` path (which opens the Editor) pass tokens for code files. Shell `cat` output stays PLAIN text (real terminals don't colorize cat; residual if ever wanted).
+- [ ] 4.6 Regenerate indexes; unit tests for token pipeline (a fixture file tokenizes deterministically; palette-index round-trip); update fixtures for visual/e2e as needed.
 
-| Item | Check |
-|---|---|
-| 1 | Personnel + Builds rows render SVG folder/file icons (e2e: icon testid/svg present; no "▸" in row icon slot) |
-| 2 | Preview of dir = ls-l rows, name last; e2e asserts row text matches `/^[.d][rwx-]{9}\s+shev\s+.+\s+\S+\/?$/`-ish shape |
-| 3 | e2e: preview/list row `clientHeight` equals one line-height; nowrap style asserted |
-| 4 | e2e: builds tree shows nested children immediately on load; Enter on dir collapses (children gone) and re-expands; no `../` row |
-| 5 | e2e: first Local Repositories row is `all-projects` and is selected on load |
-| 6 | e2e: at personnel root, no `../` row exists |
-| 7 | e2e: `personnel-path` testid absent |
-| 8/22 | grep: "add ! to override" absent from repo (src/); e2e: `:wq!` in editor yields E45 readonly message, not E492 |
-| 9 | Wallpaper element has blur+brightness filter on builds/personnel/dashboard; not on retina-v (e2e style assertion) |
-| 10 | Dashboard plate border element gone; wordmark has white fill + red stroke styling (e2e style assertion) |
-| 11 | Outer card styles (box-shadow 0 24px 80px / outer border-radius) removed from the 5 views (grep + golden diff) |
-| 12 | e2e with fake clock: toast visible at t0, gone after ~4s; no `toast-*-dismiss` testid; toasts container is position:fixed (no PaneTree height change) |
-| 13 | Repro attempt documented; if fixed, regression e2e test exists |
-| 14 | e2e: editor statusline height = one line with a long path (fixture repo has one) |
-| 15/24 | help.yaml: every `description` ≤ ~90 chars, single sentence; no j/k row in personnel section; help.spec.ts green |
-| 16 | e2e: `Ctrl-b c` creates a new window (status bar entry + shell prompt visible), the new window gets a sane index that coexists with prefix digit targets, is reachable via prefix digit and choose-tree, and dies cleanly via `Ctrl-b &`; help row exists |
-| 19 | e2e: in shell, `vim <existing file>` opens editor with content; `:q` returns to shell; `vim nofile` → error line |
-| 20 | dashboard.yaml has no `invert`; Dashboard.svelte has no invert branch; golden shows plain "Builds" |
-| 21 | e2e: `profile-summary` testid absent; dossier paragraphs have inter-paragraph spacing |
-| 23 | e2e: in a personnel subdir, j/k reaches `../` and Enter ascends; typing in filter mode narrows rows |
-| 25 | e2e: personnel dir row meta is bare digits |
+Verification: `pnpm check`, unit, e2e green; `pnpm generate` succeeds; probe: open a .ts file in Builds editor → multiple distinct token colors in DOM; open .md → docline colors unchanged; repo JSON size growth reported (must stay < 3× current per file); icons visible in Builds/Personnel/Grep screenshots. Commit.
 
-## Acceptance criteria (stop conditions)
+### Phase 5 — Translucency + Personnel filter
+- [ ] 5.1 Wallpaper constants per Decision 8.
+- [ ] 5.2 Personnel filter: REPRODUCE the click bug first — an `onclick` already exists on the prompt span (Personnel.svelte:752-759), so the real failure is likely focus/pane gating or a tiny hit target; root-cause, then fix. Then: bordered filter row (matches site panel border style `rgba(224,69,60,.35)`) with `> ` prompt, blinking cursor, right-aligned `N / N` count; whole row clickable to enter filter mode (f still works); filter box visible in both idle and active states.
+- [ ] 5.3 Update personnel e2e for the new filter affordance.
 
-- [x] All 22 items pass their table checks above.
-- [x] `pnpm check`, `pnpm test:unit`, `pnpm test:e2e`, `pnpm test:visual` all green from a clean tree.
-- [x] Visual goldens re-baselined exactly once (wave 3); updated goldens eyeballed (all 40).
-- [x] No scope beyond the 22 items (no refactors, no new features, no dependency changes except assets needed for item 10 — none expected since Webslinger is already bundled).
-- [x] Work committed per wave, single-line messages, no Co-Authored-By.
-- Out of scope: Memorial role end dates, resume/contact launch gaps, deploy.
+Verification: `pnpm check`, unit, e2e green; screenshots: dashboard/builds/personnel show more visible tracker background; personnel filter row has visible border + count; click-only filter entry proven in e2e. Commit.
+
+### Phase 6 — Content migration + conventions checklist
+- [ ] 6.1 Write `.claude/checklist.md`: researcher's conventions checklist (structure, content-vs-data criteria, Svelte 5 runes rules, hydration, a11y, performance, testing, commit style, comment hygiene) + user rules: human-editable → Markdown in src/content; machine-generated/derived → generated artifacts; never hand-edit derived data; no plan/iteration jargon in comments or user-facing copy; help copy must pass the "first-time visitor understands it" test; one-line commits.
+- [ ] 6.2 Migration table first (executor documents in commit-adjacent notes, not PLAN): for each `src/data/*.yaml` decide keep-as-config vs migrate-to-content. Required migrations: `profile.yaml` prose → `src/content/profile/` markdown (frontmatter for structured fields, body for paragraphs); `help.yaml` → `src/content/help/*.md` (one file per section, frontmatter rows); `notifications.yaml` pool → `src/content/notifications/*.md` (one per notification, body = message); boot narrative lines → content, timings/tints stay config; `companies.yaml` DELETED — order/list derived from personnel collection (stable, defined ordering: by frontmatter `order` on roles or explicit company order frontmatter file if needed). Pure UI-chrome label files (site.yaml, cmdline.yaml, grep.yaml, builds.yaml, personnel.yaml, choosetree.yaml, helpsearch.yaml, dashboard.yaml) stay YAML config unless a field is real prose a visitor reads as content. `shell.yaml` (narrative strings) and `tracker.yaml` (subject cards) contain genuine borderline prose — executor must evaluate each such field against the criterion explicitly, not default them to "chrome", and list the dispositions.
+- [ ] 6.3 Zod schemas in `content.config.ts` for each new collection; loaders (`glob`/`file`) per convention; `src/lib/data.ts` accessors updated; no `as any`.
+- [ ] 6.4 All tests updated; `pnpm generate` + full build green.
+
+Verification: `pnpm check`, unit, e2e green; `companies.yaml` gone and Personnel renders identical company list/order (e2e asserts order); rendered site output for profile/help/notifications byte-equivalent modulo intended changes (verifier diffs rendered DOM text of profile + help vs pre-migration capture). `.claude/checklist.md` exists and every rule is imperative + checkable. Commit.
+
+### Phase 7 — Jargon comment purge
+- [ ] 7.1 Sweep all of `src/` and `scripts/` (61 flagged files): delete or rewrite every comment referencing PLAN.md, Iteration/Phase numbers, "Locked decision", "source of truth" pointers, or old-design comparisons. Keep only constraint-stating comments (rewrite where a real constraint hides inside jargon). YAML header comments included. Tests/ dir included.
+- [ ] 7.2 Guard: add checklist rule + verify grep clean.
+
+Verification: `grep -rn "PLAN.md\|Iteration [0-9]\|Locked decision" src scripts tests` → only legitimate hits (none expected; PLAN.md itself and README excluded); `pnpm check` + unit + e2e still green (comments only — any code change here is a red flag). Commit.
+
+### Phase 8 — Golden re-baseline + full acceptance
+- [ ] 8.1 Confirm the Phase 3 determinism hooks keep `01-dashboard` stable (seeded notification state, no injection, animations frozen) BEFORE re-baselining. Then `pnpm build:fixtures && playwright test tests/visual/identical.spec.ts --update-snapshots`; then `pnpm test:visual` ×3 consecutive, 0 failures each; `git diff --stat tests/visual/goldens/` limited to expected recipes; every changed PNG visually inspected (executor lists each with one-line description of the visible change; verifier spot-checks).
+- [ ] 8.2 Full suite: `pnpm check`, `pnpm test:unit`, `pnpm test:e2e`, `pnpm test:visual`.
+- [ ] 8.3 Rename/replace stale visual recipe `03-builds-j` (j-motion no longer exists) with an arrows-based equivalent.
+
+Verification: all four suites green; goldens deterministic 3×. Commit.
+
+## Acceptance criteria (final checklist)
+
+- [ ] Per-extension SVG icons (Material style) in Builds tree, Personnel browser, Grep overlay.
+- [ ] Code files render with multi-color syntax highlighting in the editor; Markdown keeps doc coloring; zero client-side highlighter bundle.
+- [ ] Tracker wallpaper noticeably more visible on non-tracker views; still darkened + blurred.
+- [ ] Help page matches Mockup A (translucent bg + kept gradient + corner padding); copy passes every one of the user's 12 items; no row description wraps at either viewport; no jargon strings in help content.
+- [ ] j/k/gg/G only in Editor and CopyMode; arrows navigate lists everywhere.
+- [ ] Builds `t` gone; dashboard b/p/x/i/t/h gone; dashboard menu shows `C-b N` bindings; `r` reboots from any view; reboot copy says "reboot".
+- [ ] Notification bell/panel/toasts pixel-faithful to Mockup B incl. all animations + timed dismissals; no sim controls; read/unread/spam/archive state persists in localStorage across reloads; exactly 2 unseen pool notifications injected per visit until pool exhausted.
+- [ ] Dashboard has the mockup's red center glow, fonts untouched, menu says `Retina-V`, footer says `⚡ synced N/N panes in 48.23ms` with N live from tmux model.
+- [ ] Personnel filter: bordered box with count, clickable to activate.
+- [ ] `.claude/checklist.md` exists with enforceable stack conventions + user rules.
+- [ ] Human-editable content lives as Markdown in `src/content` (profile, help, notifications, boot narrative); `companies.yaml` deleted, list derived; machine data stays generated.
+- [ ] `grep -rn "PLAN.md\|Iteration [0-9]\|Locked decision" src scripts tests` clean.
+- [ ] All suites green: check, unit, e2e, visual (3× deterministic after re-baseline).
+- [ ] One one-line commit per phase, no bodies/trailers.
+
+Stop conditions: no new features beyond the above; no refactors outside listed files except where a step forces a type change (EditorLine); mobile/responsive work out of scope; shell `ls`/`cat` coloring out of scope; Fonts-API migration and a11y CI out of scope (residuals).
+
+Conscious deviations to flag in the final report: third per-row action for mark-as-spam (mockup has two); dropped the mockup's unwired "x dismiss" footer hint; vim keys kept in CopyMode (authentic tmux vi copy-mode); help/notification content migrated as frontmatter-structured Markdown.

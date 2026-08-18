@@ -6,7 +6,7 @@
 # own design decisions written down ahead of the code that implements them).
 #
 # Reachable via `Ctrl-b ?` (tmux list-keys), `Ctrl-b 5`, a status-bar click
-# on "5:help", and the dashboard menu's Help row (hotkey `h`). Not to be
+# on "5:help", and a click on the dashboard menu's Help row. Not to be
 # confused with the site-wide `?` HelpSearch palette (its own "Help search"
 # section below) — this window is the full reference table; that palette is
 # a fuzzy jump-to for commands and a live search over these very rows.
@@ -18,31 +18,21 @@
 # remaining row still documents an actual key or command.
 
 title: "Help — Keymap Reference"
-scrollHint: "j/k scrolls"
+scrollHint: "↑/↓ scrolls"
 plannedNote: "planned — lands in a later phase"
 
 sections:
   - title: "Global"
     rows:
-      - key: "b / p"
-        description: "Builds (from the dashboard)"
-      - key: "x"
-        description: "Personnel Files (from the dashboard)"
-      - key: "i"
-        description: "Profile (from the dashboard)"
-      - key: "t"
-        description: "E.D.I.T.H: Retina-V (from the dashboard)"
-      - key: "h"
-        description: "Help (from the dashboard)"
       - key: "r"
-        description: "reboot (dashboard only) — replays the boot sequence"
+        description: "reboot (any view) — replays the boot sequence"
       - key: "/"
         description: "open the grep overlay (any view; searches the buffer inside the editor)"
       - key: ":"
         description: "open the floating Cmdline box (any view, or the editor's ex-command line)"
       - key: "?"
         description: "open the HelpSearch palette (any view, unless another modal is open)"
-      - key: "j / k / arrows"
+      - key: "arrows"
         description: "move selection within the active pane"
       - key: "Enter"
         description: "open / drill in"
@@ -62,7 +52,7 @@ sections:
     rows:
       - key: "1 / 2 / 3 / 4 / 0"
         description: "focus panel Status / Files / Local Repositories / Commits / Changes"
-      - key: "j / k"
+      - key: "arrows"
         description: "move selection within the focused panel"
       - key: "Enter (panel [3], a repo)"
         description: "load that repo's tree into panel [2] — same as clicking the row"
@@ -78,10 +68,6 @@ sections:
         description: "load that commit's tree into panel [2] (spinner on the repo row) — no new tab"
       - key: "o (panel [4], commits)"
         description: "opens the selected commit on GitHub in a new tab"
-      - key: "t"
-        description: "E.D.I.T.H: Retina-V (works from Builds too, not only the dashboard)"
-      - key: "gg / G"
-        description: "jump to the first / last row of the open tree in panel [2] (also in the file editor)"
 
   - title: "tmux prefix (Ctrl-b)"
     rows:
@@ -132,7 +118,7 @@ sections:
 
   - title: "choose-tree (Ctrl-b w, PLAN.md Iteration 3 Phase 6)"
     rows:
-      - key: "j / k / ↑ / ↓"
+      - key: "↑ / ↓"
         description: "move the selection across every visible row"
       - key: "h / ←"
         description: "window row: jump to its session; expanded session row: collapse it"
@@ -261,8 +247,6 @@ sections:
         description: "next hit"
       - key: "↑ / Ctrl-p (or Ctrl-k)"
         description: "previous hit"
-      - key: "gg / G"
-        description: "jump to the first / last hit"
       - key: "Enter"
         description: "open the selected hit — routes to the owning view if the path maps to one"
       - key: "Esc / Ctrl-c"
@@ -281,7 +265,7 @@ sections:
       - key: "Esc"
         description: "clear the filter and exit filter mode"
       - key: "Enter"
-        description: "confirm the filter and return to normal j/k navigation"
+        description: "confirm the filter and return to normal navigation"
 
   - title: "Personnel navigation (mouse)"
     rows:
@@ -300,7 +284,7 @@ sections:
       - key: "(fresh tab)"
         description: "the E.D.I.T.H boot sequence plays once automatically, unskippable"
       - key: "r"
-        description: "on the ready dashboard, replays the boot sequence (see the Global section above)"
+        description: "from any view, replays the boot sequence (see the Global section above)"
       - key: "click ↻ reboot"
         description: "status-bar right cluster — switches to the dashboard and replays the boot sequence"
 

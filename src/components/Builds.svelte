@@ -63,10 +63,9 @@
      * this pane is the window's focused one, AND this is its focused
      * panel). */
     isFocused: boolean;
-    onTracker: () => void;
   }
 
-  const { builds, projects, commitsByRepo, isFocused, onTracker }: Props = $props();
+  const { builds, projects, commitsByRepo, isFocused }: Props = $props();
 
   const sortedProjects = $derived([...projects].sort((a, b) => a.data.order - b.data.order));
 
@@ -529,15 +528,6 @@
     repoTree = { ...repoTree, selectedIdx: ((repoTree.selectedIdx + delta) % n + n) % n };
   }
 
-  function jumpTreeTop() {
-    if (!repoTree || currentRows.length === 0) return;
-    repoTree = { ...repoTree, selectedIdx: 0 };
-  }
-  function jumpTreeBottom() {
-    if (!repoTree || currentRows.length === 0) return;
-    repoTree = { ...repoTree, selectedIdx: currentRows.length - 1 };
-  }
-
   // ---------------------------------------------------------------------
   // Live commit refresh (PLAN.md "Client commit refresh"), rekeyed to the
   // panel [3] selection (was the active-project derivation pre-Phase-4 —
@@ -635,9 +625,6 @@
     return editorRef.runExCommand(cmd);
   }
 
-  let gPending = false;
-  let gTimer: ReturnType<typeof setTimeout> | undefined;
-
   export function handleKey(e: KeyboardEvent): boolean {
     if (editorFile) {
       return editorRef ? editorRef.handleKey(e) : false;
@@ -648,68 +635,39 @@
     if (e.key === "0" || e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4") {
       const n = Number(e.key) as 0 | 1 | 2 | 3 | 4;
       focusedPanel = n;
-      gPending = false;
       return true;
     }
 
     const k = e.key.toLowerCase();
 
-    if (k === "t") {
-      onTracker();
-      return true;
-    }
-
     if (focusedPanel === 2) {
       if (!repoTree) {
-        gPending = false;
         return false;
       }
-      if (k === "j" || e.key === "ArrowDown") {
+      if (e.key === "ArrowDown") {
         moveTreeSelection(1);
-        gPending = false;
         return true;
       }
-      if (k === "k" || e.key === "ArrowUp") {
+      if (e.key === "ArrowUp") {
         moveTreeSelection(-1);
-        gPending = false;
-        return true;
-      }
-      if (e.key === "G") {
-        jumpTreeBottom();
-        gPending = false;
-        return true;
-      }
-      if (e.key === "g") {
-        if (gPending) {
-          clearTimeout(gTimer);
-          gPending = false;
-          jumpTreeTop();
-        } else {
-          gPending = true;
-          gTimer = setTimeout(() => (gPending = false), 500);
-        }
         return true;
       }
       if (e.key === "Enter") {
         const entry = currentRows[repoTree.selectedIdx];
         if (entry) activateEntry(entry, { openEditor: true });
-        gPending = false;
         return true;
       }
-      // PLAN.md Iteration 4 item 4 retired cwd-style navigation entirely (the
-      // whole tree renders at once, expand/collapse in place) — h/Backspace/
-      // ArrowLeft no longer have a "go up a level" to perform, so they're
-      // retired along with `goUpDir()` rather than repurposed.
-      gPending = false;
+      // The whole tree renders at once, expand/collapse in place — h/
+      // Backspace/ArrowLeft have no "go up a level" to perform here.
       return false;
     }
 
     if (focusedPanel === 3) {
-      if (k === "j" || e.key === "ArrowDown") {
+      if (e.key === "ArrowDown") {
         selectRepo(1);
         return true;
       }
-      if (k === "k" || e.key === "ArrowUp") {
+      if (e.key === "ArrowUp") {
         selectRepo(-1);
         return true;
       }
@@ -721,11 +679,11 @@
     }
 
     if (focusedPanel === 4) {
-      if (k === "j" || e.key === "ArrowDown") {
+      if (e.key === "ArrowDown") {
         selectCommit(1);
         return true;
       }
-      if (k === "k" || e.key === "ArrowUp") {
+      if (e.key === "ArrowUp") {
         selectCommit(-1);
         return true;
       }

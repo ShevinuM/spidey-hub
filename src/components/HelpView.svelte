@@ -8,10 +8,11 @@
   // click, and the dashboard menu's Help row — Terminal.svelte wires all
   // four to the same `setView("help")`.
   //
-  // j/k scrolling (the one interactive behavior beyond static rendering):
-  // same `bind:this` + `handleKey(): boolean` delegation contract every
-  // other view uses (Builds/Personnel/Profile) — Terminal.svelte tries this
-  // before falling through to its own generic handling.
+  // Arrow-key scrolling (the one interactive behavior beyond static
+  // rendering): same `bind:this` + `handleKey(): boolean` delegation
+  // contract every other view uses (Builds/Personnel/Profile) —
+  // Terminal.svelte tries this before falling through to its own generic
+  // handling.
   import type { HelpData } from "../lib/data";
 
   interface Props {
@@ -29,11 +30,11 @@
 
   export function handleKey(e: KeyboardEvent): boolean {
     if (!scrollerEl) return false;
-    if (e.key === "j" || e.key === "ArrowDown") {
+    if (e.key === "ArrowDown") {
       scrollerEl.scrollBy({ top: SCROLL_STEP_PX });
       return true;
     }
-    if (e.key === "k" || e.key === "ArrowUp") {
+    if (e.key === "ArrowUp") {
       scrollerEl.scrollBy({ top: -SCROLL_STEP_PX });
       return true;
     }

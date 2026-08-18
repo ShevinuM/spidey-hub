@@ -212,8 +212,8 @@ test.describe("Builds: panel [3] repo list — all-projects pinned first + defau
       "style",
       /border: 1px solid rgb\(224, 69, 60\)/,
     );
-    await page.keyboard.press("k"); // wrap from transcript-tts (idx 2) back to all-projects (idx 0)
-    await page.keyboard.press("k");
+    await page.keyboard.press("ArrowUp"); // wrap from transcript-tts (idx 2) back to all-projects (idx 0)
+    await page.keyboard.press("ArrowUp");
     await page.keyboard.press("Enter");
     await expect(treeRow(page, "daily-tech-digest.md")).toBeVisible();
     await expect(treeRow(page, "README.md")).toHaveCount(0);
@@ -289,22 +289,14 @@ test.describe("Builds: panel [2] lazygit-style tree — expand/collapse, no ../ 
     await expect(treeRow(page, "feeds")).toHaveAttribute("data-expanded", "true");
     await expect(treeRow(page, "dev_to.py")).toBeVisible();
 
-    // Same via the keyboard (focus panel [2], reset to the top row with
-    // "gg" so the walk-down-with-j loop below starts from a known index,
-    // move onto "feeds", Enter). Blur first — see `blurActive`'s doc comment
-    // — the mouse clicks above left real DOM focus sitting on "feeds"
-    // itself, which would otherwise double-fire on the Enter below.
+    // Same via the keyboard — the mouse clicks above already left the
+    // keyboard selection sitting on "feeds" itself, so focusing panel [2]
+    // and pressing Enter toggles it again with no extra movement needed.
+    // Blur first — see `blurActive`'s doc comment — the mouse clicks above
+    // left real DOM focus sitting on "feeds" itself, which would otherwise
+    // double-fire on the Enter below.
     await blurActive(page);
     await page.keyboard.press("2");
-    await page.keyboard.press("g");
-    await page.keyboard.press("g");
-    const rows = page.locator('[data-testid="builds-tree-row"]');
-    const count = await rows.count();
-    for (let i = 0; i < count; i++) {
-      const name = await rows.nth(i).getAttribute("data-entry-name");
-      if (name === "feeds") break;
-      await page.keyboard.press("j");
-    }
     await page.keyboard.press("Enter");
     await expect(treeRow(page, "feeds")).toHaveAttribute("data-expanded", "false");
     await expect(treeRow(page, "dev_to.py")).toHaveCount(0);
@@ -315,24 +307,6 @@ test.describe("Builds: panel [2] lazygit-style tree — expand/collapse, no ../ 
     await openRepoTree(page, "daily-tech-digest");
     await expect(treeRow(page, "../")).toHaveCount(0);
     await expect(page.locator('[data-testid="builds-tree-row"][data-entry-type="up"]')).toHaveCount(0);
-  });
-
-  test("gg/G jump to the first/last row of the flattened, currently-visible tree", async ({ page }) => {
-    await gotoReady(page, "/builds");
-    await openRepoTree(page, "daily-tech-digest");
-    await page.keyboard.press("2");
-
-    await page.keyboard.press("G");
-    const lastRow = page.locator('[data-testid="builds-tree-row"]').last();
-    await expect(lastRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.18\)/);
-
-    // A single "g" does nothing visible.
-    await page.keyboard.press("g");
-    await expect(lastRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.18\)/);
-
-    await page.keyboard.press("g");
-    const firstRow = page.locator('[data-testid="builds-tree-row"]').first();
-    await expect(firstRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.18\)/);
   });
 
   test("tree rows render SVG folder/file icons and a ▾/▸ caret, not a plain glyph in the icon slot (Item 1)", async ({
@@ -471,7 +445,7 @@ test.describe("Builds: panel [4] commits track ONLY panel [3] (bug fix)", () => 
 
     // Only moving the panel [3] selection changes commits again.
     await page.keyboard.press("3");
-    await page.keyboard.press("j"); // daily-tech-digest -> transcript-tts
+    await page.keyboard.press("ArrowDown"); // daily-tech-digest -> transcript-tts
     await expect.poll(shaOf).not.toBe(afterSelect);
   });
 });
@@ -673,15 +647,15 @@ test.describe("Builds: commit row heights render at full glyph height (PLAN.md 4
   });
 });
 
-test.describe("Builds: t -> tracker", () => {
+test.describe("Builds: t is not bound", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("t from builds enters the tracker (Retina-V) view", async ({ page }) => {
+  test("t from builds does nothing — Retina-V is reachable only via Ctrl-b 3 or a click", async ({ page }) => {
     await gotoReady(page, "/builds");
     await page.keyboard.press("t");
-    await expect(page).toHaveURL(/\/retina-v$/);
+    await expect(page).toHaveURL(/\/builds$/);
   });
 });
 

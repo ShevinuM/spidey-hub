@@ -45,13 +45,16 @@ async function gotoReady(page: Page, path: string) {
   await page.locator('[data-terminal-ready="true"]').waitFor({ state: "attached" });
 }
 
-/** Opens the Personnel view from the dashboard and waits for its browser
- * pane to be visible. There's no more `personnel-path` testid to wait on
- * (item 7 removed it) — the root's own `enaimco/` row is an equally
- * reliable "the view is up" signal. */
+/** Opens the Personnel view from the dashboard (via the tmux prefix, the
+ * only keyboard way to switch windows) and waits for its browser pane to be
+ * visible. There's no more `personnel-path` testid to wait on — the root's
+ * own `enaimco/` row is an equally reliable "the view is up" signal. */
 async function openPersonnel(page: Page) {
   await gotoReady(page, "/");
-  await page.keyboard.press("x");
+  await page.keyboard.down("Control");
+  await page.keyboard.press("b");
+  await page.keyboard.up("Control");
+  await page.keyboard.press("2");
   await expect(rowLocator(page, "enaimco/")).toBeVisible();
 }
 
@@ -184,7 +187,7 @@ test.describe("Personnel: root directory listing", () => {
     await openPersonnel(page);
     await expect(rowLocator(page, "enaimco/")).toHaveText(/4$/);
     await expect(rowLocator(page, "enaimco/")).not.toContainText("role");
-    await page.keyboard.press("j");
+    await page.keyboard.press("ArrowDown");
     await expect(rowLocator(page, "memorial-university/")).toHaveText(/5$/);
     await expect(rowLocator(page, "memorial-university/")).not.toContainText("role");
   });
@@ -198,7 +201,7 @@ test.describe("Personnel: root directory listing", () => {
 
   test("selecting memorial-university/ previews all 5 of its immediate children, ls -l style", async ({ page }) => {
     await openPersonnel(page);
-    await page.keyboard.press("j");
+    await page.keyboard.press("ArrowDown");
     await expect(lsRows(page)).toHaveCount(5);
     const texts = await lsRows(page).allTextContents();
     expect(texts).toEqual([
@@ -262,9 +265,9 @@ test.describe("Personnel: enaimco/software-developer/ — mixed file + directory
     await expect(lsRows(page)).toHaveCount(0);
   });
 
-  test("k from role.md (the first content row) selects ../ — reachable via keyboard (item 23a)", async ({ page }) => {
+  test("ArrowUp from role.md (the first content row) selects ../ — reachable via keyboard (item 23a)", async ({ page }) => {
     await openEnaimcoSoftwareDeveloper(page);
-    await page.keyboard.press("k");
+    await page.keyboard.press("ArrowUp");
     await expect(upRow(page)).toHaveAttribute("style", SELECTED_STYLE);
     // ../ isn't "an entry" for position-counting purposes.
     await expect(posText(page)).toHaveText("0 / 4");
@@ -273,7 +276,7 @@ test.describe("Personnel: enaimco/software-developer/ — mixed file + directory
 
   test("Enter on the selected ../ row ascends one level (item 23a)", async ({ page }) => {
     await openEnaimcoSoftwareDeveloper(page);
-    await page.keyboard.press("k"); // -> select ../
+    await page.keyboard.press("ArrowUp"); // -> select ../
     await page.keyboard.press("Enter");
     await expect(rowLocator(page, "software-developer/")).toBeVisible();
     await expect(rowLocator(page, "role.md")).toHaveCount(0);
@@ -285,20 +288,23 @@ test.describe("Personnel: enaimco/software-developer/ — mixed file + directory
     await expect(rowLocator(page, "software-developer/")).toBeVisible();
   });
 
-  test("j from the last row (co-op/) wraps around to ../", async ({ page }) => {
+  test("ArrowDown from the last row (co-op/) wraps around to ../", async ({ page }) => {
     await openEnaimcoSoftwareDeveloper(page);
-    await page.keyboard.press("G"); // -> co-op/ (last content row)
+    // Walk from role.md (the first content row) down to co-op/ (the last).
+    await page.keyboard.press("ArrowDown"); // -> full-time/
+    await page.keyboard.press("ArrowDown"); // -> part-time/
+    await page.keyboard.press("ArrowDown"); // -> co-op/ (last content row)
     await expect(posText(page)).toHaveText("4 / 4");
-    await page.keyboard.press("j");
+    await page.keyboard.press("ArrowDown");
     await expect(upRow(page)).toHaveAttribute("style", SELECTED_STYLE);
     await expect(posText(page)).toHaveText("0 / 4");
   });
 
-  test("j moves onto full-time/ — hint switches to a DIRECTORY selection and the preview becomes a 1-row ls -l listing", async ({
+  test("ArrowDown moves onto full-time/ — hint switches to a DIRECTORY selection and the preview becomes a 1-row ls -l listing", async ({
     page,
   }) => {
     await openEnaimcoSoftwareDeveloper(page);
-    await page.keyboard.press("j");
+    await page.keyboard.press("ArrowDown");
     await expect(posText(page)).toHaveText("2 / 4");
     await expect(rowLocator(page, "full-time/")).toHaveAttribute("style", SELECTED_STYLE);
     await expect(hintText(page)).toHaveText("enter opens full-time/ · h goes back · Ctrl-b ? for help");
@@ -314,7 +320,7 @@ test.describe("Personnel: enaimco/software-developer/ — mixed file + directory
 
   test("Enter on full-time/ descends into that directory (single-file listing, ../ present)", async ({ page }) => {
     await openEnaimcoSoftwareDeveloper(page);
-    await page.keyboard.press("j"); // -> full-time/
+    await page.keyboard.press("ArrowDown"); // -> full-time/
     await page.keyboard.press("Enter");
     await expect(rowLocator(page, "role.md")).toBeVisible();
     await expect(upRow(page)).toBeVisible();
@@ -330,7 +336,7 @@ test.describe("Personnel: enaimco/software-developer/ — mixed file + directory
 
   test("descending always starts fresh at the first content row (role.md), even after a deeper visit", async ({ page }) => {
     await openEnaimcoSoftwareDeveloper(page);
-    await page.keyboard.press("j"); // -> full-time/
+    await page.keyboard.press("ArrowDown"); // -> full-time/
     await page.keyboard.press("h"); // -> enaimco/
     await page.keyboard.press("l"); // -> back into software-developer/, fresh selection
     await expect(posText(page)).toHaveText("1 / 4");
@@ -341,7 +347,7 @@ test.describe("Personnel: enaimco/software-developer/ — mixed file + directory
     page,
   }) => {
     await openPersonnel(page);
-    await page.keyboard.press("j"); // root: select memorial-university/ (idx 1)
+    await page.keyboard.press("ArrowDown"); // root: select memorial-university/ (idx 1)
     await page.keyboard.press("Enter"); // descend into it
     await expect(rowLocator(page, "software-developer/")).toBeVisible();
     await page.keyboard.press("h"); // back up to root
@@ -358,17 +364,6 @@ test.describe("Personnel: enaimco/software-developer/ — mixed file + directory
     await expect(rowLocator(page, "role.md")).toBeVisible();
   });
 
-  test("gg/G jump to the first/last CONTENT row (never landing on ../)", async ({ page }) => {
-    await openEnaimcoSoftwareDeveloper(page);
-    await page.keyboard.press("G");
-    await expect(posText(page)).toHaveText("4 / 4");
-    await expect(rowLocator(page, "co-op/")).toHaveAttribute("style", SELECTED_STYLE);
-
-    await page.keyboard.press("g");
-    await page.keyboard.press("g");
-    await expect(posText(page)).toHaveText("1 / 4");
-    await expect(rowLocator(page, "role.md")).toHaveAttribute("style", SELECTED_STYLE);
-  });
 });
 
 test.describe("Personnel: role file leaves + editor", () => {
@@ -376,7 +371,7 @@ test.describe("Personnel: role file leaves + editor", () => {
     await openPersonnel(page);
     await page.keyboard.press("Enter"); // -> enaimco/
     await page.keyboard.press("Enter"); // -> enaimco/software-developer/
-    await page.keyboard.press("j"); // -> full-time/
+    await page.keyboard.press("ArrowDown"); // -> full-time/
     await page.keyboard.press("Enter"); // -> enaimco/software-developer/full-time/
     await expect(posText(page)).toHaveText("1 / 1");
   }
@@ -436,7 +431,7 @@ test.describe("Personnel: role file leaves + editor", () => {
 test.describe("Personnel: memorial-university/ — 5 sibling directories, each one file deep", () => {
   async function openMemorial(page: Page) {
     await openPersonnel(page);
-    await page.keyboard.press("j"); // -> memorial-university/
+    await page.keyboard.press("ArrowDown"); // -> memorial-university/
     await page.keyboard.press("Enter");
     await expect(posText(page)).toHaveText("1 / 5");
   }
@@ -457,16 +452,16 @@ test.describe("Personnel: memorial-university/ — 5 sibling directories, each o
     page,
   }) => {
     await openMemorial(page);
-    await page.keyboard.press("j");
-    await page.keyboard.press("j"); // -> research-assistant/ (still a dir selection)
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("ArrowDown"); // -> research-assistant/ (still a dir selection)
     await expect(lsRows(page)).toHaveCount(1);
     await expect(lsRows(page).first()).toHaveText(".rw-r--r--  shev  Oct 2023  role.md");
   });
 
   test("research-assistant/ displays the shortened title in its preview once descended", async ({ page }) => {
     await openMemorial(page);
-    await page.keyboard.press("j");
-    await page.keyboard.press("j"); // -> research-assistant/
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("ArrowDown"); // -> research-assistant/
     await page.keyboard.press("Enter");
     await expect(page.locator('[data-testid="personnel-preview"]')).toContainText("Research Assistant");
   });
@@ -695,7 +690,7 @@ test.describe("Personnel: filter mode (item 23b)", () => {
     await expect(upRow(page)).toBeVisible();
   });
 
-  test("typed 'j' while filtering types into the query instead of navigating", async ({ page }) => {
+  test("typed 'j' while filtering types into the query (not a nav key here)", async ({ page }) => {
     await openPersonnel(page);
     await page.keyboard.press("Enter");
     await page.keyboard.press("Enter");
@@ -709,7 +704,7 @@ test.describe("Personnel: filter mode (item 23b)", () => {
     await expect(posText(page)).toHaveText("0 / 0");
   });
 
-  test("Enter confirms the filter (exits typing) and j then navigates the filtered list", async ({ page }) => {
+  test("Enter confirms the filter (exits typing) and ArrowDown then navigates the filtered list", async ({ page }) => {
     await openPersonnel(page);
     await page.keyboard.press("Enter"); // -> enaimco/
     await page.keyboard.press("Enter"); // -> enaimco/software-developer/
@@ -719,38 +714,19 @@ test.describe("Personnel: filter mode (item 23b)", () => {
     await expect(posText(page)).toHaveText("1 / 2");
 
     await page.keyboard.press("Enter"); // confirm filter, back to nav mode
-    await page.keyboard.press("j");
+    await page.keyboard.press("ArrowDown");
     await expect(posText(page)).toHaveText("2 / 2");
     await expect(rowLocator(page, "part-time/")).toHaveAttribute("style", SELECTED_STYLE);
   });
 
-  test("typed characters while NOT filtering still act as nav keys", async ({ page }) => {
+  test("typed letters do nothing when NOT filtering — only arrows navigate", async ({ page }) => {
     await openPersonnel(page);
     await expect(posText(page)).toHaveText("1 / 2");
     await page.keyboard.press("j");
     await expect(promptRow(page)).not.toContainText("j");
-    await expect(posText(page)).toHaveText("2 / 2");
-  });
-
-  test("G after a filter jumps to the last entry of the filtered list, not the unfiltered one", async ({ page }) => {
-    await openPersonnel(page);
-    await page.keyboard.press("Enter"); // -> enaimco/
-    await page.keyboard.press("Enter"); // -> enaimco/software-developer/ (4 entries)
-    await page.keyboard.press("f");
-    await page.keyboard.type("time"); // matches full-time/ and part-time/ (2 of 4)
-    await page.keyboard.press("Enter"); // confirm filter, back to nav mode
     await expect(posText(page)).toHaveText("1 / 2");
-
-    await page.keyboard.press("G");
+    await page.keyboard.press("ArrowDown");
     await expect(posText(page)).toHaveText("2 / 2");
-    await expect(rowLocator(page, "part-time/")).toHaveAttribute("style", SELECTED_STYLE);
-    // Not the unfiltered list's last entry.
-    await expect(rowLocator(page, "co-op/")).not.toBeVisible();
-
-    await page.keyboard.press("g");
-    await page.keyboard.press("g");
-    await expect(posText(page)).toHaveText("1 / 2");
-    await expect(rowLocator(page, "full-time/")).toHaveAttribute("style", SELECTED_STYLE);
   });
 
   test("descending from a filtered listing enters the filtered (not positionally-indexed) entry", async ({ page }) => {

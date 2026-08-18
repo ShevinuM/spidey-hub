@@ -1,9 +1,9 @@
-// Behavioral e2e suite for the Help window — PLAN.md Phase 1 item 13.
-// New sixth status-bar window ("5:help"), reachable via `Ctrl-b ?`,
-// `Ctrl-b 5`, a status-bar click, and the dashboard menu's Help row
-// (hotkey `h` — PLAN.md Iteration 3 Phase 3 item 3.4 rebound this from the
-// old `?`, which now opens the site-wide HelpSearch palette instead —
-// see tests/e2e/help-search.spec.ts). Content is asserted against the real
+// Behavioral e2e suite for the Help window — the sixth status-bar window
+// ("5:help"), reachable via `Ctrl-b ?`, `Ctrl-b 5`, a status-bar click, and
+// the dashboard menu's Help row (its hotkey column shows the live `Ctrl-b 5`
+// binding, not a bare letter — there is no bare-key dashboard hotkey; a bare
+// `?` opens the site-wide HelpSearch palette instead, see
+// tests/e2e/help-search.spec.ts). Content is asserted against the real
 // src/data/help.yaml (read directly, same pattern as grep.spec.ts's
 // real-index comparisons) so this suite can never drift from the actual
 // copy.
@@ -69,10 +69,10 @@ test.describe("Help: reachability", () => {
     await expect(page).toHaveURL(/\/help$/);
   });
 
-  test("h from the dashboard opens help (PLAN.md Iteration 3 Phase 3 item 3.4)", async ({ page }) => {
+  test("the dashboard's Help menu row shows its real tmux binding (Ctrl-b 5)", async ({ page }) => {
     await gotoReady(page, "/");
-    await page.keyboard.press("h");
-    await expect(page).toHaveURL(/\/help$/);
+    const row = page.locator('[data-testid="dashboard-menu-row"][data-menu-id="help"]');
+    await expect(row).toContainText("C-b 5");
   });
 
   test("clicking the 5:help status-bar window opens help", async ({ page }) => {
@@ -120,21 +120,22 @@ test.describe("Help: content is sourced from src/data/help.yaml", () => {
 });
 
 test.describe("Help: scrolling", () => {
-  test("j/k scroll the help list", async ({ page }) => {
+  test("arrow keys scroll the help list", async ({ page }) => {
     await gotoReady(page, "/help");
     await expect(scroller(page)).toBeVisible();
 
     // The full keymap table (~50 rows across 8 sections) overflows any of
-    // this suite's viewports, so a handful of "j" presses is enough to move
-    // scrollTop off zero regardless of exact row/section pixel heights.
+    // this suite's viewports, so a handful of "ArrowDown" presses is enough
+    // to move scrollTop off zero regardless of exact row/section pixel
+    // heights.
     const before = await scroller(page).evaluate((el) => el.scrollTop);
-    for (let i = 0; i < 8; i++) await page.keyboard.press("j");
-    const afterJ = await scroller(page).evaluate((el) => el.scrollTop);
-    expect(afterJ).toBeGreaterThan(before);
+    for (let i = 0; i < 8; i++) await page.keyboard.press("ArrowDown");
+    const afterDown = await scroller(page).evaluate((el) => el.scrollTop);
+    expect(afterDown).toBeGreaterThan(before);
 
-    for (let i = 0; i < 8; i++) await page.keyboard.press("k");
-    const afterK = await scroller(page).evaluate((el) => el.scrollTop);
-    expect(afterK).toBeLessThan(afterJ);
+    for (let i = 0; i < 8; i++) await page.keyboard.press("ArrowUp");
+    const afterUp = await scroller(page).evaluate((el) => el.scrollTop);
+    expect(afterUp).toBeLessThan(afterDown);
   });
 });
 

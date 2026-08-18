@@ -84,9 +84,11 @@ test.describe("fresh boot", () => {
     await expect(page.locator(BOOT_SEQUENCE)).toBeVisible();
 
     // Unskippable — global key handling is inert while booting (no
-    // navigation, no grep overlay opens).
+    // navigation, no grep overlay opens, the tmux prefix never even arms).
+    await page.keyboard.down("Control");
     await page.keyboard.press("b");
-    await page.keyboard.press("x");
+    await page.keyboard.up("Control");
+    await page.keyboard.press("1");
     await page.keyboard.press("/");
     await expect(page).toHaveURL(/\/$/);
     await expect(page.locator('[data-testid="grep-overlay"]')).toHaveCount(0);
@@ -187,7 +189,10 @@ test.describe("fresh boot", () => {
     await expect(page.locator(BOOT_SEQUENCE)).toHaveCount(0);
     await expect(page.locator('[data-testid="dashboard-wordmark"]')).toBeVisible();
 
+    await page.keyboard.down("Control");
     await page.keyboard.press("b");
+    await page.keyboard.up("Control");
+    await page.keyboard.press("1");
     await expect(page).toHaveURL(/\/builds$/);
   });
 });
@@ -201,7 +206,10 @@ test.describe("session-once skip", () => {
     // No fake-clock advance needed at all — the dashboard is immediately
     // interactive, proving the skip is functional, not merely "eventually
     // finishes fast".
-    await page.keyboard.press("x");
+    await page.keyboard.down("Control");
+    await page.keyboard.press("b");
+    await page.keyboard.up("Control");
+    await page.keyboard.press("2");
     await expect(page).toHaveURL(/\/personnel$/);
   });
 
@@ -235,7 +243,10 @@ test.describe("replay", () => {
 
   test("r in a non-dashboard view does not reboot — Profile's own r still downloads the resume", async ({ page }) => {
     await skipToReady(page);
-    await page.keyboard.press("i");
+    await page.keyboard.down("Control");
+    await page.keyboard.press("b");
+    await page.keyboard.up("Control");
+    await page.keyboard.press("4");
     await expect(page).toHaveURL(/\/profile$/);
     await expect(page.locator('[data-testid="profile-signal-row"]')).toBeVisible();
 

@@ -35,7 +35,10 @@ async function gotoReady(page: Page, path: string) {
 
 async function openProfile(page: Page) {
   await gotoReady(page, "/");
-  await page.keyboard.press("i");
+  await page.keyboard.down("Control");
+  await page.keyboard.press("b");
+  await page.keyboard.up("Control");
+  await page.keyboard.press("4");
   await expect(page).toHaveURL(/\/profile$/);
   await expect(page.locator('[data-testid="profile-signal-row"]')).toBeVisible();
 }

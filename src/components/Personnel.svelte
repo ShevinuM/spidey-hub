@@ -222,11 +222,6 @@
   let filterMode = $state(false);
   let filterQuery = $state("");
 
-  /** gg/G double-tap state — same ~500ms window as Editor.svelte/
-   * Builds.svelte's own gg/G. */
-  let gPending = false;
-  let gTimer: ReturnType<typeof setTimeout> | undefined;
-
   const currentDir = $derived.by((): DirNode => {
     let dir = root;
     for (const seg of pathSegments) {
@@ -407,7 +402,6 @@
 
   function enterFilterMode() {
     filterMode = true;
-    gPending = false;
   }
 
   const FILTER_PASTE_TARGET_ID = "personnel-filter";
@@ -430,24 +424,6 @@
     const n = displayRows.length;
     if (n === 0) return;
     sel = ((sel + dir) % n + n) % n;
-  }
-
-  /** gg/G — jump to the first/last row of `displayRows` (filtered-list
-   * aware: jumps within the filtered set, not the full unfiltered
-   * directory listing). `../`, when present, sits at index 0 ahead of every
-   * content row, so "first" deliberately skips it (`firstContentSel()`) —
-   * "last" never needs the same treatment since `../` is never last. Nav-
-   * mode only (not while `filterMode` is active — see handleKey(), where
-   * typed characters including "g"/"G" go straight into the filter query
-   * instead, same as every other letter). */
-  function jumpFirst() {
-    if (displayRows.length === 0) return;
-    sel = firstContentSel();
-  }
-  function jumpLast() {
-    const n = displayRows.length;
-    if (n === 0) return;
-    sel = n - 1;
   }
 
   /** Descend into a directory, ascend via the `../` row, or open a role
@@ -607,47 +583,26 @@
       enterFilterMode();
       return true;
     }
-    if (k === "j" || e.key === "ArrowDown") {
+    if (e.key === "ArrowDown") {
       moveSelection(1);
-      gPending = false;
       return true;
     }
-    if (k === "k" || e.key === "ArrowUp") {
+    if (e.key === "ArrowUp") {
       moveSelection(-1);
-      gPending = false;
       return true;
     }
     if (e.key === "Enter" || k === "l" || e.key === "ArrowRight") {
       activateSelected();
-      gPending = false;
       return true;
     }
     if (k === "h" || e.key === "Backspace" || e.key === "ArrowLeft") {
       upOneLevel();
-      gPending = false;
-      return true;
-    }
-    if (e.key === "G") {
-      jumpLast();
-      gPending = false;
-      return true;
-    }
-    if (e.key === "g") {
-      if (gPending) {
-        clearTimeout(gTimer);
-        gPending = false;
-        jumpFirst();
-      } else {
-        gPending = true;
-        gTimer = setTimeout(() => (gPending = false), 500);
-      }
       return true;
     }
 
     // q/Escape intentionally unhandled here: falls through to
     // Terminal.svelte with no matching branch left to catch it — bare
     // q/Esc never navigates anywhere, at any depth.
-    gPending = false;
     return false;
   }
 </script>

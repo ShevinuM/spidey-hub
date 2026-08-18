@@ -89,20 +89,20 @@ test.describe("choose-tree opening / initial state (PLAN.md tmux fidelity refere
   });
 });
 
-test.describe("choose-tree navigation (j/k/h/l)", () => {
+test.describe("choose-tree navigation (arrows/h/l)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("j/k move the selection across visible rows", async ({ page }) => {
+  test("ArrowDown/ArrowUp move the selection across visible rows", async ({ page }) => {
     await gotoReady(page, "/");
     await openChooseTree(page);
     await expect(selectedRow(page)).toHaveAttribute("data-window-id", "dashboard");
-    await page.keyboard.press("j");
+    await page.keyboard.press("ArrowDown");
     await expect(selectedRow(page)).toHaveAttribute("data-window-id", "builds");
-    await page.keyboard.press("j");
+    await page.keyboard.press("ArrowDown");
     await expect(selectedRow(page)).toHaveAttribute("data-window-id", "personnel");
-    await page.keyboard.press("k");
+    await page.keyboard.press("ArrowUp");
     await expect(selectedRow(page)).toHaveAttribute("data-window-id", "builds");
   });
 
@@ -137,7 +137,7 @@ test.describe("choose-tree Enter switches window/session; x kills; q/Esc close",
   test("Enter on a window row switches to it and closes the overlay", async ({ page }) => {
     await gotoReady(page, "/");
     await openChooseTree(page);
-    await page.keyboard.press("j"); // builds
+    await page.keyboard.press("ArrowDown"); // builds
     await page.keyboard.press("Enter");
     await expect(overlay(page)).not.toBeVisible();
     await expect(page).toHaveURL(/\/builds$/);
@@ -161,7 +161,7 @@ test.describe("choose-tree Enter switches window/session; x kills; q/Esc close",
   }) => {
     await gotoReady(page, "/builds");
     await openChooseTree(page);
-    await page.keyboard.press("j"); // personnel row (index 2)
+    await page.keyboard.press("ArrowDown"); // personnel row (index 2)
     await page.keyboard.press("x");
     await expect(killConfirm(page)).toHaveText("Kill window 2? (y/n)");
     await page.keyboard.press("Y"); // case-insensitive — the real tmux quirk

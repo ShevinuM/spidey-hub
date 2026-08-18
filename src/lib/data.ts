@@ -116,7 +116,6 @@ export interface MenuEntry {
   icon: string;
   label: string;
   invert?: string;
-  hotkey: string;
 }
 
 export interface DashboardData {

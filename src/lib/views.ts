@@ -34,25 +34,6 @@ export function menuIdToView(menuId: string): ViewId | undefined {
   return MENU_ID_TO_VIEW[menuId];
 }
 
-/** Global dashboard hotkeys (only active from the "home" view). PLAN.md
- * Iteration 3 Phase 3 item 3.4 / Locked decision #14: `?` is no longer a
- * dashboard hotkey at all — it now opens the `?` HelpSearch palette
- * EVERYWHERE, including the dashboard (Terminal.svelte's own bare-`?`
- * opener, checked well before this map is ever consulted); `h` takes over
- * as the dashboard's own "open the Help window" hotkey. */
-const HOTKEY_TO_VIEW: Record<string, ViewId> = {
-  b: "builds",
-  p: "builds",
-  x: "personnel",
-  i: "profile",
-  t: "retina-v",
-  h: "help",
-};
-
-export function hotkeyToView(key: string): ViewId | undefined {
-  return HOTKEY_TO_VIEW[key];
-}
-
 export function pathToView(pathname: string): ViewId {
   const entry = (Object.entries(VIEW_ROUTES) as [ViewId, string][]).find(
     ([, path]) => path === pathname,
@@ -96,6 +77,18 @@ export function viewIdToProgram(view: ViewId): ProgramName {
 export function programToViewId(program: ProgramName): ViewId | null {
   if (program === "shell") return null;
   return program === "dashboard" ? "home" : (program as ViewId);
+}
+
+/**
+ * The tmux binding that switches to `view`, e.g. "C-b 1" — looked up by
+ * window id (a window's id always equals its `ProgramName`) in `windowNumbers`
+ * (window id -> live tmux window number) rather than any fixed table, so it
+ * always reflects the actual session state. `undefined` if that view's
+ * window isn't present (e.g. it was killed).
+ */
+export function viewToTmuxBinding(view: ViewId, windowNumbers: Record<string, number>): string | undefined {
+  const number = windowNumbers[viewIdToProgram(view)];
+  return number === undefined ? undefined : `C-b ${number}`;
 }
 
 /**

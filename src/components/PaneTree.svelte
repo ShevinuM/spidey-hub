@@ -67,6 +67,9 @@
      * nothing else needs it now that the map itself is the shared prop). */
     refs: Map<string, unknown>;
     dashboard: DashboardData;
+    /** Window id (a `ProgramName`) -> its live tmux window number — threaded
+     * straight through to Dashboard.svelte's own hotkey-column lookup. */
+    windowNumberById: Record<string, number>;
     builds: BuildsData;
     personnel: PersonnelData;
     profile: ProfileData;
@@ -76,11 +79,11 @@
     projects: CollectionEntry<"projects">[];
     personnelEntries: CollectionEntry<"personnel">[];
     commitsByRepo: Record<string, Commit[]>;
-    /** Dashboard menu clicks / Builds' "onTracker" / Personnel's
-     * "onDashboard" are all just "switch to a different WINDOW" (exactly
-     * like a status-bar click or a prefix digit target) — never a program
-     * LAUNCH into the current pane — so they all funnel through this one
-     * callback, keyed by the target window's canonical program id. */
+    /** Dashboard menu clicks / Personnel's "onDashboard" are all just
+     * "switch to a different WINDOW" (exactly like a status-bar click or a
+     * prefix digit target) — never a program LAUNCH into the current pane —
+     * so they all funnel through this one callback, keyed by the target
+     * window's canonical program id. */
     onWindowSwitch: (program: ProgramName) => void;
     /** Shell.svelte's own three effects (PLAN.md Iteration 3 Phase 4 item
      * 4.2/4.3) — launching a program IN THIS PANE (bare view-name commands/
@@ -106,6 +109,7 @@
     multiPane,
     refs,
     dashboard,
+    windowNumberById,
     builds,
     personnel,
     profile,
@@ -157,6 +161,7 @@
           {multiPane}
           {refs}
           {dashboard}
+          {windowNumberById}
           {builds}
           {personnel}
           {profile}
@@ -188,7 +193,7 @@
       : ''}"
   >
     {#if node.pane.program === "dashboard"}
-      <Dashboard {dashboard} {isFocused} onSelect={(v) => onWindowSwitch(viewIdToProgram(v))} />
+      <Dashboard {dashboard} {isFocused} windowNumbers={windowNumberById} onSelect={(v) => onWindowSwitch(viewIdToProgram(v))} />
     {:else if node.pane.program === "retina-v"}
       <!-- The full-opacity map/HUD is Wallpaper's own view-gated opacity
            (rendered once, behind every window, by Terminal.svelte) — this
@@ -197,14 +202,7 @@
            window (StatusBar still pinned to the bottom). -->
       <div style="flex:1;min-height:0"></div>
     {:else if node.pane.program === "builds"}
-      <Builds
-        bind:this={leafRef}
-        {builds}
-        {projects}
-        {commitsByRepo}
-        {isFocused}
-        onTracker={() => onWindowSwitch("retina-v")}
-      />
+      <Builds bind:this={leafRef} {builds} {projects} {commitsByRepo} {isFocused} />
     {:else if node.pane.program === "personnel"}
       <Personnel
         bind:this={leafRef}

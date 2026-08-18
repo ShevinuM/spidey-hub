@@ -76,6 +76,15 @@ async function gotoReady(page: Page, path: string) {
   await page.locator('[data-terminal-ready="true"]').waitFor({ state: "attached" });
 }
 
+/** Ctrl-b <digit> — the tmux prefix window-jump binding, the only keyboard
+ * way to switch windows (clicks are the other). */
+async function prefixDigit(page: Page, digit: string) {
+  await page.keyboard.down("Control");
+  await page.keyboard.press("b");
+  await page.keyboard.up("Control");
+  await page.keyboard.press(digit);
+}
+
 /** Returns to the dashboard via a status-bar click (PLAN.md Phase 1 item
  * 1.3) — the mouse-only replacement for the retired q/Esc-to-dashboard
  * fallback, used wherever a test merely needs to get back home as a setup
@@ -92,44 +101,37 @@ test.describe("view switching + status bar (bug fix 1: numeric order)", () => {
     expect(await statusBarText(page)).toBe(winText("dashboard"));
   });
 
-  test("b switches to builds", async ({ page }) => {
+  test("Ctrl-b 1 switches to builds", async ({ page }) => {
     await gotoReady(page, "/");
-    await page.keyboard.press("b");
+    await prefixDigit(page, "1");
     await expect(page).toHaveURL(/\/builds$/);
     expect(await statusBarText(page)).toBe(winText("builds", "dashboard"));
   });
 
-  test("p also switches to builds", async ({ page }) => {
+  test("Ctrl-b 2 switches to personnel", async ({ page }) => {
     await gotoReady(page, "/");
-    await page.keyboard.press("p");
-    await expect(page).toHaveURL(/\/builds$/);
-    expect(await statusBarText(page)).toBe(winText("builds", "dashboard"));
-  });
-
-  test("x switches to personnel", async ({ page }) => {
-    await gotoReady(page, "/");
-    await page.keyboard.press("x");
+    await prefixDigit(page, "2");
     await expect(page).toHaveURL(/\/personnel$/);
     expect(await statusBarText(page)).toBe(winText("personnel", "dashboard"));
   });
 
-  test("i switches to profile", async ({ page }) => {
+  test("Ctrl-b 4 switches to profile", async ({ page }) => {
     await gotoReady(page, "/");
-    await page.keyboard.press("i");
+    await prefixDigit(page, "4");
     await expect(page).toHaveURL(/\/profile$/);
     expect(await statusBarText(page)).toBe(winText("profile", "dashboard"));
   });
 
-  test("t switches to retina-v — renders BETWEEN personnel and profile (bug fix 1)", async ({ page }) => {
+  test("Ctrl-b 3 switches to retina-v — renders BETWEEN personnel and profile (bug fix 1)", async ({ page }) => {
     await gotoReady(page, "/");
-    await page.keyboard.press("t");
+    await prefixDigit(page, "3");
     await expect(page).toHaveURL(/\/retina-v$/);
     expect(await statusBarText(page)).toBe(winText("retina-v", "dashboard"));
   });
 
-  test("h switches to help (PLAN.md Iteration 3 Phase 3 item 3.4 — replaces the old ? hotkey)", async ({ page }) => {
+  test("Ctrl-b 5 switches to help", async ({ page }) => {
     await gotoReady(page, "/");
-    await page.keyboard.press("h");
+    await prefixDigit(page, "5");
     await expect(page).toHaveURL(/\/help$/);
     expect(await statusBarText(page)).toBe(winText("help", "dashboard"));
   });
@@ -144,22 +146,22 @@ test.describe("view switching + status bar (bug fix 1: numeric order)", () => {
   });
 });
 
-test.describe("q / Esc never switch views (PLAN.md Phase 1 items 15/16)", () => {
-  for (const [key, hotkey] of [
-    ["q", "b"],
-    ["q", "x"],
-    ["q", "i"],
-    ["q", "t"],
-    ["q", "h"],
-    ["Escape", "b"],
-    ["Escape", "x"],
-    ["Escape", "i"],
-    ["Escape", "t"],
-    ["Escape", "h"],
+test.describe("q / Esc never switch views", () => {
+  for (const [key, digit] of [
+    ["q", "1"],
+    ["q", "2"],
+    ["q", "4"],
+    ["q", "3"],
+    ["q", "5"],
+    ["Escape", "1"],
+    ["Escape", "2"],
+    ["Escape", "4"],
+    ["Escape", "3"],
+    ["Escape", "5"],
   ] as const) {
-    test(`${hotkey} then ${key} does NOT return to the dashboard`, async ({ page }) => {
+    test(`Ctrl-b ${digit} then ${key} does NOT return to the dashboard`, async ({ page }) => {
       await gotoReady(page, "/");
-      await page.keyboard.press(hotkey);
+      await prefixDigit(page, digit);
       await expect(page).not.toHaveURL(/\/$/);
       const urlAfterEnter = page.url();
       await page.keyboard.press(key);
@@ -215,15 +217,13 @@ test.describe("status bar navigation (mouse) — PLAN.md Phase 1 item 1.3", () =
 
 test.describe("URL sync + back/forward", () => {
   test("pushState on switch, popstate on back/forward", async ({ page }) => {
-    // Hotkeys only switch views from "home" (mirrors the prototype: once
-    // inside a view, only status-bar clicks / the tmux prefix are handled).
-    // So this drives home -> personnel -> home -> profile to get three
-    // distinct history entries to navigate between.
+    // Drives home -> personnel -> home -> profile to get three distinct
+    // history entries to navigate between.
     await gotoReady(page, "/");
-    await page.keyboard.press("x");
+    await prefixDigit(page, "2");
     await expect(page).toHaveURL(/\/personnel$/);
     await goDashboard(page);
-    await page.keyboard.press("i");
+    await prefixDigit(page, "4");
     await expect(page).toHaveURL(/\/profile$/);
 
     await page.goBack();
@@ -322,7 +322,7 @@ test.describe("toast notifications (seeded pool pick, PLAN.md Iteration 3 Phase 
     await expect(page.locator('[data-testid="toast-0"]')).toHaveCount(0);
     await expect(page.locator('[data-testid="toast-1"]')).toHaveCount(0);
 
-    await page.keyboard.press("b");
+    await prefixDigit(page, "1");
     await expect(page).toHaveURL(/\/builds$/);
     await goDashboard(page);
 

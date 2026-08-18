@@ -35,7 +35,7 @@ preview:
   noLayoutText: "(none applied)"
   sessionWindowsTemplate: "{n} windows"
 
-hint: "j/k/↑/↓ move · h/← collapse · l/→ expand · Enter switch · x kill (y/n) · q/Esc close"
+hint: "↑/↓ move · h/← collapse · l/→ expand · Enter switch · x kill (y/n) · q/Esc close"
 
 # In-overlay kill confirm (PLAN.md tmux fidelity reference — note the
 # CAPITAL "Kill" and the WINDOW INDEX, not its name: this is a deliberately

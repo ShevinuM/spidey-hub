@@ -11,7 +11,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { grepPathToView } from "../../src/lib/views.ts";
+import { grepPathToView, viewToTmuxBinding } from "../../src/lib/views.ts";
 
 const ROOT = join(import.meta.dirname, "../..");
 const realIndex = JSON.parse(readFileSync(join(ROOT, "public/generated/grep-index.json"), "utf8")) as {
@@ -99,4 +99,19 @@ test("fixture-only legacy paths (all under src/) never route via the bare-word f
   ]) {
     assert.equal(grepPathToView(p), null, p);
   }
+});
+
+test("viewToTmuxBinding looks up the live window number, never a fixed table", () => {
+  const windowNumbers = { dashboard: 0, builds: 1, personnel: 2, "retina-v": 3, profile: 4, help: 5 };
+  assert.equal(viewToTmuxBinding("builds", windowNumbers), "C-b 1");
+  assert.equal(viewToTmuxBinding("help", windowNumbers), "C-b 5");
+
+  // A window's number moving (e.g. after a kill/re-create elsewhere)
+  // changes the binding — nothing here is hardcoded by menu position.
+  const reshuffled = { ...windowNumbers, help: 9 };
+  assert.equal(viewToTmuxBinding("help", reshuffled), "C-b 9");
+
+  // A view whose window isn't present in the live session has no binding.
+  const { help: _help, ...withoutHelp } = windowNumbers;
+  assert.equal(viewToTmuxBinding("help", withoutHelp), undefined);
 });

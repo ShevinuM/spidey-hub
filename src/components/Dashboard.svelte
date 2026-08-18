@@ -2,7 +2,7 @@
   // Home/dashboard card (design/Homepage.dc.html lines 142-169).
   import type { DashboardData } from "../lib/data";
   import type { ViewId } from "../lib/views";
-  import { menuIdToView } from "../lib/views";
+  import { menuIdToView, viewToTmuxBinding } from "../lib/views";
 
   interface Props {
     dashboard: DashboardData;
@@ -12,14 +12,27 @@
      * `Ctrl-b [`'s untargeted `document.querySelector` only ever finds the
      * focused instance's own menu, never a non-focused sibling's. */
     isFocused: boolean;
+    /** Window id (a tmux `ProgramName`) -> its live window number, so each
+     * row's hotkey column can show the real `C-b N` binding for that view
+     * instead of a fixed table. */
+    windowNumbers: Record<string, number>;
     onSelect: (view: ViewId) => void;
   }
 
-  const { dashboard, isFocused, onSelect }: Props = $props();
+  const { dashboard, isFocused, windowNumbers, onSelect }: Props = $props();
 
   function pick(menuId: string) {
     const view = menuIdToView(menuId);
     if (view) onSelect(view);
+  }
+
+  /** The row's hotkey-column text — the actual tmux binding for whatever
+   * window `item.id` maps to, never a hardcoded per-row letter. Empty if
+   * that window isn't present in the live session. */
+  function binding(menuId: string): string {
+    const view = menuIdToView(menuId);
+    if (!view) return "";
+    return viewToTmuxBinding(view, windowNumbers) ?? "";
   }
 
   // PLAN.md Iteration 3 Phase 2 item 2.1: SPIDEY-HUB wordmark, own arched
@@ -85,7 +98,7 @@
           <span>
             {item.label}
           </span>
-          <span style="color:#5fc6b4">{item.hotkey}</span>
+          <span style="color:#5fc6b4">{binding(item.id)}</span>
         </div>
       {/each}
     </div>

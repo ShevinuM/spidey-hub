@@ -281,26 +281,27 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
   });
 
-  // PLAN.md Phase 4 rework: panel [2] is the tree browser now (empty until a
-  // repo is opened, so it has no default j/k-navigable content), so this
-  // exercises the same "prefix swallows the key" invariant against panel
-  // [3]'s repo selection instead — panel [3] still has default content
-  // (the flat repo list) to move a highlight across.
-  test("a prefixed j does not move the Builds repo selection (panel [3])", async ({ page }) => {
+  // Panel [2] is the tree browser (empty until a repo is opened, so it has
+  // no default arrow-navigable content), so this exercises the "prefix
+  // consumes the key first" invariant against panel [3]'s repo selection
+  // instead — panel [3] still has default content (the flat repo list) to
+  // move a highlight across.
+  test("a prefixed ArrowDown does not move the Builds repo selection (panel [3])", async ({ page }) => {
     await gotoReady(page, "/builds");
     await page.keyboard.press("3"); // focus panel [3], Local Repositories
     const firstRow = page.locator('[data-testid="builds-repo-row"]').first();
     await expect(firstRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.22\)/);
 
     await ctrlB(page);
-    await page.keyboard.press("j");
-    // Still on the first repo — the prefixed "j" was swallowed, never
-    // reached Builds.svelte's own j/k handler.
+    await page.keyboard.press("ArrowDown");
+    // Still on the first repo — the prefixed ArrowDown was consumed by the
+    // tmux prefix system (directional pane nav, a no-op with one pane),
+    // never reached Builds.svelte's own arrow-key handler.
     await expect(firstRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.22\)/);
     await expect(page).toHaveURL(/\/builds$/);
 
-    // An un-prefixed "j" right after still works normally.
-    await page.keyboard.press("j");
+    // An un-prefixed ArrowDown right after still works normally.
+    await page.keyboard.press("ArrowDown");
     await expect(page.locator('[data-testid="builds-repo-row"]').nth(1)).toHaveAttribute(
       "style",
       /rgba\(224, 69, 60, 0\.22\)/,
@@ -795,7 +796,7 @@ test.describe("mobile block (README \"Mobile policy\")", () => {
     await expect(page.locator('[data-testid="terminal-root"]')).toHaveCSS("display", "none");
   });
 
-  test("pressing b does nothing — no keydown listener ever attaches (data-terminal-ready stays false)", async ({
+  test("pressing a key does nothing — no keydown listener ever attaches (data-terminal-ready stays false)", async ({
     page,
   }) => {
     await page.goto("/");
@@ -807,7 +808,7 @@ test.describe("mobile block (README \"Mobile policy\")", () => {
     await page.waitForTimeout(300);
     await expect(page.locator('[data-terminal-ready="false"]')).toBeAttached();
 
-    await page.keyboard.press("b");
+    await page.keyboard.press("r");
     await expect(page).toHaveURL(/\/$/);
     await expect(page.locator('[data-terminal-ready="false"]')).toBeAttached();
   });
