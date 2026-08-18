@@ -1,11 +1,15 @@
 // Behavioral e2e suite for the site-wide floating Cmdline (PLAN.md Phase
 // 5C) — src/components/Cmdline.svelte, driven by Terminal.svelte. Covers
 // all THREE entry contexts (site `:`, editor ex-mode `:`, tmux
-// command-prompt `Ctrl-b :`), the palette feel (suggestions/Tab
-// completion), and a DATA-DRIVEN sweep over src/data/cmdline.yaml's own
-// `commands` list so a future addition to that file is asserted
-// automatically rather than silently untested (PLAN.md 5C.5 "the e2e sweep
-// is generated FROM the yaml so the list can't drift").
+// command-prompt `Ctrl-b :`), the palette feel (PLAN.md Iteration 3 Phase 3
+// item 3.1: silent Tab completion + zsh-style repeated-Tab cycling — the
+// visible suggestions list this box used to render is GONE, asserted
+// absent throughout this file), and a DATA-DRIVEN sweep over
+// src/data/cmdline.yaml's own `commands` list so a future addition to that
+// file is asserted automatically rather than silently untested (PLAN.md
+// 5C.5 "the e2e sweep is generated FROM the yaml so the list can't drift").
+// The new `?` HelpSearch palette that took over the browsable/discoverable
+// role has its own suite — tests/e2e/help-search.spec.ts.
 import { expect, test, type Page } from "./fixtures.ts";
 // PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported from
 // ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
@@ -55,9 +59,6 @@ async function ctrlB(page: Page) {
 const overlay = (page: Page) => page.locator('[data-testid="cmdline-overlay"]');
 const input = (page: Page) => page.locator('[data-testid="cmdline-input"]');
 const errorText = (page: Page) => page.locator('[data-testid="cmdline-error"]');
-const suggestions = (page: Page) => page.locator('[data-testid="cmdline-suggestion"]');
-const suggestionByName = (page: Page, name: string) =>
-  page.locator(`[data-testid="cmdline-suggestion"][data-name="${name}"]`);
 
 async function typeAndEnter(page: Page, text: string) {
   await page.keyboard.type(text);
@@ -97,22 +98,49 @@ test.describe("Cmdline: opening (PLAN.md 5C.1)", () => {
       await page.keyboard.press(":");
       await expect(overlay(page)).toBeVisible();
       await expect(input(page)).toHaveText("▌");
-      await expect(suggestionByName(page, "dashboard")).toBeVisible();
+      // PLAN.md Iteration 3 Phase 3 item 3.1: no suggestions list renders —
+      // typing a real site-wide command and submitting it is the open
+      // assertion now (the data-driven sweep below covers every command).
+      await typeAndEnter(page, "dashboard");
+      await expect(overlay(page)).not.toBeVisible();
+      await expect(page).toHaveURL(/\/$/);
     });
   }
 
-  test("Ctrl-b : opens the box in tmux mode (rename-window/kill-window/kill-pane/select-window only)", async ({
+  test("Ctrl-b : opens the box in tmux mode (rename-window/kill-window/kill-pane/select-window only, NOT the site-wide set)", async ({
     page,
   }) => {
     await gotoReady(page, "/");
     await ctrlB(page);
     await page.keyboard.press(":");
     await expect(overlay(page)).toBeVisible();
-    await expect(suggestionByName(page, "rename-window")).toBeVisible();
-    await expect(suggestionByName(page, "select-window")).toBeVisible();
-    // Site-wide-only commands must NOT appear in tmux mode.
-    await expect(suggestionByName(page, "dashboard")).toHaveCount(0);
-    await expect(suggestionByName(page, "reboot")).toHaveCount(0);
+    // A tmux-command-prompt command works (proves the box is actually in
+    // tmux mode, not merely open) ...
+    await typeAndEnter(page, "select-window 1");
+    await expect(overlay(page)).not.toBeVisible();
+    await expect(page).toHaveURL(/\/builds$/);
+
+    // ... but a site-wide-only command name is NOT recognized here — it
+    // reports the same E492 unknown-command error as any gibberish text
+    // would (PLAN.md 5C.1(c): "Only cmdline.tmuxCommands are offered/
+    // executed" in this mode).
+    await ctrlB(page);
+    await page.keyboard.press(":");
+    await typeAndEnter(page, "dashboard");
+    await expect(errorText(page)).toContainText("E492");
+    await expect(page).toHaveURL(/\/builds$/);
+  });
+
+  test("PLAN.md Iteration 3 Phase 3 item 3.1: no suggestions list ever renders, even mid-type", async ({ page }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press(":");
+    await expect(overlay(page)).toBeVisible();
+    await expect(page.locator('[data-testid="cmdline-suggestions"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="cmdline-suggestion"]')).toHaveCount(0);
+    await page.keyboard.type("d");
+    await expect(page.locator('[data-testid="cmdline-suggestions"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="cmdline-suggestion"]')).toHaveCount(0);
+    await page.keyboard.press("Escape");
   });
 
   test("Esc closes the box with no side effects", async ({ page }) => {
@@ -179,6 +207,34 @@ test.describe("Cmdline: opening (PLAN.md 5C.1)", () => {
   });
 });
 
+test.describe("Cmdline: window-chrome contract — closes on every switch path + reboot (PLAN.md Iteration 3 Phase 3 item 3.2)", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  test("a status-bar window click closes an open box (even mid-type, with no navigation side effect from the typed text)", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press(":");
+    await expect(overlay(page)).toBeVisible();
+    await page.keyboard.type("this is not a command");
+    await page.locator('[data-testid="status-bar-window"][data-window-id="builds"]').click();
+    await expect(overlay(page)).not.toBeVisible();
+    await expect(page).toHaveURL(/\/builds$/);
+  });
+
+  test("reboot (status-bar ↻ click) closes an open box", async ({ page }) => {
+    await gotoReady(page, "/builds");
+    await page.keyboard.press(":");
+    await expect(overlay(page)).toBeVisible();
+    await page.locator('[data-testid="status-bar-reboot"]').click();
+    await expect(overlay(page)).not.toBeVisible();
+    await expect(page.locator('[data-testid="boot-sequence"]')).toBeVisible();
+    await expect(page).toHaveURL(/\/$/);
+  });
+});
+
 test.describe("Cmdline: `:` stays literal inside other text inputs (PLAN.md 5C.1(b))", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
@@ -212,31 +268,52 @@ test.describe("Cmdline: `:` stays literal inside other text inputs (PLAN.md 5C.1
   });
 });
 
-test.describe("Cmdline: palette feel — suggestions + Tab completion (PLAN.md 5C.3)", () => {
+test.describe("Cmdline: palette feel — silent Tab completion + zsh-style cycling (PLAN.md Iteration 3 Phase 3 item 3.1)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("suggestions prefix-filter as you type", async ({ page }) => {
-    await gotoReady(page, "/");
-    await page.keyboard.press(":");
-    const totalCommands = loadCmdlineYaml().commands.length;
-    await expect(suggestions(page)).toHaveCount(totalCommands);
-
-    await page.keyboard.type("bu");
-    await expect(suggestions(page)).toHaveCount(1);
-    await expect(suggestionByName(page, "builds")).toBeVisible();
-  });
-
-  test("Tab completes the unique match", async ({ page }) => {
+  test("Tab completes the unique match, silently (no suggestions list ever appears)", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press(":");
     await page.keyboard.type("reb");
     await page.keyboard.press("Tab");
     await expect(input(page)).toContainText("reboot");
+    await expect(page.locator('[data-testid="cmdline-suggestions"]')).toHaveCount(0);
   });
 
-  test("j/k stay typeable inside the input (do not navigate suggestions)", async ({ page }) => {
+  test("repeated Tab cycles through every match, wrapping around (zsh-style)", async ({ page }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press(":"); // tmux mode — kill-window and kill-pane both start with "kill"
+    await page.keyboard.type("kill");
+    await page.keyboard.press("Tab");
+    const first = (await input(page).textContent())?.replace("▌", "");
+    await page.keyboard.press("Tab");
+    const second = (await input(page).textContent())?.replace("▌", "");
+    expect(second).not.toBe(first);
+    expect(["kill-window", "kill-pane"]).toContain(first);
+    expect(["kill-window", "kill-pane"]).toContain(second);
+    await page.keyboard.press("Tab");
+    const third = (await input(page).textContent())?.replace("▌", "");
+    expect(third).toBe(first);
+  });
+
+  test("a non-Tab keystroke resets the cycle, so the next Tab starts fresh", async ({ page }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press(":");
+    await page.keyboard.type("kill");
+    await page.keyboard.press("Tab");
+    const first = (await input(page).textContent())?.replace("▌", "");
+    await page.keyboard.press("Backspace"); // edits mid-cycle — invalidates it
+    await page.keyboard.type(first?.slice(-1) ?? "");
+    await page.keyboard.press("Tab");
+    const afterReset = (await input(page).textContent())?.replace("▌", "");
+    expect(afterReset).toBe(first); // fresh cycle from the same text -> same first match
+  });
+
+  test("j/k stay typeable inside the input (no suggestions list to navigate)", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press(":");
     await page.keyboard.type("j");
@@ -246,16 +323,14 @@ test.describe("Cmdline: palette feel — suggestions + Tab completion (PLAN.md 5
     await expect(input(page)).toContainText("k");
   });
 
-  test("ArrowDown/ArrowUp navigate suggestions and copy the highlighted name into the input", async ({ page }) => {
+  test("ArrowDown/ArrowUp are consumed no-ops (no suggestions list to navigate)", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press(":");
+    await page.keyboard.type("bui");
     await page.keyboard.press("ArrowDown");
-    const firstName = await suggestions(page).first().getAttribute("data-name");
-    await expect(input(page)).toContainText(firstName ?? "");
-    await expect(page.locator('[data-testid="cmdline-suggestion"][data-selected="true"]')).toHaveAttribute(
-      "data-name",
-      firstName ?? "",
-    );
+    await page.keyboard.press("ArrowUp");
+    await expect(input(page)).toContainText("bui");
+    await expect(page.locator('[data-testid="cmdline-suggestion"]')).toHaveCount(0);
   });
 });
 
@@ -365,12 +440,21 @@ test.describe("Cmdline: editor ex-mode still works through the box (PLAN.md 5C.1
         await context.route("**/api.github.com/**", (route) => route.abort());
       });
 
-      test(": opens the box in ex mode, showing the exCommands + site-wide suggestions", async ({ page }) => {
+      test(": opens the box in ex mode, no suggestions list, Tab-completion still spans exCommands + the site-wide set", async ({
+        page,
+      }) => {
         await entry.open(page);
         await page.keyboard.press(":");
         await expect(overlay(page)).toBeVisible();
-        await expect(suggestionByName(page, "q")).toBeVisible();
-        await expect(suggestionByName(page, "dashboard")).toBeVisible(); // site-wide set also offered
+        await expect(page.locator('[data-testid="cmdline-suggestions"]')).toHaveCount(0);
+        // Tab-completing a site-wide-only command name (not an ex command)
+        // still works here, proving the merged exCommands ∪ commands list
+        // (PLAN.md 5C.1(a)/5C.2) is still the completion source even though
+        // nothing renders it as a browsable list anymore.
+        await page.keyboard.type("dash");
+        await page.keyboard.press("Tab");
+        await expect(input(page)).toContainText("dashboard");
+        await page.keyboard.press("Escape");
       });
 
       test(":q closes the editor back to the exact parent view (editor context wins over the site-wide q)", async ({

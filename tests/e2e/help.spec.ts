@@ -1,9 +1,12 @@
 // Behavioral e2e suite for the Help window — PLAN.md Phase 1 item 13.
 // New sixth status-bar window ("5:help"), reachable via `Ctrl-b ?`,
 // `Ctrl-b 5`, a status-bar click, and the dashboard menu's Help row
-// (hotkey `?`). Content is asserted against the real src/data/help.yaml
-// (read directly, same pattern as grep.spec.ts's real-index comparisons)
-// so this suite can never drift from the actual copy.
+// (hotkey `h` — PLAN.md Iteration 3 Phase 3 item 3.4 rebound this from the
+// old `?`, which now opens the site-wide HelpSearch palette instead —
+// see tests/e2e/help-search.spec.ts). Content is asserted against the real
+// src/data/help.yaml (read directly, same pattern as grep.spec.ts's
+// real-index comparisons) so this suite can never drift from the actual
+// copy.
 import { expect, test, type Page } from "./fixtures.ts";
 // PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
@@ -66,9 +69,9 @@ test.describe("Help: reachability", () => {
     await expect(page).toHaveURL(/\/help$/);
   });
 
-  test("? from the dashboard opens help", async ({ page }) => {
+  test("h from the dashboard opens help (PLAN.md Iteration 3 Phase 3 item 3.4)", async ({ page }) => {
     await gotoReady(page, "/");
-    await page.keyboard.press("?");
+    await page.keyboard.press("h");
     await expect(page).toHaveURL(/\/help$/);
   });
 

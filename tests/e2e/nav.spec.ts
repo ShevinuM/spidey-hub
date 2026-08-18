@@ -123,11 +123,20 @@ test.describe("view switching + status bar (bug fix 1: numeric order)", () => {
     expect(await statusBarText(page)).toBe(winText("retina-v"));
   });
 
-  test("? switches to help", async ({ page }) => {
+  test("h switches to help (PLAN.md Iteration 3 Phase 3 item 3.4 — replaces the old ? hotkey)", async ({ page }) => {
     await gotoReady(page, "/");
-    await page.keyboard.press("?");
+    await page.keyboard.press("h");
     await expect(page).toHaveURL(/\/help$/);
     expect(await statusBarText(page)).toBe(winText("help"));
+  });
+
+  test("? no longer switches to help from the dashboard — it opens the HelpSearch palette instead", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press("?");
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.locator('[data-testid="help-search-overlay"]')).toBeVisible();
   });
 });
 
@@ -137,12 +146,12 @@ test.describe("q / Esc never switch views (PLAN.md Phase 1 items 15/16)", () => 
     ["q", "x"],
     ["q", "i"],
     ["q", "t"],
-    ["q", "?"],
+    ["q", "h"],
     ["Escape", "b"],
     ["Escape", "x"],
     ["Escape", "i"],
     ["Escape", "t"],
-    ["Escape", "?"],
+    ["Escape", "h"],
   ] as const) {
     test(`${hotkey} then ${key} does NOT return to the dashboard`, async ({ page }) => {
       await gotoReady(page, "/");

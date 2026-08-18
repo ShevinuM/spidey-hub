@@ -32,14 +32,19 @@ export function menuIdToView(menuId: string): ViewId | undefined {
   return MENU_ID_TO_VIEW[menuId];
 }
 
-/** Global dashboard hotkeys (only active from the "home" view). */
+/** Global dashboard hotkeys (only active from the "home" view). PLAN.md
+ * Iteration 3 Phase 3 item 3.4 / Locked decision #14: `?` is no longer a
+ * dashboard hotkey at all — it now opens the `?` HelpSearch palette
+ * EVERYWHERE, including the dashboard (Terminal.svelte's own bare-`?`
+ * opener, checked well before this map is ever consulted); `h` takes over
+ * as the dashboard's own "open the Help window" hotkey. */
 const HOTKEY_TO_VIEW: Record<string, ViewId> = {
   b: "builds",
   p: "builds",
   x: "personnel",
   i: "profile",
   t: "retina-v",
-  "?": "help",
+  h: "help",
 };
 
 export function hotkeyToView(key: string): ViewId | undefined {

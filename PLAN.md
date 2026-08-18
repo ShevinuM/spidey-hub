@@ -233,22 +233,22 @@ strings in components; woff2 exists (small, subset) and referenced with `font-di
 iteration 2's exact-recreation mandate — orchestrator-ruled in scope to keep).
 
 ### Phase 3 — Cmdline scoping + bare UI + `?` help palette + `h` binding
-- [ ] 3.1 Remove the cmdline suggestions list rendering (keep input, error line, Tab completion);
+- [x] 3.1 Remove the cmdline suggestions list rendering (keep input, error line, Tab completion);
   delete/adjust the suggestion tests in cmdline.spec; visual recipe 15-cmdline changes in Phase 7.
-- [ ] 3.2 Window-chrome the cmdline: add `close()` to the ref contract; close it in every switch
+- [x] 3.2 Window-chrome the cmdline: add `close()` to the ref contract; close it in every switch
   path + reboot (integration points per codebase map: Terminal.svelte setView/reboot; close BEFORE
   the same-view early return). e2e: open cmdline → status-bar click switch → box closed; reboot →
   closed.
-- [ ] 3.3 New `HelpSearch.svelte` + pure `src/lib/helpSearch.ts`: `?` opens a cmdline-style palette
+- [x] 3.3 New `HelpSearch.svelte` + pure `src/lib/helpSearch.ts`: `?` opens a cmdline-style palette
   titled from data; empty query lists the command entries (dashboard/builds/personnel/profile/
   retina-v/help/grep/reboot/resume, as in the user's screenshot); typing fuzzy-searches ALL entries
   (cmdline commands + every help.yaml key row + shell builtins once Phase 4 lands) with scoring
   exact > prefix > word-boundary > substring > subsequence (+ small Levenshtein tiebreak), top 10.
   Up/Down navigate, Enter executes executable entries (view jumps, grep, reboot, resume) and
   no-ops on keymap rows, Esc closes. Gating per Locked #14. Window-chrome close like 3.2.
-- [ ] 3.4 Rebind dashboard help hotkey `?`→`h` (views.ts HOTKEY_TO_VIEW + dashboard.yaml `[h]`
+- [x] 3.4 Rebind dashboard help hotkey `?`→`h` (views.ts HOTKEY_TO_VIEW + dashboard.yaml `[h]`
   label + help.yaml row); `?` on dashboard now opens the palette like everywhere else.
-- [ ] 3.5 Unit tests for helpSearch scoring/ranking; e2e help-search.spec (open from ≥3 contexts,
+- [x] 3.5 Unit tests for helpSearch scoring/ranking; e2e help-search.spec (open from ≥3 contexts,
   gated contexts don't open, fuzzy canaries e.g. "kil" → kill-window/kill-pane rows, Enter
   executes, window-switch closes).
 

@@ -9,6 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   completeInput,
+  cycleComplete,
   filterSuggestions,
   mergeCommandLists,
   parseExCommand,
@@ -121,6 +122,60 @@ test("completeInput is a no-op on an already-exact name (doesn't jump to an earl
 test("completeInput returns null for empty input or no match", () => {
   assert.equal(completeInput(commands, ""), null);
   assert.equal(completeInput(commands, "zzz"), null);
+});
+
+// ---------------------------------------------------------------------
+// cycleComplete (zsh-style repeated-Tab cycling — PLAN.md Iteration 3
+// Phase 3 item 3.1: the only way multiple Tab matches are still reachable
+// now that Cmdline.svelte no longer renders a suggestions list)
+// ---------------------------------------------------------------------
+
+const ambiguousKill: CommandDef[] = [
+  { name: "kill-window", description: "" },
+  { name: "kill-pane", description: "" },
+];
+
+test("cycleComplete: first press (prev=null) completes to the first match", () => {
+  const result = cycleComplete(ambiguousKill, "kill", null);
+  assert.equal(result?.text, "kill-window");
+  assert.equal(result?.state.index, 0);
+});
+
+test("cycleComplete: a second press (prev supplied) advances to the next match", () => {
+  const first = cycleComplete(ambiguousKill, "kill", null);
+  const second = cycleComplete(ambiguousKill, first?.text ?? "", first?.state ?? null);
+  assert.equal(second?.text, "kill-pane");
+  assert.equal(second?.state.index, 1);
+});
+
+test("cycleComplete: cycling wraps back around to the first match", () => {
+  const first = cycleComplete(ambiguousKill, "kill", null);
+  const second = cycleComplete(ambiguousKill, first?.text ?? "", first?.state ?? null);
+  const third = cycleComplete(ambiguousKill, second?.text ?? "", second?.state ?? null);
+  assert.equal(third?.text, "kill-window");
+  assert.equal(third?.state.index, 0);
+});
+
+test("cycleComplete: a single match is idempotent across repeated presses", () => {
+  const first = cycleComplete(commands, "reb", null);
+  assert.equal(first?.text, "reboot");
+  const second = cycleComplete(commands, first?.text ?? "", first?.state ?? null);
+  assert.equal(second?.text, "reboot");
+});
+
+test("cycleComplete: preserves an already-typed argument across cycles", () => {
+  const first = cycleComplete(ambiguousKill, "kill astro", null);
+  assert.equal(first?.text, "kill-window astro");
+  const second = cycleComplete(ambiguousKill, first?.text ?? "", first?.state ?? null);
+  assert.equal(second?.text, "kill-pane astro");
+});
+
+test("cycleComplete: empty input (prev=null) is a no-op, same as completeInput", () => {
+  assert.equal(cycleComplete(commands, "", null), null);
+});
+
+test("cycleComplete: no matches (prev=null) is a no-op", () => {
+  assert.equal(cycleComplete(commands, "zzz", null), null);
 });
 
 // ---------------------------------------------------------------------

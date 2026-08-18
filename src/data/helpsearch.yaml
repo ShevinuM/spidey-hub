@@ -1,0 +1,25 @@
+# Site-wide `?` fuzzy help palette (PLAN.md Iteration 3 Phase 3 item 3.3) —
+# src/components/HelpSearch.svelte, driven by Terminal.svelte. Same visual
+# family as the Cmdline box (src/data/cmdline.yaml — bordered floating
+# panel, box-drawing inset title, `>` prompt + block cursor) but its OWN
+# component/state: empty query lists cmdline.yaml's own site-wide
+# `commands` (minus `q` — src/lib/helpSearch.ts's own commandEntries());
+# typing fuzzy-searches those commands PLUS every src/data/help.yaml keymap
+# row (src/lib/helpSearch.ts owns the scoring — pure, unit-tested, no DOM).
+
+title: "─ Help ─"
+
+prompt:
+  glyph: "?"
+  cursorGlyph: "▌"
+
+emptyHint: "commands — type to also search keybindings"
+noResultsText: "no matches"
+
+# Rendered after a keymap row's own key/description (never after a command
+# row — those show cmdline.yaml's own argsPlaceholder instead, same as the
+# old Cmdline suggestion list did) so it's clear Enter does nothing there.
+keymapHint: "reference only"
+
+footer:
+  hint: "↑↓ navigate · Enter execute · Esc close"

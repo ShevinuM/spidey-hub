@@ -23,6 +23,7 @@
     HelpData,
     BootData,
     CmdlineData,
+    HelpSearchData,
     WindowEntry,
   } from "../lib/data";
   import type { Commit } from "../lib/commits";
@@ -44,6 +45,7 @@
   import CopyMode from "./CopyMode.svelte";
   import BootSequence from "./BootSequence.svelte";
   import Cmdline, { type CmdlineMode } from "./Cmdline.svelte";
+  import HelpSearch from "./HelpSearch.svelte";
 
   interface Props {
     initialView: ViewId;
@@ -59,6 +61,7 @@
     help: HelpData;
     boot: BootData;
     cmdline: CmdlineData;
+    helpSearch: HelpSearchData;
     projects: CollectionEntry<"projects">[];
     personnelEntries: CollectionEntry<"personnel">[];
     commitsByRepo: Record<string, Commit[]>;
@@ -78,6 +81,7 @@
     help,
     boot,
     cmdline,
+    helpSearch,
     projects,
     personnelEntries,
     commitsByRepo,
@@ -189,6 +193,23 @@
     openEx: () => void;
     openTmux: () => void;
     handleKey: (e: KeyboardEvent) => boolean;
+    /** PLAN.md Iteration 3 Phase 3 item 3.2: window-chrome contract, same
+     * shape as GrepOverlay/CopyMode's own `close()` — called from setView()
+     * (and therefore reboot(), which always calls setView) so an open box
+     * never survives a window switch, a program launch, or a detach. */
+    close: () => void;
+  } | null>(null);
+
+  /** HelpSearch.svelte (PLAN.md Iteration 3 Phase 3 item 3.3) — same
+   * always-mounted / bind:this / handleKey():boolean / isOpen() / close()
+   * contract as Cmdline above; `openPalette()` is called from the bare-`?`
+   * opener further down (mirroring the bare-`:` opener that calls
+   * cmdlineRef.openSite()). */
+  let helpSearchRef = $state<{
+    isOpen: () => boolean;
+    openPalette: () => void;
+    close: () => void;
+    handleKey: (e: KeyboardEvent) => boolean;
   } | null>(null);
 
   /** Plays the mock's `bDashIn` entrance animation on the site chrome the
@@ -278,6 +299,8 @@
    * happened to evict the current view). A no-op when grep isn't open. */
   function setView(next: ViewId) {
     grepRef?.close?.();
+    cmdlineRef?.close?.();
+    helpSearchRef?.close?.();
     if (next === view) return;
     view = next;
     history.pushState(null, "", VIEW_ROUTES[next]);
@@ -293,6 +316,8 @@
   function reboot() {
     statusBarRef?.cancelPrompt?.();
     copyModeRef?.close?.();
+    cmdlineRef?.close?.();
+    helpSearchRef?.close?.();
     setView("home");
     bootRef?.replay();
   }
@@ -625,6 +650,17 @@
     return executeSiteOrUnknown(trimmed);
   }
 
+  /** HelpSearch.svelte's `onExecute` prop (PLAN.md Iteration 3 Phase 3 item
+   * 3.3) — Enter on a command row there runs through the exact same
+   * executeSiteAction switch every `:` command already does, with no typed
+   * args (the palette's own typed text is a search query, never passed
+   * through as a command argument). HelpSearch.svelte closes itself right
+   * after calling this — this function only ever performs the action's own
+   * side effect, same "dumb about presentation" split as onCmdlineSubmit. */
+  function onHelpSearchExecute(action: string | undefined): void {
+    executeSiteAction(action, "");
+  }
+
   /** The single key following an armed Ctrl-b. Always disarms. A held
    * modifier (e.g. Ctrl-d) is deliberately NOT treated as a prefix command
    * — disarm and fall through to the rest of handleKey unchanged, so e.g.
@@ -660,8 +696,10 @@
     // prompt already open blocks `Ctrl-b :` from opening the box at all
     // (checked below, after this combined gate), which is the "pick one
     // and test it" precedence PLAN.md 5C.1 calls for between the two modal
-    // systems: prompts win over opening the box.
-    if (statusBarRef?.isPromptActive() || cmdlineRef?.isOpen?.()) {
+    // systems: prompts win over opening the box. PLAN.md Iteration 3 Phase
+    // 3 item 3.3 extends the exact same gate a second time to the new `?`
+    // HelpSearch palette — same modal, same treatment.
+    if (statusBarRef?.isPromptActive() || cmdlineRef?.isOpen?.() || helpSearchRef?.isOpen?.()) {
       if (e.key === "]") {
         e.preventDefault();
         pasteFromBuffer();
@@ -791,6 +829,7 @@
       if (
         !statusBarRef?.isPromptActive() &&
         !cmdlineRef?.isOpen?.() &&
+        !helpSearchRef?.isOpen?.() &&
         e.ctrlKey &&
         !e.metaKey &&
         !e.altKey &&
@@ -846,6 +885,14 @@
     // opening a prompt while the box is open is impossible today (nothing
     // currently starts a rename/kill confirm from inside an open Cmdline).
     if (cmdlineRef?.handleKey(e)) return;
+
+    // PLAN.md Iteration 3 Phase 3 item 3.3: the `?` HelpSearch palette gets
+    // the exact same relative slot as Cmdline immediately above it (right
+    // after the prefix system, right before the status-bar prompt) — same
+    // "Ctrl-b ] must still reach it" reasoning, and mutually exclusive with
+    // Cmdline in practice (the combined isPromptActive/isOpen gate further
+    // up already stops either one from opening while the other is up).
+    if (helpSearchRef?.handleKey(e)) return;
 
     if (statusBarRef?.handleKey(e)) return;
 
@@ -949,6 +996,27 @@
       return;
     }
 
+    // PLAN.md Iteration 3 Phase 3 item 3.3 / Locked decision #14: a bare
+    // `?` that NOTHING above already consumed opens the `?` HelpSearch
+    // palette — mirrors the `:` fallback opener immediately above in every
+    // way (same reasoning for why grep/cmdline/a status prompt/copy-mode/
+    // boot are all already guaranteed inactive by the time control reaches
+    // here — each of those consumes `?` itself while active, exactly like
+    // `:`), EXCEPT one: unlike `:` (which still opens Cmdline in "ex" mode
+    // while a file editor is open), `?` must NOT open anything while an
+    // editor is open (Locked #14 "editor open (any mode)" is a full
+    // exclusion, not a mode switch) — Editor.svelte's own handleKey already
+    // returns `false` for an unrecognized `?` (it's neither a vim motion
+    // nor a mutating key), so without this explicit `!editorIsOpen` guard
+    // the palette would incorrectly pop up over an open buffer. Shift+"/"
+    // (US-layout Shift+/) must still open the palette, so only meta/ctrl/
+    // alt are excluded here, same as `:`.
+    if (!e.metaKey && !e.ctrlKey && !e.altKey && e.key === "?" && !editorIsOpen) {
+      e.preventDefault();
+      helpSearchRef?.openPalette();
+      return;
+    }
+
     // Modifier combos fall through untouched — never preventDefault them,
     // regardless of which view is active (PLAN.md keymap: "modifier-held
     // keys fall through untouched").
@@ -1040,4 +1108,5 @@
   <CopyMode bind:this={copyModeRef} copyMode={site.copyMode} />
   <BootSequence bind:this={bootRef} {boot} {desktopMode} onReady={onBootReady} />
   <Cmdline bind:this={cmdlineRef} {cmdline} onSubmit={onCmdlineSubmit} />
+  <HelpSearch bind:this={helpSearchRef} {helpSearch} {cmdline} {help} onExecute={onHelpSearchExecute} />
 </div>

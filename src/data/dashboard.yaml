@@ -39,7 +39,11 @@ menu:
   - id: help
     icon: "?"
     label: "Help"
-    hotkey: "?"
+    # PLAN.md Iteration 3 Phase 3 item 3.4 / Locked decision #14: was "?" —
+    # that key now opens the site-wide `?` HelpSearch palette everywhere,
+    # including the dashboard, so the dashboard's own "open the Help
+    # window" hotkey moved to "h" (views.ts HOTKEY_TO_VIEW).
+    hotkey: "h"
 
 footer:
   syncLine: "⚡ tracker synced 8/8 panes in 48.23ms"

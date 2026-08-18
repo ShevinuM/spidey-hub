@@ -18,9 +18,9 @@
   //            Editor.svelte's own runExCommand) via the `onSubmit` prop;
   //            only a command that machine doesn't recognize falls through
   //            to the site-wide set — "editor context wins" (PLAN.md 5C.2).
-  //            The suggestion list here is exCommands ∪ commands, exCommands
-  //            winning name collisions (src/lib/cmdline.ts's
-  //            mergeCommandLists).
+  //            Tab-completion candidates here are exCommands ∪ commands,
+  //            exCommands winning name collisions (src/lib/cmdline.ts's
+  //            mergeCommandLists) — same "editor context wins" precedence.
   //   "tmux" — `Ctrl-b :`, real tmux's own "command-prompt" binding. Only
   //            `cmdline.tmuxCommands` are offered/executed.
   //
@@ -28,11 +28,15 @@
   // is the only way anything actually happens (view switches, grep/reboot/
   // resume, window rename/kill/select) — Terminal.svelte owns every one of
   // those side effects, exactly like GrepOverlay's `onNavigate` prop. This
-  // component only owns: open/closed + which mode, the typed text, the
-  // live suggestion list (src/lib/cmdline.ts's pure filter/complete), and
-  // rendering the transient error `onSubmit` hands back.
-  import type { CmdlineData, CmdlineCommandDef } from "../lib/data";
-  import { completeInput, filterSuggestions, mergeCommandLists, parseInput, type CommandDef } from "../lib/cmdline";
+  // component only owns: open/closed + which mode, the typed text, silent
+  // zsh-style Tab-cycling (src/lib/cmdline.ts's pure cycleComplete — see
+  // PLAN.md Iteration 3 Phase 3 item 3.1: the visible suggestions list this
+  // component used to render under the input is GONE, on purpose — the new
+  // `?` HelpSearch.svelte palette is the discoverable/browsable surface
+  // now, this box stays a plain, quiet command line), and rendering the
+  // transient error `onSubmit` hands back.
+  import type { CmdlineData } from "../lib/data";
+  import { cycleComplete, mergeCommandLists, type CommandDef, type TabCycleState } from "../lib/cmdline";
   import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
   import { STATUS_BAR_HEIGHT_PX } from "../lib/layout";
 
@@ -54,9 +58,12 @@
   let mode = $state<CmdlineMode>("site");
   let text = $state("");
   let error = $state<string | null>(null);
-  /** -1 = nothing highlighted (the resting state — Enter still parses
-   * whatever's actually typed, never an implicit "first suggestion"). */
-  let selected = $state(-1);
+  /** Tab-cycle state (PLAN.md Iteration 3 Phase 3 item 3.1) — non-null only
+   * for the span of consecutive Tab presses that are cycling the SAME
+   * match list; reset to `null` by every other keydown (Enter, Backspace,
+   * a printable character, Escape, opening the box) so the next Tab press
+   * always starts a fresh cycle from whatever's typed at that moment. */
+  let cycle = $state<TabCycleState | null>(null);
 
   const commandSource = $derived.by((): CommandDef[] => {
     if (mode === "tmux") return cmdline.tmuxCommands;
@@ -64,13 +71,10 @@
     return cmdline.commands;
   });
 
-  const parsed = $derived(parseInput(text));
-  const suggestions = $derived(filterSuggestions(commandSource, parsed.name));
-
   function resetState() {
     text = "";
     error = null;
-    selected = -1;
+    cycle = null;
   }
 
   /** Terminal.svelte's delegation gate (PLAN.md 5C.4): while true, this
@@ -115,7 +119,6 @@
       insert: (t: string) => {
         text += t;
         error = null;
-        selected = -1;
       },
     });
     return () => removePasteTarget(PASTE_TARGET_ID);
@@ -125,17 +128,9 @@
     const result = onSubmit(mode, text);
     if (result) {
       error = result;
-      selected = -1;
     } else {
       close();
     }
-  }
-
-  function selectSuggestion(i: number) {
-    selected = i;
-    const s = suggestions[i];
-    if (s) text = s.name;
-    error = null;
   }
 
   /** Handles one keydown while the box is open. Returns `false` only when
@@ -161,6 +156,15 @@
     // must not linger over new input).
     if (error) error = null;
 
+    // Tab-cycling (PLAN.md Iteration 3 Phase 3 item 3.1) — every key OTHER
+    // than Tab invalidates whatever cycle is in progress, so the very next
+    // Tab press always starts a FRESH one from whatever's typed at that
+    // moment (a stray Enter that only surfaced an error, or a Backspace/
+    // printable edit, must never leave a stale cycle position for a later,
+    // unrelated Tab press to continue from). Reset happens once, here, at
+    // the top — not duplicated in every branch below.
+    if (e.key !== "Tab") cycle = null;
+
     if (e.key === "Enter") {
       e.preventDefault();
       submit();
@@ -168,44 +172,28 @@
     }
     if (e.key === "Tab") {
       e.preventDefault();
-      const completed = completeInput(commandSource, text);
-      if (completed) text = completed;
-      return true;
-    }
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      if (suggestions.length > 0) selectSuggestion(selected < 0 ? 0 : (selected + 1) % suggestions.length);
-      return true;
-    }
-    if (e.key === "ArrowUp") {
-      e.preventDefault();
-      if (suggestions.length > 0)
-        selectSuggestion(selected < 0 ? suggestions.length - 1 : (selected - 1 + suggestions.length) % suggestions.length);
+      const result = cycleComplete(commandSource, text, cycle);
+      if (result) {
+        text = result.text;
+        cycle = result.state;
+      }
       return true;
     }
     if (e.key === "Backspace") {
       e.preventDefault();
       text = text.slice(0, -1);
-      selected = -1;
       return true;
     }
-    // j/k stay typeable (PLAN.md 5C.3 "j/k do NOT navigate suggestions —
-    // arrows do") — they fall straight into this generic printable-char
-    // branch like every other letter.
+    // j/k (and every other printable character, including the now-removed
+    // suggestion list's old ArrowUp/ArrowDown navigation keys, which simply
+    // fall through to the generic "consumed, no side effect" return below)
+    // just type.
     if (e.key.length === 1) {
       e.preventDefault();
       text += e.key;
-      selected = -1;
       return true;
     }
     return true;
-  }
-
-  /** PLAN.md Phase 6 item 6.4 content-purity fix: the "takes an argument"
-   * notation (e.g. "grep <…>") is data-driven (`cmdline.argsPlaceholder`),
-   * not a string literal here. */
-  function describe(c: CmdlineCommandDef): string {
-    return c.takesArgs ? `${c.name}${cmdline.argsPlaceholder}` : c.name;
   }
 </script>
 
@@ -240,33 +228,6 @@
         </div>
         {#if error}
           <div data-testid="cmdline-error" style="padding:6px 4px 2px;color:#e0453c">{error}</div>
-        {:else if suggestions.length > 0}
-          <div
-            data-testid="cmdline-suggestions"
-            style="padding-top:4px;display:flex;flex-direction:column;gap:1px;max-height:220px;overflow-y:auto"
-          >
-            {#each suggestions as s, i (s.name)}
-              <div
-                role="button"
-                tabindex="0"
-                data-testid="cmdline-suggestion"
-                data-name={s.name}
-                data-selected={i === selected}
-                onclick={() => selectSuggestion(i)}
-                onkeydown={(ev) => {
-                  if (ev.key === "Enter" || ev.key === " ") selectSuggestion(i);
-                }}
-                style={`cursor:pointer;display:flex;gap:10px;padding:2px 6px;border-radius:2px;` +
-                  (i === selected ? "background:rgba(224,69,60,.22);color:#f4ece9" : "color:rgba(196,216,232,.7)")}
-              >
-                <span style="flex:none;color:#5fc6b4">{describe(s)}</span>
-                <span
-                  style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(196,216,232,.5)"
-                  >{s.description}</span
-                >
-              </div>
-            {/each}
-          </div>
         {/if}
       </div>
     </div>

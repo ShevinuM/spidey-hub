@@ -31,12 +31,15 @@ prompt:
   glyph: ">"
   cursorGlyph: "▌"
 
-# Content-purity fix (PLAN.md Phase 6 item 6.4 audit): the suggestion
-# list's "takes an argument" notation (e.g. "grep <…>") was previously a
-# string literal baked into Cmdline.svelte's own describe() helper — moved
-# here so every user-visible string in that component is data-driven.
-# Appended verbatim (with its own leading space) after a command's name
-# when `takesArgs` is true; empty otherwise.
+# Content-purity fix (PLAN.md Phase 6 item 6.4 audit): the "takes an
+# argument" notation (e.g. "grep <…>") was originally a string literal
+# baked into Cmdline.svelte's own describe() helper — moved here so it's
+# data-driven. Cmdline.svelte itself stopped rendering a command list in
+# PLAN.md Iteration 3 Phase 3 item 3.1 (the suggestions UI is gone), but
+# this string is still consumed the same way by HelpSearch.svelte's own
+# command-row rendering (src/components/HelpSearch.svelte), which took over
+# as the browsable command list. Appended verbatim (with its own leading
+# space) after a command's name when `takesArgs` is true; empty otherwise.
 argsPlaceholder: " <…>"
 
 # Ex-mode-only display entries (context (a) — see file header). Real

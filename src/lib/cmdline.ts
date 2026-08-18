@@ -82,6 +82,48 @@ export function completeInput(commands: CommandDef[], input: string): string | n
   return args ? `${target.name} ${args}` : target.name;
 }
 
+/** zsh-style repeated-Tab cycling (PLAN.md Iteration 3 Phase 3 item 3.1):
+ * the suggestions list UI is gone from Cmdline.svelte, so this is now the
+ * only way multiple Tab-matches are still reachable from the keyboard.
+ * `prev` is the state this same function returned on the IMMEDIATELY
+ * preceding Tab press, or `null` on the first Tab press for a given typed
+ * prefix (the caller — Cmdline.svelte — resets to `null` on every non-Tab
+ * keydown, so `prev` being non-null is exactly "the last thing that
+ * happened was also a Tab").
+ *
+ * First press (`prev === null`): completes to the first match for the
+ * current text's command-name token (same "nothing to complete" cases as
+ * completeInput — empty name, or no matches — return `null`). Each
+ * following press with `prev` supplied advances to the NEXT match in that
+ * same fixed match list, wrapping around — it does NOT re-derive matches
+ * from whatever `input` currently is, since by construction `input` is
+ * always exactly what the previous press already wrote there. */
+export interface TabCycleState {
+  args: string;
+  matches: CommandDef[];
+  index: number;
+}
+
+export function cycleComplete(
+  commands: CommandDef[],
+  input: string,
+  prev: TabCycleState | null,
+): { text: string; state: TabCycleState } | null {
+  if (prev) {
+    const index = (prev.index + 1) % prev.matches.length;
+    const state: TabCycleState = { ...prev, index };
+    const target = state.matches[index];
+    return { text: state.args ? `${target.name} ${state.args}` : target.name, state };
+  }
+  const { name, args } = parseInput(input);
+  if (!name) return null;
+  const matches = filterSuggestions(commands, name);
+  if (matches.length === 0) return null;
+  const state: TabCycleState = { args, matches, index: 0 };
+  const target = matches[0];
+  return { text: args ? `${target.name} ${args}` : target.name, state };
+}
+
 /** Merges two command lists for DISPLAY (suggestions), preferring `primary`
  * on a name collision — used to build the editor ex-mode suggestion list
  * (PLAN.md 5C.1(a)/5C.2 "editor context wins"): `exCommands`' own `q`/`w`

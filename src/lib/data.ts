@@ -27,6 +27,7 @@ import companiesRaw from "../data/companies.yaml?raw";
 import helpRaw from "../data/help.yaml?raw";
 import bootRaw from "../data/boot.yaml?raw";
 import cmdlineRaw from "../data/cmdline.yaml?raw";
+import helpsearchRaw from "../data/helpsearch.yaml?raw";
 import notificationsRaw from "../data/notifications.yaml?raw";
 
 const RAW: Record<string, string> = {
@@ -41,6 +42,7 @@ const RAW: Record<string, string> = {
   "help.yaml": helpRaw,
   "boot.yaml": bootRaw,
   "cmdline.yaml": cmdlineRaw,
+  "helpsearch.yaml": helpsearchRaw,
   "notifications.yaml": notificationsRaw,
 };
 
@@ -534,3 +536,18 @@ export interface CmdlineData {
 }
 
 export const getCmdline = (): CmdlineData => loadYaml<CmdlineData>("cmdline.yaml");
+
+// ---------------------------------------------------------------------------
+// helpsearch.yaml
+// ---------------------------------------------------------------------------
+
+export interface HelpSearchData {
+  title: string;
+  prompt: { glyph: string; cursorGlyph: string };
+  emptyHint: string;
+  noResultsText: string;
+  keymapHint: string;
+  footer: { hint: string };
+}
+
+export const getHelpSearch = (): HelpSearchData => loadYaml<HelpSearchData>("helpsearch.yaml");

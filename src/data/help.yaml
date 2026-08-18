@@ -6,7 +6,10 @@
 # own design decisions written down ahead of the code that implements them).
 #
 # Reachable via `Ctrl-b ?` (tmux list-keys), `Ctrl-b 5`, a status-bar click
-# on "5:help", and the dashboard menu's Help row (hotkey `?`).
+# on "5:help", and the dashboard menu's Help row (hotkey `h`). Not to be
+# confused with the site-wide `?` HelpSearch palette (its own "Help search"
+# section below) — this window is the full reference table; that palette is
+# a fuzzy jump-to for commands and a live search over these very rows.
 
 title: "Help — Keymap Reference"
 scrollHint: "j/k scrolls"
@@ -23,14 +26,16 @@ sections:
         description: "Profile (from the dashboard)"
       - key: "t"
         description: "E.D.I.T.H: Retina-V (from the dashboard)"
-      - key: "?"
-        description: "Help (from the dashboard)"
+      - key: "h"
+        description: "Help (from the dashboard) — PLAN.md Iteration 3 Phase 3: replaces the old ? binding, freed up for the HelpSearch palette below"
       - key: "r"
         description: "reboot (from the dashboard only — replays the E.D.I.T.H boot sequence); Profile has its own r for downloading the resume, unrelated"
       - key: "/"
         description: "open the grep overlay (from any view — inside the vim file editor, / searches the open buffer instead; see Vim keys below)"
       - key: ":"
         description: "open the floating Cmdline box (from any view, and inside an open file editor as its ex-command line) — see Cmdline below; a literal : still types normally inside the grep query, the Personnel filter, and the rename prompt"
+      - key: "?"
+        description: "open the floating HelpSearch palette (from any view, including the dashboard) — see Help search below; does NOT open with a file editor open (the key falls through as an ordinary, no-op keystroke there instead), or while grep/Cmdline/a status-bar prompt/copy-mode is already up, or during boot"
       - key: "j / k / arrows"
         description: "move selection within the active pane"
       - key: "Enter"
@@ -217,14 +222,31 @@ sections:
       - key: "Ctrl-b :"
         description: "same box, in tmux command-prompt mode: rename-window <name>, kill-window, kill-pane, select-window <0-5> — executed through the exact same underlying rename/kill/select behavior as the , / & / x / digit bindings above, without their interactive confirm step (a typed command is already deliberate)"
       - key: "printable characters"
-        description: "append to the typed command; a live suggestion list below the input shows every matching command's name + description"
+        description: "append to the typed command — no suggestion list is shown (PLAN.md Iteration 3 Phase 3: browsing/searching commands moved to the ? HelpSearch palette below; this box stays a plain, quiet command line)"
       - key: "Tab"
-        description: "completes to the unique (or first) matching command name"
-      - key: "↓ / ↑"
-        description: "navigate the suggestion list and copy the highlighted name into the input — j/k stay typeable as ordinary text"
+        description: "completes the command name; pressing Tab again immediately afterward (with no other key in between) cycles to the NEXT matching command, wrapping around — zsh-style repeated-Tab cycling, the only way multiple matches are still reachable now that the suggestion list is gone"
       - key: "Enter"
         description: "execute the typed command"
       - key: "Esc"
         description: "close the box — a modal exit, never a side effect"
       - key: "(unrecognized command)"
         description: "shows an E492-style error inside the box (vim's own \"not an editor command\" message, reused everywhere `:` is used, not just inside a file) — cleared by the next keystroke, Esc, or the next time the box opens"
+
+  - title: "Help search (?)"
+    rows:
+      - key: "?"
+        description: "opens the ─ Help ─ palette (from any view, including the dashboard) — empty query lists the site-wide commands (dashboard, builds, personnel, profile, retina-v, help, grep, reboot, resume); typing fuzzy-searches those commands PLUS every row of every section in THIS help window"
+      - key: "(gating)"
+        description: "does NOT open while a file editor is open (any mode), grep/Cmdline is open, a status-bar prompt (rename/kill confirm) is open, copy-mode is open, or during boot — ? falls through as an ordinary no-op keystroke in all of those instead"
+      - key: "printable characters"
+        description: "append to the typed query and live-filter the results — this includes q, j, k, and a second ? once the palette is already open: it is a plain text input, not a toggle"
+      - key: "↑ / ↓"
+        description: "move the highlighted row, wrapping around"
+      - key: "Enter (on a command row)"
+        description: "runs that command — the exact same action a matching :command in Cmdline would run — and closes the palette"
+      - key: "Enter (on a keymap row)"
+        description: "a keymap row is reference-only — it documents an existing binding, it isn't one itself — so Enter is a deliberate no-op (a brief flash), the palette stays open"
+      - key: "Backspace"
+        description: "edits the typed query"
+      - key: "Esc"
+        description: "close the palette — a modal exit, never a side effect"
