@@ -48,6 +48,12 @@
      * told directly which window is active rather than reconstructing it
      * from the visible program. */
     activeWindowId: string;
+    /** PLAN.md Iteration 3 Phase 4 item 4.3 tmux fidelity reference: the
+     * real tmux `-` flag marks the PREVIOUSLY active window of the session
+     * (`Session.lastWindowIdx` in tmux.ts), so `Ctrl-b l`/`last-window`
+     * has something to jump back to. Undefined whenever the session hasn't
+     * switched windows yet (fresh session: last === active, no flag). */
+    lastWindowId?: string;
     /** Passed the clicked window's own `id` (a site.yaml window id, e.g.
      * "builds") — no ViewId translation happens in this component; the
      * caller (Terminal.svelte) owns turning a window id into a window
@@ -61,7 +67,7 @@
     onReboot: () => void;
   }
 
-  const { site, windows, activeWindowId, onSelect, onReboot }: Props = $props();
+  const { site, windows, activeWindowId, lastWindowId, onSelect, onReboot }: Props = $props();
 
   let clockTime = $state("");
   let clockDate = $state("");
@@ -263,7 +269,7 @@
           }}
           style={win.id === activeWindowId ? "cursor:pointer;background:#e0453c;color:#0b0f14;padding:0 6px" : "cursor:pointer"}
         >
-          {win.number}:{win.name}{win.id === activeWindowId ? "*" : ""}
+          {win.number}:{win.name}{win.id === activeWindowId ? "*" : win.id === lastWindowId ? "-" : ""}
         </span>
       {/each}
     </div>

@@ -28,6 +28,8 @@
 //     rebuild is byte-for-byte reproducible and every id is stable within a
 //     given tree shape (PLAN.md Phase 4 determinism rules).
 
+import { createShellState, type ShellState } from "./shell.ts";
+
 /** A pane's currently-running program. "shell" is the in-window shell a
  * program's `:q` drops back to (PLAN.md Locked decision #2) — every OTHER
  * value is one of the site's six view components, reused verbatim as the
@@ -37,6 +39,15 @@ export type ProgramName = "dashboard" | "builds" | "personnel" | "profile" | "re
 export interface Pane {
   id: string;
   program: ProgramName;
+  /** PLAN.md Iteration 3 Phase 4 item 4.2 — every pane carries its OWN
+   * shell buffer from creation, not just once it becomes a shell: any pane
+   * can `:q` its program away and back (Locked decision #5), and the
+   * buffer must survive that round-trip (and switching away from/back to
+   * the window entirely) exactly like a real tmux pane's scrollback — only
+   * `reboot()`/a page reload resets it (advisor guidance, PLAN.md
+   * Architecture notes). Lives here (not component-local Svelte state) for
+   * exactly that reason. */
+  shell: ShellState;
 }
 
 export interface PaneLeaf {
@@ -295,7 +306,7 @@ function makePane(windowId: string, index: number, program: ProgramName): Pane {
   // module-level counter or Math.random() (determinism rules): a factory
   // rebuild (reboot) always reproduces the exact same ids for the exact same
   // tree shape.
-  return { id: `${windowId}#${index}`, program };
+  return { id: `${windowId}#${index}`, program, shell: createShellState() };
 }
 
 /** Builds a fresh, single-session client — the site's initial mount AND

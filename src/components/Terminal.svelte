@@ -31,12 +31,24 @@
     BootData,
     CmdlineData,
     HelpSearchData,
+    ShellData,
   } from "../lib/data";
   import type { Commit } from "../lib/commits";
   import type { ViewId } from "../lib/views";
   import { VIEW_ROUTES, hotkeyToView, pathToView, programToViewId, viewIdToProgram, windowIdToView } from "../lib/views";
   import type { Client, ProgramName, Session } from "../lib/tmux";
-  import { activeSessionOf, activeWindowOf, createFactoryClient, focusedPane, killWindow, renameWindowManual, selectWindowIndex } from "../lib/tmux";
+  import {
+    activeSessionOf,
+    activeWindowOf,
+    createFactoryClient,
+    exitProgram,
+    focusedPane,
+    killWindow,
+    launchProgram,
+    renameWindowManual,
+    selectWindowIndex,
+  } from "../lib/tmux";
+  import type { ShellMode } from "../lib/shell";
   import { resolvePageEpoch } from "../lib/clock";
   import { getPasteBuffer } from "../lib/pasteBuffer";
   import { getActivePasteTarget } from "../lib/pasteTargets";
@@ -94,6 +106,7 @@
     boot: BootData;
     cmdline: CmdlineData;
     helpSearch: HelpSearchData;
+    shell: ShellData;
     projects: CollectionEntry<"projects">[];
     personnelEntries: CollectionEntry<"personnel">[];
     commitsByRepo: Record<string, Commit[]>;
@@ -114,10 +127,21 @@
     boot,
     cmdline,
     helpSearch,
+    shell,
     projects,
     personnelEntries,
     commitsByRepo,
   }: Props = $props();
+
+  /** PLAN.md Iteration 3 Phase 4 item 4.2 — the six canonical, launchable
+   * program names (every `ProgramName` except "shell") — Shell.svelte's own
+   * bare-command/`open <view>` validation, and the palette this file's
+   * `viewIdToProgram`/`programToViewId` bridge already agrees with. */
+  const VIEW_NAMES = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"] as const;
+
+  /** Only "pane" is reachable this phase — Phase 5 wires the detached HOST
+   * shell (same Shell.svelte component, `mode: "host"`). */
+  const SHELL_MODE: ShellMode = "pane";
 
   /** PaneTree.svelte's own `bind:this` — its `getRef(paneId)` is the single
    * lookup every one of this file's delegation checks below now goes
@@ -311,6 +335,16 @@
   const activePane = $derived(focusedPane(activeWindow));
   const activeProgram = $derived(activePane.program);
 
+  /** StatusBar's real tmux `-` flag (PLAN.md Iteration 3 Phase 4 item 4.3
+   * tmux fidelity reference) — the session's previously-active window.
+   * Undefined on a fresh session (activeWindowIdx === lastWindowIdx), same
+   * as real tmux showing no `-` until a switch has actually happened. */
+  const lastWindowId = $derived.by(() => {
+    const s = activeSession;
+    if (s.lastWindowIdx === s.activeWindowIdx) return undefined;
+    return s.windows[s.lastWindowIdx]?.id;
+  });
+
   /** "Which WINDOW (screen) is on-screen" — keyed off the window's own
    * stable id, NOT the program its pane currently runs (see this file's own
    * header comment on why those differ once Locked decision #5 applies).
@@ -324,6 +358,16 @@
    * taken, just sourced from `client` instead of a separate `windows` $state
    * array. */
   const statusWindows = $derived(activeSession.windows.map((w) => ({ number: w.number, id: w.id, name: w.name })));
+
+  /** Shell.svelte's own `session` prop (PLAN.md Iteration 3 Phase 4 item
+   * 4.2's `tmux ls`) — `attached` is always true this phase (Phase 5 adds
+   * unattached sessions a client can list without being on them). */
+  const shellSession = $derived({
+    name: activeSession.name,
+    windowCount: activeSession.windows.length,
+    createdAt: activeSession.createdAt,
+    attached: client.attachedSessionId === activeSession.id,
+  });
 
   /** Digit/`?` prefix targets, recomputed from the live window list so a
    * killed window's digit stops doing anything (tmux-faithful: an unbound
@@ -505,6 +549,50 @@
     syncUrl();
   }
 
+  /** Shell.svelte's `onLaunch` (PLAN.md Iteration 3 Phase 4 item 4.2) — a
+   * bare view-name command or `open <view>` typed into a pane's shell:
+   * launches `program` IN THAT PANE (tmux.ts's own `launchProgram`), never
+   * a window switch — Locked decision #5's "any pane can launch any
+   * program". `program` arrives pre-validated by shell.ts's own
+   * `runCommand` (checked against `VIEW_NAMES`), so the cast is safe. Syncs
+   * the URL only when the launch happened in the currently ACTIVE pane
+   * (always true this phase — every window has exactly one pane, and only
+   * the active window's pane is ever mounted — kept as an explicit guard so
+   * Phase 6 splits don't silently start pushing the wrong route for a
+   * launch in a non-focused pane). */
+  function onLaunchInPane(paneId: string, program: string) {
+    launchProgram(activeSession, paneId, program as ProgramName);
+    if (paneId === activePane.id) syncUrl();
+  }
+
+  /** Shell.svelte's `onExit` — the `exit` builtin (PLAN.md Architecture
+   * notes: "pane shell: closes pane → cascades like kill-pane"). Phase 4
+   * has no real splits yet, so "close this pane" is exactly "close this
+   * window" — `killWindowById` already refuses (status message) on the
+   * last remaining window, exactly like `Ctrl-b x`'s single-pane fallback.
+   * `paneId` is unused today (every window has exactly one pane, always the
+   * active one) but kept in the signature so Phase 6 can find the RIGHT
+   * pane's owning window without a signature change. */
+  function onExitPane(_paneId: string) {
+    killWindowById(activeWindow.id);
+  }
+
+  /** Site-mode `:q` / cmdline `q` (PLAN.md Locked decision #2, item 4.3) —
+   * drops the ACTIVE PANE's program back to a shell in the SAME window
+   * (tmux.ts's `exitProgram`); never kills the window. Distinct from
+   * `onExitPane` above (Shell.svelte's own `exit` builtin, typed inside an
+   * ALREADY-shell pane, which has no program left to drop and so still
+   * cascades to kill-window — Phase 4.2's unchanged behavior). Closes
+   * chrome first (same convention as every other window-affecting action)
+   * and re-syncs the URL, which freezes in place: `programToViewId("shell")`
+   * is null, so `syncUrl()` no-ops, satisfying Verify 4's "URL unchanged
+   * while in shell" probe. */
+  function exitActiveProgram() {
+    closeWindowChrome();
+    exitProgram(activeSession, activePane.id);
+    syncUrl();
+  }
+
   /** Ctrl-b , — PLAN.md Phase 5 item 5.2. Takes the target window's id as an
    * explicit argument (captured by `startRenamePrompt` at PROMPT-OPEN time)
    * rather than re-deriving it from `activeWindow` here at commit time —
@@ -651,11 +739,11 @@
       case "resume":
         downloadResume();
         return undefined;
-      case "kill-window":
-        // Last-window refusal surfaces as the usual status-bar message via
-        // killWindowById() itself — never intercepted into the box (PLAN.md
-        // 5C.2 "last-window refusal applies").
-        killWindowById(activeWindow.id);
+      case "exit-program":
+        // Locked decision #2 (site-mode `:q` / cmdline `q`): exits the
+        // active pane's program to a shell — never kills the window, no
+        // last-window guard to apply (see exitActiveProgram()'s own doc).
+        exitActiveProgram();
         return undefined;
       default:
         return undefined;
@@ -1029,7 +1117,19 @@
     // inert while grep open" rule.
     const editorIsOpen = !!focusedRef()?.isEditorOpen?.();
 
-    if (editorIsOpen && tryFocusedRef()) {
+    // PLAN.md Iteration 3 Phase 4 Architecture notes: "focused-shell panes
+    // consume printable keys/Enter/Backspace/arrows BEFORE grep's `/`
+    // opener" — a shell pane gets the exact same first-refusal treatment an
+    // open vim editor already does (both are "this pane owns its own text
+    // input right now"), so `/`/`:`/`?` all type into the shell instead of
+    // opening grep/Cmdline/HelpSearch. `editorIsOpen` itself stays scoped to
+    // "an embedded vim Editor is open" for the ex-mode/`?`-exclusion checks
+    // further down — a shell pane is never in "ex mode", it just never
+    // reaches those checks at all (Shell.svelte's handleKey claims every
+    // printable character first).
+    const paneIsGreedy = editorIsOpen || activeProgram === "shell";
+
+    if (paneIsGreedy && tryFocusedRef()) {
       return;
     }
 
@@ -1048,7 +1148,7 @@
     // separate unconditional blocks here — both refs simply never export
     // `isEditorOpen`, so `editorIsOpen` is already false for them and this
     // one call reaches them in exactly the same relative position).
-    if (!editorIsOpen && tryFocusedRef()) {
+    if (!paneIsGreedy && tryFocusedRef()) {
       return;
     }
 
@@ -1171,11 +1271,18 @@
       {personnel}
       {profile}
       {help}
+      {shell}
       {companies}
       {projects}
       {personnelEntries}
       {commitsByRepo}
       onWindowSwitch={switchToProgram}
+      {onLaunchInPane}
+      {onExitPane}
+      onReboot={reboot}
+      shellMode={SHELL_MODE}
+      viewNames={VIEW_NAMES}
+      {shellSession}
     />
 
     <StatusBar
@@ -1183,6 +1290,7 @@
       {site}
       windows={statusWindows}
       activeWindowId={activeWindow.id}
+      {lastWindowId}
       onSelect={switchToWindowById}
       onReboot={reboot}
     />

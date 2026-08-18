@@ -26,7 +26,7 @@ interface CmdlineYaml {
 
 function loadCommands(): CmdlineCommandDef[] {
   const doc = YAML.parse(readFileSync(join(ROOT, "src/data/cmdline.yaml"), "utf8")) as CmdlineYaml;
-  return doc.commands.filter((c) => c.name !== "q");
+  return doc.commands;
 }
 
 async function gotoReady(page: Page, path: string) {
@@ -157,7 +157,7 @@ test.describe("HelpSearch: empty-query listing + fuzzy filtering", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("empty query lists the site-wide commands, minus q", async ({ page }) => {
+  test("empty query lists the site-wide commands, including q (Phase 4 exitProgram)", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("?");
     const commands = loadCommands();
@@ -165,7 +165,7 @@ test.describe("HelpSearch: empty-query listing + fuzzy filtering", () => {
     for (const c of commands) {
       await expect(page.locator(`[data-testid="help-search-result"][data-label="${c.name}"]`)).toBeVisible();
     }
-    await expect(page.locator('[data-testid="help-search-result"][data-label="q"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="help-search-result"][data-label="q"]')).toHaveCount(1);
   });
 
   test("typing filters the results down from the full empty-query list", async ({ page }) => {

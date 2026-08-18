@@ -26,8 +26,11 @@ async function statusBarText(page: Page) {
 }
 
 const WINDOWS = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"];
-function winText(activeId: string): string {
-  return WINDOWS.map((id, i) => `${i}:${id}${id === activeId ? "*" : ""}`).join(" ");
+/** `lastId` (PLAN.md Iteration 3 Phase 4 item 4.3 tmux fidelity reference)
+ * is the real tmux `-` flag on the session's PREVIOUSLY active window —
+ * omit it for assertions made before any in-test window switch. */
+function winText(activeId: string, lastId?: string): string {
+  return WINDOWS.map((id, i) => `${i}:${id}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
 }
 
 async function ctrlB(page: Page) {
@@ -46,7 +49,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await ctrlB(page);
     await page.keyboard.press("2");
     await expect(page).toHaveURL(/\/personnel$/);
-    expect(await statusBarText(page)).toBe(winText("personnel"));
+    expect(await statusBarText(page)).toBe(winText("personnel", "dashboard"));
   });
 
   test("Ctrl-b 1/3/4 switch to builds/retina-v/profile", async ({ page }) => {
@@ -69,7 +72,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await ctrlB(page);
     await page.keyboard.press("5");
     await expect(page).toHaveURL(/\/help$/);
-    expect(await statusBarText(page)).toBe(winText("help"));
+    expect(await statusBarText(page)).toBe(winText("help", "dashboard"));
   });
 
   test("Ctrl-b ? switches to help (tmux list-keys style)", async ({ page }) => {
@@ -77,7 +80,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await ctrlB(page);
     await page.keyboard.press("?");
     await expect(page).toHaveURL(/\/help$/);
-    expect(await statusBarText(page)).toBe(winText("help"));
+    expect(await statusBarText(page)).toBe(winText("help", "dashboard"));
   });
 
   test("Ctrl-b n cycles dashboard -> builds -> personnel -> retina-v -> profile -> help -> dashboard", async ({
@@ -293,6 +296,32 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     });
     expect(prevented).toBe(false);
     await expect(page).toHaveURL(/\/$/);
+  });
+});
+
+test.describe("status bar `-` flag: the previously-active window (PLAN.md Iteration 3 Phase 4 item 4.3 tmux fidelity reference)", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  test("no flag renders on a fresh session (activeWindowIdx === lastWindowIdx)", async ({ page }) => {
+    await gotoReady(page, "/");
+    expect(await statusBarText(page)).toBe(winText("dashboard"));
+  });
+
+  test("switching windows marks the PREVIOUS window with `-`, and the flag moves with each further switch", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/");
+    await ctrlB(page);
+    await page.keyboard.press("2");
+    await expect(page).toHaveURL(/\/personnel$/);
+    expect(await statusBarText(page)).toBe(winText("personnel", "dashboard"));
+
+    await ctrlB(page);
+    await page.keyboard.press("1");
+    await expect(page).toHaveURL(/\/builds$/);
+    expect(await statusBarText(page)).toBe(winText("builds", "personnel"));
   });
 });
 

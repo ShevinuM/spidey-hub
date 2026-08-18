@@ -25,15 +25,18 @@
     PersonnelData,
     ProfileData,
     HelpData,
+    ShellData,
     CompanyEntry,
   } from "../lib/data";
   import type { CollectionEntry } from "astro:content";
   import type { Commit } from "../lib/commits";
+  import type { ShellMode } from "../lib/shell";
   import Dashboard from "./Dashboard.svelte";
   import Builds from "./Builds.svelte";
   import Personnel from "./Personnel.svelte";
   import Profile from "./Profile.svelte";
   import HelpView from "./HelpView.svelte";
+  import Shell from "./Shell.svelte";
   import { viewIdToProgram } from "../lib/views";
 
   interface Props {
@@ -43,6 +46,7 @@
     personnel: PersonnelData;
     profile: ProfileData;
     help: HelpData;
+    shell: ShellData;
     companies: CompanyEntry[];
     projects: CollectionEntry<"projects">[];
     personnelEntries: CollectionEntry<"personnel">[];
@@ -53,10 +57,38 @@
      * LAUNCH into the current pane — so they all funnel through this one
      * callback, keyed by the target window's canonical program id. */
     onWindowSwitch: (program: ProgramName) => void;
+    /** Shell.svelte's own three effects (PLAN.md Iteration 3 Phase 4 item
+     * 4.2/4.3) — launching a program IN THIS PANE (bare view-name commands/
+     * `open <view>`, never a window switch), exiting THIS pane's program
+     * back to a shell (`exit` — cascades like kill-pane), and `reboot`. */
+    onLaunchInPane: (paneId: string, program: string) => void;
+    onExitPane: (paneId: string) => void;
+    onReboot: () => void;
+    shellMode: ShellMode;
+    viewNames: readonly string[];
+    shellSession: { name: string; windowCount: number; createdAt: number; attached: boolean };
   }
 
-  const { node, dashboard, builds, personnel, profile, help, companies, projects, personnelEntries, commitsByRepo, onWindowSwitch }: Props =
-    $props();
+  const {
+    node,
+    dashboard,
+    builds,
+    personnel,
+    profile,
+    help,
+    shell,
+    companies,
+    projects,
+    personnelEntries,
+    commitsByRepo,
+    onWindowSwitch,
+    onLaunchInPane,
+    onExitPane,
+    onReboot,
+    shellMode,
+    viewNames,
+    shellSession,
+  }: Props = $props();
 
   const refs = new Map<string, unknown>();
 
@@ -107,11 +139,17 @@
   {:else if node.pane.program === "profile"}
     <Profile bind:this={leafRef} {profile} />
   {:else}
-    <!-- program === "shell" — Shell.svelte lands in PLAN.md Phase 4 item
-         4.2; unreachable this step (nothing yet calls exitProgram/
-         launchProgram from the keyboard/cmdline), kept as an explicit,
-         harmless empty branch rather than an implicit fallthrough so this
-         chain stays exhaustive over every ProgramName. -->
-    <div style="flex:1;min-height:0"></div>
+    <!-- program === "shell" (PLAN.md Iteration 3 Phase 4 item 4.2). -->
+    <Shell
+      bind:this={leafRef}
+      {shell}
+      pane={node.pane}
+      mode={shellMode}
+      {viewNames}
+      session={shellSession}
+      onLaunch={(program) => onLaunchInPane(node.pane.id, program)}
+      onExit={() => onExitPane(node.pane.id)}
+      {onReboot}
+    />
   {/if}
 {/if}

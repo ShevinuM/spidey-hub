@@ -91,8 +91,8 @@ commands:
     description: "download resume.pdf in a new tab"
     action: "resume"
   - name: "q"
-    description: "kill the current window (refuses to kill the last one)"
-    action: "kill-window"
+    description: "quit the current program to a shell in this window"
+    action: "exit-program"
 
 # tmux command-prompt mode (Ctrl-b :) — PLAN.md 5C.1(c). A distinct, smaller
 # vocabulary matching real tmux's own command-prompt commands; EXECUTED

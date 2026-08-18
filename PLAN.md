@@ -263,11 +263,11 @@ opens Help window; cmdline/palette close on window switch (e2e).
   selectWindow. All existing behavior (switching, rename, kill-window, prefix cycle, status bar
   click) preserved against the new model. **CHECKPOINT: after 4.1, run the FULL existing e2e
   suite and get it green before starting 4.2** — keeps the fix loop scoped to the refactor.
-- [ ] 4.2 Shell.svelte + shell.ts + shell.yaml + `fs-index.json` generation in generate.mjs;
+- [x] 4.2 Shell.svelte + shell.ts + shell.yaml + `fs-index.json` generation in generate.mjs;
   builtins per Architecture notes (except tmux session subcommands — Phase 5); `dashboard` etc.
   launch programs in-pane; `exit` closes the pane→window cascade (last-window guard stays until
   Phase 5 adds sessions).
-- [ ] 4.3 `:q`/`q` cmdline command → exitProgram(focused pane) per Locked #2; window auto-rename
+- [x] 4.3 `:q`/`q` cmdline command → exitProgram(focused pane) per Locked #2; window auto-rename
   (program name ↔ `zsh`, manual rename wins); status bar shows renames live + `-` flag for last
   window.
 - [ ] 4.4 Reboot reset now also rebuilds the client to factory (sessions/windows/panes/programs/

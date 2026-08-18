@@ -26,7 +26,7 @@ const commands: CommandSource[] = [
   { name: "grep", description: "open the grep overlay", action: "grep", takesArgs: true },
   { name: "reboot", description: "replay the E.D.I.T.H boot sequence", action: "reboot" },
   { name: "resume", aliases: ["cv"], description: "download resume.pdf in a new tab", action: "resume" },
-  { name: "q", description: "kill the current window", action: "kill-window" },
+  { name: "q", description: "quit the current program to a shell in this window", action: "exit-program" },
 ];
 
 const sections: HelpSectionSource[] = [
@@ -54,17 +54,17 @@ const sections: HelpSectionSource[] = [
 // commandEntries / keymapEntries / buildEntries
 // ---------------------------------------------------------------------
 
-test("commandEntries excludes q (PLAN.md 3.3 empty-query listing + searchable corpus)", () => {
+test("commandEntries includes q as of Phase 4 (exitProgram meaning)", () => {
   const entries = commandEntries(commands);
-  assert.equal(entries.length, commands.length - 1);
-  assert.ok(!entries.some((e) => e.label === "q"));
+  assert.equal(entries.length, commands.length);
+  assert.ok(entries.some((e) => e.label === "q" && e.action === "exit-program"));
 });
 
 test("commandEntries preserves cmdline.yaml's own declared order", () => {
   const entries = commandEntries(commands);
   assert.deepEqual(
     entries.map((e) => e.label),
-    ["dashboard", "builds", "personnel", "profile", "retina-v", "help", "grep", "reboot", "resume"],
+    ["dashboard", "builds", "personnel", "profile", "retina-v", "help", "grep", "reboot", "resume", "q"],
   );
 });
 

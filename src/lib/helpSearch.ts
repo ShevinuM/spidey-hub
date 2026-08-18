@@ -10,16 +10,16 @@
 // types, same reasoning as src/lib/cmdline.ts's own CommandDef — this file
 // stays a zero-dependency pure module):
 //   - "command" entries: cmdline.yaml's own site-wide `commands` list
-//     (dashboard/builds/personnel/profile/retina-v/help/grep/reboot/resume)
+//     (dashboard/builds/personnel/profile/retina-v/help/grep/reboot/resume/q)
 //     — EXECUTABLE (Enter runs the same action id Cmdline.svelte's own
 //     onSubmit already dispatches through Terminal.svelte's
-//     executeSiteAction). `q` is deliberately excluded from this module's
-//     corpus entirely (not just the empty-query listing PLAN.md 3.3 spells
-//     out as "dashboard/builds/.../resume — NOT q"): it's a single letter
-//     that would otherwise fuzzy-(subsequence-)match almost every typed
-//     query in a *discovery* palette, and Locked decision #2 is about to
-//     change what it even means (Phase 4 retargets it at exitProgram) — an
-//     executor interpretation, flagged in the phase report.
+//     executeSiteAction). `q` was deliberately excluded from this module's
+//     corpus in Phase 3 (PLAN.md 3.3's empty-query listing spells out
+//     "dashboard/builds/.../resume — NOT q") because Locked decision #2 was
+//     about to change what it even means; Phase 4 has now retargeted it at
+//     exitProgram (site-mode `:q`/cmdline `q` exits the active pane's
+//     program to a shell — no longer kills the window), so it's re-added
+//     here with that new description, same as every other command.
 //   - "keymap" entries: every row of every src/data/help.yaml section —
 //     INFORMATIONAL ONLY (Enter no-ops; see HelpSearch.svelte). Phase 4
 //     adds shell builtins to this same corpus once they exist; nothing
@@ -78,15 +78,12 @@ export interface HelpSearchKeymapEntry {
 
 export type HelpSearchEntry = HelpSearchCommandEntry | HelpSearchKeymapEntry;
 
-const EXCLUDED_COMMAND_NAMES = new Set(["q"]);
-
-/** cmdline.yaml's `commands` list, minus `q` (see file header) — this is
- * BOTH the empty-query listing (PLAN.md 3.3: "dashboard/builds/personnel/
- * profile/retina-v/help/grep/reboot/resume") and the "command" half of the
- * typed-search corpus, in the yaml's own declared order. */
+/** cmdline.yaml's `commands` list (see file header) — this is BOTH the
+ * empty-query listing and the "command" half of the typed-search corpus, in
+ * the yaml's own declared order. `q` is included as of Phase 4 (see file
+ * header) with its new exitProgram meaning. */
 export function commandEntries(commands: CommandSource[]): HelpSearchCommandEntry[] {
   return commands
-    .filter((c) => !EXCLUDED_COMMAND_NAMES.has(c.name.toLowerCase()))
     .map((c) => ({
       kind: "command" as const,
       id: `cmd:${c.name}`,

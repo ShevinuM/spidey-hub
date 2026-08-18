@@ -55,8 +55,12 @@ async function statusBarText(page: Page) {
  * the expected string instead of hand-writing it at each call site (PLAN.md
  * Phase 1 renumbers/extends the window list, touching ~20 literals). */
 const WINDOWS = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"];
-function winText(activeId: string): string {
-  return WINDOWS.map((id, i) => `${i}:${id}${id === activeId ? "*" : ""}`).join(" ");
+/** `lastId` (PLAN.md Iteration 3 Phase 4 item 4.3 tmux fidelity reference)
+ * is the real tmux `-` flag on the session's PREVIOUSLY active window —
+ * omit it for assertions made before any in-test window switch (a fresh
+ * `gotoReady`/SSR load has no previous window, so no flag renders). */
+function winText(activeId: string, lastId?: string): string {
+  return WINDOWS.map((id, i) => `${i}:${id}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
 }
 
 /**
@@ -92,42 +96,42 @@ test.describe("view switching + status bar (bug fix 1: numeric order)", () => {
     await gotoReady(page, "/");
     await page.keyboard.press("b");
     await expect(page).toHaveURL(/\/builds$/);
-    expect(await statusBarText(page)).toBe(winText("builds"));
+    expect(await statusBarText(page)).toBe(winText("builds", "dashboard"));
   });
 
   test("p also switches to builds", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("p");
     await expect(page).toHaveURL(/\/builds$/);
-    expect(await statusBarText(page)).toBe(winText("builds"));
+    expect(await statusBarText(page)).toBe(winText("builds", "dashboard"));
   });
 
   test("x switches to personnel", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("x");
     await expect(page).toHaveURL(/\/personnel$/);
-    expect(await statusBarText(page)).toBe(winText("personnel"));
+    expect(await statusBarText(page)).toBe(winText("personnel", "dashboard"));
   });
 
   test("i switches to profile", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("i");
     await expect(page).toHaveURL(/\/profile$/);
-    expect(await statusBarText(page)).toBe(winText("profile"));
+    expect(await statusBarText(page)).toBe(winText("profile", "dashboard"));
   });
 
   test("t switches to retina-v — renders BETWEEN personnel and profile (bug fix 1)", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("t");
     await expect(page).toHaveURL(/\/retina-v$/);
-    expect(await statusBarText(page)).toBe(winText("retina-v"));
+    expect(await statusBarText(page)).toBe(winText("retina-v", "dashboard"));
   });
 
   test("h switches to help (PLAN.md Iteration 3 Phase 3 item 3.4 — replaces the old ? hotkey)", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("h");
     await expect(page).toHaveURL(/\/help$/);
-    expect(await statusBarText(page)).toBe(winText("help"));
+    expect(await statusBarText(page)).toBe(winText("help", "dashboard"));
   });
 
   test("? no longer switches to help from the dashboard — it opens the HelpSearch palette instead", async ({
@@ -177,6 +181,7 @@ test.describe("q / Esc never switch views (PLAN.md Phase 1 items 15/16)", () => 
 test.describe("status bar navigation (mouse) — PLAN.md Phase 1 item 1.3", () => {
   test("clicking each window jumps straight to it, from anywhere", async ({ page }) => {
     await gotoReady(page, "/");
+    let prev = "dashboard";
     for (const [id, route] of [
       ["builds", "/builds"],
       ["personnel", "/personnel"],
@@ -187,7 +192,8 @@ test.describe("status bar navigation (mouse) — PLAN.md Phase 1 item 1.3", () =
     ] as const) {
       await page.locator(`[data-testid="status-bar-window"][data-window-id="${id}"]`).click();
       await expect(page).toHaveURL(new RegExp(`${route.replace("/", "\\/")}$`));
-      expect(await statusBarText(page)).toBe(winText(id));
+      expect(await statusBarText(page)).toBe(winText(id, prev));
+      prev = id;
     }
   });
 
@@ -222,19 +228,19 @@ test.describe("URL sync + back/forward", () => {
 
     await page.goBack();
     await expect(page).toHaveURL(/\/$/);
-    expect(await statusBarText(page)).toBe(winText("dashboard"));
+    expect(await statusBarText(page)).toBe(winText("dashboard", "profile"));
 
     await page.goBack();
     await expect(page).toHaveURL(/\/personnel$/);
-    expect(await statusBarText(page)).toBe(winText("personnel"));
+    expect(await statusBarText(page)).toBe(winText("personnel", "dashboard"));
 
     await page.goForward();
     await expect(page).toHaveURL(/\/$/);
-    expect(await statusBarText(page)).toBe(winText("dashboard"));
+    expect(await statusBarText(page)).toBe(winText("dashboard", "personnel"));
 
     await page.goForward();
     await expect(page).toHaveURL(/\/profile$/);
-    expect(await statusBarText(page)).toBe(winText("profile"));
+    expect(await statusBarText(page)).toBe(winText("profile", "dashboard"));
   });
 
   test("landing directly on a non-home route SSRs the matching view", async ({ page }) => {

@@ -7,7 +7,7 @@
 import Shell from "../layouts/Shell.astro";
 import Terminal from "../components/Terminal.svelte";
 import { getCollection } from "astro:content";
-import { getSite, getDashboard, getNotifications, getTracker, getProfile, getBuilds, getPersonnel, getCompanies, getGrep, getHelp, getBoot, getCmdline, getHelpSearch } from "../lib/data";
+import { getSite, getDashboard, getNotifications, getTracker, getProfile, getBuilds, getPersonnel, getCompanies, getGrep, getHelp, getBoot, getCmdline, getHelpSearch, getShell } from "../lib/data";
 import { getCommitsByRepo } from "../lib/commits";
 
 const site = getSite();
@@ -23,6 +23,7 @@ const help = getHelp();
 const boot = getBoot();
 const cmdline = getCmdline();
 const helpSearch = getHelpSearch();
+const shell = getShell();
 const projects = await getCollection("projects");
 const personnelEntries = await getCollection("personnel");
 const commitsByRepo = getCommitsByRepo(projects);
@@ -45,6 +46,7 @@ const commitsByRepo = getCommitsByRepo(projects);
     {boot}
     {cmdline}
     {helpSearch}
+    {shell}
     {projects}
     {personnelEntries}
     {commitsByRepo}

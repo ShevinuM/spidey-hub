@@ -690,16 +690,22 @@ test.describe("Cmdline: data-driven sweep of every src/data/cmdline.yaml command
       continue;
     }
 
-    if (action === "kill-window") {
-      // Kills the current window: asserted here. Last-window refusal (PLAN.md
-      // 5C.2 "last-window refusal applies") is its own dedicated test below
-      // ("kill-window (:q) refuses to kill the last remaining window...").
-      test(`:${def.name} kills the current window`, async ({ page }) => {
+    if (action === "exit-program") {
+      // Locked decision #2 (Phase 4): exits the active pane's program to a
+      // shell in the SAME window — no longer kills it. Behavior on the last
+      // remaining window is its own dedicated test below (no last-window
+      // guard applies, since nothing is being killed).
+      test(`:${def.name} exits the active pane's program to a shell in the same window`, async ({ page }) => {
         await gotoReady(page, "/builds");
         await page.keyboard.press(":");
         await typeAndEnter(page, def.name);
         await expect(overlay(page)).not.toBeVisible();
-        await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(0);
+        // Window survives (same stable id), auto-renamed live to "zsh" —
+        // and its URL is frozen (Architecture notes: pushState only for
+        // canonical program windows — "shell" isn't one).
+        await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveText(/zsh/);
+        await expect(page.locator('[data-testid="shell-prompt"]')).toBeVisible();
+        await expect(page).toHaveURL(/\/builds$/);
       });
       continue;
     }
@@ -715,7 +721,9 @@ test.describe("Cmdline: data-driven sweep of every src/data/cmdline.yaml command
     });
   }
 
-  test("kill-window (:q) refuses to kill the last remaining window, exactly like Ctrl-b &", async ({ page }) => {
+  test(":q on the last remaining window exits its program to a shell, without killing it (no last-window refusal — nothing is being killed)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     for (let i = 0; i < 5; i++) {
       await ctrlB(page);
@@ -726,7 +734,7 @@ test.describe("Cmdline: data-driven sweep of every src/data/cmdline.yaml command
 
     await page.keyboard.press(":");
     await typeAndEnter(page, "q");
-    await expect(page.locator('[data-testid="status-message"]')).toContainText("only window");
     await expect(page.locator('[data-testid="status-bar-window"]')).toHaveCount(1);
+    await expect(page.locator('[data-testid="shell-prompt"]')).toBeVisible();
   });
 });

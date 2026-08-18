@@ -29,6 +29,7 @@ import bootRaw from "../data/boot.yaml?raw";
 import cmdlineRaw from "../data/cmdline.yaml?raw";
 import helpsearchRaw from "../data/helpsearch.yaml?raw";
 import notificationsRaw from "../data/notifications.yaml?raw";
+import shellRaw from "../data/shell.yaml?raw";
 
 const RAW: Record<string, string> = {
   "site.yaml": siteRaw,
@@ -44,6 +45,7 @@ const RAW: Record<string, string> = {
   "cmdline.yaml": cmdlineRaw,
   "helpsearch.yaml": helpsearchRaw,
   "notifications.yaml": notificationsRaw,
+  "shell.yaml": shellRaw,
 };
 
 const cache = new Map<string, unknown>();
@@ -551,3 +553,49 @@ export interface HelpSearchData {
 }
 
 export const getHelpSearch = (): HelpSearchData => loadYaml<HelpSearchData>("helpsearch.yaml");
+
+// ---------------------------------------------------------------------------
+// shell.yaml (PLAN.md Iteration 3 Phase 4 items 4.2/4.3)
+// ---------------------------------------------------------------------------
+
+export interface ShellErrors {
+  commandNotFoundTemplate: string;
+  cdNoSuchDirTemplate: string;
+  cdNotADirTemplate: string;
+  lsNoSuchTemplate: string;
+  catMissingArgMessage: string;
+  catNoSuchFileTemplate: string;
+  catIsADirTemplate: string;
+  catUnindexedTemplate: string;
+  nestedTmuxMessage: string;
+  tmuxUnknownSubcommandTemplate: string;
+}
+
+export interface ShellHelpRow {
+  cmd: string;
+  description: string;
+}
+
+export interface ShellNeofetchField {
+  label: string;
+  value: string;
+}
+
+export interface ShellData {
+  prompt: { paneTemplate: string; hostTemplate: string };
+  homeLabel: string;
+  errors: ShellErrors;
+  sudo: { message: string };
+  whoami: string;
+  viewNames: { label: string };
+  help: { intro: string; rows: ShellHelpRow[] };
+  neofetch: {
+    art: string[];
+    fields: ShellNeofetchField[];
+    uptimeLabel: string;
+    uptimeTemplate: string;
+  };
+  tmux: { lsRowTemplate: string; lsAttachedSuffix: string };
+}
+
+export const getShell = (): ShellData => loadYaml<ShellData>("shell.yaml");

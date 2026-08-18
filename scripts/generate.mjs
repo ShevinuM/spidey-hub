@@ -275,6 +275,119 @@ function generateGrepIndex() {
 }
 
 // ---------------------------------------------------------------------------
+// 2b. Shell fs-index (public/generated/fs-index.json) — PLAN.md Iteration 3
+//     Phase 4 item 4.2: the generated filesystem the in-window shell's
+//     cd/ls/tree/cat walk. A FLAT `{path, size?}[]` list (same shape
+//     convention as the grep/repo indexes' own `{path, lines}[]` — src/lib/
+//     shell.ts derives directory structure from path prefixes, exactly like
+//     src/lib/repoTree.ts's listDir already does for a single repo).
+//
+// Same skip list as the grep walker, PLUS `public/generated` itself
+// (this file's own output directory — including it would make fs-index.json
+// list its own changing byte size every run, breaking `pnpm generate`
+// idempotency) and `.DS_Store` (machine-dependent, not part of the repo).
+// Structural (isTextFile is NOT consulted here — every file gets a size,
+// text or binary; `cat`'s own "binary or unindexed" case is what a real fs
+// walk's content-vs-structure split looks like).
+//
+// repos/* subtrees come from the per-repo index JSONs already written by
+// generateRepoIndexes() above (path-only — PLAN.md Architecture notes),
+// NOT a second walk of the repos/ submodules on disk, so `cat`'s own lazy
+// per-repo fetch always agrees with what `ls`/`tree` show here. The virtual
+// "all-projects" entry is excluded — it has no corresponding `repos/
+// all-projects` directory on disk for a real `cd`/`ls` to land in.
+// ---------------------------------------------------------------------------
+
+const FS_INDEX_SKIP_DIRS = new Set([
+  "node_modules",
+  ".git",
+  "dist",
+  ".astro",
+  "goldens",
+  "reference",
+]);
+
+const FS_INDEX_SKIP_FILES = new Set([".DS_Store"]);
+
+const FS_INDEX_SUBDIRS = ["src", "public", "fixtures", "scripts", "tests"];
+
+/**
+ * Recursively walks `dir`, pushing {path, size} entries (path relative to
+ * `root`, posix-separated) for EVERY file (text or binary) not inside a
+ * directory named in `skipDirs` (checked against `extraSkipDirs` too, for
+ * the one-off "public/generated" exclusion). Symlinks are not followed.
+ */
+function walkStructure(dir, root, collected, extraSkipDirs) {
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const entry of entries) {
+    if (entry.isSymbolicLink()) continue;
+    if (FS_INDEX_SKIP_FILES.has(entry.name)) continue;
+    if (entry.isDirectory()) {
+      if (FS_INDEX_SKIP_DIRS.has(entry.name) || extraSkipDirs.has(entry.name)) continue;
+      walkStructure(join(dir, entry.name), root, collected, extraSkipDirs);
+      continue;
+    }
+    if (!entry.isFile()) continue;
+    const full = join(dir, entry.name);
+    let size;
+    try {
+      size = statSync(full).size;
+    } catch {
+      continue;
+    }
+    collected.push({ path: toPosix(relative(root, full)), size });
+  }
+}
+
+function generateFsIndex() {
+  const entries = [];
+
+  for (const sub of FS_INDEX_SUBDIRS) {
+    const dir = join(ROOT, sub);
+    if (!existsSync(dir)) continue;
+    // "public/generated" is this very generator's own output — see file
+    // header. No other subdir needs an exclusion.
+    const extraSkip = sub === "public" ? new Set(["generated"]) : new Set();
+    walkStructure(dir, ROOT, entries, extraSkip);
+  }
+
+  // Root-level files: every direct file in the repo root (a real `ls`, not
+  // the grep indexer's curated allowlist above).
+  for (const entry of readdirSync(ROOT, { withFileTypes: true })) {
+    if (!entry.isFile() || FS_INDEX_SKIP_FILES.has(entry.name)) continue;
+    let size;
+    try {
+      size = statSync(join(ROOT, entry.name)).size;
+    } catch {
+      continue;
+    }
+    entries.push({ path: entry.name, size });
+  }
+
+  // repos/* — path-only, from the already-generated per-repo indexes.
+  const reposIndexDir = join(ROOT, "public/generated/repos");
+  if (existsSync(reposIndexDir)) {
+    for (const file of readdirSync(reposIndexDir)) {
+      if (!file.endsWith(".json") || file === "all-projects.json") continue;
+      const index = JSON.parse(readFileSync(join(reposIndexDir, file), "utf8"));
+      for (const f of index.files) {
+        entries.push({ path: `repos/${index.name}/${f.path}` });
+      }
+    }
+  }
+
+  entries.sort((a, b) => a.path.localeCompare(b.path));
+  mkdirSync(join(ROOT, "public/generated"), { recursive: true });
+  writeFileSync(join(ROOT, "public/generated/fs-index.json"), JSON.stringify({ entries }) + "\n");
+  console.log(`[generate] public/generated/fs-index.json — ${entries.length} entries`);
+}
+
+// ---------------------------------------------------------------------------
 // 3. Commit snapshots (src/generated/commits/<repo>.json)
 // ---------------------------------------------------------------------------
 
@@ -347,6 +460,10 @@ async function main() {
   // state and leave the index permanently one generation stale.
   await generateCommitSnapshots();
   generateGrepIndex();
+  // Must run after generateRepoIndexes(): reads the per-repo JSONs it just
+  // wrote for the repos/* path-only subtrees (see generateFsIndex's own
+  // header comment).
+  generateFsIndex();
 }
 
 main().catch((err) => {

@@ -21,8 +21,11 @@ async function statusBarText(page: Page) {
 }
 
 const WINDOWS = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"];
-function winText(activeId: string): string {
-  return WINDOWS.map((id, i) => `${i}:${id}${id === activeId ? "*" : ""}`).join(" ");
+/** `lastId` (PLAN.md Iteration 3 Phase 4 item 4.3 tmux fidelity reference)
+ * is the real tmux `-` flag on the session's PREVIOUSLY active window —
+ * omit it for assertions made before any in-test window switch. */
+function winText(activeId: string, lastId?: string): string {
+  return WINDOWS.map((id, i) => `${i}:${id}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
 }
 
 async function gotoReady(page: Page, path: string) {
@@ -215,6 +218,6 @@ test.describe("Profile: q/Esc never navigate, no close pill (PLAN.md Phase 1 ite
 
   test("status bar shows windows 0-5 in numeric order with profile active", async ({ page }) => {
     await openProfile(page);
-    expect(await statusBarText(page)).toBe(winText("profile"));
+    expect(await statusBarText(page)).toBe(winText("profile", "dashboard"));
   });
 });

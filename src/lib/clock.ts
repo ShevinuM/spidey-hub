@@ -85,3 +85,18 @@ export function resolvePageEpoch(): number {
   }
   return Date.now();
 }
+
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
+/** asctime-style "{Weekday} {Mon} {DD} {HH:MM:SS} {YYYY}" local time, e.g.
+ * "Mon Aug 17 23:34:00 2026" — real tmux's own default `created` format for
+ * `tmux ls` (PLAN.md tmux fidelity reference). Always fed a Date built from
+ * a frozen epoch (`Session.createdAt`, itself from `resolvePageEpoch()`
+ * above) — never `new Date()` at call time. */
+export function formatCtime(d: Date): string {
+  const wd = WEEKDAYS[d.getDay()];
+  const month = MONTHS[d.getMonth()];
+  const day = pad2(d.getDate());
+  const time = `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+  return `${wd} ${month} ${day} ${time} ${d.getFullYear()}`;
+}

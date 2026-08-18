@@ -1,0 +1,109 @@
+# In-window shell (PLAN.md Iteration 3 Phase 4 items 4.2/4.3 — a program's
+# `:q` drops its pane back to this; Phase 5 reuses the exact same component/
+# data for the detached, fullscreen HOST shell). Every user-visible shell
+# string lives here (content-purity rule) — src/lib/shell.ts only ever does
+# substitution/formatting, never holds copy of its own.
+
+prompt:
+  # Pane-mode prompt (a program's `:q` shell, one per window/pane) —
+  # `{path}` is "" at the fs root, else "/" followed by the cwd's segments
+  # joined with "/" (e.g. "/src/lib").
+  paneTemplate: "shev@edith:~/shevinum.dev{path} $ "
+  # Host-mode prompt (PLAN.md Phase 5's detached fullscreen shell) — matches
+  # the user's own mock screenshot verbatim; kept here now (unused until
+  # Phase 5 wires host mode) so that phase needs no new data-file work.
+  hostTemplate: "shev@edith:~/shevinum.dev git:(main) $ "
+
+# `pwd`'s own output prefix — the project directory's display name, reused
+# by the prompt template above for consistency.
+homeLabel: "~/shevinum.dev"
+
+errors:
+  commandNotFoundTemplate: "{cmd}: command not found"
+  cdNoSuchDirTemplate: "cd: no such file or directory: {path}"
+  cdNotADirTemplate: "cd: not a directory: {path}"
+  lsNoSuchTemplate: "ls: cannot access '{path}': No such file or directory"
+  catMissingArgMessage: "cat: missing operand"
+  catNoSuchFileTemplate: "cat: {path}: No such file or directory"
+  catIsADirTemplate: "cat: {path}: Is a directory"
+  # PLAN.md Architecture notes' own exact wording for a path that exists in
+  # the fs tree but has no captured text content (outside the size cap, a
+  # binary file, or simply not walked into either generated index).
+  catUnindexedTemplate: "cat: {path}: binary or unindexed"
+  # PLAN.md tmux fidelity reference: `tmux new`/`tmux a` inside a pane shell
+  # always refuse with this exact string, regardless of argument.
+  nestedTmuxMessage: "sessions should be nested with care, unset $TMUX to force"
+  tmuxUnknownSubcommandTemplate: "usage: tmux {cmd}"
+
+sudo:
+  message: "shev is not in the sudoers file. This incident will be reported to D.O.O.M."
+
+whoami: "shev"
+
+viewNames:
+  label: "available views:"
+
+help:
+  intro: "builtins:"
+  # One row per builtin, printed verbatim (in this order) by the `help`
+  # builtin. `cmd` is the literal thing you type — kept here rather than in
+  # code so a future rename never needs a code change alongside it.
+  rows:
+    - cmd: "cd <path>"
+      description: "change directory"
+    - cmd: "ls [path]"
+      description: "list a directory's contents"
+    - cmd: "cat <path>"
+      description: "print a file's contents"
+    - cmd: "pwd"
+      description: "print the current directory"
+    - cmd: "tree"
+      description: "print the current directory as a tree (depth 3)"
+    - cmd: "clear"
+      description: "clear the scrollback"
+    - cmd: "whoami"
+      description: "print the current user"
+    - cmd: "help"
+      description: "show this list"
+    - cmd: "open <view>"
+      description: "launch a program in this pane"
+    - cmd: "view-names"
+      description: "list the launchable programs"
+    - cmd: "neofetch"
+      description: "system info card"
+    - cmd: "sudo <...>"
+      description: "try it"
+    - cmd: "exit"
+      description: "close this pane"
+    - cmd: "reboot"
+      description: "factory-reset the session"
+    - cmd: "tmux ls"
+      description: "list sessions"
+    - cmd: "<view name>"
+      description: "launch that program in this pane (same as open)"
+
+neofetch:
+  # Small hand-authored glyph (never copied artwork — PLAN.md Locked
+  # decision #11's same rule applied here), printed to the left of the info
+  # fields.
+  art:
+    - "     /\\"
+    - "    /  \\"
+    - "   | () |"
+    - "    \\  /"
+    - "     \\/"
+  fields:
+    - label: "OS"
+      value: "E.D.I.T.H OS (Battleworld build)"
+    - label: "Host"
+      value: "10.42.7.13"
+    - label: "Shell"
+      value: "zsh (tmux)"
+    - label: "Resolution"
+      value: "RETINA-V"
+  uptimeLabel: "Uptime"
+  uptimeTemplate: "{mins} min"
+
+tmux:
+  lsRowTemplate: "{name}: {n} windows (created {ctime})"
+  lsAttachedSuffix: " (attached)"
