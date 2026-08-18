@@ -284,7 +284,6 @@ test.describe("layouts: Ctrl-b Space cycles the 7 presets (PLAN.md Iteration 3 P
     // main-horizontal-mirrored: the big pane is now on the BOTTOM.
     await prefixed(page, " ");
     const topLeft2 = (await panes(page).nth(0).boundingBox())!;
-    const topRight2 = (await panes(page).nth(1).boundingBox())!;
     const mainBottom = (await panes(page).nth(2).boundingBox())!;
     expect(mainBottom.y).toBeGreaterThan(topLeft2.y);
     expect(mainBottom.height).toBeGreaterThan(topLeft2.height);

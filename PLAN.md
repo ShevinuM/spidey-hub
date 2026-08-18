@@ -305,21 +305,21 @@ no status bar) → `tmux ls` shows `10.42.7.13: 6 windows … (attached)`-style 
 reattaches with prior window state intact.
 
 ### Phase 6 — Panes: splits, nav, kill, layouts, choose-tree
-- [ ] 6.1 Split ops in tmux.ts (binary split tree; `|`/`%` right, `-`/`"` below, focused, 50/50) +
+- [x] 6.1 Split ops in tmux.ts (binary split tree; `|`/`%` right, `-`/`"` below, focused, 50/50) +
   PaneTree recursive flex rendering with borders + active-pane border accent; new panes run shell.
-- [ ] 6.2 Pane nav: prefix o / arrows / `;`; focus follows; delegation targets focused pane.
-- [ ] 6.3 `Ctrl-b x` real kill-pane per Locked #4 (+ cascade), Builds panel-kill removed (tests
+- [x] 6.2 Pane nav: prefix o / arrows / `;`; focus follows; delegation targets focused pane.
+- [x] 6.3 `Ctrl-b x` real kill-pane per Locked #4 (+ cascade), Builds panel-kill removed (tests
   updated; Builds `canKillPane`/`killPane` exports deleted); `kill-pane` tmux command targets the
   focused pane.
-- [ ] 6.4 Layout engine: all 7 presets per fidelity reference (pure tree→tree functions,
+- [x] 6.4 Layout engine: all 7 presets per fidelity reference (pure tree→tree functions,
   unit-tested for pane counts 2/3/4/5); prefix Space cycles in the verified order with lastLayout;
   `select-layout <name>` added to the tmux command prompt vocabulary (+ usage/unknown errors).
-- [ ] 6.5 choose-tree overlay (`Ctrl-b w`) per fidelity reference: tree of sessions/windows,
+- [x] 6.5 choose-tree overlay (`Ctrl-b w`) per fidelity reference: tree of sessions/windows,
   markers, flags, initial selection, expand/collapse, Enter switch (window or session), x kill
   with case-insensitive confirm, q/Esc cancel, bottom preview strip (pane programs of selection).
   Window-chrome rules: opening closes grep/cmdline/palette; it owns the keyboard while open
   (delegation slot right after copy-mode).
-- [ ] 6.6 Tests: unit layout engine + split/kill tree ops; e2e panes.spec (split, nav, kill
+- [x] 6.6 Tests: unit layout engine + split/kill tree ops; e2e panes.spec (split, nav, kill
   confirm exact prompt text, cascades incl. `[exited]`, each of 7 layouts asserted via bounding
   boxes for 3 panes, Space cycle order, select-layout command) + choose-tree.spec (open, navigate,
   switch window + session, kill window via x, cancel, initial selection).

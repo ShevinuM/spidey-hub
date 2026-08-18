@@ -292,11 +292,17 @@
       <div data-testid="choose-tree-rows" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;padding-top:6px">
         {#each rows as row, i (row.kind + ":" + row.sessionId + ":" + (row.windowId ?? ""))}
           <div
+            role="button"
+            tabindex="0"
             data-testid={row.kind === "session" ? "choose-tree-session-row" : "choose-tree-window-row"}
             data-session-id={row.sessionId}
             data-window-id={row.windowId ?? ""}
             data-selected={i === selectedIdx}
-            style="white-space:pre;padding:2px 6px;{i === selectedIdx ? 'background:rgba(224,69,60,.22);color:#f0e7e4' : 'color:rgba(196,216,232,.8)'}"
+            onclick={() => (selectedIdx = i)}
+            onkeydown={(e) => {
+              if (e.key === "Enter" || e.key === " ") selectedIdx = i;
+            }}
+            style="cursor:pointer;white-space:pre;padding:2px 6px;{i === selectedIdx ? 'background:rgba(224,69,60,.22);color:#f0e7e4' : 'color:rgba(196,216,232,.8)'}"
           >{row.depth === 1 ? `${row.isLast ? "└─ " : "├─ "}${row.text}` : row.text}</div>
         {/each}
       </div>

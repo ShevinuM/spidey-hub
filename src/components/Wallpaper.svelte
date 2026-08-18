@@ -21,9 +21,18 @@
      * last had; `dim` is what actually drives the look). Defaults to false
      * so every existing call site (none of which pass it) is unaffected. */
     dim?: boolean;
+    /** PLAN.md Iteration 3 Phase 6 (Locked decision #5 — a program can run in
+     * more than one pane at once, so copy-source capture must resolve to the
+     * *focused pane's* program, not the window's `view`). True only when the
+     * currently focused pane is actually running retina-v — e.g. false in a
+     * split retina-v window while a sibling shell pane is focused, even
+     * though `view` is still "retina-v" for the window as a whole. Defaults
+     * to `view === "retina-v"` so single-pane windows (the only case before
+     * splits existed) keep their old behavior unchanged. */
+    isRetinaFocused?: boolean;
   }
 
-  const { tracker, view, dim = false }: Props = $props();
+  const { tracker, view, dim = false, isRetinaFocused = view === "retina-v" }: Props = $props();
 
   // wallOpacity/wallFilter: Component.renderVals() (Homepage.dc.html line
   // 1125-1126). The prototype's `trackerBrightness` design-tool knob has no
@@ -220,9 +229,12 @@
          data-copy-source, gated to the tracker view only (this markup is
          always in the DOM at every view, just faded via wallOpacity above)
          so `Ctrl-b [` never captures the HUD text while some other view is
-         active. -->
+         active. PLAN.md Phase 6: gated on the *focused pane* running
+         retina-v (isRetinaFocused), not merely the window's view, so a split
+         retina-v window with a shell pane focused doesn't let CopyMode
+         capture the HUD out from under the focused shell. -->
     <pre
-      data-copy-source={view === "retina-v" ? "" : undefined}
+      data-copy-source={isRetinaFocused ? "" : undefined}
       style="position:absolute;left:30px;bottom:56px;margin:0;font:12px/1.5 inherit;color:rgba(224,69,60,.6);background:rgba(9,13,18,.78);border:1px solid rgba(224,69,60,.22);border-radius:4px;padding:8px 12px">{tracker.hud.left.join(
         "\n",
       )}</pre>

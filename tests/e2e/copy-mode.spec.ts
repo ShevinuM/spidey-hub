@@ -99,6 +99,31 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     });
   }
 
+  // PLAN.md Iteration 3 Phase 6 item 6.1 / Locked decision #5: a program can
+  // run in more than one pane at once, so `[data-copy-source]` capture must
+  // resolve to the FOCUSED PANE's own program, not the window's `view`.
+  // Wallpaper's tracker HUD is always in the DOM (just faded) at every view,
+  // so before this was fixed, splitting the retina-v window and focusing the
+  // new (shell) sibling still left Wallpaper's `data-copy-source` attribute
+  // on — CopyMode's `document.querySelector('[data-copy-source]')` would
+  // find the HUD (earlier in the DOM) instead of the focused shell, since
+  // querySelector returns only the first match.
+  test("a shell pane split off a retina-v window is the copy-source, not the tracker HUD", async ({ page }) => {
+    await gotoReady(page, "/retina-v");
+    await expect(page.locator("[data-copy-source]")).toHaveCount(1);
+
+    await ctrlB(page);
+    await page.keyboard.press("|");
+    await expect(page.locator('[data-testid="pane-leaf"]')).toHaveCount(2);
+    await expect(page.locator('[data-testid="pane-leaf"][data-pane-focused="true"]')).toHaveCount(1);
+
+    // Exactly one copy-source in the DOM, and it's the new (focused) shell
+    // pane's scroller — not the wallpaper's HUD `<pre>`.
+    await expect(page.locator("[data-copy-source]")).toHaveCount(1);
+    await expect(page.locator("[data-copy-source]")).toHaveAttribute("data-testid", "shell-scroller");
+    await expect(page.locator('pre[data-copy-source]')).toHaveCount(0);
+  });
+
   // A verifier caught that the editor's visible scroller renders each line's
   // gutter number and text as SIBLING flex items, and `innerText` inserts a
   // line break between flex siblings the same way it does between block

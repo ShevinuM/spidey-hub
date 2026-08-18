@@ -1032,6 +1032,12 @@
     const result = killWindowCascade(client, session, windowId);
     if (result.kind === "session-destroyed" && result.detachedToHost) {
       appendHostLine(shell.host.exitedMessage);
+      // Nothing left to browse — the client is now fully detached, so
+      // there's no PaneTree/StatusBar left underneath this overlay either
+      // (Terminal's own `{#if activeSession}...{:else}...{/if}` branch has
+      // already switched to the host shell). Close it rather than leaving
+      // an empty tree floating over the host shell.
+      chooseTreeRef?.close?.();
     }
     syncUrl();
   }
@@ -1042,7 +1048,10 @@
    * once via tmux.ts's own `killSession`. */
   function chooseTreeKillSession(sessionId: string) {
     const result = killSession(client, sessionId);
-    if (result.detachedToHost) appendHostLine(shell.host.exitedMessage);
+    if (result.detachedToHost) {
+      appendHostLine(shell.host.exitedMessage);
+      chooseTreeRef?.close?.(); // see chooseTreeKillWindow's own comment
+    }
     syncUrl();
   }
 
@@ -1298,8 +1307,14 @@
     if (pk === "w") {
       // PLAN.md Locked decision #3 / Iteration 3 Phase 6 item 6.5 — `w` is
       // now real tmux choose-tree, REPLACING the Phase 4/5 "go home"
-      // behavior (`0` still always selects window 0, unaffected).
+      // behavior (`0` still always selects window 0, unaffected). Closes
+      // grep/cmdline/palette first (window-chrome contract) — reachable in
+      // practice only for grep (Cmdline/HelpSearch being open already
+      // blocks every prefixed key including this one, per the combined gate
+      // above), same "prefix precedence over grep" PLAN.md Phase 1 rule
+      // every other window-switch prefix key already follows.
       e.preventDefault();
+      closeWindowChrome();
       chooseTreeRef?.openOverlay();
       return true;
     }
@@ -1734,7 +1749,7 @@
     ? 'bDashIn 1.05s cubic-bezier(.2,.7,.3,1) both'
     : 'none'}"
 >
-  <Wallpaper {tracker} view={view ?? "home"} dim={!activeSession} />
+  <Wallpaper {tracker} view={view ?? "home"} dim={!activeSession} isRetinaFocused={activeProgram === "retina-v"} />
 
   <div style="position:relative;z-index:2;height:100vh;overflow:hidden;display:flex;flex-direction:column">
     {#if activeSession}
