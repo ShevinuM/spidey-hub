@@ -2,11 +2,11 @@
 # Source: design/Homepage.dc.html lines 130-154 (plate, menu, footer),
 # lines 104-124 (toasts).
 #
-# PLAN.md Iteration 3 Phase 2 item 2.1: plate rebrands from "SHEVINUM.DEV" +
-# a "welcome back" line to a SPIDEY-HUB wordmark (own arched rendering in
-# Dashboard.svelte using the self-hosted Webslinger font — see
+# PLAN.md Iteration 3 Phase 2 item 2.1: plate rebrands from the old
+# site-title text plus a greeting line to a SPIDEY-HUB wordmark (own arched
+# rendering in Dashboard.svelte using the self-hosted Webslinger font — see
 # src/styles/global.css's @font-face — never Marvel's actual logo artwork).
-# The old welcome line + inline spider-mask glyph are removed outright, not
+# The old greeting line + inline spider-mask glyph are removed outright, not
 # replaced.
 
 plate:

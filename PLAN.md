@@ -229,7 +229,8 @@ Present).
 
 **Verify 2**: unit + e2e green; `pnpm check`; build; grep asserts zero hardcoded notification/title
 strings in components; woff2 exists (small, subset) and referenced with `font-display: swap`;
-`welcome back` appears nowhere in src/.
+`welcome back` appears nowhere in src/ EXCEPT src/data/boot.yaml (verbatim boot-mock copy from
+iteration 2's exact-recreation mandate — orchestrator-ruled in scope to keep).
 
 ### Phase 3 — Cmdline scoping + bare UI + `?` help palette + `h` binding
 - [ ] 3.1 Remove the cmdline suggestions list rendering (keep input, error line, Tab completion);

@@ -57,7 +57,7 @@ pool:
   - id: tmux-prefix-history
     icon: "T"
     badge: "Tmux"
-    text: "tmux: the prefix defaults to Ctrl-b, a holdover from GNU screen."
+    text: "tmux: the prefix defaults to Ctrl-b on purpose. Ctrl-a (screen's choice) clashes with readline's start-of-line."
   - id: tmux-layout-cycle
     icon: "T"
     badge: "Tmux"
