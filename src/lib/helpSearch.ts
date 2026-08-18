@@ -20,10 +20,15 @@
 //     exitProgram (site-mode `:q`/cmdline `q` exits the active pane's
 //     program to a shell — no longer kills the window), so it's re-added
 //     here with that new description, same as every other command.
-//   - "keymap" entries: every row of every src/data/help.yaml section —
-//     INFORMATIONAL ONLY (Enter no-ops; see HelpSearch.svelte). Phase 4
-//     adds shell builtins to this same corpus once they exist; nothing
-//     here needs to change shape to accommodate that later.
+//   - "keymap" entries: every row of every src/data/help.yaml section, PLUS
+//     (as of Phase 4) every row of src/data/shell.yaml's own `help.rows`
+//     (the in-window shell's `cd`/`ls`/`cat`/.../`neofetch`/`sudo`/... — see
+//     src/lib/shell.ts's `runCommand` "help" case, which prints this exact
+//     same list inside the shell itself) — INFORMATIONAL ONLY (Enter
+//     no-ops; see HelpSearch.svelte), same shape as a help.yaml row
+//     (`{label, description}`), content-purity-sourced from shell.yaml
+//     rather than duplicated here (PLAN.md 3.3 "+ shell builtins once
+//     Phase 4 lands").
 //
 // Scoring cascade (PLAN.md 3.3): exact > prefix > word-boundary > substring
 // > subsequence. The first four tiers all mean "the query occurs verbatim,
@@ -58,6 +63,14 @@ export interface HelpRowSource {
 export interface HelpSectionSource {
   title: string;
   rows: HelpRowSource[];
+}
+
+/** shell.yaml's `help.rows[]` shape (src/lib/data.ts's `ShellHelpRow`,
+ * structurally mirrored here rather than imported — same zero-dependency
+ * convention as `CommandSource`/`HelpRowSource` above). */
+export interface ShellHelpRowSource {
+  cmd: string;
+  description: string;
 }
 
 export interface HelpSearchCommandEntry {
@@ -107,10 +120,24 @@ export function keymapEntries(sections: HelpSectionSource[]): HelpSearchKeymapEn
   return out;
 }
 
+/** shell.yaml's own `help.rows[]` (see file header) as "keymap"-shaped
+ * entries — `id`s are namespaced `shell:` (distinct from help.yaml's
+ * `key:${si}:${ri}`) so the two sources can never collide. */
+export function shellEntries(rows: ShellHelpRowSource[]): HelpSearchKeymapEntry[] {
+  return rows.map((row, i) => ({ kind: "keymap", id: `shell:${i}`, label: row.cmd, description: row.description }));
+}
+
 /** The full corpus in the order ties resolve against — commands first
- * (see file header), then keymap rows. */
-export function buildEntries(commands: CommandSource[], sections: HelpSectionSource[]): HelpSearchEntry[] {
-  return [...commandEntries(commands), ...keymapEntries(sections)];
+ * (see file header), then help.yaml's keymap rows, then the shell's own
+ * builtins. `shellRows` defaults to `[]` so existing callers (and the
+ * fixture-driven unit tests that predate shell.yaml) don't all need
+ * updating in lockstep. */
+export function buildEntries(
+  commands: CommandSource[],
+  sections: HelpSectionSource[],
+  shellRows: ShellHelpRowSource[] = [],
+): HelpSearchEntry[] {
+  return [...commandEntries(commands), ...keymapEntries(sections), ...shellEntries(shellRows)];
 }
 
 // ---------------------------------------------------------------------

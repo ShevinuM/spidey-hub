@@ -205,6 +205,16 @@ test.describe("HelpSearch: empty-query listing + fuzzy filtering", () => {
     await page.keyboard.type("rbt");
     await expect(results(page).first()).toHaveAttribute("data-label", "reboot");
   });
+
+  test('fuzzy canary: "neof" surfaces the shell builtin "neofetch" (PLAN.md 3.3 "+ shell builtins once Phase 4 lands")', async ({
+    page,
+  }) => {
+    await gotoReady(page, "/");
+    await page.keyboard.press("?");
+    await page.keyboard.type("neof");
+    await expect(results(page).first()).toHaveAttribute("data-label", "neofetch");
+    await expect(results(page).first()).toHaveAttribute("data-kind", "keymap");
+  });
 });
 
 test.describe("HelpSearch: Enter behavior", () => {

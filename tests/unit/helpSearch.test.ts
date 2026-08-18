@@ -12,8 +12,10 @@ import {
   keymapEntries,
   levenshtein,
   searchHelp,
+  shellEntries,
   type CommandSource,
   type HelpSectionSource,
+  type ShellHelpRowSource,
 } from "../../src/lib/helpSearch.ts";
 
 const commands: CommandSource[] = [
@@ -50,6 +52,15 @@ const sections: HelpSectionSource[] = [
   },
 ];
 
+// shell.yaml's own `help.rows[]` shape (PLAN.md 3.3 "+ shell builtins once
+// Phase 4 lands") — a small representative subset, "shape not wording" per
+// this file's own header comment.
+const shellRows: ShellHelpRowSource[] = [
+  { cmd: "cd <path>", description: "change directory" },
+  { cmd: "neofetch", description: "system info card" },
+  { cmd: "sudo <...>", description: "try it" },
+];
+
 // ---------------------------------------------------------------------
 // commandEntries / keymapEntries / buildEntries
 // ---------------------------------------------------------------------
@@ -84,6 +95,32 @@ test("buildEntries puts commands before keymap rows", () => {
   assert.equal(entries[entries.length - 1].kind, "keymap");
 });
 
+test("shellEntries maps shell.yaml's help rows to keymap-shaped entries (cmd -> label, description -> description)", () => {
+  const entries = shellEntries(shellRows);
+  assert.deepEqual(
+    entries.map((e) => ({ kind: e.kind, label: e.label, description: e.description })),
+    [
+      { kind: "keymap", label: "cd <path>", description: "change directory" },
+      { kind: "keymap", label: "neofetch", description: "system info card" },
+      { kind: "keymap", label: "sudo <...>", description: "try it" },
+    ],
+  );
+});
+
+test("buildEntries appends shell builtins LAST — commands, then help.yaml keymap rows, then shell rows (PLAN.md 3.3)", () => {
+  const entries = buildEntries(commands, sections, shellRows);
+  assert.equal(
+    entries.length,
+    commandEntries(commands).length + keymapEntries(sections).length + shellEntries(shellRows).length,
+  );
+  assert.equal(entries[entries.length - 1].label, "sudo <...>");
+});
+
+test("buildEntries defaults shellRows to [] — existing two-argument callers are unaffected", () => {
+  const entries = buildEntries(commands, sections);
+  assert.equal(entries.length, commandEntries(commands).length + keymapEntries(sections).length);
+});
+
 // ---------------------------------------------------------------------
 // searchHelp — scoring cascade canaries
 // ---------------------------------------------------------------------
@@ -116,6 +153,19 @@ test('searchHelp: "rbt" subsequence-matches "reboot" with no better-tier competi
   const entries = buildEntries(commands, sections);
   const results = searchHelp("rbt", entries, commands);
   assert.equal(results[0].label, "reboot");
+});
+
+test('searchHelp: "neof" prefix-matches the shell builtin "neofetch" (PLAN.md 3.3 shell-builtins canary)', () => {
+  const entries = buildEntries(commands, sections, shellRows);
+  const results = searchHelp("neof", entries, commands);
+  assert.equal(results[0].kind, "keymap");
+  assert.equal(results[0].label, "neofetch");
+});
+
+test('searchHelp: "sudo" surfaces the shell builtin "sudo <...>"', () => {
+  const entries = buildEntries(commands, sections, shellRows);
+  const results = searchHelp("sudo", entries, commands);
+  assert.ok(results.some((r) => r.label === "sudo <...>"));
 });
 
 test("searchHelp: an empty/whitespace query returns no results (caller falls back to commandEntries instead)", () => {

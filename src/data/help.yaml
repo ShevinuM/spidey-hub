@@ -216,9 +216,9 @@ sections:
   - title: "Cmdline"
     rows:
       - key: ":"
-        description: "opens a floating command box (─ Cmdline ─, same visual family as the grep overlay) from any view — window jumps (:dashboard/:home, :builds, :personnel, :profile, :retina-v, :help), :grep <query> (opens grep pre-filled and already searching), :reboot, :resume/:cv (same as Profile's r), :q (kills the current window, same last-window refusal as Ctrl-b &)"
+        description: "opens a floating command box (─ Cmdline ─, same visual family as the grep overlay) from any view — window jumps (:dashboard/:home, :builds, :personnel, :profile, :retina-v, :help), :grep <query> (opens grep pre-filled and already searching), :reboot, :resume/:cv (same as Profile's r), :q (quits the current program to a shell in this window — the window itself is never killed; that's Ctrl-b & / Ctrl-b x)"
       - key: ": (with a file editor open)"
-        description: "same box, in ex mode — Phase-3's own :q/:q!/:w/:wq/:<number> PLUS every command above; a command the ex machine recognizes always wins (e.g. :q closes the editor, never the window)"
+        description: "same box, in ex mode — Phase-3's own :q/:q!/:w/:wq/:<number> PLUS every command above; a command the ex machine recognizes always wins (e.g. :q closes the editor first, never drops the pane to a shell)"
       - key: "Ctrl-b :"
         description: "same box, in tmux command-prompt mode: rename-window <name>, kill-window, kill-pane, select-window <0-5> — executed through the exact same underlying rename/kill/select behavior as the , / & / x / digit bindings above, without their interactive confirm step (a typed command is already deliberate)"
       - key: "printable characters"

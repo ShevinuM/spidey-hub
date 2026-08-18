@@ -578,8 +578,17 @@
    * (always true this phase — every window has exactly one pane, and only
    * the active window's pane is ever mounted — kept as an explicit guard so
    * Phase 6 splits don't silently start pushing the wrong route for a
-   * launch in a non-focused pane). */
+   * launch in a non-focused pane). Closes grep/cmdline/palette first,
+   * unconditionally — same window-chrome contract every other
+   * switch/launch/kill entry point follows (`switchActiveWindow`,
+   * `exitActiveProgram`, `killWindowById`): a launch changes what's on
+   * screen just as much as a window switch does, so any open chrome from
+   * the PREVIOUS pane content must not survive it. Latent this phase
+   * (every window has exactly one pane, always the focused one, so this
+   * is reachable from the same context those other paths already are) —
+   * becomes reachable from a NON-focused pane once Phase 6 adds splits. */
   function onLaunchInPane(paneId: string, program: string) {
+    closeWindowChrome();
     launchProgram(activeSession, paneId, program as ProgramName);
     if (paneId === activePane.id) syncUrl();
   }
@@ -1319,5 +1328,5 @@
   <CopyMode bind:this={copyModeRef} copyMode={site.copyMode} />
   <BootSequence bind:this={bootRef} {boot} {desktopMode} onReady={onBootReady} />
   <Cmdline bind:this={cmdlineRef} {cmdline} onSubmit={onCmdlineSubmit} />
-  <HelpSearch bind:this={helpSearchRef} {helpSearch} {cmdline} {help} onExecute={onHelpSearchExecute} />
+  <HelpSearch bind:this={helpSearchRef} {helpSearch} {cmdline} {help} {shell} onExecute={onHelpSearchExecute} />
 </div>

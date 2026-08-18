@@ -23,7 +23,7 @@
   // flashes the box border briefly rather than closing or navigating
   // anywhere, and there is nothing for an e2e test to assert beyond "the
   // palette is still open and nothing navigated" (see help-search.spec.ts).
-  import type { CmdlineData, HelpData, HelpSearchData } from "../lib/data";
+  import type { CmdlineData, HelpData, HelpSearchData, ShellData } from "../lib/data";
   import { buildEntries, commandEntries, searchHelp, type HelpSearchEntry } from "../lib/helpSearch";
   import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
   import { STATUS_BAR_HEIGHT_PX } from "../lib/layout";
@@ -32,6 +32,10 @@
     helpSearch: HelpSearchData;
     cmdline: CmdlineData;
     help: HelpData;
+    /** shell.yaml (PLAN.md 3.3 "+ shell builtins once Phase 4 lands") —
+     * only its own `help.rows[]` is consulted here (see helpSearch.ts's
+     * `shellEntries`); the rest of ShellData is irrelevant to this palette. */
+    shell: ShellData;
     /** Runs a resolved command entry's `action` id — Terminal.svelte's own
      * executeSiteAction, reused verbatim (see file header). Never called
      * for a keymap entry (Enter no-ops on those, handled entirely inside
@@ -39,7 +43,7 @@
     onExecute: (action: string | undefined) => void;
   }
 
-  const { helpSearch, cmdline, help, onExecute }: Props = $props();
+  const { helpSearch, cmdline, help, shell, onExecute }: Props = $props();
 
   let open = $state(false);
   let text = $state("");
@@ -56,7 +60,7 @@
   let flashTimer: ReturnType<typeof setTimeout> | undefined;
 
   const commandList = $derived(commandEntries(cmdline.commands));
-  const allEntries = $derived(buildEntries(cmdline.commands, help.sections));
+  const allEntries = $derived(buildEntries(cmdline.commands, help.sections, shell.help.rows));
   const results = $derived.by((): HelpSearchEntry[] =>
     text.trim() ? searchHelp(text, allEntries, cmdline.commands) : commandList,
   );
