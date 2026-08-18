@@ -16,6 +16,7 @@
   // hotkey gate are keyed off "which WINDOW (screen) is on-screen", a concept
   // distinct from "which PROGRAM its pane happens to be running" once a pane
   // can run any program (or a shell) in any window (Locked decision #5).
+  import { tick } from "svelte";
   import type { CollectionEntry } from "astro:content";
   import type {
     SiteData,
@@ -40,15 +41,19 @@
   import {
     activeSessionOf,
     activeWindowOf,
+    attachSession,
     createFactoryClient,
+    createSession,
+    detachClient,
     exitProgram,
     focusedPane,
-    killWindow,
+    killWindowCascade,
     launchProgram,
     renameWindowManual,
     selectWindowIndex,
   } from "../lib/tmux";
-  import type { ShellMode } from "../lib/shell";
+  import type { SessionRosterEntry, ShellLineKind, ShellMode } from "../lib/shell";
+  import { seedHostNarrative } from "../lib/shell";
   import { resolvePageEpoch } from "../lib/clock";
   import { getPasteBuffer } from "../lib/pasteBuffer";
   import { getActivePasteTarget } from "../lib/pasteTargets";
@@ -57,6 +62,7 @@
   import Wallpaper from "./Wallpaper.svelte";
   import StatusBar from "./StatusBar.svelte";
   import PaneTree from "./PaneTree.svelte";
+  import Shell from "./Shell.svelte";
   import Toasts from "./Toasts.svelte";
   import GrepOverlay from "./GrepOverlay.svelte";
   import CopyMode from "./CopyMode.svelte";
@@ -139,8 +145,9 @@
    * `viewIdToProgram`/`programToViewId` bridge already agrees with. */
   const VIEW_NAMES = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"] as const;
 
-  /** Only "pane" is reachable this phase — Phase 5 wires the detached HOST
-   * shell (same Shell.svelte component, `mode: "host"`). */
+  /** Every in-pane Shell instance is "pane" mode; the one host-shell
+   * instance rendered directly below (not through PaneTree) is "host" mode —
+   * see the template's `{#if activeSession}...{:else}...{/if}` split. */
   const SHELL_MODE: ShellMode = "pane";
 
   /** PaneTree.svelte's own `bind:this` — its `getRef(paneId)` is the single
@@ -153,11 +160,32 @@
    * currently on screen. */
   let paneTreeRef = $state<{ getRef: (paneId: string) => unknown } | null>(null);
 
+  /** The one HOST-mode Shell instance (PLAN.md Iteration 3 Phase 5 item
+   * 5.1) — rendered directly in the template below (never through
+   * PaneTree, since there's no window/pane tree to render while detached).
+   * `handleKey` is the only member `activeRef()` below ever needs from it. */
+  let hostShellRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
+
   /** Returns the currently-focused pane's ref (if it exposes one) — see
    * `paneTreeRef`'s own comment. Recomputed fresh on every call rather than
-   * cached, exactly like the old per-view ref reads it replaces. */
+   * cached, exactly like the old per-view ref reads it replaces. `undefined`
+   * while detached (no pane is focused then) — see `activeRef()` below for
+   * the delegation target that actually covers that case. */
   function focusedRef(): ProgramRef | undefined {
+    if (!activePane) return undefined;
     return paneTreeRef?.getRef(activePane.id) as ProgramRef | undefined;
+  }
+
+  /** PLAN.md Iteration 3 Phase 5 item 5.1 — "keyboard belongs to the host
+   * shell" while detached: the SAME delegation slot `focusedRef()` has
+   * always occupied (key-consumption checks below, `paneIsGreedy`'s own
+   * `tryFocusedRef()`), just routed to the host shell instance instead of
+   * whatever pane happens to be focused. Kill-pane/rename/ex-command call
+   * sites deliberately keep calling `focusedRef()` directly, never this —
+   * those operations are meaningless in host mode and are unreachable while
+   * detached anyway (the tmux prefix is inert then). */
+  function activeRef(): ProgramRef | undefined {
+    return activeSession ? focusedRef() : (hostShellRef as ProgramRef | undefined);
   }
 
   /** GrepOverlay.svelte (PLAN.md Phase 8) — always mounted (see that file's
@@ -276,6 +304,7 @@
       windows: site.statusBar.windows,
       epoch: resolvePageEpoch(),
       activeWindowId: viewIdToProgram(initialView),
+      hostNarrative: seedHostNarrative(shell, DEFAULT_SESSION_NAME),
     }),
   );
   let offToast0 = $state(false);
@@ -326,22 +355,27 @@
   // Derived read models over `client` (PLAN.md Iteration 3 Phase 4 item 4.1)
   // -----------------------------------------------------------------------
 
-  /** Phase 4 always has exactly one, attached, session — the non-null
-   * assertion is safe here (Phase 5's detach is what first makes this
-   * legitimately undefined; every call site added this phase runs only
-   * while attached). */
-  const activeSession = $derived(activeSessionOf(client)!);
-  const activeWindow = $derived(activeWindowOf(activeSession));
-  const activePane = $derived(focusedPane(activeWindow));
-  const activeProgram = $derived(activePane.program);
+  /** `undefined` once detached (PLAN.md Iteration 3 Phase 5 item 5.1) — no
+   * session owns the keyboard, the host shell does instead (see
+   * `Client.attachedSessionId`'s own comment). Every function below that
+   * assumes this is defined is only ever reachable from a UI path that
+   * itself only exists while attached (PaneTree/StatusBar aren't even
+   * mounted while detached, and the tmux prefix is inert then too — see
+   * `armPrefix()`'s own gate) — EXCEPT `switchActiveWindow` (popstate can
+   * fire regardless of attachment), which guards explicitly. */
+  const activeSession = $derived(activeSessionOf(client));
+  const activeWindow = $derived(activeSession ? activeWindowOf(activeSession) : undefined);
+  const activePane = $derived(activeWindow ? focusedPane(activeWindow) : undefined);
+  const activeProgram = $derived(activePane?.program);
 
   /** StatusBar's real tmux `-` flag (PLAN.md Iteration 3 Phase 4 item 4.3
    * tmux fidelity reference) — the session's previously-active window.
-   * Undefined on a fresh session (activeWindowIdx === lastWindowIdx), same
-   * as real tmux showing no `-` until a switch has actually happened. */
+   * Undefined on a fresh session (activeWindowIdx === lastWindowIdx) or
+   * while detached, same as real tmux showing no `-` until a switch has
+   * actually happened. */
   const lastWindowId = $derived.by(() => {
     const s = activeSession;
-    if (s.lastWindowIdx === s.activeWindowIdx) return undefined;
+    if (!s || s.lastWindowIdx === s.activeWindowIdx) return undefined;
     return s.windows[s.lastWindowIdx]?.id;
   });
 
@@ -350,30 +384,70 @@
    * header comment on why those differ once Locked decision #5 applies).
    * Drives Wallpaper's opacity/blur knob and the dashboard-only hotkey gate
    * below, exactly like the old `view` var did before a pane could run
-   * anything other than its window's own namesake program. */
-  const view = $derived(windowIdToView(activeWindow.id));
+   * anything other than its window's own namesake program. `undefined`
+   * while detached — there is no "on-screen window" then. */
+  const view = $derived(activeWindow ? windowIdToView(activeWindow.id) : undefined);
 
   /** Status bar's own window list, re-derived from the live model on every
    * change — same shape (`{number, id, name}`) StatusBar.svelte has always
    * taken, just sourced from `client` instead of a separate `windows` $state
-   * array. */
-  const statusWindows = $derived(activeSession.windows.map((w) => ({ number: w.number, id: w.id, name: w.name })));
+   * array. Empty while detached (StatusBar isn't even mounted then — see
+   * the template). */
+  const statusWindows = $derived(activeSession ? activeSession.windows.map((w) => ({ number: w.number, id: w.id, name: w.name })) : []);
 
   /** Shell.svelte's own `session` prop (PLAN.md Iteration 3 Phase 4 item
-   * 4.2's `tmux ls`) — `attached` is always true this phase (Phase 5 adds
-   * unattached sessions a client can list without being on them). */
-  const shellSession = $derived({
-    name: activeSession.name,
-    windowCount: activeSession.windows.length,
-    createdAt: activeSession.createdAt,
-    attached: client.attachedSessionId === activeSession.id,
+   * 4.2's `tmux ls`) — every IN-PANE shell's anchor session (its own).
+   * Falls back to a harmless zero-value shape while detached (unreachable
+   * in practice — no pane is mounted then — kept only so this derived never
+   * throws). */
+  const shellSession = $derived.by(() => {
+    const s = activeSession;
+    if (!s) return { name: "", windowCount: 0, createdAt: resolvePageEpoch(), attached: false };
+    return { name: s.name, windowCount: s.windows.length, createdAt: s.createdAt, attached: client.attachedSessionId === s.id };
+  });
+
+  /** PLAN.md Iteration 3 Phase 5 items 5.2/5.3 — every session the client
+   * currently knows about, in the exact shape src/lib/shell.ts's
+   * `RunContext.sessions` wants — computed fresh on every keystroke/render
+   * so `tmux ls`/`new`/`a`/`attach`'s validation always sees the live
+   * roster. Threaded to BOTH pane-mode Shell instances (via PaneTree) and
+   * the host-mode one below — `tmux ls` works everywhere. */
+  const sessionsRoster = $derived(
+    client.sessions.map(
+      (s): SessionRosterEntry => ({
+        id: s.id,
+        name: s.name,
+        windowCount: s.windows.length,
+        createdAt: s.createdAt,
+        attached: client.attachedSessionId === s.id,
+        lastAttachedSeq: s.lastAttachedSeq,
+        windowIds: s.windows.map((w) => w.id),
+      }),
+    ),
+  );
+
+  /** The detached HOST shell's own `session` prop (neofetch's uptime
+   * anchor only — see shell.ts's `RunContext.session` doc comment). Not
+   * "the attached session" (there isn't one while detached) — just a
+   * stable reference point so neofetch has SOME `createdAt` to compute
+   * against; falls back to the page's own load epoch if every session has
+   * been destroyed (PLAN.md Iteration 3 Phase 5 item 5.3's `[exited]`
+   * end-state, advisor-caught: `client.sessions` can be legitimately
+   * empty there). */
+  const hostSessionSummary = $derived.by(() => {
+    const s = client.sessions[0];
+    return s
+      ? { name: s.name, windowCount: s.windows.length, createdAt: s.createdAt, attached: false }
+      : { name: "", windowCount: 0, createdAt: resolvePageEpoch(), attached: false };
   });
 
   /** Digit/`?` prefix targets, recomputed from the live window list so a
    * killed window's digit stops doing anything (tmux-faithful: an unbound
    * prefixed key is silently swallowed) — same shape as before Phase 4,
    * just holding window ids instead of ViewIds (the two agree for every one
-   * of these five windows; see NUMBER_TO_ID below). */
+   * of these five windows; see NUMBER_TO_ID below). Empty while detached —
+   * the prefix is inert then anyway (`armPrefix()`'s own gate), so this is
+   * never consulted, but must still not throw. */
   const NUMBER_TO_ID: Record<string, string> = {
     "1": "builds",
     "2": "personnel",
@@ -416,7 +490,10 @@
    * for popstate, which has already updated `location.pathname` itself). */
   function syncUrl() {
     if (client.attachedSessionId !== DEFAULT_SESSION_ID) return;
-    const vid = programToViewId(activeProgram);
+    // `attachedSessionId === DEFAULT_SESSION_ID` already implies
+    // `activeSession`/`activeProgram` are defined (only true while
+    // attached) — the assertion is safe by construction, not a guess.
+    const vid = programToViewId(activeProgram!);
     if (!vid) return;
     if (location.pathname !== VIEW_ROUTES[vid]) {
       history.pushState(null, "", VIEW_ROUTES[vid]);
@@ -433,6 +510,13 @@
   function switchActiveWindow(pickIndex: (session: Session) => number) {
     closeWindowChrome();
     const session = activeSession;
+    // Detached (advisor-caught): popstate is the one caller reachable
+    // regardless of attachment (a browser back/forward can fire after
+    // `Ctrl-b d`) — every OTHER caller (status-bar click, prefix nav,
+    // dashboard hotkeys) only exists while attached. No session to switch
+    // within, so this is a no-op — "maps route -> session 0 window if
+    // present, else no-op" already covers "no session at all" the same way.
+    if (!session) return;
     selectWindowIndex(session, pickIndex(session));
     syncUrl();
   }
@@ -498,6 +582,7 @@
       windows: site.statusBar.windows,
       epoch: resolvePageEpoch(),
       activeWindowId: "dashboard",
+      hostNarrative: seedHostNarrative(shell, DEFAULT_SESSION_NAME),
     });
     offToast0 = false;
     offToast1 = false;
@@ -544,26 +629,44 @@
 
   /** The active window's own display name, for the rename prompt's
    * prefilled text and the kill-window/kill-pane confirm templates'
-   * `{name}` substitution. */
+   * `{name}` substitution. Only ever called while attached — the rename/
+   * kill-window prompts it feeds are only reachable via the tmux prefix
+   * (inert while detached, see `armPrefix()`'s own gate) or a PaneTree/
+   * StatusBar interaction (neither is even mounted while detached). */
   function currentWindowName(): string {
-    return activeWindow.name;
+    return activeWindow!.name;
   }
 
-  /** Ctrl-b & (and the Builds single-pane Ctrl-b x fallback, and a
-   * kill-pane that emptied the last Builds panel) — PLAN.md Phase 5 item
-   * 5.2, now backed by tmux.ts's own `killWindow` op (see its header
-   * comment for the exact fallback-index formula, ported verbatim from what
-   * used to live here). Refuses (a status message, no removal) when only
-   * one window is left; closes window chrome and syncs the URL exactly like
-   * every other window-switching path even though the fallback selection
-   * happens as a side effect of the tmux.ts op itself rather than a second
-   * explicit `switchActiveWindow` call. */
+  /** Appends one system line (a `[detached (from session …)]`, `[exited]`,
+   * or `logout`) directly to the HOST shell's own persistent buffer
+   * (`Client.hostPane` — PLAN.md Iteration 3 Phase 5 item 5.1's "own
+   * persistent buffer, survives re-attach/detach cycles"). These are never
+   * typed commands, so they never go through shell.ts's own `runCommand` —
+   * this is the one place Terminal.svelte writes into a shell buffer
+   * directly. */
+  function appendHostLine(text: string, kind: ShellLineKind = "output") {
+    client.hostPane.shell = { ...client.hostPane.shell, lines: [...client.hostPane.shell.lines, { text, kind }] };
+  }
+
+  /** Ctrl-b & (and the Builds single-pane Ctrl-b x fallback, a kill-pane
+   * that emptied the last Builds panel, and shell `exit` in the last pane)
+   * — PLAN.md Iteration 3 Phase 5 item 5.3, now routed through tmux.ts's
+   * `killWindowCascade` instead of the bare `killWindow` op: killing a
+   * window that ISN'T the session's last one still just removes it
+   * (unchanged Phase 4 behavior); killing the LAST window now destroys the
+   * session outright — this SUPERSEDES Phase 4's "refuse to kill the only
+   * window" (dead now that sessions exist to fall back to; see
+   * `killWindowCascade`'s own header comment). If that cascade leaves NO
+   * session attached, the client has detached to the host shell — append
+   * the exact `[exited]` line there. If another session was silently
+   * switched to instead, nothing further happens here (PLAN.md: "show
+   * nothing special"). */
   function killWindowById(id: string) {
     closeWindowChrome();
-    const result = killWindow(activeSession, id);
-    if (!result.ok) {
-      statusBarRef?.showMessage(site.statusBar.prompts.killLastWindowMessage);
-      return;
+    const session = activeSession!;
+    const result = killWindowCascade(client, session, id);
+    if (result.kind === "session-destroyed" && result.detachedToHost) {
+      appendHostLine(shell.host.exitedMessage);
     }
     syncUrl();
   }
@@ -589,8 +692,8 @@
    * becomes reachable from a NON-focused pane once Phase 6 adds splits. */
   function onLaunchInPane(paneId: string, program: string) {
     closeWindowChrome();
-    launchProgram(activeSession, paneId, program as ProgramName);
-    if (paneId === activePane.id) syncUrl();
+    launchProgram(activeSession!, paneId, program as ProgramName);
+    if (paneId === activePane?.id) syncUrl();
   }
 
   /** Shell.svelte's `onExit` — the `exit` builtin (PLAN.md Architecture
@@ -602,7 +705,7 @@
    * active one) but kept in the signature so Phase 6 can find the RIGHT
    * pane's owning window without a signature change. */
   function onExitPane(_paneId: string) {
-    killWindowById(activeWindow.id);
+    killWindowById(activeWindow!.id);
   }
 
   /** Site-mode `:q` / cmdline `q` (PLAN.md Locked decision #2, item 4.3) —
@@ -617,7 +720,7 @@
    * while in shell" probe. */
   function exitActiveProgram() {
     closeWindowChrome();
-    exitProgram(activeSession, activePane.id);
+    exitProgram(activeSession!, activePane!.id);
     syncUrl();
   }
 
@@ -630,18 +733,93 @@
    * prompt-active gate already makes that drift impossible, but this
    * closure doesn't depend on that invariant holding elsewhere. */
   function renameWindowById(id: string, name: string) {
-    renameWindowManual(activeSession, id, name);
+    renameWindowManual(activeSession!, id, name);
   }
 
   function startRenamePrompt() {
-    const id = activeWindow.id;
+    const id = activeWindow!.id;
     statusBarRef?.startRename(currentWindowName(), (name) => renameWindowById(id, name));
   }
 
   function startKillWindowConfirm() {
-    const id = activeWindow.id;
+    const id = activeWindow!.id;
     const text = site.statusBar.prompts.killWindowTemplate.replace("{name}", currentWindowName());
     statusBarRef?.startConfirm(text, () => killWindowById(id));
+  }
+
+  /** `Ctrl-b d` (PLAN.md Locked decision #3 / Iteration 3 Phase 5 item 5.1)
+   * — REPLACES the Phase 4 "go home" behavior. Only reachable while
+   * attached (the tmux prefix never arms otherwise — see `armPrefix()`'s
+   * own gate), so the non-null assertion is safe by construction. Detaches
+   * the client, then appends the exact `[detached (from session {name})]`
+   * line to the host shell's own persistent buffer — the SAME string its
+   * own pre-seeded narrative already used once, now for a real, live
+   * detach. */
+  function detachSession() {
+    closeWindowChrome();
+    const session = activeSession!;
+    detachClient(client);
+    appendHostLine(shell.host.detachedTemplate.replace("{name}", session.name));
+  }
+
+  // -----------------------------------------------------------------------
+  // Host shell effects (PLAN.md Iteration 3 Phase 5 item 5.2) — Shell.svelte's
+  // `onAttach`/`onCreateAndAttach`/`onAttachView`, only ever invoked from the
+  // ONE host-mode Shell instance (rendered directly in the template below,
+  // never through PaneTree) — a pane-mode instance's own `runCommand` never
+  // emits these effects (shell.ts gates every one of them behind `mode ===
+  // "host"`).
+  // -----------------------------------------------------------------------
+
+  /** `tmux a [-t name]` resolved to an existing session id by shell.ts. */
+  function onHostAttach(sessionId: string) {
+    attachSession(client, sessionId);
+    syncUrl();
+  }
+
+  /** `tmux new [-s name]` — `name` already resolved/validated (non-
+   * duplicate, or the next free numeric name) by shell.ts. Real tmux's own
+   * "starting a new session from outside both creates and attaches". */
+  function onHostCreateAndAttach(name: string) {
+    const session = createSession(client, name, resolvePageEpoch());
+    attachSession(client, session.id);
+    syncUrl();
+  }
+
+  /** `open <view>` / `edith` in HOST mode (PLAN.md Architecture notes) —
+   * attaches the default session and selects `view`'s window if it still
+   * exists; otherwise attaches anyway (staying on whatever window that
+   * session is already on) and surfaces a transient status-bar message —
+   * the "attach + message per your judgment" allowance PLAN.md leaves to
+   * the executor for a window that's since been killed. */
+  async function onHostAttachView(sessionId: string, view: string, windowExists: boolean) {
+    const session = client.sessions.find((s) => s.id === sessionId);
+    if (!session) return; // defensive — shell.ts already checked this session exists
+    attachSession(client, sessionId);
+    if (windowExists) {
+      const idx = session.windows.findIndex((w) => w.id === view);
+      if (idx !== -1) selectWindowIndex(session, idx);
+    } else {
+      // `statusBarRef` is still null here — StatusBar was UNMOUNTED (we were
+      // detached) and Svelte hasn't re-rendered the `{#if activeSession}`
+      // branch yet within this same synchronous tick, so `bind:this` hasn't
+      // fired. `tick()` flushes that pending render before the message is
+      // shown, so it actually lands on the StatusBar that just mounted
+      // rather than silently no-op'ing through the `?.` (advisor-caught).
+      await tick();
+      statusBarRef?.showMessage(shell.host.windowGoneTemplate.replace("{view}", view).replace("{name}", session.name));
+    }
+    syncUrl();
+  }
+
+  /** Host `exit` builtin (PLAN.md Iteration 3 Phase 5 item 5.3) — prints
+   * `logout` then reloads the page; the boot-seen sessionStorage flag is
+   * untouched by a reload, so boot skips exactly like any other reload
+   * (BootSequence.svelte's own gate), landing back on the factory-attached
+   * default session. */
+  function onHostExit() {
+    appendHostLine(shell.host.logoutMessage);
+    window.location.reload();
   }
 
   /** The actual "kill the focused pane, or the window if it's the only
@@ -660,7 +838,7 @@
     if (ref?.canKillPane?.()) {
       ref.killFocusedPane?.();
     } else {
-      killWindowById(activeWindow.id);
+      killWindowById(activeWindow!.id);
     }
   }
 
@@ -802,11 +980,11 @@
   function executeTmuxCommand(trimmed: string): string | undefined {
     const parsed = parseTmuxCommand(trimmed);
     if (parsed.kind === "rename-window") {
-      renameWindowById(activeWindow.id, parsed.name);
+      renameWindowById(activeWindow!.id, parsed.name);
       return undefined;
     }
     if (parsed.kind === "kill-window") {
-      killWindowById(activeWindow.id);
+      killWindowById(activeWindow!.id);
       return undefined;
     }
     if (parsed.kind === "kill-pane") {
@@ -925,12 +1103,18 @@
       cyclePrefixView(-1);
       return true;
     }
-    if (pk === "d" || pk === "w" || e.key === "0") {
-      // PLAN.md Locked decision #3 / this task's mandatory sequencing:
-      // Ctrl-b d/w keep their CURRENT "go home" behavior THIS PHASE — Phase
-      // 5 rebinds d to detach and w to choose-tree.
+    if (pk === "w" || e.key === "0") {
+      // PLAN.md Locked decision #3: `w` keeps "go home" THIS PHASE — Phase 6
+      // rebinds it to choose-tree. `0` always selects window 0 (dashboard).
       e.preventDefault();
       switchToProgram("dashboard");
+      return true;
+    }
+    if (pk === "d") {
+      // PLAN.md Locked decision #3 / Iteration 3 Phase 5 item 5.1 — `d` is
+      // now real tmux detach, REPLACING the Phase 4 "go home" behavior.
+      e.preventDefault();
+      detachSession();
       return true;
     }
     if (e.key === ",") {
@@ -1054,7 +1238,17 @@
     // combo falls through untouched). Skipped when `sendPrefixLiteral` is
     // set above — this exact Ctrl-b keydown is the second half of a
     // send-prefix chord, not a fresh arm.
-    if (!sendPrefixLiteral && e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "b") {
+    //
+    // PLAN.md Iteration 3 Phase 5 item 5.1: "while detached, the Ctrl-b
+    // prefix is INERT — no prefix arming" — `activeSession` gates the arm
+    // itself (not e.g. a check inside `handlePrefixedKey`, which would only
+    // stop DISPATCH, not arming): with no arm, `prefixArmed` simply never
+    // becomes true while detached, so a bare Ctrl-b just falls through
+    // untouched (no preventDefault either) like any other unrecognized
+    // chord — the keydown reaches the host shell's own handler next, which
+    // already refuses every ctrlKey-held combo (Shell.svelte's own
+    // `handleKey` guard), so it's a true no-op, not merely "swallowed".
+    if (!sendPrefixLiteral && activeSession && e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "b") {
       e.preventDefault();
       armPrefix();
       return;
@@ -1122,7 +1316,7 @@
      * only Builds/Personnel ever do, so the outcome is identical to before
      * this file's Phase 4 refactor. Returns whether the key was consumed. */
     function tryFocusedRef(): boolean {
-      const ref = focusedRef();
+      const ref = activeRef();
       if (!ref?.handleKey) return false;
       const supportsScrollChord = typeof ref.isEditorOpen === "function";
       const modifierOk = (supportsScrollChord && isEditorScrollChord) || !(e.metaKey || e.ctrlKey || e.altKey);
@@ -1143,7 +1337,7 @@
     // return; }` runs before any view-specific handling), except that the
     // tmux prefix (above) now runs ahead of it per the retired "prefix
     // inert while grep open" rule.
-    const editorIsOpen = !!focusedRef()?.isEditorOpen?.();
+    const editorIsOpen = !!activeRef()?.isEditorOpen?.();
 
     // PLAN.md Iteration 3 Phase 4 Architecture notes: "focused-shell panes
     // consume printable keys/Enter/Backspace/arrows BEFORE grep's `/`
@@ -1155,7 +1349,17 @@
     // further down — a shell pane is never in "ex mode", it just never
     // reaches those checks at all (Shell.svelte's handleKey claims every
     // printable character first).
-    const paneIsGreedy = editorIsOpen || activeProgram === "shell";
+    //
+    // PLAN.md Iteration 3 Phase 5 item 5.1: "keyboard belongs to the host
+    // shell" while detached — `!activeSession` extends the exact same
+    // greedy treatment to the host shell instance, which `activeRef()`
+    // above already resolves to in that case. This is also what makes the
+    // tmux prefix's own inertness complete: with the prefix never arming
+    // (see `armPrefix()`'s gate) AND every other key claimed here by the
+    // host shell, nothing below this line — grep/Cmdline/HelpSearch's own
+    // fallback openers, the dashboard hotkeys — is ever reachable while
+    // detached.
+    const paneIsGreedy = editorIsOpen || activeProgram === "shell" || !activeSession;
 
     if (paneIsGreedy && tryFocusedRef()) {
       return;
@@ -1278,50 +1482,78 @@
     ? 'bDashIn 1.05s cubic-bezier(.2,.7,.3,1) both'
     : 'none'}"
 >
-  <Wallpaper {tracker} {view} />
+  <Wallpaper {tracker} view={view ?? "home"} dim={!activeSession} />
 
   <div style="position:relative;z-index:2;height:100vh;overflow:hidden;display:flex;flex-direction:column">
-    <Toasts
-      toasts={dashboard.toasts}
-      {notifications}
-      {view}
-      {offToast0}
-      {offToast1}
-      onHideToast0={() => (offToast0 = true)}
-      onHideToast1={() => (offToast1 = true)}
-    />
+    {#if activeSession}
+      <!-- Attached (PLAN.md Iteration 3 Phase 5 item 5.1) — the non-null
+           assertions below are safe: this whole branch only renders while
+           `activeSession` (hence `activeWindow`) is defined. -->
+      <Toasts
+        toasts={dashboard.toasts}
+        {notifications}
+        view={view!}
+        {offToast0}
+        {offToast1}
+        onHideToast0={() => (offToast0 = true)}
+        onHideToast1={() => (offToast1 = true)}
+      />
 
-    <PaneTree
-      bind:this={paneTreeRef}
-      node={activeWindow.root}
-      {dashboard}
-      {builds}
-      {personnel}
-      {profile}
-      {help}
-      {shell}
-      {companies}
-      {projects}
-      {personnelEntries}
-      {commitsByRepo}
-      onWindowSwitch={switchToProgram}
-      {onLaunchInPane}
-      {onExitPane}
-      onReboot={reboot}
-      shellMode={SHELL_MODE}
-      viewNames={VIEW_NAMES}
-      {shellSession}
-    />
+      <PaneTree
+        bind:this={paneTreeRef}
+        node={activeWindow!.root}
+        {dashboard}
+        {builds}
+        {personnel}
+        {profile}
+        {help}
+        {shell}
+        {companies}
+        {projects}
+        {personnelEntries}
+        {commitsByRepo}
+        onWindowSwitch={switchToProgram}
+        {onLaunchInPane}
+        {onExitPane}
+        onReboot={reboot}
+        shellMode={SHELL_MODE}
+        viewNames={VIEW_NAMES}
+        {shellSession}
+        sessions={sessionsRoster}
+        defaultSessionName={DEFAULT_SESSION_NAME}
+      />
 
-    <StatusBar
-      bind:this={statusBarRef}
-      {site}
-      windows={statusWindows}
-      activeWindowId={activeWindow.id}
-      {lastWindowId}
-      onSelect={switchToWindowById}
-      onReboot={reboot}
-    />
+      <StatusBar
+        bind:this={statusBarRef}
+        {site}
+        sessionName={activeSession.name}
+        windows={statusWindows}
+        activeWindowId={activeWindow!.id}
+        {lastWindowId}
+        onSelect={switchToWindowById}
+        onReboot={reboot}
+      />
+    {:else}
+      <!-- Detached (PLAN.md Iteration 3 Phase 5 item 5.1) — the host shell,
+           fullscreen over the dim radar: no Toasts (dashboard-only), no
+           PaneTree/StatusBar (no session owns the screen). -->
+      <Shell
+        bind:this={hostShellRef}
+        {shell}
+        pane={client.hostPane}
+        mode="host"
+        viewNames={VIEW_NAMES}
+        session={hostSessionSummary}
+        sessions={sessionsRoster}
+        defaultSessionName={DEFAULT_SESSION_NAME}
+        onLaunch={() => {}}
+        onExit={onHostExit}
+        onReboot={reboot}
+        onAttach={onHostAttach}
+        onCreateAndAttach={onHostCreateAndAttach}
+        onAttachView={onHostAttachView}
+      />
+    {/if}
   </div>
 
   <GrepOverlay bind:this={grepRef} {grep} onNavigate={switchToView} />

@@ -39,6 +39,14 @@
 
   interface Props {
     site: SiteData;
+    /** PLAN.md Iteration 3 Phase 5 item 5.2 / Locked decision #1: the
+     * ATTACHED session's own bare name — substituted into
+     * `site.statusBar.sessionTemplate` here rather than passed pre-formatted
+     * (this component owns every bit of its own text rendering, same
+     * convention as `activeWindowId`/`lastWindowId` below). Always the
+     * default session's name in Phase 4; dynamic once Phase 5 sessions can
+     * be renamed-via-creation (`tmux new -s test`) or switched. */
+    sessionName: string;
     windows: WindowEntry[];
     /** PLAN.md Iteration 3 Phase 4 item 4.1: the tmux model's own active
      * window id, passed straight through rather than derived here from a
@@ -67,7 +75,7 @@
     onReboot: () => void;
   }
 
-  const { site, windows, activeWindowId, lastWindowId, onSelect, onReboot }: Props = $props();
+  const { site, sessionName, windows, activeWindowId, lastWindowId, onSelect, onReboot }: Props = $props();
 
   let clockTime = $state("");
   let clockDate = $state("");
@@ -223,8 +231,8 @@
 </script>
 
 <div style="height:{STATUS_BAR_HEIGHT_PX}px;flex:none;display:flex;align-items:center;background:#0d2a2f;font-size:14px">
-  <div style="flex:none;padding:0 8px;color:#7fd8a8;letter-spacing:.02em;white-space:nowrap">
-    {site.statusBar.session}
+  <div data-testid="status-bar-session" style="flex:none;padding:0 8px;color:#7fd8a8;letter-spacing:.02em;white-space:nowrap">
+    {site.statusBar.sessionTemplate.replace("{name}", sessionName)}
   </div>
   <div style="color:rgba(127,216,200,.45)">{site.statusBar.separator}</div>
 

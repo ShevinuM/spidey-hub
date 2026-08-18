@@ -30,7 +30,7 @@
   } from "../lib/data";
   import type { CollectionEntry } from "astro:content";
   import type { Commit } from "../lib/commits";
-  import type { ShellMode } from "../lib/shell";
+  import type { SessionRosterEntry, ShellMode } from "../lib/shell";
   import Dashboard from "./Dashboard.svelte";
   import Builds from "./Builds.svelte";
   import Personnel from "./Personnel.svelte";
@@ -67,6 +67,12 @@
     shellMode: ShellMode;
     viewNames: readonly string[];
     shellSession: { name: string; windowCount: number; createdAt: number; attached: boolean };
+    /** PLAN.md Iteration 3 Phase 5 items 5.2/5.3 — forwarded straight
+     * through to every in-pane Shell instance so `tmux ls` (which lists
+     * every session, not just this one) works from a pane too, not only the
+     * host shell — see Shell.svelte's own prop doc comment. */
+    sessions: SessionRosterEntry[];
+    defaultSessionName: string;
   }
 
   const {
@@ -88,6 +94,8 @@
     shellMode,
     viewNames,
     shellSession,
+    sessions,
+    defaultSessionName,
   }: Props = $props();
 
   const refs = new Map<string, unknown>();
@@ -147,6 +155,8 @@
       mode={shellMode}
       {viewNames}
       session={shellSession}
+      {sessions}
+      {defaultSessionName}
       onLaunch={(program) => onLaunchInPane(node.pane.id, program)}
       onExit={() => onExitPane(node.pane.id)}
       {onReboot}

@@ -37,6 +37,7 @@
     runCommand,
     typeChar,
     type CatTarget,
+    type SessionRosterEntry,
     type ShellEffect,
     type ShellMode,
     type FsEntry,
@@ -51,17 +52,50 @@
     mode: ShellMode;
     viewNames: readonly string[];
     session: { name: string; windowCount: number; createdAt: number; attached: boolean };
+    /** PLAN.md Iteration 3 Phase 5 items 5.2/5.3 — every session the client
+     * currently knows about (`tmux ls`/`new`/`a`/`attach`'s own validation
+     * roster) plus the well-known default session's bare name — threaded
+     * through to BOTH pane-mode and host-mode instances alike (`tmux ls`
+     * works everywhere — PLAN.md tmux fidelity reference), not just the
+     * host shell. */
+    sessions: SessionRosterEntry[];
+    defaultSessionName: string;
     /** Launches `program` in THIS pane (bare view-name commands, `open
      * <view>` in pane mode) — Terminal.svelte's own `launchProgram`. */
     onLaunch: (program: string) => void;
     /** `exit` — pane mode: close this pane (cascades to kill-window on a
      * single-pane window, same fallback `Ctrl-b x` already uses); host
-     * mode's own `logout` + reload lands in Phase 5. */
+     * mode: prints `logout` then reloads the page (PLAN.md Iteration 3
+     * Phase 5 item 5.3). */
     onExit: () => void;
     onReboot: () => void;
+    /** `tmux a [-t name]` resolved to an existing session — HOST mode only
+     * (PLAN.md Iteration 3 Phase 5 item 5.2); undefined/never called from a
+     * pane-mode instance (that mode's own `runCommand` never emits this
+     * effect there — see shell.ts's own mode gating). */
+    onAttach?: (sessionId: string) => void;
+    /** `tmux new [-s name]` — HOST mode only, same reasoning as `onAttach`. */
+    onCreateAndAttach?: (name: string) => void;
+    /** `open <view>` / `edith` — HOST mode only, same reasoning as
+     * `onAttach`. */
+    onAttachView?: (sessionId: string, view: string, windowExists: boolean) => void;
   }
 
-  const { shell, pane, mode, viewNames, session, onLaunch, onExit, onReboot }: Props = $props();
+  const {
+    shell,
+    pane,
+    mode,
+    viewNames,
+    session,
+    sessions,
+    defaultSessionName,
+    onLaunch,
+    onExit,
+    onReboot,
+    onAttach,
+    onCreateAndAttach,
+    onAttachView,
+  }: Props = $props();
 
   let fsEntries = $state<FsEntry[] | null>(null);
 
@@ -102,6 +136,9 @@
     if (effect.kind === "launch") onLaunch(effect.program);
     else if (effect.kind === "exit-pane") onExit();
     else if (effect.kind === "reboot") onReboot();
+    else if (effect.kind === "attach") onAttach?.(effect.sessionId);
+    else if (effect.kind === "create-and-attach") onCreateAndAttach?.(effect.name);
+    else if (effect.kind === "attach-view") onAttachView?.(effect.sessionId, effect.view, effect.windowExists);
   }
 
   // Enter-key submission is fire-and-forget from handleKey's own
@@ -155,6 +192,8 @@
       // min" under a frozen page clock — deterministic, not a live tick.
       nowMs: resolvePageEpoch(),
       session,
+      sessions,
+      defaultSessionName,
       shell,
       viewNames,
     });
@@ -240,7 +279,10 @@
   const promptText = $derived(formatPrompt(mode, shell, pane.shell.cwd));
 </script>
 
-<div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:10px 14px;font-size:13px;line-height:1.5;color:#c9d1d9">
+<div
+  data-shell-mode={mode}
+  style="flex:1;min-height:0;display:flex;flex-direction:column;padding:10px 14px;font-size:13px;line-height:1.5;color:#c9d1d9"
+>
   <div
     bind:this={scrollerEl}
     data-testid="shell-scroller"

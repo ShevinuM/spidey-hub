@@ -12,20 +12,31 @@
   interface Props {
     tracker: TrackerData;
     view: ViewId;
+    /** PLAN.md Iteration 3 Phase 5 item 5.1 — the detached HOST shell
+     * renders fullscreen over this same wallpaper, dimmed far below any
+     * attached view's own opacity ("very dark, radar faint behind" — the
+     * user's own mock). Takes precedence over every `view`-keyed knob below
+     * (the `view` prop passed in while detached is otherwise meaningless —
+     * there's no active window — so Terminal.svelte just passes whatever it
+     * last had; `dim` is what actually drives the look). Defaults to false
+     * so every existing call site (none of which pass it) is unaffected. */
+    dim?: boolean;
   }
 
-  const { tracker, view }: Props = $props();
+  const { tracker, view, dim = false }: Props = $props();
 
   // wallOpacity/wallFilter: Component.renderVals() (Homepage.dc.html line
   // 1125-1126). The prototype's `trackerBrightness` design-tool knob has no
   // equivalent control in the real site, so off-tracker opacity is the
   // flat 0.72 the knob defaults to.
-  const wallOpacity = $derived(view === "retina-v" ? 1 : 0.72);
+  const wallOpacity = $derived(dim ? 0.14 : view === "retina-v" ? 1 : 0.72);
   // PLAN.md Iteration 3 Phase 2 item 2.2 / Locked decision #15: the whole
   // wallpaper blurs behind the dashboard window only — every other view
   // (including retina-v, which stays sharp at full opacity above) is
-  // unaffected.
-  const wallFilter = $derived(view === "home" ? "blur(3px)" : "none");
+  // unaffected. PLAN.md Phase 5 item 5.1: the detached host shell darkens
+  // it further still (brightness, not blur — the mock reads as a dimmed
+  // radar, not an out-of-focus one).
+  const wallFilter = $derived(dim ? "brightness(0.35)" : view === "home" ? "blur(3px)" : "none");
 
   const MAP_W = "min(1100px,92vw)";
   const MAP_H = "min(600px,calc(100vh - 340px))";
@@ -85,7 +96,7 @@
 </script>
 
 <div style="position:absolute;inset:0;pointer-events:none">
-  <div style="position:absolute;inset:0;opacity:{wallOpacity};filter:{wallFilter}">
+  <div data-testid="wallpaper-layer" style="position:absolute;inset:0;opacity:{wallOpacity};filter:{wallFilter}">
     <div
       style="position:absolute;inset:0;background-image:radial-gradient(rgba(196,216,232,.16) 1px,transparent 1px);background-size:26px 26px"
     ></div>
