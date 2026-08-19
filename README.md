@@ -100,8 +100,8 @@ file opens the shared vim editor. Panel [4] Commits follows *only* panel
 [3]'s repo selection (never panel [2]/[0] navigation); clicking/`Enter`-ing
 a commit fetches that commit's tree into panel [2] (a lazygit-style
 `Pulling ··●` spinner shows on the repo row while the fetch is in flight) —
-`o` opens it on GitHub in a new tab, nothing else does. See `src/data/
-help.yaml`'s "Builds" section (rendered in the app's own Help window,
+`o` opens it on GitHub in a new tab, nothing else does. See
+`src/content/help/builds.md` (rendered in the app's own Help window,
 `Ctrl-b 5`) for the complete key-by-key reference.
 
 ### Add a Builds project
@@ -219,17 +219,15 @@ click-navigation work at every level regardless of how deep it is.
    `loc`, `order`, and `employmentType` only where that level exists — see
    any existing file under `src/content/personnel/` for the exact body
    shape: an `h1` + one-line meta, then `## Highlights` / `## Stack`).
-   - `company` must exactly match an existing (or new) entry in
-     `src/data/companies.yaml` (`name`, plus a display `order`) — that file
-     controls the company list's order in the Personnel view, independent
-     of role `order` within a company.
+   - The company (top-level directory) list has no separate order file —
+     `Personnel.svelte` lists root-level directories alphabetically by
+     name, so a brand-new company just needs its own
+     `src/content/personnel/<company-slug>/` directory.
    - `employmentType` should match the role's containing directory name
      (e.g. `Full-Time`) — it drives the middle-level grouping in
      `Personnel.svelte`, independent of any directory structure the loader
      itself doesn't care about (Astro's `glob()` loader sees a flat entry
      list regardless of nesting).
-   - A brand-new company just needs one more entry appended to
-     `companies.yaml` and a `src/content/personnel/<Company>/` directory.
 2. `pnpm generate` (keeps the grep index in sync with the new file) and
    commit both.
 
@@ -330,10 +328,10 @@ argument), then `pnpm generate` and commit as above.
 
 ## Keymap reference
 
-**Single source of truth**: `src/data/help.yaml` — every row below is
-transcribed from it, and the app's own Help window (`Ctrl-b ?`, `Ctrl-b 5`,
-a status-bar click on "5:help", or the dashboard menu's Help row) renders
-that same file, so this table and the in-app
+**Single source of truth**: `src/content/help/*.md` — every row below is
+transcribed from those scope files, and the app's own Help window
+(`Ctrl-b ?`, `Ctrl-b 5`, a status-bar click on "5:help", or the dashboard
+menu's Help row) renders that same content, so this table and the in-app
 reference cannot drift silently (both are reviewed together whenever a
 binding changes). **Bare `q`/Esc never switch the active view anywhere** —
 Esc only exits whatever's currently open (grep, a filter, a status-line
@@ -558,7 +556,8 @@ lists every `src/content/projects/*.md` file as its own browsable tree.
 ### Boot sequence / reboot
 
 A fresh browser tab plays the E.D.I.T.H boot sequence (`src/components/
-BootSequence.svelte`, copy/config in `src/data/boot.yaml`) once before the
+BootSequence.svelte`, config in `src/data/boot.yaml`, boot-log text in
+`src/content/boot/log.md`) once before the
 dashboard appears — unskippable while it runs (no key or click bypasses
 it; all global key handling is inert during boot). It plays at most once
 per tab: a reload or a deep link later in the same tab (sessionStorage

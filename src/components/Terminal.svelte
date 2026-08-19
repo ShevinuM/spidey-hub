@@ -26,7 +26,6 @@
     ProfileData,
     BuildsData,
     PersonnelData,
-    CompanyEntry,
     GrepData,
     HelpData,
     BootData,
@@ -127,7 +126,6 @@
     profile: ProfileData;
     builds: BuildsData;
     personnel: PersonnelData;
-    companies: CompanyEntry[];
     grep: GrepData;
     help: HelpData;
     boot: BootData;
@@ -150,7 +148,6 @@
     profile,
     builds,
     personnel,
-    companies,
     grep,
     help,
     boot,
@@ -1836,7 +1833,6 @@
         {profile}
         {help}
         {shell}
-        {companies}
         {projects}
         {personnelEntries}
         {commitsByRepo}

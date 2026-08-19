@@ -1,18 +1,18 @@
 <script lang="ts">
-  // Profile ("Agent Profile") view — design/Homepage.dc.html lines 184-269,
-  // PLAN.md Phase 7. All copy comes from src/data/profile.yaml (ProfileData);
+  // Profile ("Agent Profile") view — design/Homepage.dc.html lines 184-269.
+  // All copy comes from the `profile` content collection (ProfileData,
+  // built by src/lib/data.ts's `buildProfile` from src/content/profile);
   // this component only supplies structure/styling and the `r`
-  // resume-download hotkey. PLAN.md Phase 1 items 15/16 removed the
-  // `[q] close` pill entirely — view navigation is status-bar clicks / the
-  // tmux prefix / the dashboard menu now, never a bare key or an in-view
-  // click target, so there is nothing left here to close *to* the dashboard.
+  // resume-download hotkey. View navigation is status-bar clicks / the
+  // tmux prefix / the dashboard menu, never a bare key or an in-view click
+  // target, so there is nothing here to close *to* the dashboard.
   //
   // Image src paths (portrait/field/retina-v/icon-*) are literal, same
   // convention as Wallpaper.svelte/Dashboard.svelte's hardcoded
   // `/assets/spiderman.svg` mask URLs — these are asset URLs, not
-  // user-visible copy, so they live here rather than in the yaml (the
+  // user-visible copy, so they live here rather than in content (the
   // per-row contact `icon` paths are the one exception, already
-  // data-driven in profile.yaml).
+  // data-driven in the profile entry's frontmatter).
   //
   // The SIGNAL footer row's `border-top: 1px solid rgba(224, 69, 60,
   // 0.25)` declaration is authored here with the exact spacing the visual

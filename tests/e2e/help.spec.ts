@@ -4,9 +4,9 @@
 // binding, not a bare letter — there is no bare-key dashboard hotkey; a bare
 // `?` opens the site-wide HelpSearch palette instead, see
 // tests/e2e/help-search.spec.ts). Content is asserted against the real
-// src/data/help.yaml (read directly, same pattern as grep.spec.ts's
-// real-index comparisons) so this suite can never drift from the actual
-// copy.
+// src/data/help.yaml chrome + src/content/help/*.md scopes (read directly,
+// same pattern as grep.spec.ts's real-index comparisons) so this suite can
+// never drift from the actual copy.
 import { expect, test, type Page } from "./fixtures.ts";
 // This spec's `context` fixture (imported from ./fixtures.ts, not raw
 // "@playwright/test") pre-seeds the boot-seen sessionStorage flag before
@@ -15,6 +15,7 @@ import { expect, test, type Page } from "./fixtures.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
+import { readContentDir } from "./contentFixtures.ts";
 
 const ROOT = join(import.meta.dirname, "../..");
 
@@ -29,17 +30,31 @@ interface HelpScope {
   hint: string;
   rows: HelpRow[];
 }
-interface HelpData {
+interface HelpChrome {
   title: string;
   filterPlaceholder: string;
   allScopeLabel: string;
   emptyStateText: string;
   legend: string[];
+}
+interface HelpData extends HelpChrome {
   scopes: HelpScope[];
+}
+interface HelpScopeFrontmatter {
+  label: string;
+  hint: string;
+  order: number;
+  rows: HelpRow[];
 }
 
 function realHelp(): HelpData {
-  return YAML.parse(readFileSync(join(ROOT, "src/data/help.yaml"), "utf8")) as HelpData;
+  const chrome = YAML.parse(readFileSync(join(ROOT, "src/data/help.yaml"), "utf8")) as HelpChrome;
+  const entries = readContentDir<HelpScopeFrontmatter>(join(ROOT, "src/content/help"));
+  const scopes = entries
+    .slice()
+    .sort((a, b) => a.data.order - b.data.order)
+    .map((e) => ({ id: e.id, label: e.data.label, hint: e.data.hint, rows: e.data.rows }));
+  return { ...chrome, scopes };
 }
 
 async function gotoReady(page: Page, path: string) {
@@ -94,7 +109,7 @@ test.describe("Help: reachability", () => {
   });
 });
 
-test.describe("Help: content is sourced from src/data/help.yaml", () => {
+test.describe("Help: content is sourced from src/data/help.yaml + src/content/help", () => {
   test("title and total row count match the real file", async ({ page }) => {
     await gotoReady(page, "/help");
     const help = realHelp();

@@ -5,7 +5,7 @@
 // Profile component — single source of behavior, no duplicated
 // window.open call. The literal path is an asset URL, not user-visible
 // copy, same convention as Profile.svelte's own hardcoded image src paths
-// (see that file's header comment for why those live outside profile.yaml).
+// (see that file's header comment for why those live outside content).
 const RESUME_HREF = "/assets/resume.pdf";
 
 export function downloadResume(): void {

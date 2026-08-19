@@ -8,17 +8,30 @@
 // 2-new-per-visit pool injection, and toast auto-dismiss/hover-pause via the
 // shortened test-duration hook (tests/e2e/fixtures.ts) rather than sleeping
 // through the real severity timers.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import YAML from "yaml";
 import { expect, test, E2E_NOTIFICATIONS_INJECT_SEED, E2E_TOAST_DURATION_SCALE, type Page } from "./fixtures.ts";
 import { mulberry32, pickRandomUnseen, TOAST_DURATION_MS, type NotificationSeverity, type PoolEntry } from "../../src/lib/notificationStore.ts";
+import { readContentDir } from "./contentFixtures.ts";
 
 const ROOT = join(import.meta.dirname, "../..");
 
+interface NotificationFrontmatter {
+  sev: PoolEntry["sev"];
+  title: string;
+  src: string;
+  order: number;
+}
+
+/** Reads the real `notifications` content collection (src/content/
+ * notifications/*.md), sorted by frontmatter `order` — the same order
+ * src/lib/data.ts's `buildNotificationPool` reconstructs at build time, so
+ * this suite's seeded pick expectations match the real site. */
 function loadPool(): PoolEntry[] {
-  const doc = YAML.parse(readFileSync(join(ROOT, "src/data/notifications.yaml"), "utf8")) as { pool: PoolEntry[] };
-  return doc.pool;
+  const entries = readContentDir<NotificationFrontmatter>(join(ROOT, "src/content/notifications"));
+  return entries
+    .slice()
+    .sort((a, b) => a.data.order - b.data.order)
+    .map((e) => ({ id: e.id, sev: e.data.sev, title: e.data.title, body: e.body, src: e.data.src }));
 }
 
 const POOL = loadPool();

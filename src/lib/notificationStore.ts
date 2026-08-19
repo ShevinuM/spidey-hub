@@ -9,8 +9,9 @@
 export type NotificationSeverity = "alert" | "warn" | "info";
 export type NotificationFolder = "inbox" | "archive" | "spam";
 
-/** A pool entry (src/data/notifications.yaml `pool[]`) — content only, no
- * per-instance state yet (that's added at injection time). */
+/** A pool entry (built from the `notifications` content collection,
+ * src/content/notifications/*.md) — content only, no per-instance state
+ * yet (that's added at injection time). */
 export interface PoolEntry {
   id: string;
   sev: NotificationSeverity;

@@ -4,9 +4,11 @@
 # `Component` class props/LOG array (lines 283-442). Geometry (ring sizes,
 # tick-mark positions/rotations, keyframe timings/delays) stays inline in
 # BootSequence.svelte, matching Wallpaper.svelte's own convention (ring/tick
-# geometry inline, only textual content here) — everything below is text a
-# viewer actually reads, or a config knob the mock exposed as an editable
-# prop (bootMs/coreTint/showBootLog).
+# geometry inline, only textual content here) — everything below is either
+# text a viewer actually reads or a config knob the mock exposed as an
+# editable prop (bootMs/coreTint/showBootLog). The boot log's own text
+# (label/val) has moved to src/content/boot/log.md — `log:` below keeps
+# only that row's timing/tag, joined to the content file by `id`.
 
 bootMs: 4600
 # "cyan" is the only variant actually rendered (PLAN.md: "render only the
@@ -78,60 +80,49 @@ statusBox:
 
 bootLogTitle: "── boot log ──────────────────"
 
-# LOG array (lines 287-300), VERBATIM — including the "grep index 22 files"
-# flavor text (user-editable, kept exactly as authored). `threshold` is the
-# 0..1 progress fraction at which the row becomes visible;
-# src/lib/boot.ts's logRows() keeps only the ones reached so far, most-
-# recent-last, capped to the last 5.
+# Boot log timing/tag config, in display order. `threshold` is the 0..1
+# progress fraction at which the row becomes visible; `tag` picks the
+# row's glyph/color. The row's actual text (label/val) is content now, in
+# src/content/boot/log.md, matched to a row here by `id`. src/lib/boot.ts's
+# logRows() keeps only the rows reached so far, most-recent-last, capped to
+# the last 5.
 log:
-  - threshold: 0.02
+  - id: mounting-shell
+    threshold: 0.02
     tag: ok
-    label: "mounting shell"
-    val: "Shell.astro"
-  - threshold: 0.10
+  - id: hydrating-island
+    threshold: 0.10
     tag: ok
-    label: "hydrating island"
-    val: "Terminal.svelte"
-  - threshold: 0.18
+  - id: tmux-session
+    threshold: 0.18
     tag: ok
-    label: "tmux session"
-    val: "6 windows"
-  - threshold: 0.27
+  - id: grep-index
+    threshold: 0.27
     tag: ok
-    label: "grep index"
-    val: "22 files"
-  - threshold: 0.36
+  - id: repo-trees
+    threshold: 0.36
     tag: ok
-    label: "repo trees"
-    val: "3 submodules"
-  - threshold: 0.45
+  - id: commit-snapshots
+    threshold: 0.45
     tag: ok
-    label: "commit snapshots"
-    val: "15 x 3"
-  - threshold: 0.55
+  - id: retina-v-optics
+    threshold: 0.55
     tag: ok
-    label: "retina-v optics"
-    val: "CALIBRATED"
-  - threshold: 0.64
+  - id: retina-v-feed
+    threshold: 0.64
     tag: ok
-    label: "retina-v feed"
-    val: "latveria grid"
-  - threshold: 0.73
+  - id: retina-v-lock
+    threshold: 0.73
     tag: ok
-    label: "retina-v lock"
-    val: "0.94 / 0.91"
-  - threshold: 0.82
+  - id: retina-v-anomaly
+    threshold: 0.82
     tag: warn
-    label: "retina-v anomaly"
-    val: "FLERKEN [!]"
-  - threshold: 0.90
+  - id: wallpaper-radar
+    threshold: 0.90
     tag: ok
-    label: "wallpaper radar"
-    val: "3 signatures"
-  - threshold: 0.96
+  - id: edith-online
+    threshold: 0.96
     tag: done
-    label: "e.d.i.t.h online"
-    val: "welcome back, shev"
 
 # Full palette per tint (lines 217-237); only `tints[coreTint]` above is
 # ever rendered. Named fields map 1:1 onto the mock's inline styles for the

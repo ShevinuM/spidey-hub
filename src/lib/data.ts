@@ -16,14 +16,13 @@
 // content at the *import's* location during bundling, independent of
 // where the chunk ends up at runtime.
 import YAML from "yaml";
+import type { CollectionEntry } from "astro:content";
 import siteRaw from "../data/site.yaml?raw";
 import dashboardRaw from "../data/dashboard.yaml?raw";
 import trackerRaw from "../data/tracker.yaml?raw";
-import profileRaw from "../data/profile.yaml?raw";
 import buildsRaw from "../data/builds.yaml?raw";
 import grepRaw from "../data/grep.yaml?raw";
 import personnelRaw from "../data/personnel.yaml?raw";
-import companiesRaw from "../data/companies.yaml?raw";
 import helpRaw from "../data/help.yaml?raw";
 import bootRaw from "../data/boot.yaml?raw";
 import cmdlineRaw from "../data/cmdline.yaml?raw";
@@ -36,11 +35,9 @@ const RAW: Record<string, string> = {
   "site.yaml": siteRaw,
   "dashboard.yaml": dashboardRaw,
   "tracker.yaml": trackerRaw,
-  "profile.yaml": profileRaw,
   "builds.yaml": buildsRaw,
   "grep.yaml": grepRaw,
   "personnel.yaml": personnelRaw,
-  "companies.yaml": companiesRaw,
   "help.yaml": helpRaw,
   "boot.yaml": bootRaw,
   "cmdline.yaml": cmdlineRaw,
@@ -127,7 +124,7 @@ export interface DashboardData {
 export const getDashboard = (): DashboardData => loadYaml<DashboardData>("dashboard.yaml");
 
 // ---------------------------------------------------------------------------
-// notifications.yaml
+// notifications.yaml (chrome) + src/content/notifications/*.md (pool)
 // ---------------------------------------------------------------------------
 
 /** A notification pool entry (src/lib/notificationStore.ts's `PoolEntry`,
@@ -141,6 +138,19 @@ export interface NotificationPoolEntry {
   body: string;
   src: string;
 }
+
+/** Builds the pool from the `notifications` content collection, sorted by
+ * each entry's frontmatter `order` — the pool's array position feeds the
+ * seeded per-visit pick (src/lib/notificationStore.ts's `pickRandomUnseen`),
+ * so this order must stay stable across a rebuild even though the loader's
+ * own directory-read order isn't guaranteed to be. */
+export const buildNotificationPool = (
+  entries: CollectionEntry<"notifications">[],
+): NotificationPoolEntry[] =>
+  entries
+    .slice()
+    .sort((a, b) => a.data.order - b.data.order)
+    .map((e) => ({ id: e.id, sev: e.data.sev, title: e.data.title, body: (e.body ?? "").trim(), src: e.data.src }));
 
 export interface NotificationsFooterHint {
   key: string;
@@ -176,7 +186,14 @@ export interface NotificationsData {
   pool: NotificationPoolEntry[];
 }
 
-export const getNotifications = (): NotificationsData => loadYaml<NotificationsData>("notifications.yaml");
+interface NotificationsChrome {
+  ui: NotificationsUi;
+}
+
+export const buildNotifications = (entries: CollectionEntry<"notifications">[]): NotificationsData => {
+  const { ui } = loadYaml<NotificationsChrome>("notifications.yaml");
+  return { ui, pool: buildNotificationPool(entries) };
+};
 
 // ---------------------------------------------------------------------------
 // tracker.yaml
@@ -215,7 +232,7 @@ export interface TrackerData {
 export const getTracker = (): TrackerData => loadYaml<TrackerData>("tracker.yaml");
 
 // ---------------------------------------------------------------------------
-// profile.yaml
+// src/content/profile/*.md
 // ---------------------------------------------------------------------------
 
 export interface ProfileField {
@@ -251,10 +268,9 @@ export interface ProfileData {
     retinaV: { alt: string; caption: string };
   };
   fields: ProfileField[];
-  // PLAN.md Iteration 3 Phase 1 item 1.4: the data file's own "Agent
-  // Profile → Summary" bio. PLAN.md Iteration 4 item 21 removed the
-  // shorter, separate `summary` block this once sat "distinct from" — this
-  // dossier is the only bio block left.
+  /** The bio's heading (frontmatter) plus its paragraphs, split from the
+   * content entry's markdown body on blank lines — the only bio block on
+   * the page. */
   dossier: { heading: string; paragraphs: string[] };
   recordDatabase: { title: string; stats: { label: string; value: number }[] };
   cv: {
@@ -271,7 +287,23 @@ export interface ProfileData {
   signal: { label: string; coords: string; initialReadout: string };
 }
 
-export const getProfile = (): ProfileData => loadYaml<ProfileData>("profile.yaml");
+/** Splits a markdown body into paragraphs on blank lines — the profile
+ * entry's body holds only plain-prose paragraphs (no lists/headings), so
+ * this needs no markdown rendering. */
+function splitParagraphs(body: string): string[] {
+  return body
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0);
+}
+
+export const buildProfile = (entry: CollectionEntry<"profile">): ProfileData => {
+  const { dossierHeading, ...rest } = entry.data;
+  return {
+    ...rest,
+    dossier: { heading: dossierHeading, paragraphs: splitParagraphs(entry.body ?? "") },
+  };
+};
 
 // ---------------------------------------------------------------------------
 // builds.yaml
@@ -425,18 +457,7 @@ export interface PersonnelData {
 export const getPersonnel = (): PersonnelData => loadYaml<PersonnelData>("personnel.yaml");
 
 // ---------------------------------------------------------------------------
-// companies.yaml
-// ---------------------------------------------------------------------------
-
-export interface CompanyEntry {
-  name: string;
-  order: number;
-}
-
-export const getCompanies = (): CompanyEntry[] => loadYaml<CompanyEntry[]>("companies.yaml");
-
-// ---------------------------------------------------------------------------
-// help.yaml
+// help.yaml + src/content/help/*.md
 // ---------------------------------------------------------------------------
 
 /** One keymap row: a short `name`, a plain-language one-line `desc`
@@ -458,19 +479,32 @@ export interface HelpScope {
   rows: HelpRow[];
 }
 
-export interface HelpData {
+/** Page chrome only (title/filter/legend) — `scopes` is assembled from the
+ * `help` content collection by `buildHelp` below. */
+export interface HelpChrome {
   title: string;
   filterPlaceholder: string;
   allScopeLabel: string;
   emptyStateText: string;
   legend: string[];
+}
+
+export interface HelpData extends HelpChrome {
   scopes: HelpScope[];
 }
 
-export const getHelp = (): HelpData => loadYaml<HelpData>("help.yaml");
+export const getHelpChrome = (): HelpChrome => loadYaml<HelpChrome>("help.yaml");
+
+export const buildHelp = (entries: CollectionEntry<"help">[]): HelpData => {
+  const scopes = entries
+    .slice()
+    .sort((a, b) => a.data.order - b.data.order)
+    .map((e) => ({ id: e.id, label: e.data.label, hint: e.data.hint, rows: e.data.rows }));
+  return { ...getHelpChrome(), scopes };
+};
 
 // ---------------------------------------------------------------------------
-// boot.yaml
+// boot.yaml (config) + src/content/boot/log.md (log text)
 // ---------------------------------------------------------------------------
 
 export interface BootHandshakeData {
@@ -507,6 +541,14 @@ export interface BootLogEntry {
   val: string;
 }
 
+/** boot.yaml's own `log[]` shape — timing/tag config only, joined to its
+ * text (label/val) in the `boot` content collection by `id`. */
+interface BootLogConfigRow {
+  id: string;
+  threshold: number;
+  tag: "ok" | "warn" | "done";
+}
+
 export interface BootTintPalette {
   border: string;
   glowStart: string;
@@ -518,7 +560,7 @@ export interface BootTintPalette {
   phaseColor: string;
 }
 
-export interface BootData {
+interface BootConfig {
   bootMs: number;
   coreTint: "cyan" | "red" | "gold";
   showBootLog: boolean;
@@ -530,11 +572,28 @@ export interface BootData {
   compass: BootCompassData;
   statusBox: BootStatusBoxData;
   bootLogTitle: string;
-  log: BootLogEntry[];
+  log: BootLogConfigRow[];
   tints: Record<"cyan" | "red" | "gold", BootTintPalette>;
 }
 
-export const getBoot = (): BootData => loadYaml<BootData>("boot.yaml");
+export interface BootData extends Omit<BootConfig, "log"> {
+  log: BootLogEntry[];
+}
+
+export const buildBoot = (entries: CollectionEntry<"boot">[]): BootData => {
+  const config = loadYaml<BootConfig>("boot.yaml");
+  const textById = new Map(entries.flatMap((e) => e.data.entries).map((row) => [row.id, row]));
+  const log = config.log.map((row) => {
+    const text = textById.get(row.id);
+    if (!text) throw new Error(`src/lib/data.ts: boot.yaml log id "${row.id}" has no matching src/content/boot entry`);
+    return { threshold: row.threshold, tag: row.tag, label: text.label, val: text.val };
+  });
+  const unmatched = [...textById.keys()].filter((id) => !config.log.some((row) => row.id === id));
+  if (unmatched.length > 0) {
+    throw new Error(`src/lib/data.ts: src/content/boot has entries with no matching boot.yaml log id: ${unmatched.join(", ")}`);
+  }
+  return { ...config, log };
+};
 
 // ---------------------------------------------------------------------------
 // cmdline.yaml

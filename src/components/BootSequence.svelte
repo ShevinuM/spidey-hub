@@ -7,8 +7,9 @@
   // transcribed from that file; timing/progress/log MATH is factored out to
   // src/lib/boot.ts (kept pure so tests/unit/boot.test.ts can spot-check
   // the formulas without a browser), and every piece of on-screen TEXT
-  // comes from src/data/boot.yaml — this file renders geometry + data,
-  // never hardcodes copy (content-purity rule).
+  // comes from the `BootData` built from src/data/boot.yaml's timing/tag
+  // config plus the boot log's text in src/content/boot/log.md — this file
+  // renders geometry + data, never hardcodes copy.
   //
   // Always mounted by Terminal.svelte (same convention as GrepOverlay/
   // CopyMode: a `bind:this` ref with an imperative contract — here

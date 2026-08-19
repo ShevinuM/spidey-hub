@@ -175,7 +175,7 @@ test.describe("Profile: summary section removed (Iteration 4 item 21)", () => {
 });
 
 test.describe("Profile: DOSSIER panel (PLAN.md Iteration 3 Phase 1 item 1.4)", () => {
-  test("renders the data file's real bio, from profile.yaml (not hardcoded)", async ({ page }) => {
+  test("renders the content collection's real bio, from src/content/profile (not hardcoded)", async ({ page }) => {
     await openProfile(page);
     const dossier = page.locator('[data-testid="profile-dossier"]');
     await expect(dossier).toBeVisible();

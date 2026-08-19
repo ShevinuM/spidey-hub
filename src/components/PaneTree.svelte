@@ -38,7 +38,6 @@
     ProfileData,
     HelpData,
     ShellData,
-    CompanyEntry,
   } from "../lib/data";
   import type { CollectionEntry } from "astro:content";
   import type { Commit } from "../lib/commits";
@@ -78,7 +77,6 @@
     profile: ProfileData;
     help: HelpData;
     shell: ShellData;
-    companies: CompanyEntry[];
     projects: CollectionEntry<"projects">[];
     personnelEntries: CollectionEntry<"personnel">[];
     commitsByRepo: Record<string, Commit[]>;
@@ -119,7 +117,6 @@
     profile,
     help,
     shell,
-    companies,
     projects,
     personnelEntries,
     commitsByRepo,
@@ -172,7 +169,6 @@
           {profile}
           {help}
           {shell}
-          {companies}
           {projects}
           {personnelEntries}
           {commitsByRepo}
@@ -212,7 +208,6 @@
       <Personnel
         bind:this={leafRef}
         {personnel}
-        {companies}
         {personnelEntries}
         {isFocused}
         onDashboard={() => onWindowSwitch("dashboard")}

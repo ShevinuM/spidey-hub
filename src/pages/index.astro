@@ -1,32 +1,31 @@
 ---
-// Route: "/" — dashboard (home) view. All five route pages share this same
-// shape (PLAN.md "Routing assumption"): load every data source + content
-// collection in frontmatter, then SSR the single Terminal.svelte island
-// with `initialView` so the matching view is in the static HTML with no
-// client-side flash. Later view switches are client-side only (pushState).
+// Route: "/" — dashboard (home) view. All six route pages share this same
+// shape: load every data source + content collection in frontmatter, then
+// SSR the single Terminal.svelte island with `initialView` so the matching
+// view is in the static HTML with no client-side flash. Later view switches
+// are client-side only (pushState).
 import Shell from "../layouts/Shell.astro";
 import Terminal from "../components/Terminal.svelte";
 import { getCollection } from "astro:content";
-import { getSite, getDashboard, getNotifications, getTracker, getProfile, getBuilds, getPersonnel, getCompanies, getGrep, getHelp, getBoot, getCmdline, getHelpSearch, getShell, getChooseTree } from "../lib/data";
+import { getSite, getDashboard, getTracker, getBuilds, getPersonnel, getGrep, getCmdline, getHelpSearch, getShell, getChooseTree, buildProfile, buildHelp, buildNotifications, buildBoot } from "../lib/data";
 import { getCommitsByRepo } from "../lib/commits";
 
 const site = getSite();
 const dashboard = getDashboard();
-const notifications = getNotifications();
 const tracker = getTracker();
-const profile = getProfile();
 const builds = getBuilds();
 const personnel = getPersonnel();
-const companies = getCompanies();
 const grep = getGrep();
-const help = getHelp();
-const boot = getBoot();
 const cmdline = getCmdline();
 const helpSearch = getHelpSearch();
 const shell = getShell();
 const chooseTree = getChooseTree();
 const projects = await getCollection("projects");
 const personnelEntries = await getCollection("personnel");
+const profile = buildProfile((await getCollection("profile"))[0]);
+const help = buildHelp(await getCollection("help"));
+const notifications = buildNotifications(await getCollection("notifications"));
+const boot = buildBoot(await getCollection("boot"));
 const commitsByRepo = getCommitsByRepo(projects);
 // PORTFOLIO_FIXTURES gates the notification system into a fixed,
 // hand-authored state for deterministic golden capture (Notifications.svelte's
@@ -46,7 +45,6 @@ const notificationsFixtureMode = process.env.PORTFOLIO_FIXTURES === "1";
     {profile}
     {builds}
     {personnel}
-    {companies}
     {grep}
     {help}
     {boot}

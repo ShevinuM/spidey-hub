@@ -5,7 +5,7 @@
   // existing palette) but its OWN component/state: this is the
   // discoverable/browsable surface Cmdline.svelte's own suggestions list
   // used to be (removed in item 3.1) — empty query lists the site-wide
-  // commands, typing fuzzy-searches commands + every help.yaml keymap row.
+  // commands, typing fuzzy-searches commands + every help scope's keymap row.
   //
   // Always mounted (Terminal.svelte renders this once, unconditionally),
   // exactly like Cmdline/GrepOverlay/CopyMode — Terminal owns a live
@@ -59,7 +59,7 @@
   let flash = $state(false);
   let flashTimer: ReturnType<typeof setTimeout> | undefined;
 
-  // help.yaml's rows are {name, desc, keys[]} (HelpView.svelte's own scope/
+  // A help row is {name, desc, keys[]} (HelpView.svelte's own scope/
   // chip shape) — adapted here into helpSearch.ts's decoupled {key,
   // description} shape (see that file's own header comment on why it stays
   // independent of src/lib/data.ts's types) rather than changing that

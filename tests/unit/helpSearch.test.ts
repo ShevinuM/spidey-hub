@@ -1,9 +1,9 @@
 // Unit tests for the pure scoring/search logic behind the site-wide `?`
 // fuzzy help palette (PLAN.md Iteration 3 Phase 3 item 3.5) —
 // src/lib/helpSearch.ts. No DOM, no Svelte state: exercised against
-// fixture command/section lists (not the real cmdline.yaml/help.yaml, same
-// "shape, not wording" isolation tests/unit/cmdline.test.ts already uses)
-// so this suite can't drift silently if either yaml's copy changes.
+// fixture command/section lists (not the real cmdline.yaml/help content,
+// same "shape, not wording" isolation tests/unit/cmdline.test.ts already
+// uses) so this suite can't drift silently if either source's copy changes.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -107,7 +107,7 @@ test("shellEntries maps shell.yaml's help rows to keymap-shaped entries (cmd -> 
   );
 });
 
-test("buildEntries appends shell builtins LAST — commands, then help.yaml keymap rows, then shell rows (PLAN.md 3.3)", () => {
+test("buildEntries appends shell builtins LAST — commands, then help scope keymap rows, then shell rows", () => {
   const entries = buildEntries(commands, sections, shellRows);
   assert.equal(
     entries.length,

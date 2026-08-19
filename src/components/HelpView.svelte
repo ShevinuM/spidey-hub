@@ -1,9 +1,10 @@
 <script lang="ts">
   // Help window ("5:help") — sidebar-scoped keymap reference plus a live
   // filter, following Mockup A's layout (header + 230px scope sidebar +
-  // section rows with right-aligned key chips). Renders src/data/help.yaml
-  // verbatim; this component owns no copy of its own beyond structure/
-  // styling.
+  // section rows with right-aligned key chips). Renders the `HelpData`
+  // built from src/data/help.yaml's chrome plus the `help` content
+  // collection's scopes verbatim; this component owns no copy of its own
+  // beyond structure/styling.
   //
   // Reachable via `Ctrl-b ?`, `Ctrl-b 5`, a status-bar click, and the
   // dashboard menu's Help row.

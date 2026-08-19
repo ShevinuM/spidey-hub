@@ -76,4 +76,113 @@ const personnel = defineCollection({
   }),
 });
 
-export const collections = { projects, personnel };
+const profileFieldSchema = z.object({
+  label: z.string(),
+  value: z.string().optional(),
+  valuePrefix: z.string().optional(),
+  linkText: z.string().optional(),
+  linkHref: z.string().optional(),
+});
+
+const profile = defineCollection({
+  loader: glob({
+    pattern: "*.md",
+    base: "src/content/profile",
+    generateId: ({ entry }) => entry.replace(/\.md$/, ""),
+  }),
+  schema: z.object({
+    header: z.object({ badge: z.string(), fileClearance: z.string() }),
+    title: z.object({ name: z.string(), subtitle: z.string() }),
+    images: z.object({
+      portrait: z.object({ alt: z.string(), caption: z.string() }),
+      field: z.object({ alt: z.string(), caption: z.string() }),
+      retinaV: z.object({ alt: z.string(), caption: z.string() }),
+    }),
+    fields: z.array(profileFieldSchema),
+    dossierHeading: z.string(),
+    recordDatabase: z.object({
+      title: z.string(),
+      stats: z.array(z.object({ label: z.string(), value: z.number() })),
+    }),
+    cv: z.object({
+      title: z.string(),
+      fileLabel: z.string(),
+      meta: z.string(),
+      hintPrefix: z.string(),
+      hintKey: z.string(),
+      hintSuffix: z.string(),
+      href: z.string(),
+    }),
+    contact: z.object({
+      title: z.string(),
+      rows: z.array(
+        z.object({
+          icon: z.string(),
+          alt: z.string(),
+          text: z.string(),
+          href: z.string().nullable(),
+        }),
+      ),
+    }),
+    education: z.object({
+      title: z.string(),
+      rows: z.array(
+        z.object({ degree: z.string(), school: z.string(), loc: z.string(), dates: z.string() }),
+      ),
+    }),
+    signal: z.object({ label: z.string(), coords: z.string(), initialReadout: z.string() }),
+  }),
+});
+
+const help = defineCollection({
+  loader: glob({
+    pattern: "*.md",
+    base: "src/content/help",
+    generateId: ({ entry }) => entry.replace(/\.md$/, ""),
+  }),
+  schema: z.object({
+    label: z.string(),
+    hint: z.string(),
+    order: z.number(),
+    rows: z.array(
+      z.object({
+        name: z.string(),
+        desc: z.string(),
+        keys: z.array(z.string()),
+      }),
+    ),
+  }),
+});
+
+const notifications = defineCollection({
+  loader: glob({
+    pattern: "*.md",
+    base: "src/content/notifications",
+    generateId: ({ entry }) => entry.replace(/\.md$/, ""),
+  }),
+  schema: z.object({
+    sev: z.enum(["alert", "warn", "info"]),
+    title: z.string(),
+    src: z.string(),
+    order: z.number(),
+  }),
+});
+
+const boot = defineCollection({
+  loader: glob({
+    pattern: "*.md",
+    base: "src/content/boot",
+    generateId: ({ entry }) => entry.replace(/\.md$/, ""),
+  }),
+  schema: z.object({
+    entries: z.array(
+      z.object({
+        id: z.string(),
+        label: z.string(),
+        val: z.string(),
+      }),
+    ),
+  }),
+});
+
+export const collections = { projects, personnel, profile, help, notifications, boot };

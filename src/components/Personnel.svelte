@@ -23,9 +23,10 @@
   // Locked #9 specifies without hardcoding it: role.md sorts first because
   // files always precede directories, and full-time/part-time/co-op sort
   // by each's own `order` field (0/1/2 — most-recent-first, matching the
-  // resume convention). The root's two directories (enaimco,
-  // memorial-university) are ordered by companies.yaml instead, since
-  // there's no role file order to fall back to at that level.
+  // resume convention). The root's own directories (companies) sort
+  // alphabetically by name instead, since there's no role file order to
+  // fall back to at that level and no per-company frontmatter to read an
+  // explicit order from.
   //
   // `../` fidelity: PLAN.md Iteration 4 item 23a revised this from the
   // original prototype behavior (which excluded `../` from the j/k
@@ -68,7 +69,7 @@
   // `activateRow()` function — mouse and keyboard are identical by
   // construction, not two parallel implementations that could drift.
   import type { CollectionEntry } from "astro:content";
-  import type { PersonnelData, CompanyEntry } from "../lib/data";
+  import type { PersonnelData } from "../lib/data";
   import { classifyBody, colorFor } from "../lib/docline";
   import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
   import { iconSvgForPath } from "../lib/fileIcons";
@@ -78,7 +79,6 @@
 
   interface Props {
     personnel: PersonnelData;
-    companies: CompanyEntry[];
     personnelEntries: RoleEntry[];
     /** PLAN.md Iteration 3 Phase 6 item 6.1 — see PaneTree.svelte's own
      * header comment (multi-instance data-copy-source/paste-target
@@ -87,7 +87,7 @@
     onDashboard: () => void;
   }
 
-  const { personnel, companies, personnelEntries, isFocused, onDashboard }: Props = $props();
+  const { personnel, personnelEntries, isFocused, onDashboard }: Props = $props();
 
   /** Directory segments straight off disk, relative to
    * `src/content/personnel/`, case-preserved — `entry.id` would normally be
@@ -144,8 +144,9 @@
    * built) — this is what makes `full-time/`/`part-time/`/`co-op/` (each a
    * single-file directory) sort by that file's own `order` frontmatter
    * without any directory-level order field ever needing to be authored by
-   * hand. Root-level directories are re-ordered separately from
-   * `companies.yaml` afterward (see `buildTree()`). */
+   * hand. Root-level directories are re-ordered alphabetically afterward,
+   * overwriting this function's result for exactly the root's own
+   * children (see the `root` derivation below). */
   function computeDirOrders(node: TreeNode): number {
     if (node.kind === "file") return node.order;
     if (node.children.length === 0) return node.order;
@@ -176,14 +177,11 @@
       dir.children.push({ kind: "file", name: fileNameOf(entry), order: entry.data.order, entry });
     }
     computeDirOrders(r);
-    // Root-level directories are ordered by companies.yaml, not by any
-    // nested role file's order — overwrite what computeDirOrders derived
-    // for exactly (and only) the root's direct children.
-    const companyOrder = new Map(companies.map((c) => [c.name, c.order]));
-    for (const c of r.children) {
-      if (companyOrder.has(c.name)) c.order = companyOrder.get(c.name)!;
-    }
-    sortChildren(r.children);
+    // Root-level directories (companies) sort alphabetically by name, not
+    // by any nested role file's order — a plain lexicographic compare, not
+    // a locale-sensitive one, so the order is stable across environments.
+    r.children.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+    for (const c of r.children) if (c.kind === "dir") sortChildren(c.children);
     return r;
   });
 

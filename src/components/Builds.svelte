@@ -26,7 +26,8 @@
   //     tree (src/lib/githubTrees.ts) into panel [2] instead, with a
   //     lazygit-style braille spinner on the panel [3] repo row while any
   //     fetch for that repo is in flight; `o` opens the commit on GitHub
-  //     (the only surviving external-link path, documented in help.yaml).
+  //     (the only surviving external-link path, documented in the Help
+  //     window's Builds scope).
   //     Selecting the all-projects entry shows a data-driven "local only"
   //     line instead (it isn't a real remote).
   //
