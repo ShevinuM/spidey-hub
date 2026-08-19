@@ -688,16 +688,17 @@
         >
           {personnel.insetTitles.fileBrowser}
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;color:rgba(196,216,232,.5)">
-          <span
-            role="button"
-            tabindex="0"
-            data-testid="personnel-prompt"
-            onclick={enterFilterMode}
-            onkeydown={(ev) => {
-              if (ev.key === "Enter" || ev.key === " ") enterFilterMode();
-            }}
-            style="cursor:pointer;color:#5fc6b4"
+        <div
+          role="button"
+          tabindex="0"
+          data-testid="personnel-filter-row"
+          onclick={enterFilterMode}
+          onkeydown={(ev) => {
+            if (ev.key === "Enter" || ev.key === " ") enterFilterMode();
+          }}
+          style="margin-top:10px;border:1px solid rgba(224,69,60,.35);border-radius:4px;padding:5px 10px;display:flex;justify-content:space-between;align-items:center;color:rgba(196,216,232,.5);cursor:pointer"
+        >
+          <span data-testid="personnel-prompt" style="color:#5fc6b4"
             >{personnel.promptIcon} {filterQuery}{#if filterMode}<span
                 data-testid="personnel-filter-cursor"
                 style="display:inline-block;width:7px;height:13px;vertical-align:-2px;background:#5fc6b4;animation:blk 1.1s steps(1) infinite"

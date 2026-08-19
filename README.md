@@ -18,7 +18,7 @@ modal editor (NORMAL/VISUAL/VISUAL-LINE, motions, counts, yank, in-buffer
 search); a `/`-triggered grep overlay that searches the site's own source;
 a noice.nvim-style floating `:` command box (no suggestion list — Tab still
 completes); a site-wide `?` fuzzy HelpSearch palette; a dedicated Help
-window (dashboard hotkey `h`) listing every binding; an E.D.I.T.H boot
+window (`Ctrl-b 5`) listing every binding; an E.D.I.T.H boot
 sequence on first load; a live network meter; and a SPIDEY-HUB dashboard
 wordmark over a blurred radar with a large seeded notification pool. Bare
 `q`/Esc never change the active view anywhere — navigation is tmux prefix
@@ -102,7 +102,7 @@ a commit fetches that commit's tree into panel [2] (a lazygit-style
 `Pulling ··●` spinner shows on the repo row while the fetch is in flight) —
 `o` opens it on GitHub in a new tab, nothing else does. See `src/data/
 help.yaml`'s "Builds" section (rendered in the app's own Help window,
-dashboard hotkey `h`) for the complete key-by-key reference.
+`Ctrl-b 5`) for the complete key-by-key reference.
 
 ### Add a Builds project
 
@@ -332,8 +332,8 @@ argument), then `pnpm generate` and commit as above.
 
 **Single source of truth**: `src/data/help.yaml` — every row below is
 transcribed from it, and the app's own Help window (`Ctrl-b ?`, `Ctrl-b 5`,
-a status-bar click on "5:help", or the dashboard menu's Help row —
-dashboard hotkey `h`) renders that same file, so this table and the in-app
+a status-bar click on "5:help", or the dashboard menu's Help row) renders
+that same file, so this table and the in-app
 reference cannot drift silently (both are reviewed together whenever a
 binding changes). **Bare `q`/Esc never switch the active view anywhere** —
 Esc only exits whatever's currently open (grep, a filter, a status-line
@@ -359,7 +359,7 @@ never a view.
 | action | targets |
 |---|---|
 | click a status-bar window | jump straight to it — `0:dashboard 1:builds 2:personnel 3:retina-v 4:profile 5:help` (the number/route stay fixed even after a window auto-renames — see "Shell builtins" below) |
-| click a dashboard menu row | same targets as their hotkeys |
+| click a dashboard menu row | same target as the `Ctrl-b N` binding shown in that row's own key column |
 
 ### tmux prefix (`Ctrl-b`)
 
@@ -409,7 +409,7 @@ window too.
 | key | action |
 |---|---|
 | (opening) | session rows read `{name}: {n} windows[, (attached)]`; window rows read `{index}: {name}{flags}`. The current session starts expanded, every other session starts collapsed; the current window starts selected |
-| `j` / `k` / `↑` / `↓` | move the selection across every visible row |
+| `↑` / `↓` | move the selection across every visible row |
 | `h` / `←` | on a window row: jump up to its parent session row; on an expanded session row: collapse it |
 | `l` / `→` | on a collapsed session row: expand it |
 | `Enter` | switch to the selected window (attaching its session first, if different) or session, then close the overlay |
@@ -479,7 +479,7 @@ footer.
 
 | key | action |
 |---|---|
-| `j` / `k` | move the line cursor down/up (also works in Builds/Personnel lists) |
+| `j` / `k` | move the line cursor down/up |
 | `h` | up one level (Builds repo tree, Personnel employment-types/role-files levels) |
 | `gg` | jump to the first entry / top of file (double-tap within ~500ms; a single `g` does nothing) |
 | `G` | jump to the last entry / bottom of file |
@@ -514,7 +514,6 @@ footer.
 | `Ctrl-u` / `Ctrl-w` | clear the query |
 | `↓` / `Ctrl-n` (or `Ctrl-j`) | next hit |
 | `↑` / `Ctrl-p` (or `Ctrl-k`) | previous hit |
-| `gg` / `G` | jump to the first / last hit |
 | `Enter` | open the selected hit — routes to the owning view if the path maps to one, otherwise just closes |
 | `Esc` / `Ctrl-c` | close, no navigation |
 
@@ -529,11 +528,11 @@ open.
 | key | action |
 |---|---|
 | `f` | enter filter mode on the `>` prompt |
-| click the `>` prompt | also enters filter mode |
+| click the bordered filter row | also enters filter mode |
 | any printable character | appended to the filter query; the entry list live-filters (case-insensitive substring on names) |
 | `Backspace` | edit the filter query |
 | `Esc` | clear the filter and exit filter mode |
-| `Enter` | confirm the filter (exits typing; the filtered list stays applied) and returns to normal `j`/`k` navigation |
+| `Enter` | confirm the filter (exits typing; the filtered list stays applied) and returns to normal arrow-key navigation |
 | click a row | activates it immediately — a company, an employment type, or a role file, at whatever depth-generic level it appears at (single-click at every level, no select-then-activate) |
 | click `../` | up one level (its parent path segment) — or the dashboard, at the companies root |
 
@@ -542,7 +541,7 @@ open.
 | key | action |
 |---|---|
 | `1` / `2` / `3` / `4` / `0` | focus panel Status / Files (tree browser) / Local Repositories (every repo, flat, plus all-projects) / Commits / Changes (preview) |
-| `j` / `k` | move selection within the focused panel |
+| `↑` / `↓` | move selection within the focused panel |
 | `Enter` (panel [3], a repo) / click a repo row | load that repo's tree into panel [2] |
 | click a file (panel [2]) | preview it in panel [0] — does not open the editor |
 | `Enter` (a file in the tree) | open the file in the full-screen vim editor |
@@ -550,7 +549,6 @@ open.
 | `h` / `Backspace` (repo tree) | up one directory |
 | click a commit / `Enter` on a commit (panel [4]) | load that commit's tree into panel [2] (a lazygit-style `Pulling ··●` spinner shows on the repo row) — no new tab |
 | `o` (panel [4], commits) | opens the selected commit on GitHub in a new tab — the only remaining external-link path in Builds |
-| `gg` / `G` | jump to the first / last row of the open tree in panel [2] (also inside the file editor) |
 
 Panel [4] Commits tracks **only** panel [3]'s repo selection — it never
 changes while navigating panel [2]/[0]. The virtual **all-projects** repo
@@ -643,8 +641,10 @@ The site-wide fuzzy palette (`src/components/HelpSearch.svelte` +
   or any shell pane / the host shell, claims `/`/`:`/`?` as literal
   characters here, before grep/Cmdline/help-search ever get a bare-key
   chance) → `GrepOverlay` → the focused pane's non-greedy handling (list
-  navigation) → the bare `:`/`?` openers → the dashboard's own hotkeys
-  (home view only). It renders `Wallpaper`, `StatusBar`, a recursive
+  navigation) → the bare `:`/`?` openers → the dashboard's notification
+  bell/panel (`n`/Esc, dashboard view only) → the global `r` reboot
+  backstop (any view whose focused pane hasn't already claimed `r` itself).
+  It renders `Wallpaper`, `StatusBar`, a recursive
   `PaneTree.svelte` (split nodes are flex containers; leaves render
   `Dashboard` / `Builds` / `Personnel` / `Profile` / `TrackerView` /
   `HelpView` / `Shell` per the pane's own `program`, `bind:this`-registered

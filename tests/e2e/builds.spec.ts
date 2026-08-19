@@ -631,6 +631,21 @@ test.describe("Builds: commit row heights render at full glyph height (PLAN.md 4
     await page.locator('[data-testid="builds-repo-row"][data-repo-name="daily-tech-digest"]').click();
     const rows = page.locator('[data-testid="builds-commit-row"]');
     await expect(rows).toHaveCount(15);
+    // Root cause of the flake this replaces: `commits` (Builds.svelte) is
+    // `liveCommits[repo.key] ?? commitsByRepo[repo.key] ?? []` — clicking
+    // the repo row FIRST renders the committed static snapshot (which,
+    // coincidentally, also currently has exactly 15 real commits for
+    // daily-tech-digest), then swaps to this test's mocked `liveCommits`
+    // once the fetch above resolves. Both states satisfy `toHaveCount(15)`,
+    // so that assertion alone can resolve during either one; the keyed
+    // `{#each commits as c (c.sha8)}` block has no shas in common between
+    // the two states, so the swap removes and recreates all 15 row
+    // elements, and measuring mid-swap caught freshly-inserted nodes before
+    // a style/layout pass applied their scoped CSS (0 height, unparsed
+    // "normal" line-height). Waiting for the mocked commits' own text
+    // (absent from the real static snapshot) proves the swap is over
+    // before any row is measured, rather than racing it with a sleep.
+    await expect(rows.first()).toContainText("fake commit number");
 
     const measurements = await rows.evaluateAll((els) =>
       els.map((el) => {

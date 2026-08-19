@@ -80,6 +80,7 @@ const posText = (page: Page) => page.locator('[data-testid="personnel-pos"]');
 const hintText = (page: Page) => page.locator('[data-testid="personnel-hint"]');
 const upRow = (page: Page) => page.locator('[data-testid="personnel-up-row"]');
 const promptRow = (page: Page) => page.locator('[data-testid="personnel-prompt"]');
+const filterRow = (page: Page) => page.locator('[data-testid="personnel-filter-row"]');
 const filterCursor = (page: Page) => page.locator('[data-testid="personnel-filter-cursor"]');
 const lsRows = (page: Page) => page.locator('[data-testid="personnel-ls-row"]');
 
@@ -675,6 +676,37 @@ test.describe("Personnel: filter mode (item 23b)", () => {
     await expect(rowLocator(page, "co-op/")).toBeVisible();
     await expect(rowLocator(page, "full-time/")).not.toBeVisible();
     await expect(promptRow(page)).toContainText("co");
+  });
+
+  test("the whole bordered filter row is clickable, not just the tiny > glyph (regression fix)", async ({
+    page,
+  }) => {
+    // Root cause of the "clicking doesn't filter" report: the prompt span's
+    // own hitbox measured ~8x17px (just the "> " glyph, idle query is
+    // empty), with no border/box drawn around it, so a real click landing
+    // anywhere else in that footer strip did nothing. Clicking near the
+    // row's FAR edge (well away from the prompt text, close to the N / N
+    // counter) now must still enter filter mode, proving the entire
+    // bordered row — not just the glyph — is the hit target.
+    await openPersonnel(page);
+    await page.keyboard.press("Enter"); // -> enaimco/
+    await page.keyboard.press("Enter"); // -> enaimco/software-developer/
+    const box = await filterRow(page).boundingBox();
+    if (!box) throw new Error("filter row not found");
+    await filterRow(page).click({ position: { x: box.width - 4, y: box.height / 2 } });
+    await expect(filterCursor(page)).toBeVisible();
+    await page.keyboard.type("co");
+    await expect(rowLocator(page, "co-op/")).toBeVisible();
+    await expect(rowLocator(page, "full-time/")).not.toBeVisible();
+  });
+
+  test("the filter row renders a visible border box in both idle and active states", async ({
+    page,
+  }) => {
+    await openPersonnel(page);
+    await expect(filterRow(page)).toHaveCSS("border-style", "solid");
+    await page.keyboard.press("f");
+    await expect(filterRow(page)).toHaveCSS("border-style", "solid");
   });
 
   test("Esc restores the full list and exits filter mode", async ({ page }) => {

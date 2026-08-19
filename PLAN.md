@@ -83,10 +83,11 @@ Verification: `pnpm check`, unit, e2e green; screenshot pass at both viewports c
 Verification: `pnpm check`, unit, e2e green; `pnpm generate` succeeds; probe: open a .ts file in Builds editor → multiple distinct token colors in DOM; open .md → docline colors unchanged; repo JSON size growth reported (must stay < 3× current per file); icons visible in Builds/Personnel/Grep screenshots. Commit.
 
 ### Phase 5 — Translucency + Personnel filter
-- [ ] 5.1 Wallpaper constants per Decision 8.
-- [ ] 5.2 Personnel filter: REPRODUCE the click bug first — an `onclick` already exists on the prompt span (Personnel.svelte:752-759), so the real failure is likely focus/pane gating or a tiny hit target; root-cause, then fix. Then: bordered filter row (matches site panel border style `rgba(224,69,60,.35)`) with `> ` prompt, blinking cursor, right-aligned `N / N` count; whole row clickable to enter filter mode (f still works); filter box visible in both idle and active states.
-- [ ] 5.3 Update personnel e2e for the new filter affordance.
-- [ ] 5.4 Fix-forward from Phase 3: `builds.yaml` commandLog still says "Press t for Retina-V" and references removed j/k nav — reword truthfully (arrows/click, no t). Also finish the README keymap truthfulness pass: Builds j/k and gg/G rows, choose-tree j/k row, Grep overlay gg/G row, Personnel "returns to normal j/k navigation" line (README is user-facing via the site's cat/grep).
+- [x] 5.1 Wallpaper constants per Decision 8.
+- [x] 5.2 Personnel filter: REPRODUCE the click bug first — an `onclick` already exists on the prompt span (Personnel.svelte:752-759), so the real failure is likely focus/pane gating or a tiny hit target; root-cause, then fix. Then: bordered filter row (matches site panel border style `rgba(224,69,60,.35)`) with `> ` prompt, blinking cursor, right-aligned `N / N` count; whole row clickable to enter filter mode (f still works); filter box visible in both idle and active states.
+- [x] 5.3 Update personnel e2e for the new filter affordance.
+- [x] 5.5 Root-cause and fix the pre-existing failing e2e test `tests/e2e/builds.spec.ts:617` ("15 live-mocked commits render unclipped rows", 1920x1080 project): rows exist (toHaveCount(15) passes) but getBoundingClientRect().height reads 0 and lineHeight reads NaN — reproduces at a5d8393 too; intermittently passes under load. Fix the test (or underlying rendering race) so it passes 3× consecutively.
+- [x] 5.4 Fix-forward from Phase 3: `builds.yaml` commandLog still says "Press t for Retina-V" and references removed j/k nav — reword truthfully (arrows/click, no t). Also finish the README keymap truthfulness pass: Builds j/k and gg/G rows, choose-tree j/k row, Grep overlay gg/G row, Personnel "returns to normal j/k navigation" line (README is user-facing via the site's cat/grep).
 
 Verification: `pnpm check`, unit, e2e green; screenshots: dashboard/builds/personnel show more visible tracker background; personnel filter row has visible border + count; click-only filter entry proven in e2e. Commit.
 
