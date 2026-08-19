@@ -98,15 +98,14 @@
    * `bind:this` ref may expose — a superset of the four separate ref shapes
    * this file used to declare individually (buildsRef/personnelRef/
    * profileRef/helpRef), now that PaneTree.svelte's single ref registry
-   * serves all of them through one lookup (PLAN.md "per-pane ref Map for
-   * delegation"). Every field stays optional: Dashboard/retina-v export no
-   * ref at all, Profile/HelpView only ever export `handleKey`.
+   * serves all of them through one lookup. Every field stays optional:
+   * Dashboard/retina-v export no ref at all, Profile only ever exports
+   * `handleKey`; HelpView also exports `isEditorOpen` (its own filter box
+   * needs the same "owns the keyboard while focused" treatment an open vim
+   * Editor already gets).
    *
-   * PLAN.md Iteration 3 Phase 6 item 6.3: the Builds-internal panel-kill
-   * fields this interface used to carry (`canKillPane`/`focusedPanelTitle`/
-   * `focusedPanelNumber`/`killFocusedPane`/`killPane`) are REMOVED entirely —
-   * `Ctrl-b x` now always kills the real tmux PANE (src/lib/tmux.ts), never
-   * a Builds-internal panel, per Locked decision #4. */
+   * `Ctrl-b x` always kills the real tmux PANE (src/lib/tmux.ts), never a
+   * Builds-internal panel. */
   interface ProgramRef {
     handleKey?: (e: KeyboardEvent) => boolean;
     isEditorOpen?: () => boolean;

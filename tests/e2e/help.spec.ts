@@ -8,12 +8,10 @@
 // real-index comparisons) so this suite can never drift from the actual
 // copy.
 import { expect, test, type Page } from "./fixtures.ts";
-// PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
-// from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
-// sessionStorage flag before every navigation, so BootSequence.svelte's
-// ~4.6s unskippable sequence never runs for these tests — see that
-// file's header comment for why this is a context-fixture override
-// rather than a per-goto-helper change.
+// This spec's `context` fixture (imported from ./fixtures.ts, not raw
+// "@playwright/test") pre-seeds the boot-seen sessionStorage flag before
+// every navigation, so BootSequence.svelte's unskippable sequence never
+// runs for these tests.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
@@ -21,19 +19,23 @@ import YAML from "yaml";
 const ROOT = join(import.meta.dirname, "../..");
 
 interface HelpRow {
-  key: string;
-  description: string;
-  status?: "planned";
+  name: string;
+  desc: string;
+  keys: string[];
 }
-interface HelpSection {
-  title: string;
+interface HelpScope {
+  id: string;
+  label: string;
+  hint: string;
   rows: HelpRow[];
 }
 interface HelpData {
   title: string;
-  scrollHint: string;
-  plannedNote: string;
-  sections: HelpSection[];
+  filterPlaceholder: string;
+  allScopeLabel: string;
+  emptyStateText: string;
+  legend: string[];
+  scopes: HelpScope[];
 }
 
 function realHelp(): HelpData {
@@ -52,6 +54,10 @@ async function ctrlB(page: Page) {
 }
 
 const scroller = (page: Page) => page.locator('[data-testid="help-scroller"]');
+const rows = (page: Page) => page.locator('[data-testid="help-row"]');
+const scopeTabs = (page: Page) => page.locator('[data-testid="help-scope-tab"]');
+const filterBox = (page: Page) => page.locator('[data-testid="help-filter-box"]');
+const matchCount = (page: Page) => page.locator('[data-testid="help-match-count"]');
 
 test.describe("Help: reachability", () => {
   test("Ctrl-b ? opens help (tmux list-keys style)", async ({ page }) => {
@@ -89,45 +95,131 @@ test.describe("Help: reachability", () => {
 });
 
 test.describe("Help: content is sourced from src/data/help.yaml", () => {
-  test("title, section titles, and row count match the real file", async ({ page }) => {
+  test("title and total row count match the real file", async ({ page }) => {
     await gotoReady(page, "/help");
     const help = realHelp();
 
-    await expect(page.getByText(help.title)).toBeVisible();
+    await expect(page.locator('[data-testid="help-title"]')).toHaveText(help.title);
 
-    const rows = page.locator('[data-testid="help-row"]');
-    const totalRows = help.sections.reduce((n, s) => n + s.rows.length, 0);
-    await expect(rows).toHaveCount(totalRows);
+    const totalRows = help.scopes.reduce((n, s) => n + s.rows.length, 0);
+    await expect(rows(page)).toHaveCount(totalRows);
+    await expect(matchCount(page)).toContainText(`${totalRows} shown`);
 
-    // Spot-check the first section's first row and the last section's last
-    // row render the exact yaml text, not a paraphrase.
-    const firstRow = help.sections[0].rows[0];
-    await expect(rows.first()).toContainText(firstRow.key);
-    await expect(rows.first()).toContainText(firstRow.description);
+    // Spot-check the first scope's first row renders the exact yaml text.
+    const firstRow = help.scopes[0].rows[0];
+    await expect(rows(page).first()).toContainText(firstRow.name);
+    await expect(rows(page).first()).toContainText(firstRow.desc);
+  });
 
-    const lastSection = help.sections[help.sections.length - 1];
-    const lastRow = lastSection.rows[lastSection.rows.length - 1];
-    await expect(rows.last()).toContainText(lastRow.key);
+  test("the sidebar lists 'All bindings' plus one tab per scope, with matching counts", async ({ page }) => {
+    await gotoReady(page, "/help");
+    const help = realHelp();
+    const totalRows = help.scopes.reduce((n, s) => n + s.rows.length, 0);
+
+    await expect(scopeTabs(page)).toHaveCount(help.scopes.length + 1);
+    await expect(scopeTabs(page).first()).toContainText(help.allScopeLabel);
+    await expect(scopeTabs(page).first()).toContainText(String(totalRows));
+
+    const secondScope = help.scopes[1];
+    const secondTab = page.locator(`[data-testid="help-scope-tab"][data-scope-id="${secondScope.id}"]`);
+    await expect(secondTab).toContainText(secondScope.label);
+    await expect(secondTab).toContainText(String(secondScope.rows.length));
+  });
+
+  test("clicking a scope tab narrows the list to just that scope's rows", async ({ page }) => {
+    await gotoReady(page, "/help");
+    const help = realHelp();
+    const target = help.scopes.find((s) => s.id === "builds")!;
+
+    await page.locator('[data-testid="help-scope-tab"][data-scope-id="builds"]').click();
+    await expect(rows(page)).toHaveCount(target.rows.length);
+    await expect(matchCount(page)).toContainText(`${target.rows.length} shown`);
+    for (const row of target.rows) {
+      await expect(rows(page).filter({ hasText: row.name })).not.toHaveCount(0);
+    }
   });
 
   test("the previously-undocumented Profile `r` resume key is listed", async ({ page }) => {
     await gotoReady(page, "/help");
     const help = realHelp();
-    const hasR = help.sections.some((s) => s.rows.some((r) => r.key === "r" && /resume/i.test(r.description)));
+    const hasR = help.scopes.some((s) => s.rows.some((r) => r.keys.includes("r") && /résumé/i.test(r.desc)));
     expect(hasR).toBe(true);
-    await expect(page.locator('[data-testid="help-row"]', { hasText: "resume.pdf" })).toBeVisible();
+    await expect(page.locator('[data-testid="help-row"]', { hasText: "PDF" })).toBeVisible();
+  });
+});
+
+test.describe("Help: filter", () => {
+  test("clicking the filter box focuses it and shows a blinking cursor", async ({ page }) => {
+    await gotoReady(page, "/help");
+    await filterBox(page).click();
+    await expect(page.locator('[data-testid="help-filter-cursor"]')).toBeVisible();
+  });
+
+  test("typing filters rows by name/description/keys and updates the shown count", async ({ page }) => {
+    await gotoReady(page, "/help");
+    const before = await rows(page).count();
+
+    await filterBox(page).click();
+    await page.keyboard.type("kill-window");
+
+    await expect(rows(page)).toHaveCount(1);
+    await expect(rows(page).first()).toContainText("kill-window");
+    const count = await rows(page).count();
+    expect(count).toBeLessThan(before);
+    await expect(matchCount(page)).toContainText(`${count} shown`);
+  });
+
+  test("a filter with no matches shows the empty state", async ({ page }) => {
+    await gotoReady(page, "/help");
+    await filterBox(page).click();
+    await page.keyboard.type("zzzznotarealbinding");
+    await expect(page.locator('[data-testid="help-empty"]')).toBeVisible();
+    await expect(rows(page)).toHaveCount(0);
+  });
+
+  test("Esc blurs the filter but keeps the typed text and the narrowed list", async ({ page }) => {
+    await gotoReady(page, "/help");
+    await filterBox(page).click();
+    await page.keyboard.type("reboot");
+    const filtered = await rows(page).count();
+
+    await page.keyboard.press("Escape");
+
+    await expect(page.locator('[data-testid="help-filter-cursor"]')).not.toBeVisible();
+    await expect(page.locator('[data-testid="help-filter-text"]')).toHaveText("reboot");
+    await expect(rows(page)).toHaveCount(filtered);
+  });
+
+  test("while the filter is focused, r/`/`/`?` type into the query instead of rebooting/opening grep/opening the command search", async ({
+    page,
+  }) => {
+    await gotoReady(page, "/help");
+    await filterBox(page).click();
+    await page.keyboard.press("r");
+    await page.keyboard.press("/");
+    await page.keyboard.press("?");
+
+    await expect(page.locator('[data-testid="help-filter-text"]')).toHaveText("r/?");
+    await expect(page.locator('[data-testid="boot-sequence"]')).not.toBeVisible();
+    await expect(page.locator('[data-testid="grep-overlay"]')).not.toBeVisible();
+    await expect(page.locator('[data-testid="help-search-overlay"]')).not.toBeVisible();
+  });
+
+  test("while the filter is NOT focused, a bare r still reboots", async ({ page }) => {
+    await gotoReady(page, "/help");
+    await page.keyboard.press("r");
+    await expect(page.locator('[data-testid="boot-sequence"]')).toBeVisible();
   });
 });
 
 test.describe("Help: scrolling", () => {
-  test("arrow keys scroll the help list", async ({ page }) => {
+  test("arrow keys scroll the list when the filter isn't focused", async ({ page }) => {
     await gotoReady(page, "/help");
     await expect(scroller(page)).toBeVisible();
 
-    // The full keymap table (~50 rows across 8 sections) overflows any of
-    // this suite's viewports, so a handful of "ArrowDown" presses is enough
-    // to move scrollTop off zero regardless of exact row/section pixel
-    // heights.
+    // The full keymap table overflows any of this suite's viewports, so a
+    // handful of "ArrowDown" presses is enough to move scrollTop off zero
+    // regardless of exact row/section pixel heights.
     const before = await scroller(page).evaluate((el) => el.scrollTop);
     for (let i = 0; i < 8; i++) await page.keyboard.press("ArrowDown");
     const afterDown = await scroller(page).evaluate((el) => el.scrollTop);

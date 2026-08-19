@@ -84,7 +84,7 @@ commands:
     action: "grep"
     takesArgs: true
   - name: "reboot"
-    description: "replay the E.D.I.T.H boot sequence"
+    description: "restart the session from a blank terminal"
     action: "reboot"
   - name: "resume"
     aliases: ["cv"]

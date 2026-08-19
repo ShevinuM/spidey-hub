@@ -409,29 +409,32 @@ export const getCompanies = (): CompanyEntry[] => loadYaml<CompanyEntry[]>("comp
 // help.yaml
 // ---------------------------------------------------------------------------
 
-/** One keymap row. `status` marks bindings that don't exist yet at HEAD —
- * PLAN.md Phase 1 requires help.yaml to be the single source of truth for
- * every binding across the whole plan (incl. Phase 3/5 work), added here
- * ahead of the code that implements it so README/help never drift; `status`
- * lets HelpView (and a future README generator) flag those rows instead of
- * silently claiming they already work. Omitted (undefined) means "live
- * today". */
+/** One keymap row: a short `name`, a plain-language one-line `desc`
+ * (renders on its own line under `name` — never wraps, see HelpView.svelte's
+ * layout comment), and the literal key chip(s) that trigger it. */
 export interface HelpRow {
-  key: string;
-  description: string;
-  status?: "planned";
+  name: string;
+  desc: string;
+  keys: string[];
 }
 
-export interface HelpSection {
-  title: string;
+/** One sidebar scope — both a "SCOPES" tab (HelpView derives its count from
+ * `rows.length`) and a content section under that tab. `hint` is the short
+ * label shown next to the section header (e.g. "Ctrl-b, then a key"). */
+export interface HelpScope {
+  id: string;
+  label: string;
+  hint: string;
   rows: HelpRow[];
 }
 
 export interface HelpData {
   title: string;
-  scrollHint: string;
-  plannedNote: string;
-  sections: HelpSection[];
+  filterPlaceholder: string;
+  allScopeLabel: string;
+  emptyStateText: string;
+  legend: string[];
+  scopes: HelpScope[];
 }
 
 export const getHelp = (): HelpData => loadYaml<HelpData>("help.yaml");
