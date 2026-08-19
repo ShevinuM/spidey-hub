@@ -127,7 +127,7 @@ test.describe("Grep overlay", () => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
     await page.keyboard.type("Builds.svelte");
-    await expect(rows(page).first()).toHaveAttribute("data-path", "src/components/Builds.svelte");
+    await expect(rows(page).first()).toHaveAttribute("data-path", "src/components/builds/Builds.svelte");
     await page.keyboard.press("Enter");
     await expect(overlay(page)).not.toBeVisible();
     await expect(page.locator('[data-testid="builds-panel-2"]')).toBeVisible();

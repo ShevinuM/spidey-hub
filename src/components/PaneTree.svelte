@@ -37,7 +37,7 @@
   import type { Commit } from "../lib/commits";
   import type { SessionRosterEntry, ShellMode } from "../lib/shell";
   import Dashboard from "./Dashboard.svelte";
-  import Builds from "./Builds.svelte";
+  import Builds from "./builds/Builds.svelte";
   import Personnel from "./Personnel.svelte";
   import Profile from "./Profile.svelte";
   import HelpView from "./HelpView.svelte";

@@ -30,7 +30,7 @@ function expectedView(path: string): "personnel" | "builds" | "retina-v" | "prof
   if (/^src\/content\/personnel\//.test(path)) return "personnel";
   if (/^src\/content\/projects\//.test(path)) return "builds";
   if (path === "src/components/Personnel.svelte") return "personnel";
-  if (path === "src/components/Builds.svelte") return "builds";
+  if (path === "src/components/builds/Builds.svelte") return "builds";
   if (path === "src/components/Wallpaper.svelte") return "retina-v";
   if (path === "src/components/Profile.svelte") return "profile";
   return null;
