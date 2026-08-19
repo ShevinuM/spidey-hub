@@ -1,11 +1,11 @@
-// Unit tests for src/lib/repoTree.ts (PLAN.md Phase 5, "Repo browsing").
+// Unit tests for src/lib/repoTree.ts's repo browsing.
 // Exercised against the real generated index for one of the 8 submodules
 // (public/generated/repos/daily-tech-digest.json — has genuine nested
 // subdirectories, unlike transcript-tts which is flat at the root) so the
 // directory-synthesis logic is checked against real data, not a hand-rolled
 // fixture. Run via `pnpm test:unit` / `node --test` (requires `pnpm generate`
 // to have produced public/generated/repos/*.json first, same precondition
-// as the rest of the suite per PLAN.md "Verification commands").
+// as the rest of the suite).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -74,7 +74,7 @@ test("findFile returns the exact file record; joinPath round-trips a path's segm
 });
 
 // ---------------------------------------------------------------------------
-// buildTree / flattenVisible (PLAN.md Iteration 4 item 4 — lazygit-style
+// buildTree / flattenVisible (lazygit-style
 // Files panel: nested tree, all dirs expanded by default, no `../` entry).
 // A small hand-rolled fixture makes the collapse-behavior assertions
 // deterministic; the real daily-tech-digest index (genuine nested dirs, e.g.

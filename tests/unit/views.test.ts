@@ -1,7 +1,7 @@
 // Locks grepPathToView() (src/lib/views.ts) against the real grep index
 // (public/generated/grep-index.json, refreshed by `pnpm generate`) — the
-// no-false-positive property flagged by Phase 8's verifier and fixed in
-// Phase 9: real-index rules must be segment-anchored so a future real file
+// no-false-positive property requires real-index rules to be
+// segment-anchored so a future real file
 // can never be mis-routed by an incidental substring match (e.g. a bare
 // `/info/i` catching a hypothetical `src/lib/info.ts`). This test mirrors
 // what the verifier checked by hand — every path in the *current* real
@@ -20,7 +20,7 @@ const realIndex = JSON.parse(readFileSync(join(ROOT, "public/generated/grep-inde
 
 /**
  * Hand-audited whitelist of every real-index path that should route
- * somewhere, as of this writing (see PLAN.md Phase 9). Anything in the real
+ * somewhere, as of this writing. Anything in the real
  * index NOT matched by one of these patterns must map to `null` — that's
  * the actual "no false positive" property: every one of the ~70 other real
  * paths (data/*.yaml, lib/*.ts, pages/*.astro, tests/**, root configs) is
@@ -71,9 +71,9 @@ test("a hypothetical future real path containing the legacy bare words does NOT 
   assert.equal(grepPathToView("src/components/RadarBlip.svelte"), null);
 });
 
-test("variable-depth personnel content paths (PLAN.md Iteration 3 Phase 1 item 1.3 path-derived tree) route to personnel", () => {
+test("variable-depth personnel content paths (path-derived tree) route to personnel", () => {
   // grepPathToView's real-index rule is a depth-agnostic prefix match
-  // (`(^|\/)content\/personnel\/`), so the Phase 1 restructure to a
+  // (`(^|\/)content\/personnel\/`), so the
   // variable-depth tree (2-5 path segments — enaimco/software-developer/
   // role.md vs. enaimco/software-developer/full-time/role.md vs.
   // memorial-university/<slug>/role.md) needs no code change here — this

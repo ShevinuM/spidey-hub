@@ -1,6 +1,6 @@
-// Unit tests for the pure boot-sequence math (src/lib/boot.ts, PLAN.md
-// Phase 5B item 5B.1/5B.5 "boot timings/text spot-checked against the mock
-// source line-by-line"). Every assertion below reproduces a value computed
+// Unit tests for the pure boot-sequence math (src/lib/boot.ts). Boot
+// timings/text are spot-checked against the mock source line-by-line.
+// Every assertion below reproduces a value computed
 // by hand from the mock's own `Component.pct()/progress()/renderVals()`
 // formulas (Boot Sequence.dc.html lines 369-437) — this is the guard
 // against a transcription slip in src/lib/boot.ts, independent of
@@ -72,7 +72,7 @@ test("pct: never leaves 0..100 even with jitter added", () => {
 });
 
 // ---------------------------------------------------------------------------
-// phaseLabel — thresholds 30/60/86/99 (PLAN.md 5B.1)
+// phaseLabel — thresholds 30/60/86/99
 // ---------------------------------------------------------------------------
 
 test("phaseLabel: INIT/SCAN/LINK/LOCK/READY at the exact boundary values", () => {

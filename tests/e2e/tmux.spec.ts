@@ -1,14 +1,11 @@
 // Behavioral e2e suite for the tmux prefix (Ctrl-b) state machine
-// (Terminal.svelte) and the mobile-block card (Shell.astro) — PLAN.md
-// Phase 9, reworked by PLAN.md Phase 1:
-//   - the window list gained "0:dashboard" and "5:help" (items 6/13), so
-//     `n`/`p` now cycle six windows and `5`/`?` jump straight to Help;
-//   - the prefix now takes precedence over the grep overlay (item 2 in
-//     PLAN.md "Orchestrator design decisions" — "Prefix precedence over
-//     grep"): Ctrl-b arms even while grep is open, retiring the old
-//     "prefix inert while grep is open" rule.
+// (Terminal.svelte) and the mobile-block card (Shell.astro):
+//   - the window list has "0:dashboard" through "5:help" (six windows), so
+//     `n`/`p` cycle all six windows and `5`/`?` jump straight to Help;
+//   - the prefix takes precedence over the grep overlay ("Prefix precedence
+//     over grep"): Ctrl-b arms even while grep is open.
 import { expect, test, type Page } from "./fixtures.ts";
-// PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
+// This spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's
 // ~4.6s unskippable sequence never runs for these tests — see that
@@ -26,8 +23,8 @@ async function statusBarText(page: Page) {
 }
 
 const WINDOWS = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"];
-/** `lastId` (PLAN.md Iteration 3 Phase 4 item 4.3 tmux fidelity reference)
- * is the real tmux `-` flag on the session's PREVIOUSLY active window —
+/** `lastId` (real tmux fidelity) is the real tmux `-` flag on the
+ * session's PREVIOUSLY active window —
  * omit it for assertions made before any in-test window switch. */
 function winText(activeId: string, lastId?: string): string {
   return WINDOWS.map((id, i) => `${i}:${id}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
@@ -142,10 +139,8 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await expect(page).toHaveURL(/\/builds$/);
   });
 
-  // PLAN.md Locked decision #3 / Iteration 3 Phase 5 item 5.1: `d` is now
-  // real tmux detach (see tests/e2e/sessions.spec.ts for its own coverage),
-  // REPLACING the Phase 4 "go home" behavior this test used to assert for
-  // all three keys.
+  // `d` is real tmux detach — see tests/e2e/sessions.spec.ts for its own
+  // coverage.
   test("Ctrl-b 0 returns to the dashboard", async ({ page }) => {
     await gotoReady(page, "/builds");
     await ctrlB(page);
@@ -153,12 +148,10 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await expect(page).toHaveURL(/\/$/);
   });
 
-  // PLAN.md Locked decision #3 / Iteration 3 Phase 6 item 6.5: `w` is now
-  // real tmux choose-tree, REBINDING the old "go home" behavior — see
-  // tests/e2e/choose-tree.spec.ts for its own dedicated coverage. This is
-  // just the rebind smoke test: opening does NOT navigate anywhere (the URL
-  // stays put — choose-tree is an overlay, not a window switch) until Enter
-  // picks something.
+  // `w` is real tmux choose-tree — see tests/e2e/choose-tree.spec.ts for its
+  // own dedicated coverage. This is just a smoke test: opening does NOT
+  // navigate anywhere (the URL stays put — choose-tree is an overlay, not a
+  // window switch) until Enter picks something.
   test("Ctrl-b w opens choose-tree instead of going home", async ({ page }) => {
     await gotoReady(page, "/builds");
     await ctrlB(page);
@@ -187,9 +180,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     expect(await statusBarText(page)).toBe(winText("dashboard"));
   });
 
-  // PLAN.md Phase 5 item 5.2: Ctrl-b Ctrl-b is tmux's own default
-  // "send-prefix" binding — it REPLACES the old "pressing Ctrl-b again while
-  // armed just re-arms the 2s window" behavior this test used to assert.
+  // Ctrl-b Ctrl-b is tmux's own default "send-prefix" binding.
   // The second Ctrl-b disarms and is dispatched as a literal keydown instead
   // of arming anything further, so a digit typed right after it is
   // unprefixed (does nothing from the dashboard, which has no digit
@@ -206,22 +197,19 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     expect(await statusBarText(page)).toBe(winText("dashboard"));
   });
 
-  // PLAN.md Phase 5 item 5.2: send-prefix's whole purpose is making vim's
-  // own Ctrl-b (full-page-back) reachable from a real keypress — Phase 3
-  // shipped the engine complete but this exact chord unreachable (a bare
-  // Ctrl-b was always consumed by the prefix arm first). Opens a real repo
+  // Send-prefix's whole purpose is making vim's own Ctrl-b (full-page-back)
+  // reachable from a real keypress — a bare Ctrl-b is otherwise always
+  // consumed by the prefix arm first. Opens a real repo
   // file (same fixture/entry point editor-vim.spec.ts uses) long enough to
   // scroll, jumps to the last line, then proves Ctrl-b Ctrl-b actually moves
   // the cursor backward.
   test("Ctrl-b Ctrl-b pages back in the open vim editor (send-prefix reaches vim's Ctrl-b)", async ({ page }) => {
     await page.route("**/api.github.com/**", (route) => route.abort());
     await gotoReady(page, "/builds");
-    // PLAN.md Iteration 4 items 4/5: the default-highlighted panel [3] repo
-    // is now the virtual "all-projects" entry (no README.md in its flat
-    // .md-only tree) — click transcript-tts's own row directly (selects AND
-    // loads its tree, same as before; its README.md is 56 lines, still well
-    // over this test's 8-line floor) instead of relying on the old
-    // press("3")+Enter default-repo path.
+    // The default-highlighted panel [3] repo is the virtual "all-projects"
+    // entry (no README.md in its flat .md-only tree) — click transcript-tts's
+    // own row directly (selects AND loads its tree; its README.md is 56
+    // lines, still well over this test's 8-line floor).
     await page.locator('[data-testid="builds-repo-row"][data-repo-name="transcript-tts"]').click();
     await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
     await page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]').click();
@@ -241,11 +229,10 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await expect(position).not.toContainText(`${totalLines}:`);
   });
 
-  // PLAN.md Phase 5 item 5.5 REPLACES this test's old assertion: the grep
-  // overlay is now WINDOW chrome, not something that survives a window
+  // The grep overlay is WINDOW chrome, not something that survives a window
   // switch — switching via the prefix (or a status-bar click) always closes
-  // it. The prefix itself still works while grep is open (retiring the
-  // Phase-1 "prefix inert while grep open" rule) — that half is unchanged.
+  // it. The prefix itself still works while grep is open — that half is
+  // unchanged.
   test("Ctrl-b works even while the grep overlay is open, and the switch closes the overlay", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
@@ -321,7 +308,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
   });
 });
 
-test.describe("status bar `-` flag: the previously-active window (PLAN.md Iteration 3 Phase 4 item 4.3 tmux fidelity reference)", () => {
+test.describe("status bar `-` flag: the previously-active window (real tmux fidelity reference)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -347,7 +334,7 @@ test.describe("status bar `-` flag: the previously-active window (PLAN.md Iterat
   });
 });
 
-test.describe("Ctrl-b , rename-window (PLAN.md Phase 5 item 5.2)", () => {
+test.describe("Ctrl-b , rename-window", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -392,8 +379,8 @@ test.describe("Ctrl-b , rename-window (PLAN.md Phase 5 item 5.2)", () => {
     await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveText("1:builds*");
   });
 
-  // PLAN.md Phase 5.4: "prompt owns keys — typing j into rename doesn't
-  // scroll anything behind it."
+  // "Prompt owns keys — typing j into rename doesn't scroll anything
+  // behind it."
   test("the prompt owns the keyboard — typing j does not move the Builds repo selection behind it", async ({
     page,
   }) => {
@@ -424,7 +411,7 @@ test.describe("Ctrl-b , rename-window (PLAN.md Phase 5 item 5.2)", () => {
   });
 });
 
-test.describe("Ctrl-b & kill-window (PLAN.md Phase 5 item 5.2)", () => {
+test.describe("Ctrl-b & kill-window", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -440,7 +427,7 @@ test.describe("Ctrl-b & kill-window (PLAN.md Phase 5 item 5.2)", () => {
     await page.keyboard.press("y");
     await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
     await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(0);
-    // builds (index 1) was active; the window that used to sit right after
+    // builds (index 1) was active; the window that sits right after
     // it — personnel (index 2) — becomes the new active view.
     await expect(page).toHaveURL(/\/personnel$/);
   });
@@ -465,10 +452,9 @@ test.describe("Ctrl-b & kill-window (PLAN.md Phase 5 item 5.2)", () => {
     await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(1);
   });
 
-  // PLAN.md Iteration 3 Phase 5 item 5.3 SUPERSEDES the Phase 4 "refuse to
-  // kill the only window" behavior this test used to assert — sessions now
-  // exist to fall back to (or, as here, not to): killing the session's last
-  // window destroys the session outright and, since it's the only session,
+  // Sessions exist to fall back to (or, as here, not to): killing the
+  // session's last window destroys the session outright and, since it's the
+  // only session,
   // detaches the client to the host shell printing exactly `[exited]`. See
   // tests/e2e/sessions.spec.ts for the "another session still exists"
   // sibling case.
@@ -494,11 +480,11 @@ test.describe("Ctrl-b & kill-window (PLAN.md Phase 5 item 5.2)", () => {
   });
 });
 
-// PLAN.md Iteration 4 item 16: `Ctrl-b c` is tmux new-window — creates a
-// window running the in-window shell program, switches to it immediately,
-// and it coexists with the six fixed digit targets (0:dashboard..5:help)
-// rather than colliding with any of them.
-test.describe("Ctrl-b c new-window (PLAN.md Iteration 4 item 16)", () => {
+// `Ctrl-b c` is tmux new-window — creates a window running the in-window
+// shell program, switches to it immediately, and it coexists with the six
+// fixed digit targets (0:dashboard..5:help) rather than colliding with any
+// of them.
+test.describe("Ctrl-b c new-window", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -565,13 +551,11 @@ test.describe("Ctrl-b c new-window (PLAN.md Iteration 4 item 16)", () => {
   });
 });
 
-// PLAN.md Iteration 3 Phase 6 item 6.3 / Locked decision #4: `Ctrl-b x` is
-// now REAL tmux kill-pane (Builds-internal panel-kill is REMOVED entirely —
-// see tests/e2e/panes.spec.ts for full split/kill/layout coverage; this
-// describe block only keeps the single-pane-window smoke test, UPDATED for
-// the new numeric-index prompt and real cascade, per the plan's explicit
-// "changed, not deleted" instruction).
-test.describe("Ctrl-b x kill-pane (PLAN.md Iteration 3 Phase 6 item 6.3)", () => {
+// `Ctrl-b x` is real tmux kill-pane (there is no Builds-internal panel-kill
+// — see tests/e2e/panes.spec.ts for full split/kill/layout coverage); this
+// describe block keeps only the single-pane-window smoke test, exercising
+// the numeric-index prompt and real cascade.
+test.describe("Ctrl-b x kill-pane", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -595,19 +579,16 @@ test.describe("Ctrl-b x kill-pane (PLAN.md Iteration 3 Phase 6 item 6.3)", () =>
   });
 });
 
-// Verifier round 2 regression: fixing "Ctrl-b ] can paste into a status-bar
-// prompt" by moving the prompt's own handleKey() consultation to run AFTER
-// the prefix system (see Terminal.svelte's handleKey() comment) had an
-// unintended side effect — EVERY prefixed key, not just `]`, ran the full
-// prefix-dispatch system while a prompt was open, so `Ctrl-b 2` could switch
-// the view out from under a still-open rename prompt (which then committed
-// onto the NEW window instead of the one it was opened for), and `Ctrl-b &`
-// could silently replace a rename prompt with a kill-window confirm. The fix
-// gates every branch of `handlePrefixedKey` except `]` behind
-// `statusBarRef.isPromptActive()`, and hardens the rename/kill-window commit
-// closures to close over the target window's id captured at prompt-OPEN
+// While a status-bar prompt (rename/confirm) is open, it owns the keyboard:
+// every branch of `handlePrefixedKey` except `]` is gated behind
+// `statusBarRef.isPromptActive()` (see Terminal.svelte's handleKey()
+// comment), so `Ctrl-b 2` can't switch the view out from under a still-open
+// rename prompt (which would otherwise commit onto the NEW window instead
+// of the one it was opened for), and `Ctrl-b &` can't silently replace a
+// rename prompt with a kill-window confirm. The rename/kill-window commit
+// closures also close over the target window's id captured at prompt-OPEN
 // time rather than re-reading `view` at commit time (defense in depth).
-test.describe("prompt keyboard ownership vs. the prefix system (verifier round 2 regression)", () => {
+test.describe("prompt keyboard ownership vs. the prefix system", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -727,10 +708,10 @@ test.describe("prompt keyboard ownership vs. the prefix system (verifier round 2
   });
 });
 
-// PLAN.md Phase 5 item 5.5: "Status bar is SESSION chrome, grep is WINDOW
-// chrome" — the dim/blur backdrop must never cover the bar, and any window
-// switch while grep is open (click OR prefix) closes the overlay.
-test.describe("grep is window chrome, the status bar is session chrome (PLAN.md Phase 5 item 5.5)", () => {
+// "Status bar is SESSION chrome, grep is WINDOW chrome" — the dim/blur
+// backdrop must never cover the bar, and any window switch while grep is
+// open (click OR prefix) closes the overlay.
+test.describe("grep is window chrome, the status bar is session chrome", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -813,8 +794,8 @@ test.describe("mobile block (README \"Mobile policy\")", () => {
     await expect(page.locator('[data-terminal-ready="false"]')).toBeAttached();
   });
 
-  // PLAN.md Phase 9 verify bullet: "prefix inert in mobile mode" — a
-  // separate assertion from "pressing b does nothing" above. Structurally
+  // "Prefix inert in mobile mode" — a separate assertion from "pressing b
+  // does nothing" above. Structurally
   // guaranteed the same way (no keydown listener attaches at all outside
   // desktop+fine-pointer — see Terminal.svelte's `desktopMode` effect), but
   // called out explicitly since Ctrl-b arms *state*, not just a view

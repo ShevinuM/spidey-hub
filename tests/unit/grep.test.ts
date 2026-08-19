@@ -1,7 +1,7 @@
 // Pins search() (src/lib/grep.ts) to Homepage.dc.html's grepHits() (lines
 // 812-832) semantics: empty-query row shape, per-file path-hit-then-
 // content-hit ordering, 400-row cap, and the 24-char ellipsis/offset math.
-// PLAN.md Phase 2 item 7. Run via `pnpm test:unit` / `node --test`.
+// Run via `pnpm test:unit` / `node --test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

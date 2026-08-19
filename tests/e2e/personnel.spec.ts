@@ -1,7 +1,5 @@
 // Behavioral e2e suite for the Personnel Files (yazi clone) view, against
-// the real-content build — PLAN.md Iteration 3 Phase 1 item 1.3, revised for
-// Iteration 4's batch of Personnel-view fixes (items 1, 2, 3, 6, 7, 23a,
-// 23b, 24, 25 — see PLAN.md's "1A. Personnel view" step).
+// the real-content build.
 //
 // Real content is a variable-depth, path-derived tree (no frontmatter
 // `company`/`employmentType` grouping):
@@ -22,14 +20,13 @@
 // mixes a role FILE (role.md, listed first) with 3 role DIRECTORIES
 // (full-time/, part-time/, co-op/) at the very same level.
 //
-// Iteration 4 removed the `personnel-path` breadcrumb entirely (item 7), so
-// this suite no longer asserts "which directory are we in" via a path
-// string — it asserts it via which rows are visible instead (a directory's
+// There is no `personnel-path` breadcrumb, so this suite asserts "which
+// directory are we in" via which rows are visible instead (a directory's
 // own children are a distinctive fingerprint: e.g. only `enaimco/software-
 // developer/` ever renders a `full-time/` row).
 import type { Locator } from "@playwright/test";
 import { expect, test, type Page } from "./fixtures.ts";
-// PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
+// This spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's
 // ~4.6s unskippable sequence never runs for these tests — see that
@@ -95,7 +92,7 @@ function allRowNames(page: Page): Promise<(string | null)[]> {
     .evaluateAll((els) => els.map((el) => el.getAttribute("data-row-name")));
 }
 
-/** PLAN.md item 3: "strictly one line" — an element whose rendered height
+/** "Strictly one line" — an element whose rendered height
  * is at most ~1.6 line-heights tall hasn't wrapped (mirrors the executor
  * brief's own suggested tolerance). */
 async function isSingleLine(locator: Locator): Promise<boolean> {
@@ -553,9 +550,9 @@ test.describe("Personnel: editor close paths", () => {
   });
 
   test(":w and :wq show a readonly error IN THE CMDLINE BOX and do not close the editor", async ({ page }) => {
-    // PLAN.md Phase 5C: the `:` ex-command line's presentation (typed
-    // text, resulting error) moved from Editor.svelte's own footer to the
-    // site-wide floating Cmdline box (src/components/Cmdline.svelte) —
+    // The `:` ex-command line's presentation (typed text, resulting error)
+    // lives in the site-wide floating Cmdline box
+    // (src/components/Cmdline.svelte), not Editor.svelte's own footer —
     // see tests/e2e/cmdline.spec.ts for that box's own dedicated coverage.
     await openEditor(page);
     await page.keyboard.press(":");
@@ -638,8 +635,7 @@ test.describe("Personnel: filter mode (item 23b)", () => {
   test("INTENDED: '/' pressed BEFORE entering filter mode opens the sitewide grep overlay", async ({
     page,
   }) => {
-    // PLAN.md Iteration 4 item 23c (orchestrator decision after wave 1):
-    // making "/" ITSELF an alternate filter-mode opener (alongside `f`)
+    // Making "/" ITSELF an alternate filter-mode opener (alongside `f`)
     // would steal the sitewide grep binding on this view — a UX regression
     // for a nicety nobody asked for. `f` (and clicking the `>` prompt) is
     // the fixed, tested way to enter filter mode; outside of it, "/" keeps

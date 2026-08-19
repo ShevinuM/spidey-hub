@@ -1,4 +1,4 @@
-// Shared visual-regression state recipes (PLAN.md "Visual-regression
+// Shared visual-regression state recipes ("Visual-regression
 // harness"). Each recipe is a sequence of key/type actions replayed against
 // a freshly loaded page to reach one of the states captured at each
 // viewport.
@@ -17,22 +17,22 @@ export interface Recipe {
 /**
  * The ORIGINAL 10 recipes (20 goldens at 2 viewports), captured against
  * BOTH the vendored prototype reference (tests/visual/capture-goldens.mjs
- * — Phase 1, now guarded/historical, see that file's header) and the real
+ * — now guarded/historical, see that file's header) and the real
  * implementation (tests/visual/identical.spec.ts). Kept deliberately
  * scoped to states the prototype itself can reach (no help window, no
  * all-projects, no boot sequence, no cmdline box — none of those existed
  * yet when the prototype was vendored), so capture-goldens.mjs's guarded
  * "restore prototype parity" path never has to attempt a state the
- * prototype has no code for. PLAN.md Phase 6 item 6.1's "11-help",
+ * prototype has no code for. "11-help",
  * "12-all-projects", the boot recipes, and "15-cmdline" all live in their
  * own sibling arrays below instead of being appended here for exactly that
  * reason — identical.spec.ts imports and asserts the union of every array
  * on this page (15 recipes total), capture-goldens.mjs only ever this one.
  *
- * PLAN.md Phase 6 item 6.1 audit (executor, verified by actually running
+ * Audited by actually running
  * every recipe against the current implementation, not by reading source
- * alone — see the fixed three below):
- *   - "03-builds-j": the Phase 4 Builds rework changed the default focused
+ * alone — see the fixed three below:
+ *   - "03-builds-j": the Builds rework changed the default focused
  *     panel on entry to [2] Files (empty until a repo is opened), so the
  *     OLD action list `[{key:"b"},{key:"j"}]` pressed "j" against an empty,
  *     unfocused-for-input panel — confirmed empirically byte-IDENTICAL to
@@ -40,9 +40,9 @@ export interface Recipe {
  *     zero-value golden. Fixed to explicitly focus panel [3] (Local
  *     Repositories, `{key:"3"}`) before "j", which moves the repo-list
  *     selection highlight — confirmed to produce a distinct screenshot.
- *   - "05-personnel-l1"/"06-editor": PLAN.md's own callout ("05/06
- *     personnel now need the 3-level path") — Personnel gained a middle
- *     employmentType level (PLAN.md Phase 2), so what used to be reachable
+ *   - "05-personnel-l1"/"06-editor": 05/06
+ *     personnel now need the 3-level path — Personnel gained a middle
+ *     employmentType level, so content reachable
  *     in 1/2 Enters from the companies level now needs 2/3. Confirmed
  *     empirically: the OLD "06-editor" action list left `hasEditor: false`
  *     (it landed on the level-2 role-files LIST, one Enter short of
@@ -76,8 +76,8 @@ export const recipes: Recipe[] = [
 ];
 
 /**
- * Iteration-2 recipes (PLAN.md Phase 6 item 6.1: "wire in 11-help,
- * 12-all-projects"). Standard key/type `Recipe` shape (captured via the
+ * Wires in 11-help and
+ * 12-all-projects. Standard key/type `Recipe` shape (captured via the
  * same `captureState()` as the array above) but kept in their OWN array,
  * not appended to `recipes`, because they reach states the vendored
  * prototype has no code path for at all (help didn't exist as a window,
@@ -86,9 +86,9 @@ export const recipes: Recipe[] = [
  * refuse-by-default override flag (see that file's header comment).
  * identical.spec.ts is the only consumer.
  *
- * "12-all-projects": PLAN.md Iteration 4 item 5 moved the virtual
- * all-projects repo from the LAST row in panel [3]'s flat list to the
- * FIRST, and made it the default selection (`selectedRepoIdx = $state(0)`
+ * "12-all-projects": the virtual
+ * all-projects repo is now the FIRST row in panel [3]'s flat list (it was
+ * the LAST), and is the default selection (`selectedRepoIdx = $state(0)`
  * in Builds.svelte) — so plain "02-builds" (`{key:"b"}`) already lands on
  * the all-projects tree with panel [3] unfocused (no row highlighted).
  * The OLD action list here (`{key:"3"},{key:"k"},{key:"Enter"}`) relied on
@@ -105,25 +105,23 @@ export const recipes: Recipe[] = [
  * fixture project markdown files.
  */
 export const extraRecipes: Recipe[] = [
-  // PLAN.md Iteration 3 Phase 7 item 7.1: `?` is no longer the dashboard's
-  // Help-WINDOW hotkey (Locked decision #14 / Phase 3 item 3.4) — a bare
+  // `?` is no longer the dashboard's
+  // Help-WINDOW hotkey — a bare
   // `?` now opens the site-wide HelpSearch palette everywhere, including
   // the dashboard. "20-help-search" below captures THAT state; this recipe
   // stays "11-help" (the Help WINDOW, "Help — Keymap Reference") and is
   // reached with `h`, the dashboard's own current Help hotkey
   // (views.ts's HOTKEY_TO_VIEW, dashboard.yaml's `hotkey: "h"`) — verified
-  // empirically by actually running it, not by reading source alone
-  // (iteration-2's own lesson, restated in this file's header comment).
+  // empirically by actually running it, not by reading source alone.
   { name: "11-help", actions: [{ key: "h" }] },
   { name: "12-all-projects", actions: [{ key: "b" }, { key: "3" }, { key: "Enter" }] },
 ];
 
 /**
- * Boot-sequence recipes (PLAN.md Phase 5B item 5B.5, wired in by Phase 6
- * item 6.1). Kept in their OWN array rather than merged into `recipes` or
+ * Boot-sequence recipes. Kept in their OWN array rather than merged into `recipes` or
  * `extraRecipes`: they have a fundamentally different action shape (a
  * clock offset, not a key/type replay — the boot overlay swallows all
- * input while active, PLAN.md 5B.3) AND the vendored prototype has no boot
+ * input while active) AND the vendored prototype has no boot
  * sequence at all, so — same reasoning as `extraRecipes` above —
  * capture-goldens.mjs must never iterate these. Only identical.spec.ts
  * (via `captureBootState()` in pipeline.mjs, not `captureState()`)
@@ -149,11 +147,9 @@ export const extraRecipes: Recipe[] = [
  * pipeline's own convention) freezes those, and must keep doing so here
  * exactly as it does for every other recipe.
  *
- * Fidelity target for the verifier's mandatory zoom review (PLAN.md 6.1,
- * updated by the docs commit at `bab6d29`): the `Boot Sequence.dc.html`
+ * Fidelity target for the verifier's mandatory zoom review: the `Boot Sequence.dc.html`
  * SOURCE (styles/geometry/text transcribed into BootSequence.svelte/
- * boot.ts/boot.yaml) — NOT `project/ref/*.png`, which the 5B executor
- * determined are screenshots of an earlier, contradicted design iteration
+ * boot.ts/boot.yaml) — NOT `project/ref/*.png`, which are screenshots of an earlier, contradicted design
  * (skippable boot, a different command line, an extra status-box row).
  */
 export interface BootRecipe {
@@ -196,8 +192,7 @@ export const bootRecipes: BootRecipe[] = [
 ];
 
 /**
- * Cmdline box recipe (PLAN.md Phase 5C item 5C's visual recipe / Phase 6
- * item 6.1's "add ... 5C's 15-cmdline"). Kept in its OWN array rather than
+ * Cmdline box recipe. Kept in its OWN array rather than
  * merged into `recipes` above — same reasoning as `extraRecipes`/
  * `bootRecipes`: the vendored prototype predates this feature entirely (no
  * code path, no golden), so `capture-goldens.mjs`'s guarded prototype-parity
@@ -209,18 +204,18 @@ export const bootRecipes: BootRecipe[] = [
  * no other text input active, so this is context (b), "site mode") and
  * types a short, deterministic partial query ("bui", a prefix of the
  * `builds` command) so the golden captures the suggestion list mid-filter
- * — box open, partial query, suggestions visible, per PLAN.md 5C's own
- * description of what this recipe should show. Never presses Enter (no
+ * — box open, partial query, suggestions visible. Never presses Enter (no
  * navigation side effect baked into the capture).
  */
 export const cmdlineRecipes: Recipe[] = [{ name: "15-cmdline", actions: [{ key: ":" }, { type: "bui" }] }];
 
 /**
- * Iteration-3 recipes (PLAN.md Phase 7 item 7.1: "ADD five recipes") — kept
+ * Five recipes covering real pane splits, layouts, choose-tree, and the
+ * in-window/host shell — kept
  * in their OWN array for the same reason every other post-vendored-prototype
  * array on this page is (`extraRecipes`/`bootRecipes`/`cmdlineRecipes`'s own
- * header comments): these states (real pane splits, layouts, choose-tree,
- * the in-window/host shell) did not exist even at the Phase-6 re-baseline,
+ * header comments): these states did not exist at the time the goldens
+ * were self-baselined,
  * let alone in the vendored prototype `capture-goldens.mjs` replays against
  * — that script must never be asked to attempt them. `identical.spec.ts` is
  * the only consumer, via the same `captureState()` every recipe above (bar
@@ -231,8 +226,8 @@ export const cmdlineRecipes: Recipe[] = [{ name: "15-cmdline", actions: [{ key: 
  * `handleKey`/`handlePrefixedKey`) and cross-checking against the ground-
  * truth e2e specs that already exercise these exact sequences (panes.spec.ts,
  * choose-tree.spec.ts, sessions.spec.ts, shell.spec.ts, help-search.spec.ts)
- * — iteration-2's own lesson ("run them, don't trust them") applied by using
- * sequences already proven live in a real browser, not freshly guessed ones.
+ * — "run them, don't trust them": using sequences already proven live in a
+ * real browser, not freshly guessed ones.
  *
  * A tmux prefix chord is TWO separate key actions, not one: `Ctrl-b` arms
  * the prefix (`{key: "Control+b"}`, Playwright's own down/press/up chord —
@@ -246,7 +241,7 @@ export const cmdlineRecipes: Recipe[] = [{ name: "15-cmdline", actions: [{ key: 
  * before EACH one, not just the first.
  */
 export const iteration3Recipes: Recipe[] = [
-  // "16-shell": PLAN.md Locked decision #2 — the cmdline `q` command exits
+  // "16-shell": the cmdline `q` command exits
   // the dashboard's program to an in-window shell (verified sequence,
   // shell.spec.ts's own `dropToShell()`: bare `:` opens site-mode Cmdline
   // from the dashboard, typing `q` + Enter runs the `:q`-equivalent exit).
@@ -254,7 +249,7 @@ export const iteration3Recipes: Recipe[] = [
   // fixed ASCII art + yaml-driven fields + an uptime in whole MINUTES
   // (floors 10s of fake-clock advance to "0 min" every run) — unlike
   // `tree`/`cat`/`ls` against the real repo-root fs-index, which drifts
-  // with every unrelated source-tree edit (PLAN.md 7.1's own warning).
+  // with every unrelated source-tree edit.
   {
     name: "16-shell",
     actions: [
@@ -265,7 +260,7 @@ export const iteration3Recipes: Recipe[] = [
       { key: "Enter" },
     ],
   },
-  // "17-host-shell": `Ctrl-b d` detach (Locked decision #3) from a fresh
+  // "17-host-shell": `Ctrl-b d` detach from a fresh
   // dashboard load — the pre-seeded host-shell narrative (shell.yaml's
   // `host.narrative`, `{session}` substituted with the real default session
   // name) plus the live-appended `[detached (from session …)]` line, shown
@@ -302,8 +297,8 @@ export const iteration3Recipes: Recipe[] = [
       { key: " " },
     ],
   },
-  // "19-choose-tree": `Ctrl-b w` from a window that already has a split —
-  // per PLAN.md 7.1 ("from a window with a split"), so the overlay's
+  // "19-choose-tree": `Ctrl-b w` from a window that already has a split,
+  // so the overlay's
   // bottom preview strip has more than one pane program to actually
   // describe. Choose-tree itself needs no split precondition to OPEN
   // (choose-tree.spec.ts opens it from a plain single-pane `/builds` too),
@@ -314,8 +309,7 @@ export const iteration3Recipes: Recipe[] = [
     actions: [{ key: "Control+b" }, { key: "|" }, { key: "Control+b" }, { key: "w" }],
   },
   // "20-help-search": bare `?` opens the site-wide HelpSearch palette from
-  // the dashboard (Locked decision #14 — REPLACES the old `?`→help-window
-  // binding "11-help" used to exercise), then the "kil" fuzzy canary
+  // the dashboard, then the "kil" fuzzy canary
   // (help-search.spec.ts's own canary — surfaces both the kill-window and
   // kill-pane keymap rows) captures a populated, non-empty result list.
   { name: "20-help-search", actions: [{ key: "?" }, { type: "kil" }] },
@@ -326,12 +320,12 @@ export const viewports = [
   { name: "1920x1080", width: 1920, height: 1080 },
 ] as const;
 
-/** page.clock.install() time, per PLAN.md capture pipeline contract. */
+/** page.clock.install() time, per the capture pipeline contract. */
 export const CLOCK_TIME = "2026-08-15T23:34:00";
 
 /**
  * Fixed sub-60s clock.runFor() amount used identically on both sides
- * (goldens and, from Phase 3, the implementation), applied twice per the
+ * (goldens and the implementation), applied twice per the
  * pipeline contract in pipeline.mjs: once right after load (flushes the
  * boot/first-render rAF & timers) and once after the recipe's key sequence
  * (flushes the newly-entered view's own rAF loops, e.g. tracker sweep or
@@ -343,8 +337,8 @@ export const CLOCK_TIME = "2026-08-15T23:34:00";
 export const RUN_FOR_MS = 5000;
 
 /**
- * PLAN.md Iteration 3 Phase 7 item 7.1: the dashboard's seeded 2-of-pool
- * toast pick (Locked decision #12, src/lib/notifications.ts's
+ * The dashboard's seeded 2-of-pool
+ * toast pick (src/lib/notifications.ts's
  * `resolveToastSeed()`/`pickToastPair()`) reads `Date.now()` in prod, which
  * would make every recipe that ever touches the dashboard window (its `id`
  * stays "dashboard" — and Toasts stays visible — even once its PROGRAM is

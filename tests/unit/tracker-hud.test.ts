@@ -1,7 +1,7 @@
-// Unit test for src/data/tracker.yaml's ASCII HUD box (PLAN.md Phase 1 item
-// 11 rename: "spider-tracker" -> "retina-v"). The header line's "─" fill
-// was hand re-padded so the box's width/alignment survives the label
-// getting 6 characters shorter — this test makes that claim durable
+// Unit test for src/data/tracker.yaml's ASCII HUD box (labeled
+// "retina-v", 6 characters shorter than "spider-tracker"). The header
+// line's "─" fill was hand re-padded so the box's width/alignment survives
+// the shorter label — this test makes that claim durable
 // (referenced from tracker.yaml's own comment) by asserting every line in
 // the box, including the re-padded header and the untouched closing edge,
 // is exactly the same code-point width.

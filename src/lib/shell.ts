@@ -1,18 +1,17 @@
-// Pure line-parser/builtins/fs-navigation logic for the in-window shell
-// (PLAN.md Iteration 3 Phase 4 items 4.2/4.3) — src/components/Shell.svelte
-// owns the stateful/effectful parts (keydown handling, the lazy fetch+cache
-// of the generated fs/grep/repo indexes, calling into src/lib/tmux.ts to
-// launch/exit a program or reboot the client), exactly the same split
-// src/lib/cmdline.ts already uses for Cmdline.svelte. No DOM, no Svelte
-// state, no fetch — every builtin below is a pure function of (state,
-// already-resolved data) so it's unit-testable against a small fixture fs
-// index with no network/browser involved.
+// Pure line-parser/builtins/fs-navigation logic for the in-window shell —
+// src/components/Shell.svelte owns the stateful/effectful parts (keydown
+// handling, the lazy fetch+cache of the generated fs/grep/repo indexes,
+// calling into src/lib/tmux.ts to launch/exit a program or reboot the
+// client), exactly the same split src/lib/cmdline.ts already uses for
+// Cmdline.svelte. No DOM, no Svelte state, no fetch — every builtin below is
+// a pure function of (state, already-resolved data) so it's unit-testable
+// against a small fixture fs index with no network/browser involved.
 //
 // Deliberately designed so this ONE component/module serves BOTH the
-// per-pane in-window shell (Phase 4, `mode: "pane"`) and Phase 5's detached
-// HOST shell (`mode: "host"`) without rework — every function below already
-// takes `mode` where it matters (the prompt, and the `tmux` builtin's
-// nesting-refusal rule), even though only "pane" is reachable yet.
+// per-pane in-window shell (`mode: "pane"`) and the detached HOST shell
+// (`mode: "host"`) without rework — every function below already takes
+// `mode` where it matters (the prompt, and the `tmux` builtin's
+// nesting-refusal rule).
 import type { ShellData } from "./data.ts";
 import { formatCtime } from "./clock.ts";
 
@@ -27,9 +26,9 @@ export interface ShellLine {
   kind: ShellLineKind;
 }
 
-/** Lives inside a tmux.ts `Pane` (PLAN.md advisor guidance: shell buffers
- * must survive switching away from and back to a window — only `reboot()`/
- * a page reload resets them, exactly like a real tmux pane's scrollback).
+/** Lives inside a tmux.ts `Pane`: shell buffers must survive switching away
+ * from and back to a window — only `reboot()`/a page reload resets them,
+ * exactly like a real tmux pane's scrollback.
  * `cwd` is a segment array (posix path components, `[]` = the fs root) —
  * never a raw string, so `..`/`.`/double-slash normalization has one home
  * (`resolveCd` below). */
@@ -51,8 +50,8 @@ export function createShellState(): ShellState {
 }
 
 // ---------------------------------------------------------------------
-// Line parsing (PLAN.md Locked decision #16: no pipes/redirection/
-// globbing — a plain whitespace split is the whole grammar).
+// Line parsing — no pipes/redirection/globbing: a plain whitespace split is
+// the whole grammar.
 // ---------------------------------------------------------------------
 
 export interface ParsedLine {
@@ -70,9 +69,8 @@ export function parseLine(line: string): ParsedLine {
 // as src/lib/repoTree.ts's RepoFile / src/lib/grep.ts's RepoFile: this
 // module stays a zero-Svelte-dependency pure module, so it declares its own
 // structurally-equivalent type rather than importing theirs). `size` is
-// absent for `repos/*` entries (PLAN.md Architecture notes: those subtrees
-// are "paths only", taken from the per-repo index JSONs without an extra
-// byte-size pass).
+// absent for `repos/*` entries — those subtrees are paths only, taken from
+// the per-repo index JSONs without an extra byte-size pass.
 // ---------------------------------------------------------------------
 
 export interface FsEntry {
@@ -148,8 +146,8 @@ export function listDir(entries: FsEntry[], segments: string[]): DirEntry[] {
 /** `tree`(1)-style ASCII rendering of `segments` and its descendants, capped
  * at `maxDepth` levels of directory listing beyond `segments` itself — a
  * directory at the cap is listed but its OWN children are replaced by a
- * single `…` marker rather than descended into (PLAN.md Architecture
- * notes). Root label is `.` at the fs root, else the cwd's own last
+ * single `…` marker rather than descended into. Root label is `.` at the
+ * fs root, else the cwd's own last
  * segment (matching real `tree`'s own "argument you gave it" label). */
 export function renderTree(entries: FsEntry[], segments: string[], maxDepth = 3): string[] {
   const rootLabel = segments.length === 0 ? "." : segments[segments.length - 1];
@@ -187,9 +185,9 @@ export function resolveCd(entries: FsEntry[], cwd: string[], argPath: string | u
 
 /** Where `cat <argPath>` (resolved against `cwd`) should pull content
  * from — a decision the (impure) caller makes BEFORE fetching anything, so
- * it knows whether to warm the grep index or a specific repo index (PLAN.md
- * Architecture notes: "site files from the grep index, repos/<name>/ files
- * from repo index JSONs"). Pure — depends only on the fs-index structure,
+ * it knows whether to warm the grep index or a specific repo index (site
+ * files from the grep index, repos/<name>/ files from repo index JSONs).
+ * Pure — depends only on the fs-index structure,
  * never on whether content has actually been fetched yet. */
 export type CatTarget =
   | { kind: "site"; path: string }
@@ -267,7 +265,7 @@ export interface SessionSummary {
   attached: boolean;
 }
 
-/** PLAN.md Iteration 3 Phase 5 items 5.2/5.3 — one roster row for `tmux ls`
+/** One roster row for `tmux ls`
  * / the `tmux new [-s name]` duplicate check / the `tmux a [-t name]`
  * missing-session check / bare `tmux a`'s "most recently used unattached
  * session" pick / `open <view>`'s "does that window still exist" check.
@@ -288,8 +286,8 @@ export interface SessionRosterEntry {
    * the same instant). */
   lastAttachedSeq: number;
   /** Every window id currently present in this session — `open <view>`'s
-   * "does the target window still exist" check (PLAN.md Architecture
-   * notes: "if the window was killed → attach + message"). */
+   * "does the target window still exist" check (if the window was killed,
+   * attach + message). */
   windowIds: string[];
 }
 
@@ -299,8 +297,8 @@ export interface RunContext {
    * `resolveCatTarget` FIRST, fetches whatever that implies (the grep index
    * or one repo index), and only then calls `runCommand` with this filled
    * in; `undefined` means "structurally a file, but no captured text
-   * content" (binary, over the size cap, or simply never walked — PLAN.md
-   * Architecture notes' `cat: {path}: binary or unindexed`). This function
+   * content" (binary, over the size cap, or simply never walked — renders
+   * as `cat: {path}: binary or unindexed`). This function
    * never fetches anything itself. */
   resolveContent: (target: CatTarget) => string | undefined;
   mode: ShellMode;
@@ -313,19 +311,18 @@ export interface RunContext {
    * remaining use of a single "current session" summary now that `tmux ls`
    * (below) reads the full `sessions` roster instead. */
   session: SessionSummary;
-  /** PLAN.md Iteration 3 Phase 5 items 5.2/5.3 — every session the CLIENT
+  /** Every session the CLIENT
    * currently knows about (attached or not) — `tmux ls`/`new`/`a`/`attach`'s
    * own validation source. Always populated, in both pane and host mode
-   * ("`tmux ls` works everywhere" — PLAN.md tmux fidelity reference). */
+   * (`tmux ls` works everywhere). */
   sessions: SessionRosterEntry[];
-  /** The well-known default session's bare name ("10.42.7.13", PLAN.md
-   * Locked decision #1) — HOST mode's `open <view>`/`edith` builtin always
-   * target this specific session by name, never "whichever is most
-   * recent" (PLAN.md Architecture notes). */
+  /** The well-known default session's bare name ("10.42.7.13") — HOST
+   * mode's `open <view>`/`edith` builtin always target this specific
+   * session by name, never "whichever is most recent". */
   defaultSessionName: string;
   shell: ShellData;
   /** The six canonical program names — bare-command validation for `open`/
-   * relaunch-by-name (PLAN.md Architecture notes). */
+   * relaunch-by-name. */
   viewNames: readonly string[];
 }
 
@@ -334,8 +331,8 @@ export type ShellEffect =
   | { kind: "launch"; program: string }
   | { kind: "exit-pane" }
   | { kind: "reboot" }
-  /** `tmux a [-t name]` resolved to an EXISTING session id (PLAN.md item
-   * 5.2) — the impure caller (Terminal.svelte) performs the actual
+  /** `tmux a [-t name]` resolved to an EXISTING session id — the impure
+   * caller (Terminal.svelte) performs the actual
    * `attachSession()` mutation. */
   | { kind: "attach"; sessionId: string }
   /** `tmux new [-s name]` — `name` is already fully resolved/validated
@@ -344,14 +341,13 @@ export type ShellEffect =
    * AND immediately attaches (real tmux's own combined behavior for a
    * brand-new session started from outside). */
   | { kind: "create-and-attach"; name: string }
-  /** HOST mode's `open <view>` / `edith` builtin (PLAN.md Architecture
-   * notes) — attaches the default session and selects `view`'s window if
-   * it still exists (`windowExists`); the caller shows a fallback message
-   * instead of a hard navigation when it doesn't (that window was killed
-   * at some point) — same "attach + message per your judgment" allowance
-   * PLAN.md leaves to the executor. */
+  /** HOST mode's `open <view>` / `edith` builtin — attaches the default
+   * session and selects `view`'s window if it still exists
+   * (`windowExists`); the caller shows a fallback message instead of a
+   * hard navigation when it doesn't (that window was killed at some
+   * point). */
   | { kind: "attach-view"; sessionId: string; view: string; windowExists: boolean }
-  /** PLAN.md Iteration 4 item 19 — `vim`/`vi`/`nvim <file>`: `path` is the
+  /** `vim`/`vi`/`nvim <file>`: `path` is the
    * fully-resolved (cwd-joined) display path, `content` its already-
    * fetched text (the caller resolved `resolveCatTarget` and fetched it
    * BEFORE calling `runCommand`, same "pre-warm, then call" convention
@@ -367,7 +363,7 @@ export interface RunOutcome {
 }
 
 // ---------------------------------------------------------------------
-// Sessions (PLAN.md Iteration 3 Phase 5 items 5.1/5.2)
+// Sessions
 // ---------------------------------------------------------------------
 
 /** Bare `tmux new` fidelity rule: "next numeric name (\"1\", \"2\", …)" —
@@ -390,7 +386,7 @@ function pickMostRecentUnattached(sessions: SessionRosterEntry[]): SessionRoster
   return [...sessions].sort((a, b) => b.lastAttachedSeq - a.lastAttachedSeq)[0];
 }
 
-/** PLAN.md Iteration 3 Phase 5 item 5.1 — builds the detached HOST shell's
+/** Builds the detached HOST shell's
  * pre-seeded scrollback from shell.yaml's `host.narrative` rows, with every
  * row's `{session}` placeholder substituted for the real default session
  * name. Pure (no DOM/fetch) so it's callable from both Terminal.svelte (at
@@ -464,7 +460,7 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
       return out(content.split("\n").map(outLine));
     }
 
-    // PLAN.md Iteration 4 item 19 — `vim`/`vi`/`nvim <file>`: reuses `cat`'s
+    // `vim`/`vi`/`nvim <file>`: reuses `cat`'s
     // own path-resolution and content-fetch machinery (same fs index,
     // same `resolveCatTarget`/`ctx.resolveContent` pre-warm convention) —
     // this viewer never writes, so there is nothing else to resolve.
@@ -519,8 +515,8 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
       return { state: base, effect: { kind: "launch", program: target } };
     }
 
-    // PLAN.md Architecture notes — HOST mode only ("the mock's header
-    // advertises `edith` to launch the site again"); a pane shell has
+    // HOST mode only (the mock's header
+    // advertises `edith` to launch the site again); a pane shell has
     // nothing to attach (it's already attached — that's what a pane IS), so
     // it falls through to the ordinary command-not-found case below.
     case "edith": {
@@ -548,7 +544,7 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
         return out(rows.map(outLine));
       }
 
-      // PLAN.md tmux fidelity reference: inside a pane shell, new/attach
+      // Inside a pane shell, new/attach
       // always refuse — real tmux nesting protection. `ls` above works
       // everywhere; only these two subcommands are pane-restricted.
       if (sub === "new") {
@@ -586,8 +582,8 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
 
     default:
       if (ctx.viewNames.includes(cmd) && args.length === 0) {
-        // PLAN.md Architecture notes: "bare view-name commands print a hint
-        // to attach" in HOST mode — a bare name never attaches on its own,
+        // Bare view-name commands print a hint
+        // to attach in HOST mode — a bare name never attaches on its own,
         // only `open <view>`/`edith` do (those are the site's own
         // "return commands", per the user's own return_path design).
         if (ctx.mode === "host") return out([errLine(ctx.shell.host.notAttachedMessage)]);
@@ -596,14 +592,14 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
       return out([errLine(ctx.shell.errors.commandNotFoundTemplate.replace("{cmd}", cmd))]);
   }
 
-  /** Shared tail of HOST mode's `open <view>`/`edith` (PLAN.md Architecture
-   * notes) — both always target the well-known DEFAULT session by name
-   * (never "whichever is most recent"). If that session doesn't exist at
+  /** Shared tail of HOST mode's `open <view>`/`edith` — both always target
+   * the well-known DEFAULT session by name (never "whichever is most
+   * recent"). If that session doesn't exist at
    * all (destroyed via a kill-cascade and never recreated), reports it the
    * same way a missing `-t` target does; otherwise emits the attach-view
    * effect, letting the window-existence check ride along for the
-   * (impure) caller to act on (PLAN.md: "if the window was killed → attach
-   * + message per your judgment"). */
+   * (impure) caller to act on (if the window was killed, attach + message
+   * per its own judgment). */
   function attachViewOutcome(state: ShellState, runCtx: RunContext, view: string): RunOutcome {
     const found = runCtx.sessions.find((s) => s.name === runCtx.defaultSessionName);
     if (!found) {

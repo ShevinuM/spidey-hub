@@ -1,5 +1,5 @@
 // Behavioral e2e suite for the grep overlay (GrepOverlay.svelte), against
-// the real-content build — PLAN.md Phase 8.
+// the real-content build.
 //
 // Real index: public/generated/grep-index.json, refreshed by `pnpm
 // generate` (which `pnpm build` runs as its `prebuild` hook — see
@@ -11,7 +11,7 @@
 // tests/unit/grep.test.ts) — never hardcoded — so this suite can't drift
 // from the index's real contents as the site's own source grows.
 import { expect, test, type Page } from "./fixtures.ts";
-// PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
+// This spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's
 // ~4.6s unskippable sequence never runs for these tests — see that
@@ -42,8 +42,8 @@ const rowByPath = (page: Page, path: string) => page.locator(`[data-testid="grep
 
 test.describe("Grep overlay", () => {
   test.beforeEach(async ({ page }) => {
-    // Same network-determinism rule as the visual suite (PLAN.md "Network
-    // determinism"): Builds' own commit-refresh island fires on mount, and
+    // Same network-determinism rule as the visual suite: Builds' own
+    // commit-refresh island fires on mount, and
     // none of these tests should depend on api.github.com's real
     // availability. Grep itself never calls it (verified explicitly below).
     await page.route("**/api.github.com/**", (route) => route.abort());
@@ -99,12 +99,11 @@ test.describe("Grep overlay", () => {
   test("Enter on a personnel content hit lands in the personnel view", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
-    // The co-op role's own frontmatter `role:` line (PLAN.md Iteration 3
-    // Phase 1 item 1.3 restructured personnel content to a path-derived
-    // tree where every leaf is literally named "role.md" — that bare
-    // filename alone is no longer a unique search term across the whole
+    // The co-op role's own frontmatter `role:` line: personnel content is a
+    // path-derived tree where every leaf is literally named "role.md" — that
+    // bare filename alone is not a unique search term across the whole
     // index, since it's also a substring of test files/fixtures that
-    // mention this content's own path). This exact frontmatter value only
+    // mention this content's own path. This exact frontmatter value only
     // ever appears in the one real content file, verified against the
     // committed index.
     await page.keyboard.type('role: "Software Developer, Co-op"');
@@ -114,14 +113,13 @@ test.describe("Grep overlay", () => {
     );
     await page.keyboard.press("Enter");
     await expect(overlay(page)).not.toBeVisible();
-    // PLAN.md Iteration 4 item 7 deleted the `personnel-path` breadcrumb
-    // this used to assert on. GrepOverlay's own routing (`grepPathToView`,
-    // src/lib/views.ts) is coarse — it only switches the active VIEW to
-    // "personnel", it never deep-links to the specific directory the hit
-    // lives in — so the original assertion's real claim was just "we
-    // landed on the personnel view", never anything path-specific;
+    // There is no `personnel-path` breadcrumb element. GrepOverlay's own
+    // routing (`grepPathToView`, src/lib/views.ts) is coarse — it only
+    // switches the active VIEW to "personnel", it never deep-links to the
+    // specific directory the hit lives in — so the real claim here is just
+    // "we landed on the personnel view", never anything path-specific;
     // `personnel-preview` (unconditionally rendered by the Personnel view)
-    // is the equivalent-strength anchor for that same claim.
+    // is the equivalent-strength anchor for that claim.
     await expect(page.locator('[data-testid="personnel-preview"]')).toBeVisible();
   });
 
@@ -204,7 +202,7 @@ test.describe("Grep overlay", () => {
     await expect(rows(page).first()).toHaveAttribute("data-selected", "true");
   });
 
-  test("/ inside the personnel editor searches the buffer instead of opening grep (PLAN.md Phase 3 delegation flip)", async ({
+  test("/ inside the personnel editor searches the buffer instead of opening grep (editor gets first refusal)", async ({
     page,
   }) => {
     await gotoReady(page, "/personnel");
@@ -239,17 +237,15 @@ test.describe("Grep overlay", () => {
   });
 
   test("/ while personnel filter mode is active appends to the query; grep must NOT open", async ({ page }) => {
-    // PLAN.md Iteration 4 item 23b (1A): the old behavior asserted here —
-    // "/" preventDefaults and opens grep even while the personnel filter
-    // prompt is actively typing — was itself the bug report ("search box
-    // doesn't type"). Fixed by having Personnel's `isEditorOpen()` also
-    // report `true` while `filterMode` is active, which makes Terminal's
-    // greedy-pane gate give the filter prompt first refusal over grep's own
-    // "/" opener (see tests/e2e/personnel.spec.ts's "REPRO + FIX" test for
+    // Personnel's `isEditorOpen()` reports `true` while `filterMode` is
+    // active, which makes Terminal's greedy-pane gate give the filter prompt
+    // first refusal over grep's own "/" opener — "/" typed into an active
+    // filter prompt must be typed into the query, not preventDefault'd into
+    // opening grep (see tests/e2e/personnel.spec.ts's "REPRO + FIX" test for
     // the root-cause trace). Note: "/" pressed BEFORE entering filter mode
     // still opens grep unconditionally — an intentional, documented
-    // limitation of this wave (personnel.spec.ts's own "KNOWN LIMITATION"
-    // test), not something this test exercises.
+    // limitation (personnel.spec.ts's own "KNOWN LIMITATION" test), not
+    // something this test exercises.
     await gotoReady(page, "/personnel");
     await page.keyboard.press("Enter"); // -> enaimco/ (single child: software-developer/)
     await page.keyboard.press("f"); // -> filter mode
@@ -270,7 +266,7 @@ test.describe("Grep overlay", () => {
     await expect(rows(page)).toHaveCount(expectedRows);
   });
 
-  // PLAN.md Phase 1 item 1.5: the user reported the overlay's top clipped.
+  // Regression coverage for the overlay's top rendering clipped.
   // Prior research couldn't reproduce it against the LEFT pane's "GREP ~"
   // title across 8 viewports; the actual culprit is the RIGHT preview
   // pane's own absolutely-positioned labels (`grep-file` / `grep-file-pos`,

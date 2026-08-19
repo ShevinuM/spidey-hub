@@ -1,13 +1,13 @@
 // Minimal dependency-free static file server used to serve the vendored
 // visual-regression reference (tests/visual/reference) for both
 // `pnpm goldens` (capture-goldens.mjs) and playwright.config.ts's webServer
-// entries — as of Phase 3, both webServer entries (the reference AND the
+// entries — both webServer entries (the reference AND the
 // real implementation's `dist/`, per the comment above `serveStatic`
-// below). No third-party static-server package is added so the pinned
-// dependency set in package.json stays exactly the plan's "exact stack"
+// below) use it. No third-party static-server package is added so the pinned
+// dependency set in package.json stays exactly the intended "exact stack"
 // list.
 //
-// Phase 3 note: this also replaces `astro preview` as the impl-preview
+// This also replaces `astro preview` as the impl-preview
 // webServer command. Astro 7.2.2's `astro preview` daemonizes (it forks a
 // detached background process and the launching process exits within
 // ~1s), which Playwright's `webServer` cannot use — it monitors the

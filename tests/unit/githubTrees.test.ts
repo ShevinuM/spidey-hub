@@ -1,6 +1,5 @@
-// Unit tests for src/lib/githubTrees.ts (PLAN.md Phase 4 item 5: "unit
-// tests for githubTrees.ts (tree mapping, base64 decode incl. multibyte,
-// cache TTL, null-on-failure)"). Follows the same style as
+// Unit tests for src/lib/githubTrees.ts: tree mapping, base64 decode incl.
+// multibyte, cache TTL, null-on-failure. Follows the same style as
 // tests/unit/githubCommits.test.ts: pure/cache logic is exercised directly
 // here; the live fetch/DOM integration is covered end-to-end by
 // tests/e2e/builds.spec.ts's mocked-route tests.

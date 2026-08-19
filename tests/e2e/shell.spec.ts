@@ -1,7 +1,7 @@
-// Behavioral e2e suite for the in-window shell (PLAN.md Iteration 3 Phase 4
-// items 4.2/4.3) — src/components/Shell.svelte, driven through Terminal.svelte
-// exactly like every other program ref. Covers: `:q` dropping a pane's
-// program to a shell (Locked decision #2) with live window auto-rename,
+// Behavioral e2e suite for the in-window shell — src/components/Shell.svelte,
+// driven through Terminal.svelte exactly like every other program ref.
+// Covers: `:q` dropping a pane's program to a shell with live window
+// auto-rename,
 // relaunching a program by typing its bare name (round-tripping the
 // auto-rename), every documented builtin's real output (against the real
 // generated fs-index/grep-index/repo-index JSONs — never hardcoded copies of
@@ -100,7 +100,7 @@ async function runInShell(page: Page, line: string) {
   await page.keyboard.press("Enter");
 }
 
-test.describe("`:q` exits the active pane's program to a shell (PLAN.md Locked decision #2)", () => {
+test.describe("`:q` exits the active pane's program to a shell", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -120,7 +120,7 @@ test.describe("`:q` exits the active pane's program to a shell (PLAN.md Locked d
   });
 });
 
-test.describe("typing a bare view name relaunches that program in the pane (PLAN.md Iteration 3 Phase 4 item 4.2)", () => {
+test.describe("typing a bare view name relaunches that program in the pane", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -141,7 +141,7 @@ test.describe("typing a bare view name relaunches that program in the pane (PLAN
   });
 });
 
-test.describe("`exit` builtin (PLAN.md Iteration 3 Phase 4 item 4.2 — 'closes the pane->window cascade')", () => {
+test.describe("`exit` builtin ('closes the pane->window cascade')", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -160,7 +160,7 @@ test.describe("`exit` builtin (PLAN.md Iteration 3 Phase 4 item 4.2 — 'closes 
   });
 });
 
-test.describe("manual rename wins over auto-rename (PLAN.md Iteration 3 Phase 4 item 4.3)", () => {
+test.describe("manual rename wins over auto-rename", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -188,7 +188,7 @@ test.describe("manual rename wins over auto-rename (PLAN.md Iteration 3 Phase 4 
   });
 });
 
-test.describe("shell builtins (PLAN.md Architecture notes)", () => {
+test.describe("shell builtins", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -278,12 +278,12 @@ test.describe("shell builtins (PLAN.md Architecture notes)", () => {
   });
 });
 
-// PLAN.md Iteration 4 item 19 — `vim <file>` (and `vi`/`nvim` aliases) shell
-// builtin: resolves the path against the same fs index/content sources
-// `cat` already uses, opens the read-only Editor over the shell pane
-// (Builds/Personnel's own `editorFile` local-state pattern, reused inside
-// Shell.svelte), and `:q` drops back to the shell (never killing the pane).
-test.describe("vim / vi / nvim (PLAN.md Iteration 4 item 19)", () => {
+// `vim <file>` (and `vi`/`nvim` aliases) shell builtin: resolves the path
+// against the same fs index/content sources `cat` already uses, opens the
+// read-only Editor over the shell pane (Builds/Personnel's own `editorFile`
+// local-state pattern, reused inside Shell.svelte), and `:q` drops back to
+// the shell (never killing the pane).
+test.describe("vim / vi / nvim", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -369,7 +369,7 @@ test.describe("shell history (Up/Down arrows)", () => {
   });
 });
 
-test.describe("reboot factory-resets the tmux client AND every pane's shell state (PLAN.md Locked decision #6 / item 4.4)", () => {
+test.describe("reboot factory-resets the tmux client AND every pane's shell state", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -409,7 +409,7 @@ test.describe("reboot factory-resets the tmux client AND every pane's shell stat
   // reboot-closes-the-panel coverage for the Mockup-B replacement.
 });
 
-test.describe("window-chrome delegation: a focused shell owns `?`/`:`/`/` (PLAN.md Architecture notes)", () => {
+test.describe("window-chrome delegation: a focused shell owns `?`/`:`/`/`", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });

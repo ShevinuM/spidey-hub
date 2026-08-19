@@ -1,21 +1,18 @@
 <script lang="ts">
-  // Single Svelte island mounted by every route page (PLAN.md "Routing
-  // assumption"): owns the tmux client/session/window/pane model
-  // (src/lib/tmux.ts), the global keymap, and pushState/popstate URL sync.
-  // Astro SSRs this island with `initialView` so the first paint matches the
-  // route with no client-side flash; all window switches after that are
-  // client-side only.
+  // Single Svelte island mounted by every route page: owns the tmux
+  // client/session/window/pane model (src/lib/tmux.ts), the global keymap,
+  // and pushState/popstate URL sync. Astro SSRs this island with
+  // `initialView` so the first paint matches the route with no client-side
+  // flash; all window switches after that are client-side only.
   //
-  // PLAN.md Iteration 3 Phase 4 item 4.1: this file used to own a single
-  // `view: ViewId` $state var driving a `{#if view === "home"}...` chain
-  // directly. That's replaced by one `client: Client` $state object
-  // (src/lib/tmux.ts) — sessions own windows, windows own a pane tree, panes
-  // own a running program — rendered through <PaneTree>. `view`/
-  // `activeWindowId` below are now DERIVED read models over that client,
-  // kept only because Wallpaper's opacity/blur knob and the dashboard-only
-  // hotkey gate are keyed off "which WINDOW (screen) is on-screen", a concept
-  // distinct from "which PROGRAM its pane happens to be running" once a pane
-  // can run any program (or a shell) in any window (Locked decision #5).
+  // One `client: Client` $state object (src/lib/tmux.ts) drives everything
+  // — sessions own windows, windows own a pane tree, panes own a running
+  // program — rendered through <PaneTree>. `view`/`activeWindowId` below
+  // are DERIVED read models over that client, kept only because
+  // Wallpaper's opacity/blur knob and the dashboard-only hotkey gate are
+  // keyed off "which WINDOW (screen) is on-screen", a concept distinct from
+  // "which PROGRAM its pane happens to be running" since a pane can run any
+  // program (or a shell) in any window.
   import { tick } from "svelte";
   import type { CollectionEntry } from "astro:content";
   import type {
@@ -85,19 +82,16 @@
   import Cmdline, { type CmdlineMode } from "./Cmdline.svelte";
   import HelpSearch from "./HelpSearch.svelte";
 
-  /** The default (and, this phase, only) session's stable identity — a
-   * synthetic internal id, distinct from its user-visible NAME
-   * ("10.42.7.13", still a bare literal here per PLAN.md advisor guidance:
-   * formalizing it as data is a Phase 5 question, when `tmux ls`/multiple
-   * sessions actually need it). */
+  /** The initial factory session's stable identity — a synthetic internal
+   * id, distinct from its user-visible NAME ("10.42.7.13"). URL sync
+   * (`syncUrl` below) only applies while this specific session is attached;
+   * other sessions created via `tmux new` don't have their own routes. */
   const DEFAULT_SESSION_ID = "default";
   const DEFAULT_SESSION_NAME = "10.42.7.13";
 
   /** Unified optional-methods contract every mounted program component's
-   * `bind:this` ref may expose — a superset of the four separate ref shapes
-   * this file used to declare individually (buildsRef/personnelRef/
-   * profileRef/helpRef), now that PaneTree.svelte's single ref registry
-   * serves all of them through one lookup. Every field stays optional:
+   * `bind:this` ref may expose, since PaneTree.svelte's single ref registry
+   * looks all of them up through one shape. Every field stays optional:
    * Dashboard/retina-v export no ref at all, Profile only ever exports
    * `handleKey`; HelpView also exports `isEditorOpen` (its own filter box
    * needs the same "owns the keyboard while focused" treatment an open vim
@@ -160,8 +154,8 @@
     commitsByRepo,
   }: Props = $props();
 
-  /** PLAN.md Iteration 3 Phase 4 item 4.2 — the six canonical, launchable
-   * program names (every `ProgramName` except "shell") — Shell.svelte's own
+  /** The six canonical, launchable program names (every `ProgramName`
+   * except "shell") — Shell.svelte's own
    * bare-command/`open <view>` validation, and the palette this file's
    * `viewIdToProgram`/`programToViewId` bridge already agrees with. */
   const VIEW_NAMES = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"] as const;
@@ -171,42 +165,40 @@
    * see the template's `{#if activeSession}...{:else}...{/if}` split. */
   const SHELL_MODE: ShellMode = "pane";
 
-  /** Shared, non-reactive pane-ref registry (PLAN.md Iteration 3 Phase 6
-   * item 6.1, advisor-caught) — created ONCE here and threaded down through
-   * every recursive `<PaneTree>`/`<svelte:self>` instance as a plain prop
-   * (never `$state`; consulted imperatively on keydown, never rendered
-   * through a template — same non-reactive convention PaneTree.svelte's own
-   * per-leaf registration effect already used). Phase 4's original design
-   * had PaneTree.svelte own a fresh `Map` PER COMPONENT INSTANCE with a
-   * `getRef(paneId)` export Terminal called on the ROOT instance only —
-   * that broke the moment splitting existed at all: the root becomes a
-   * split node, every leaf lives in a CHILD instance with its OWN map, and
-   * `getRef` on the root would only ever see whichever leaf happens to
-   * render at the root (never true post-split) — every other pane's ref
-   * silently vanished from delegation. One shared map threaded down as a
-   * prop sidesteps that entirely: every leaf, at any depth, registers into
-   * the exact same object. */
+  /** Shared, non-reactive pane-ref registry — created ONCE here and
+   * threaded down through every recursive `<PaneTree>`/`<svelte:self>`
+   * instance as a plain prop (never `$state`; consulted imperatively on
+   * keydown, never rendered through a template — same non-reactive
+   * convention PaneTree.svelte's own per-leaf registration effect already
+   * uses). A PER-COMPONENT-INSTANCE map with a `getRef(paneId)` export
+   * called only on the ROOT instance would break once a window has split
+   * panes: the root becomes a split node, every leaf lives in a CHILD
+   * instance with its OWN map, and `getRef` on the root would only ever see
+   * whichever leaf happens to render at the root — every other pane's ref
+   * would silently vanish from delegation. One shared map threaded down as
+   * a prop sidesteps that entirely: every leaf, at any depth, registers
+   * into the exact same object. */
   const paneRefs = new Map<string, unknown>();
 
-  /** The one HOST-mode Shell instance (PLAN.md Iteration 3 Phase 5 item
-   * 5.1) — rendered directly in the template below (never through
-   * PaneTree, since there's no window/pane tree to render while detached).
-   * `handleKey` is the only member `activeRef()` below ever needs from it. */
+  /** The one HOST-mode Shell instance — rendered directly in the template
+   * below (never through PaneTree, since there's no window/pane tree to
+   * render while detached). `handleKey` is the only member `activeRef()`
+   * below ever needs from it. */
   let hostShellRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
 
   /** Returns the currently-focused pane's ref (if it exposes one) — see
    * `paneRefs`'s own comment. Recomputed fresh on every call rather than
-   * cached, exactly like the old per-view ref reads it replaces. `undefined`
-   * while detached (no pane is focused then) — see `activeRef()` below for
-   * the delegation target that actually covers that case. */
+   * cached. `undefined` while detached (no pane is focused then) — see
+   * `activeRef()` below for the delegation target that actually covers
+   * that case. */
   function focusedRef(): ProgramRef | undefined {
     if (!activePane) return undefined;
     return paneRefs.get(activePane.id) as ProgramRef | undefined;
   }
 
-  /** PLAN.md Iteration 3 Phase 5 item 5.1 — "keyboard belongs to the host
-   * shell" while detached: the SAME delegation slot `focusedRef()` has
-   * always occupied (key-consumption checks below, `paneIsGreedy`'s own
+  /** "Keyboard belongs to the host shell" while detached: the SAME
+   * delegation slot `focusedRef()` has always occupied (key-consumption
+   * checks below, `paneIsGreedy`'s own
    * `tryFocusedRef()`), just routed to the host shell instance instead of
    * whatever pane happens to be focused. Kill-pane/rename/ex-command call
    * sites deliberately keep calling `focusedRef()` directly, never this —
@@ -216,24 +208,24 @@
     return activeSession ? focusedRef() : (hostShellRef as ProgramRef | undefined);
   }
 
-  /** GrepOverlay.svelte (PLAN.md Phase 8) — always mounted (see that file's
-   * header comment), consulted ahead of every other ref above EXCEPT the
-   * active view's own vim Editor when one is open (PLAN.md Phase 3's
-   * delegation flip, see handleKey() below): this is what makes "/" open
-   * the overlay from inside Builds/Personnel when no editor is open, and
-   * what keeps the overlay's own keys (typing, nav, Enter/Esc) from ever
-   * reaching the view underneath while it's open. */
+  /** GrepOverlay.svelte — always mounted (see that file's header comment),
+   * consulted ahead of every other ref above EXCEPT the active view's own
+   * vim Editor when one is open (the delegation flip, see handleKey()
+   * below): this is what makes "/" open the overlay from inside
+   * Builds/Personnel when no editor is open, and what keeps the overlay's
+   * own keys (typing, nav, Enter/Esc) from ever reaching the view
+   * underneath while it's open. */
   let grepRef = $state<{
     handleKey: (e: KeyboardEvent) => boolean;
     close?: () => void;
-    /** PLAN.md Phase 5C `:grep <query>` — see GrepOverlay.svelte's own
-     * doc comments on these two exports. */
+    /** `:grep <query>` — see GrepOverlay.svelte's own doc comments on
+     * these two exports. */
     isOpen?: () => boolean;
     openWithQuery?: (query: string) => void;
   } | null>(null);
 
-  /** StatusBar's status-line prompt state machine (PLAN.md Phase 5 item
-   * 5.1) — consulted in handleKey() below AFTER the prefix system (arm +
+  /** StatusBar's status-line prompt state machine — consulted in
+   * handleKey() below AFTER the prefix system (arm +
    * dispatch) has had a turn, so a prompt owns every key EXCEPT the ones
    * the prefix system itself claims (a bare Ctrl-b to arm, and the single
    * key immediately following an armed prefix, e.g. `]` to paste into the
@@ -248,24 +240,24 @@
     cancelPrompt: () => void;
   } | null>(null);
 
-  /** Ctrl-b [ copy-mode overlay (PLAN.md Phase 5 item 5.3) — same
-   * always-mounted / bind:this / handleKey():boolean contract as
-   * GrepOverlay, consulted right after the status-bar prompt. */
+  /** Ctrl-b [ copy-mode overlay — same always-mounted / bind:this /
+   * handleKey():boolean contract as GrepOverlay, consulted right after the
+   * status-bar prompt. */
   let copyModeRef = $state<{
     handleKey: (e: KeyboardEvent) => boolean;
     openOverlay: () => void;
     close: () => void;
   } | null>(null);
 
-  /** BootSequence.svelte (PLAN.md Phase 5B) — always mounted, rendered
-   * above every other overlay (see that component's own z-index note).
-   * `isActive()` gates ALL key handling below (checked first, ahead of
-   * even copy-mode); `replay()` is invoked by the dashboard's `r` hotkey
-   * and the status-bar ↻ reboot control. */
+  /** BootSequence.svelte — always mounted, rendered above every other
+   * overlay (see that component's own z-index note). `isActive()` gates
+   * ALL key handling below (checked first, ahead of even copy-mode);
+   * `replay()` is invoked by the dashboard's `r` hotkey and the status-bar
+   * ↻ reboot control. */
   let bootRef = $state<{ replay: () => void; isActive: () => boolean } | null>(null);
 
-  /** Cmdline.svelte (PLAN.md Phase 5C) — always mounted, same contract as
-   * GrepOverlay/CopyMode above. `isOpen()` is consulted by the tmux prefix
+  /** Cmdline.svelte — always mounted, same contract as GrepOverlay/CopyMode
+   * above. `isOpen()` is consulted by the tmux prefix
    * system (handlePrefixedKey below) so an open box is gated exactly like
    * an open status-bar prompt (only the bare Ctrl-b arm and a prefixed `]`
    * paste get through); `handleKey()` is checked right alongside
@@ -279,16 +271,16 @@
     openEx: () => void;
     openTmux: () => void;
     handleKey: (e: KeyboardEvent) => boolean;
-    /** PLAN.md Iteration 3 Phase 3 item 3.2: window-chrome contract, same
-     * shape as GrepOverlay/CopyMode's own `close()` — called from
+    /** Window-chrome contract, same shape as GrepOverlay/CopyMode's own
+     * `close()` — called from
      * `closeWindowChrome()` (and therefore every window switch/kill/reboot,
      * all of which call it) so an open box never survives a window switch,
      * a program launch, or a detach. */
     close: () => void;
   } | null>(null);
 
-  /** HelpSearch.svelte (PLAN.md Iteration 3 Phase 3 item 3.3) — same
-   * always-mounted / bind:this / handleKey():boolean / isOpen() / close()
+  /** HelpSearch.svelte — same always-mounted / bind:this /
+   * handleKey():boolean / isOpen() / close()
    * contract as Cmdline above; `openPalette()` is called from the bare-`?`
    * opener further down (mirroring the bare-`:` opener that calls
    * cmdlineRef.openSite()). */
@@ -299,10 +291,9 @@
     handleKey: (e: KeyboardEvent) => boolean;
   } | null>(null);
 
-  /** ChooseTree.svelte (PLAN.md Iteration 3 Phase 6 item 6.5, `Ctrl-b w`) —
-   * same always-mounted / bind:this / handleKey():boolean / isOpen()/close()
-   * contract as Cmdline/HelpSearch above. `openOverlay()` is called from
-   * the prefix `w` binding (REBOUND from "go home", Locked decision #3);
+  /** ChooseTree.svelte (`Ctrl-b w`) — same always-mounted / bind:this /
+   * handleKey():boolean / isOpen()/close() contract as Cmdline/HelpSearch
+   * above. `openOverlay()` is called from the prefix `w` binding;
    * `handleKey()` is consulted in its own documented slot (see ChooseTree.
    * svelte's own header comment) — after copy-mode and the prefix system,
    * before Cmdline/StatusBar/every view ref. */
@@ -351,10 +342,11 @@
   );
   let notificationsRef = $state<{ handleKey: (e: KeyboardEvent) => boolean; close?: () => void } | null>(null);
 
-  // Mobile-block JS guard (README "Mobile policy"): listeners/timers only
-  // attach while the viewport is desktop-sized with a fine pointer. The
-  // full mobile card UI lands in Phase 9 — this is only the guard
-  // architecture, kept reactive to live resizes.
+  // Mobile-block JS guard: listeners/timers only attach while the viewport
+  // is desktop-sized with a fine pointer — the JS half of the guard whose
+  // CSS half lives in Shell.astro (see that file's own comment); the
+  // mobile-block card itself is server-rendered there, not by this
+  // component. Kept reactive to live resizes.
   let desktopMode = $state(false);
 
   // Set once the real keydown/popstate listeners are attached (below).
@@ -378,8 +370,8 @@
   // Real, imperative (rather than `<svelte:window>`) listener attachment so
   // the mobile-block guard is literal: outside desktop+fine-pointer, no
   // keydown/popstate listener is ever registered, not merely a handler that
-  // early-returns (README "Mobile policy" — verified by a Phase 9 e2e
-  // marker check).
+  // early-returns (verified by e2e, tests/e2e/tmux.spec.ts's mobile-block
+  // checks).
   $effect(() => {
     if (!desktopMode) return;
     window.addEventListener("keydown", handleKey);
@@ -393,10 +385,10 @@
   });
 
   // -----------------------------------------------------------------------
-  // Derived read models over `client` (PLAN.md Iteration 3 Phase 4 item 4.1)
+  // Derived read models over `client`
   // -----------------------------------------------------------------------
 
-  /** `undefined` once detached (PLAN.md Iteration 3 Phase 5 item 5.1) — no
+  /** `undefined` once detached — no
    * session owns the keyboard, the host shell does instead (see
    * `Client.attachedSessionId`'s own comment). Every function below that
    * assumes this is defined is only ever reachable from a UI path that
@@ -409,7 +401,7 @@
   const activePane = $derived(activeWindow ? focusedPane(activeWindow) : undefined);
   const activeProgram = $derived(activePane?.program);
 
-  /** PLAN.md Iteration 3 Phase 6 item 6.1 — whether the active window has
+  /** Whether the active window has
    * more than one pane right now; gates PaneTree's active-pane border
    * accent (a single-pane window shows no border, matching real tmux — see
    * PaneTree.svelte's own header comment). */
@@ -420,8 +412,7 @@
    * hardcoded number. 0 while detached (no session owns any panes then). */
   const totalPaneCount = $derived(activeSession ? activeSession.windows.reduce((sum, w) => sum + allPanes(w.root).length, 0) : 0);
 
-  /** StatusBar's real tmux `-` flag (PLAN.md Iteration 3 Phase 4 item 4.3
-   * tmux fidelity reference) — the session's previously-active window.
+  /** StatusBar's real tmux `-` flag — the session's previously-active window.
    * Undefined on a fresh session (activeWindowIdx === lastWindowIdx) or
    * while detached, same as real tmux showing no `-` until a switch has
    * actually happened. */
@@ -433,11 +424,10 @@
 
   /** "Which WINDOW (screen) is on-screen" — keyed off the window's own
    * stable id, NOT the program its pane currently runs (see this file's own
-   * header comment on why those differ once Locked decision #5 applies).
-   * Drives Wallpaper's opacity/blur knob and the dashboard-only hotkey gate
-   * below, exactly like the old `view` var did before a pane could run
-   * anything other than its window's own namesake program. `undefined`
-   * while detached — there is no "on-screen window" then. */
+   * header comment on why those differ, since a pane can run any program
+   * in any window). Drives Wallpaper's opacity/blur knob and the
+   * dashboard-only hotkey gate below. `undefined` while detached — there
+   * is no "on-screen window" then. */
   const view = $derived(activeWindow ? windowIdToView(activeWindow.id) : undefined);
 
   /** Status bar's own window list, re-derived from the live model on every
@@ -458,8 +448,8 @@
     return m;
   });
 
-  /** Shell.svelte's own `session` prop (PLAN.md Iteration 3 Phase 4 item
-   * 4.2's `tmux ls`) — every IN-PANE shell's anchor session (its own).
+  /** Shell.svelte's own `session` prop (`tmux ls`'s anchor) — every
+   * IN-PANE shell's anchor session (its own).
    * Falls back to a harmless zero-value shape while detached (unreachable
    * in practice — no pane is mounted then — kept only so this derived never
    * throws). */
@@ -469,7 +459,7 @@
     return { name: s.name, windowCount: s.windows.length, createdAt: s.createdAt, attached: client.attachedSessionId === s.id };
   });
 
-  /** PLAN.md Iteration 3 Phase 5 items 5.2/5.3 — every session the client
+  /** Every session the client
    * currently knows about, in the exact shape src/lib/shell.ts's
    * `RunContext.sessions` wants — computed fresh on every keystroke/render
    * so `tmux ls`/`new`/`a`/`attach`'s validation always sees the live
@@ -494,9 +484,8 @@
    * "the attached session" (there isn't one while detached) — just a
    * stable reference point so neofetch has SOME `createdAt` to compute
    * against; falls back to the page's own load epoch if every session has
-   * been destroyed (PLAN.md Iteration 3 Phase 5 item 5.3's `[exited]`
-   * end-state, advisor-caught: `client.sessions` can be legitimately
-   * empty there). */
+   * been destroyed (the `[exited]` end-state — `client.sessions` can be
+   * legitimately empty there). */
   const hostSessionSummary = $derived.by(() => {
     const s = client.sessions[0];
     return s
@@ -506,9 +495,8 @@
 
   /** Digit/`?` prefix targets, recomputed from the live window list so a
    * killed window's digit stops doing anything (tmux-faithful: an unbound
-   * prefixed key is silently swallowed) — same shape as before Phase 4,
-   * just holding window ids instead of ViewIds. Fully generic over each
-   * window's own `number` field (PLAN.md Iteration 4 item 16, `Ctrl-b c`)
+   * prefixed key is silently swallowed) — holding window ids, keyed off
+   * each window's own `number` field (`Ctrl-b c` new-window included)
    * rather than a hardcoded 1-5 map — behavior-identical for the six fixed
    * seed windows (every one of them has `number === its own fixed digit`,
    * present-gated either way) AND the only way a window `createWindow()`
@@ -531,17 +519,15 @@
   });
 
   // -----------------------------------------------------------------------
-  // Window switching (PLAN.md Iteration 3 Phase 4 item 4.1 — replaces the
-  // old single `setView(next: ViewId)`)
+  // Window switching
   // -----------------------------------------------------------------------
 
-  /** Window-chrome contract (PLAN.md "close BEFORE the same-view early
-   * return") — closes grep/cmdline/help-palette/choose-tree unconditionally.
-   * Called at the top of every window-switch/kill/reboot path below,
-   * exactly like the old `setView` did, so an open overlay never survives
-   * ANY of them, even ones that end up no-op'ing (e.g. selecting the
-   * already-active window, or a kill that gets refused). PLAN.md Iteration 3
-   * Phase 6 item 6.5: choose-tree's own Enter-switch already calls its own
+  /** Window-chrome contract ("close BEFORE the same-view early return") —
+   * closes grep/cmdline/help-palette/choose-tree unconditionally. Called at
+   * the top of every window-switch/kill/reboot path below, so an open
+   * overlay never survives ANY of them, even ones that end up no-op'ing
+   * (e.g. selecting the already-active window, or a kill that gets
+   * refused). Choose-tree's own Enter-switch already calls its own
    * `close()` directly, but every OTHER window-switch entry point (status-
    * bar click, prefix digit/n/p, dashboard hotkeys, `Ctrl-b d` detach) goes
    * through this helper — closing it here too means choose-tree never
@@ -554,8 +540,8 @@
   }
 
   /** pushState only when the ACTIVE PANE's program is canonical (not
-   * "shell") AND the default session is attached (PLAN.md Architecture
-   * notes) — a shelled-in pane freezes the URL wherever it already was.
+   * "shell") AND the default session is attached — a shelled-in pane
+   * freezes the URL wherever it already was.
    * Idempotent: a no-op when the route already matches (true for every
    * within-session switch that lands back on a window it started on, and
    * for popstate, which has already updated `location.pathname` itself). */
@@ -581,7 +567,7 @@
   function switchActiveWindow(pickIndex: (session: Session) => number) {
     closeWindowChrome();
     const session = activeSession;
-    // Detached (advisor-caught): popstate is the one caller reachable
+    // Detached: popstate is the one caller reachable
     // regardless of attachment (a browser back/forward can fire after
     // `Ctrl-b d`) — every OTHER caller (status-bar click, prefix nav,
     // dashboard hotkeys) only exists while attached. No session to switch
@@ -597,8 +583,8 @@
   }
 
   /** Every one of the six windows' own id equals its canonical program name
-   * in this (the only, default) session — see tmux.ts's `FactorySeed`
-   * comment — so "switch to the window that runs program X" is just
+   * in the default session (see tmux.ts's `FactorySeed` comment) — so
+   * "switch to the window that runs program X" is just
    * `switchToWindowById(program)`. Used by the dashboard menu, Personnel's
    * "onDashboard", GrepOverlay's Enter-routing, and Cmdline/HelpSearch's
    * `view:*` actions — every one of them a WINDOW switch, never a program
@@ -619,20 +605,18 @@
     });
   }
 
-  /** Status-bar ↻ reboot control (PLAN.md Phase 5B item 5B.3) — replays
+  /** Status-bar ↻ reboot control — replays
    * boot from ANY window by first switching to the dashboard. Cancels a
-   * stray status-bar prompt and a stray copy-mode overlay first (both
-   * hazards the plan calls out explicitly: a rename/confirm prompt would
-   * otherwise survive the switch bound to the old window, and copy-mode's
-   * own z-index sits above the status bar so it would occlude the
-   * freshly-replayed boot). `switchToProgram` already closes a stray grep/
-   * cmdline/help-palette overlay.
+   * stray status-bar prompt and a stray copy-mode overlay first (a
+   * rename/confirm prompt would otherwise survive the switch bound to the
+   * old window, and copy-mode's own z-index sits above the status bar so
+   * it would occlude the freshly-replayed boot). `switchToProgram` already
+   * closes a stray grep/cmdline/help-palette overlay.
    *
-   * PLAN.md Locked decision #6 / Phase 4 item 4.4: "reboot (all triggers) =
-   * factory state + boot replay" — REPLACES `client` wholesale with a fresh
-   * `createFactoryClient()` call (the exact same shape the initial `$state`
-   * seed above uses) rather than merely switching the EXISTING client back
-   * to the dashboard window (this function's interim Phase 4.1-4.3 form) —
+   * "Reboot (all triggers) = factory state + boot replay" — REPLACES
+   * `client` wholesale with a fresh `createFactoryClient()` call (the exact
+   * same shape the initial `$state` seed above uses) rather than merely
+   * switching the EXISTING client back to the dashboard window —
    * every window/pane/program/shell buffer resets, not just the active
    * one. The signal-inbox PANEL (open/closed, queued toasts) is in-memory,
    * ephemeral UI state, closed here alongside every other overlay — the
@@ -664,23 +648,20 @@
   }
 
   // ---------------------------------------------------------------------
-  // tmux prefix (PLAN.md Phase 9 / README keymap, "Stated assumptions";
-  // reordered by PLAN.md Phase 1 "Prefix precedence over grep" — see below).
-  // Ctrl-b arms a 2s window during which the very next key is a
-  // window-switch command instead of reaching any view. `prefixArmed`'s
+  // tmux prefix. Ctrl-b arms a 2s window during which the very next key is
+  // a window-switch command instead of reaching any view. `prefixArmed`'s
   // dispatch branch is checked FIRST in handleKey() below, and the *arm*
-  // check (bare Ctrl-b itself) is now checked SECOND — ahead of grep
+  // check (bare Ctrl-b itself) is checked SECOND — ahead of grep
   // delegation, tmux-faithful — so the prefix works even while the grep
-  // overlay is open (needed for `Ctrl-b ]`'s paste into the grep query,
-  // PLAN.md Phase 5 item 5.3). This retires the old "prefix inert while
-  // grep is open" rule: while armed, the prefix consumes the next key
-  // before grep ever sees it, exactly like every other view.
+  // overlay is open (needed for `Ctrl-b ]`'s paste into the grep query):
+  // while armed, the prefix consumes the next key before grep ever sees
+  // it, exactly like every other view.
   //
-  // PLAN.md Phase 5 item 5.2 "Ctrl-b ," / "&" / "x" / "[" / "]" — rename-
-  // window, kill-window, kill-pane, copy-mode, and paste-buffer — are all
-  // dispatched from `handlePrefixedKey` below alongside the pre-existing
-  // digit/n/p/d/w/0 targets, since they're all "the single key following an
-  // armed Ctrl-b" in exactly the same way.
+  // "Ctrl-b ," / "&" / "x" / "[" / "]" — rename-window, kill-window,
+  // kill-pane, copy-mode, and paste-buffer — are all dispatched from
+  // `handlePrefixedKey` below alongside the digit/n/p/d/w/0 targets, since
+  // they're all "the single key following an armed Ctrl-b" in exactly the
+  // same way.
   // ---------------------------------------------------------------------
   const PREFIX_TIMEOUT_MS = 2000;
 
@@ -712,8 +693,8 @@
 
   /** Appends one system line (a `[detached (from session …)]`, `[exited]`,
    * or `logout`) directly to the HOST shell's own persistent buffer
-   * (`Client.hostPane` — PLAN.md Iteration 3 Phase 5 item 5.1's "own
-   * persistent buffer, survives re-attach/detach cycles"). These are never
+   * (`Client.hostPane`'s own persistent buffer, survives re-attach/detach
+   * cycles). These are never
    * typed commands, so they never go through shell.ts's own `runCommand` —
    * this is the one place Terminal.svelte writes into a shell buffer
    * directly. */
@@ -723,17 +704,14 @@
 
   /** Ctrl-b & (and the Builds single-pane Ctrl-b x fallback, a kill-pane
    * that emptied the last Builds panel, and shell `exit` in the last pane)
-   * — PLAN.md Iteration 3 Phase 5 item 5.3, now routed through tmux.ts's
-   * `killWindowCascade` instead of the bare `killWindow` op: killing a
-   * window that ISN'T the session's last one still just removes it
-   * (unchanged Phase 4 behavior); killing the LAST window now destroys the
-   * session outright — this SUPERSEDES Phase 4's "refuse to kill the only
-   * window" (dead now that sessions exist to fall back to; see
-   * `killWindowCascade`'s own header comment). If that cascade leaves NO
-   * session attached, the client has detached to the host shell — append
-   * the exact `[exited]` line there. If another session was silently
-   * switched to instead, nothing further happens here (PLAN.md: "show
-   * nothing special"). */
+   * — routed through tmux.ts's `killWindowCascade` instead of the bare
+   * `killWindow` op: killing a window that ISN'T the session's last one
+   * still just removes it; killing the LAST window destroys the session
+   * outright (see `killWindowCascade`'s own header comment). If that
+   * cascade leaves NO session attached, the client has detached to the
+   * host shell — append the exact `[exited]` line there. If another
+   * session was silently switched to instead, nothing further happens
+   * here (shows nothing special to the user). */
   function killWindowById(id: string) {
     closeWindowChrome();
     const session = activeSession!;
@@ -744,38 +722,32 @@
     syncUrl();
   }
 
-  /** Shell.svelte's `onLaunch` (PLAN.md Iteration 3 Phase 4 item 4.2) — a
-   * bare view-name command or `open <view>` typed into a pane's shell:
-   * launches `program` IN THAT PANE (tmux.ts's own `launchProgram`), never
-   * a window switch — Locked decision #5's "any pane can launch any
-   * program". `program` arrives pre-validated by shell.ts's own
-   * `runCommand` (checked against `VIEW_NAMES`), so the cast is safe. Syncs
-   * the URL only when the launch happened in the currently ACTIVE pane
-   * (always true this phase — every window has exactly one pane, and only
-   * the active window's pane is ever mounted — kept as an explicit guard so
-   * Phase 6 splits don't silently start pushing the wrong route for a
-   * launch in a non-focused pane). Closes grep/cmdline/palette first,
-   * unconditionally — same window-chrome contract every other
-   * switch/launch/kill entry point follows (`switchActiveWindow`,
-   * `exitActiveProgram`, `killWindowById`): a launch changes what's on
-   * screen just as much as a window switch does, so any open chrome from
-   * the PREVIOUS pane content must not survive it. Latent this phase
-   * (every window has exactly one pane, always the focused one, so this
-   * is reachable from the same context those other paths already are) —
-   * becomes reachable from a NON-focused pane once Phase 6 adds splits. */
+  /** Shell.svelte's `onLaunch` — a bare view-name command or
+   * `open <view>` typed into a pane's shell: launches `program` IN THAT
+   * PANE (tmux.ts's own `launchProgram`), never a window switch — any pane
+   * can launch any program. `program` arrives pre-validated by shell.ts's
+   * own `runCommand` (checked against `VIEW_NAMES`), so the cast is safe.
+   * Syncs the URL only when the launch happened in the currently ACTIVE
+   * pane — a window can have more than one pane (splits), and a launch in
+   * a NON-focused pane must not push a route for content that isn't even
+   * on screen. Closes grep/cmdline/palette first, unconditionally — same
+   * window-chrome contract every other switch/launch/kill entry point
+   * follows (`switchActiveWindow`, `exitActiveProgram`, `killWindowById`):
+   * a launch changes what's on screen just as much as a window switch
+   * does, so any open chrome from the PREVIOUS pane content must not
+   * survive it. */
   function onLaunchInPane(paneId: string, program: string) {
     closeWindowChrome();
     launchProgram(activeSession!, paneId, program as ProgramName);
     if (paneId === activePane?.id) syncUrl();
   }
 
-  /** Shell.svelte's `onExit` — the `exit` builtin (PLAN.md Architecture
-   * notes: "pane shell: closes pane → cascades like kill-pane"). PLAN.md
-   * Iteration 3 Phase 6: now that a window can have more than one pane,
+  /** Shell.svelte's `onExit` — the `exit` builtin ("pane shell: closes pane
+   * → cascades like kill-pane"). A window can have more than one pane, so
    * this resolves `paneId`'s OWN owning window (via `windowOfPane`, never
-   * assumed to be `activeWindow` — advisor-caught: `onExit` only ever fires
-   * from the FOCUSED pane in practice, but the window it lives in is found
-   * from the id, not hardcoded) and either removes just that pane (more than
+   * assumed to be `activeWindow` — `onExit` only ever fires from the
+   * FOCUSED pane in practice, but the window it lives in is found from the
+   * id, not hardcoded) and either removes just that pane (more than
    * one pane in the window — `killPaneInWindow`) or falls back to the exact
    * same window-kill cascade `Ctrl-b x`'s single-pane case uses. */
   function onExitPane(paneId: string) {
@@ -791,12 +763,11 @@
     }
   }
 
-  /** Site-mode `:q` / cmdline `q` (PLAN.md Locked decision #2, item 4.3) —
-   * drops the ACTIVE PANE's program back to a shell in the SAME window
+  /** Site-mode `:q` / cmdline `q` — drops the ACTIVE PANE's program back to a shell in the SAME window
    * (tmux.ts's `exitProgram`); never kills the window. Distinct from
    * `onExitPane` above (Shell.svelte's own `exit` builtin, typed inside an
    * ALREADY-shell pane, which has no program left to drop and so still
-   * cascades to kill-window — Phase 4.2's unchanged behavior). Closes
+   * cascades to kill-window). Closes
    * chrome first (same convention as every other window-affecting action)
    * and re-syncs the URL, which freezes in place: `programToViewId("shell")`
    * is null, so `syncUrl()` no-ops, satisfying Verify 4's "URL unchanged
@@ -807,10 +778,10 @@
     syncUrl();
   }
 
-  /** Ctrl-b , — PLAN.md Phase 5 item 5.2. Takes the target window's id as an
+  /** Ctrl-b , — takes the target window's id as an
    * explicit argument (captured by `startRenamePrompt` at PROMPT-OPEN time)
    * rather than re-deriving it from `activeWindow` here at commit time —
-   * defense in depth (verifier round 2) so this can never rename the wrong
+   * defense in depth so this can never rename the wrong
    * window even if some future delegation change let the active window
    * drift while the prompt was still open; today's `handlePrefixedKey`
    * prompt-active gate already makes that drift impossible, but this
@@ -830,8 +801,7 @@
     statusBarRef?.startConfirm(text, () => killWindowById(id));
   }
 
-  /** `Ctrl-b d` (PLAN.md Locked decision #3 / Iteration 3 Phase 5 item 5.1)
-   * — REPLACES the Phase 4 "go home" behavior. Only reachable while
+  /** `Ctrl-b d` — only reachable while
    * attached (the tmux prefix never arms otherwise — see `armPrefix()`'s
    * own gate), so the non-null assertion is safe by construction. Detaches
    * the client, then appends the exact `[detached (from session {name})]`
@@ -846,7 +816,7 @@
   }
 
   // -----------------------------------------------------------------------
-  // Host shell effects (PLAN.md Iteration 3 Phase 5 item 5.2) — Shell.svelte's
+  // Host shell effects — Shell.svelte's
   // `onAttach`/`onCreateAndAttach`/`onAttachView`, only ever invoked from the
   // ONE host-mode Shell instance (rendered directly in the template below,
   // never through PaneTree) — a pane-mode instance's own `runCommand` never
@@ -869,12 +839,11 @@
     syncUrl();
   }
 
-  /** `open <view>` / `edith` in HOST mode (PLAN.md Architecture notes) —
-   * attaches the default session and selects `view`'s window if it still
-   * exists; otherwise attaches anyway (staying on whatever window that
-   * session is already on) and surfaces a transient status-bar message —
-   * the "attach + message per your judgment" allowance PLAN.md leaves to
-   * the executor for a window that's since been killed. */
+  /** `open <view>` / `edith` in HOST mode — attaches the default session
+   * and selects `view`'s window if it still exists; otherwise attaches
+   * anyway (staying on whatever window that session is already on) and
+   * surfaces a transient status-bar message for a window that's since
+   * been killed. */
   async function onHostAttachView(sessionId: string, view: string, windowExists: boolean) {
     const session = client.sessions.find((s) => s.id === sessionId);
     if (!session) return; // defensive — shell.ts already checked this session exists
@@ -888,14 +857,14 @@
       // branch yet within this same synchronous tick, so `bind:this` hasn't
       // fired. `tick()` flushes that pending render before the message is
       // shown, so it actually lands on the StatusBar that just mounted
-      // rather than silently no-op'ing through the `?.` (advisor-caught).
+      // rather than silently no-op'ing through the `?.`.
       await tick();
       statusBarRef?.showMessage(shell.host.windowGoneTemplate.replace("{view}", view).replace("{name}", session.name));
     }
     syncUrl();
   }
 
-  /** Host `exit` builtin (PLAN.md Iteration 3 Phase 5 item 5.3) — prints
+  /** Host `exit` builtin — prints
    * `logout` then reloads the page; the boot-seen sessionStorage flag is
    * untouched by a reload, so boot skips exactly like any other reload
    * (BootSequence.svelte's own gate), landing back on the factory-attached
@@ -905,14 +874,13 @@
     window.location.reload();
   }
 
-  /** The actual "kill the focused PANE, or the window if it's the only one"
-   * ACTION (PLAN.md Iteration 3 Phase 6 item 6.3 / Locked decision #4 — a
-   * REAL tmux pane kill now, not a Builds-internal panel one) — factored out
-   * so the NO-CONFIRM `Ctrl-b :` "kill-pane" tmux command can call the exact
-   * same underlying behavior `Ctrl-b x`'s own confirm dialog below
-   * eventually calls, without a second copy of the "which pane, or fall
-   * back to kill-window" decision (PLAN.md "single source of behavior; no
-   * duplicated kill/rename logic"). */
+  /** The actual "kill the focused PANE, or the window if it's the only
+   * one" ACTION (a REAL tmux pane kill, not a Builds-internal panel one) —
+   * factored out so the NO-CONFIRM `Ctrl-b :` "kill-pane" tmux command can
+   * call the exact same underlying behavior `Ctrl-b x`'s own confirm
+   * dialog below eventually calls, without a second copy of the "which
+   * pane, or fall back to kill-window" decision (single source of
+   * behavior; no duplicated kill/rename logic). */
   function killPaneOrWindow() {
     const win = activeWindow!;
     const paneId = activePane!.id;
@@ -925,13 +893,10 @@
     }
   }
 
-  /** Ctrl-b x (PLAN.md Iteration 3 Phase 6 item 6.3 / Locked decision #4) —
-   * REAL kill-pane: ALWAYS prompts `kill-pane {pane_index}? (y/n)`, even on
-   * a single-pane window — REPLACES the iteration-2 Builds-internal
-   * panel-kill behavior (canKillPane/focusedPanelNumber/killPane, now
-   * deleted from Builds.svelte entirely) with the real tmux semantic:
-   * destroying the last pane destroys the window by cascade, no separate
-   * "fall back to kill-window confirm" step. The target pane's id and its
+  /** Ctrl-b x — REAL kill-pane: ALWAYS prompts `kill-pane {pane_index}?
+   * (y/n)`, even on a single-pane window: destroying the last pane
+   * destroys the window by cascade, no separate "fall back to kill-window
+   * confirm" step. The target pane's id and its
    * `pane_index` (for the prompt text — `Window.paneOrder`'s own live-
    * renumbered position) are captured HERE, at confirm-OPEN time — same
    * "captured at prompt-open time" pattern as startRenamePrompt/
@@ -953,7 +918,7 @@
     });
   }
 
-  /** Ctrl-b ] — PLAN.md Phase 5 item 5.3: inserts the shared paste buffer
+  /** Ctrl-b ] — inserts the shared paste buffer
    * into whichever text input is currently registered (src/lib/
    * pasteTargets.ts) — the grep query, the personnel filter, the rename
    * prompt, or the editor's in-buffer search. A transient status message
@@ -969,8 +934,7 @@
   }
 
   // ---------------------------------------------------------------------
-  // Splits / pane nav / layouts (PLAN.md Iteration 3 Phase 6 items 6.1/6.2/
-  // 6.4) — every one of these operates on the ACTIVE window's own tree;
+  // Splits / pane nav / layouts — every one of these operates on the ACTIVE window's own tree;
   // none of them touch the URL (a split/nav/layout change never implies a
   // different WINDOW, hence never a different route — `syncUrl()` isn't
   // called from any of these, matching the "URL keyed off the active
@@ -1006,8 +970,8 @@
     nextLayout(activeWindow!);
   }
 
-  /** `select-layout <name>` / bare `select-layout` (PLAN.md 6.4, `Ctrl-b :`
-   * tmux command-prompt mode) — applies the named preset, or reapplies
+  /** `select-layout <name>` / bare `select-layout` (`Ctrl-b :` tmux
+   * command-prompt mode) — applies the named preset, or reapplies
    * whatever was last applied when no name is given (a silent no-op if none
    * ever was). Unknown names are reported by the caller
    * (`executeTmuxCommand` below), which already has the raw typed string. */
@@ -1017,7 +981,7 @@
     else reapplyLastLayout(win);
   }
 
-  /** `Ctrl-b c` (PLAN.md Iteration 4 item 16) — tmux new-window: creates a
+  /** `Ctrl-b c` — tmux new-window: creates a
    * new window running the in-window shell program and switches focus to it
    * immediately (real tmux's own combined "create and select" behavior for
    * this binding — distinct from `createSession`'s create-only split, which
@@ -1026,8 +990,8 @@
    * window chrome first, same convention every other window-affecting
    * action follows (`switchActiveWindow`, `killWindowById`, `detachSession`)
    * — including choose-tree, which is not otherwise gated for this key
-   * (PLAN.md 6.5: same free-close treatment as the digit/n/p window-switch
-   * keys, nothing to starve). `syncUrl()` no-ops for the newly-shelled
+   * (same free-close treatment as the digit/n/p window-switch keys,
+   * nothing to starve). `syncUrl()` no-ops for the newly-shelled
    * window exactly like `:q`'s `exitActiveProgram` does (`programToViewId
    * ("shell")` is null) — the URL freezes wherever it already was. */
   function createWindowInSession() {
@@ -1040,8 +1004,7 @@
   }
 
   // ---------------------------------------------------------------------
-  // choose-tree (PLAN.md Iteration 3 Phase 6 item 6.5, `Ctrl-b w`) —
-  // ChooseTree.svelte's own callback props; every one of these is a WINDOW/
+  // choose-tree (`Ctrl-b w`) — ChooseTree.svelte's own callback props; every one of these is a WINDOW/
   // SESSION-level change, so each funnels through the same helpers every
   // other switch/kill path in this file already uses (switchToWindowById,
   // killWindowCascade, killSession) rather than duplicating that logic here.
@@ -1086,10 +1049,10 @@
     syncUrl();
   }
 
-  /** In-overlay `x` → case-insensitive `y` on a SESSION row (PLAN.md
-   * Locked decision #16: only the TYPED `kill-session` command is out of
-   * scope, not this overlay action) — kills every window in that session at
-   * once via tmux.ts's own `killSession`. */
+  /** In-overlay `x` → case-insensitive `y` on a SESSION row (the TYPED
+   * `kill-session` command is out of scope, not this overlay action) —
+   * kills every window in that session at once via tmux.ts's own
+   * `killSession`. */
   function chooseTreeKillSession(sessionId: string) {
     const result = killSession(client, sessionId);
     if (result.detachedToHost) {
@@ -1100,17 +1063,17 @@
   }
 
   // ---------------------------------------------------------------------
-  // Site-wide floating Cmdline (PLAN.md Phase 5C) — Cmdline.svelte itself
+  // Site-wide floating Cmdline — Cmdline.svelte itself
   // is dumb about execution (see that component's own header comment);
   // every side effect a `:`/`Ctrl-b :` command implies lives here, reusing
   // the exact same functions the rest of this file already uses for the
   // equivalent bound key (switchToProgram, killWindowById, killPaneOrWindow,
-  // renameWindowById, reboot, grepRef, downloadResume) — "single source of
-  // behavior, no duplicated kill/rename logic" (PLAN.md 5C.1(c)).
+  // renameWindowById, reboot, grepRef, downloadResume) — single source of
+  // behavior, no duplicated kill/rename logic.
   // ---------------------------------------------------------------------
 
   /** Forwards to the focused pane's own embedded Editor if it's actually
-   * open (if any) — the ex-mode entry context (PLAN.md 5C.1(a)) always
+   * open (if any) — the ex-mode entry context always
    * tries this FIRST; only a command it doesn't recognize falls through to
    * the site-wide `commands` list below ("editor context wins"). Keyed off
    * the focused ref's own capability (same simplification as
@@ -1125,7 +1088,7 @@
   }
 
   /** Executes a resolved `cmdline.yaml` `commands[]` entry by its `action`
-   * id (PLAN.md 5C.2) — shared by both the "site" and "ex" entry contexts.
+   * id — shared by both the "site" and "ex" entry contexts.
    * Returns an error string on failure, `undefined` on success (the box
    * closes itself whenever this returns nothing, same convention as the
    * `onSubmit` prop it's called from). */
@@ -1159,7 +1122,7 @@
         downloadResume();
         return undefined;
       case "exit-program":
-        // Locked decision #2 (site-mode `:q` / cmdline `q`): exits the
+        // Site-mode `:q` / cmdline `q`: exits the
         // active pane's program to a shell — never kills the window, no
         // last-window guard to apply (see exitActiveProgram()'s own doc).
         exitActiveProgram();
@@ -1171,10 +1134,9 @@
 
   /** Resolves `trimmed` against the site-wide `commands` list and runs it,
    * or reports E492 if nothing matches — the shared tail of both "site"
-   * mode and ex mode's own fallback (PLAN.md 5C.2 "unknown -> the Phase-3
-   * E492 template", reused verbatim for every context, not just an open
-   * editor's — see cmdline.yaml's own `errors.unknownCommandTemplate`
-   * comment). */
+   * mode and ex mode's own fallback (the unknown-command template, reused
+   * verbatim for every context, not just an open editor's — see
+   * cmdline.yaml's own `errors.unknownCommandTemplate` comment). */
   function executeSiteOrUnknown(trimmed: string): string | undefined {
     const { name, args } = parseInput(trimmed);
     const def = resolveCommand(cmdline.commands, name);
@@ -1182,12 +1144,12 @@
     return formatUnknownCommand(trimmed);
   }
 
-  /** `Ctrl-b :` tmux command-prompt mode (PLAN.md 5C.1(c)) — parses and
+  /** `Ctrl-b :` tmux command-prompt mode — parses and
    * dispatches `rename-window <name>` / `kill-window` / `kill-pane` /
    * `select-window <0-5>` through the exact functions the bound keys
    * (`,` / `&` / `x` / digit targets) already use, minus their interactive
    * confirm step: a typed command is already deliberate, exactly like
-   * `:q` bypassing the bare-key q/Esc ban (PLAN.md items 15/16) — real
+   * `:q` bypassing the bare-key q/Esc ban — real
    * tmux's own command-prompt doesn't re-confirm `:kill-window` either
    * (only the `&` KEY binding is wrapped in `confirm-before`). */
   function executeTmuxCommand(trimmed: string): string | undefined {
@@ -1239,15 +1201,14 @@
     if (mode === "ex") {
       const result = runEditorExCommand(trimmed);
       if (result.recognized) return result.error;
-      // Not a Phase-3 ex command — fall through to the site-wide set
-      // (PLAN.md 5C.1(a) "PLUS the site-wide set below").
+      // Not an editor ex command — fall through to the site-wide set too.
     }
 
     return executeSiteOrUnknown(trimmed);
   }
 
-  /** HelpSearch.svelte's `onExecute` prop (PLAN.md Iteration 3 Phase 3 item
-   * 3.3) — Enter on a command row there runs through the exact same
+  /** HelpSearch.svelte's `onExecute` prop — Enter on a command row there
+   * runs through the exact same
    * executeSiteAction switch every `:` command already does, with no typed
    * args (the palette's own typed text is a search query, never passed
    * through as a command argument). HelpSearch.svelte closes itself right
@@ -1272,29 +1233,25 @@
 
     if (e.key === "Escape") return true; // cancel — swallowed, no action
 
-    // PLAN.md Phase 5 item 5.1 / verifier round 2 regression fix: while a
-    // status-bar prompt (rename/confirm) is open, it OWNS the keyboard —
-    // the only prefixed key allowed through is `]` (paste into the
-    // prompt's own registered paste target). Every other prefixed command
-    // (digit targets, n/p, d/w/0, ,/&/x/[, ?) is inert here: swallowed with
-    // zero side effects, leaving the prompt bound to whatever window it was
-    // opened for. Without this gate, `Ctrl-b <anything>` while a prompt was
-    // open ran the FULL prefix system out from under it — switching the
-    // view while a stale rename prompt for the OLD window stayed open (and
-    // committed onto the NEW one), or silently replacing a rename prompt
-    // with a kill-window confirm — exactly what an independent verifier
-    // reproduced after the previous fix's reordering. This check must come
-    // before every other branch below, `]` excepted.
+    // While a status-bar prompt (rename/confirm) is open, it OWNS the
+    // keyboard — the only prefixed key allowed through is `]` (paste into
+    // the prompt's own registered paste target). Every other prefixed
+    // command (digit targets, n/p, d/w/0, ,/&/x/[, ?) is inert here:
+    // swallowed with zero side effects, leaving the prompt bound to
+    // whatever window it was opened for. Without this gate, `Ctrl-b
+    // <anything>` while a prompt was open would run the FULL prefix system
+    // out from under it — switching the view while a stale rename prompt
+    // for the OLD window stayed open (and committed onto the NEW one), or
+    // silently replacing a rename prompt with a kill-window confirm. This
+    // check must come before every other branch below, `]` excepted.
     //
-    // PLAN.md Phase 5C extends the exact same gate to an open Cmdline box:
-    // "while it's open the prefix system should treat it like the status
-    // prompts (only Ctrl-b arm + ] allowed through)" — this also means a
-    // prompt already open blocks `Ctrl-b :` from opening the box at all
-    // (checked below, after this combined gate), which is the "pick one
-    // and test it" precedence PLAN.md 5C.1 calls for between the two modal
-    // systems: prompts win over opening the box. PLAN.md Iteration 3 Phase
-    // 3 item 3.3 extends the exact same gate a second time to the new `?`
-    // HelpSearch palette — same modal, same treatment.
+    // The exact same gate extends to an open Cmdline box: while it's open
+    // the prefix system treats it like the status prompts (only Ctrl-b arm
+    // + ] allowed through) — this also means a prompt already open blocks
+    // `Ctrl-b :` from opening the box at all (checked below, after this
+    // combined gate): prompts win over opening the box. The same gate
+    // extends a second time to the `?` HelpSearch palette — same modal,
+    // same treatment.
     if (statusBarRef?.isPromptActive() || cmdlineRef?.isOpen?.() || helpSearchRef?.isOpen?.()) {
       if (e.key === "]") {
         e.preventDefault();
@@ -1314,16 +1271,15 @@
 
     const pk = e.key.toLowerCase();
 
-    // PLAN.md Iteration 3 Phase 6 item 6.5 (documented keyboard-slot choice,
-    // advisor-reviewed) — while choose-tree is open, it owns the keyboard
-    // for its OWN vocabulary via a LATER delegation slot (ChooseTree.svelte's
-    // own `handleKey`, consulted after this whole function returns). Four
+    // While choose-tree is open, it owns the keyboard for its OWN
+    // vocabulary via a LATER delegation slot (ChooseTree.svelte's own
+    // `handleKey`, consulted after this whole function returns). Four
     // PREFIXED keys are gated OFF here specifically, though: `,`/`&`/`x`
     // (status-bar rename/kill prompts) and `:` (the Cmdline box) would each
     // pop a competing modal UNDERNEATH the overlay — since this component's
     // handleKey runs BEFORE StatusBar's/Cmdline's in the dispatch chain, that
     // prompt's own y/n/Enter keystrokes could never reach it, leaving it
-    // permanently starved (advisor-caught). Window-switch keys (digits, n/p)
+    // permanently starved. Window-switch keys (digits, n/p)
     // and detach (`d`) are deliberately NOT gated — both close the overlay
     // for free (`closeWindowChrome()`/`detachSession()` already do), so
     // there's nothing to starve.
@@ -1349,7 +1305,7 @@
       return true;
     }
     if (pk === "c") {
-      // PLAN.md Iteration 4 item 16 — `c` is tmux new-window: creates a
+      // `c` is tmux new-window: creates a
       // fresh window running the in-window shell program and switches to it
       // immediately (see `createWindowInSession`'s own comment).
       e.preventDefault();
@@ -1357,22 +1313,19 @@
       return true;
     }
     if (pk === "w") {
-      // PLAN.md Locked decision #3 / Iteration 3 Phase 6 item 6.5 — `w` is
-      // now real tmux choose-tree, REPLACING the Phase 4/5 "go home"
-      // behavior (`0` still always selects window 0, unaffected). Closes
-      // grep/cmdline/palette first (window-chrome contract) — reachable in
-      // practice only for grep (Cmdline/HelpSearch being open already
-      // blocks every prefixed key including this one, per the combined gate
-      // above), same "prefix precedence over grep" PLAN.md Phase 1 rule
-      // every other window-switch prefix key already follows.
+      // `w` is real tmux choose-tree (`0` still always selects window 0,
+      // unaffected). Closes grep/cmdline/palette first (window-chrome
+      // contract) — reachable in practice only for grep (Cmdline/HelpSearch
+      // being open already blocks every prefixed key including this one,
+      // per the combined gate above), same "prefix precedence over grep"
+      // rule every other window-switch prefix key already follows.
       e.preventDefault();
       closeWindowChrome();
       chooseTreeRef?.openOverlay();
       return true;
     }
     if (pk === "d") {
-      // PLAN.md Locked decision #3 / Iteration 3 Phase 5 item 5.1 — `d` is
-      // now real tmux detach, REPLACING the Phase 4 "go home" behavior.
+      // `d` is real tmux detach.
       e.preventDefault();
       detachSession();
       return true;
@@ -1403,7 +1356,7 @@
       return true;
     }
     if (e.key === ":") {
-      // Ctrl-b : — PLAN.md 5C.1(c), real tmux's own "command-prompt"
+      // Ctrl-b : — real tmux's own "command-prompt"
       // binding: opens the SAME floating box in its third mode
       // (tmuxCommands only — rename-window/kill-window/kill-pane/
       // select-window/select-layout). The combined isPromptActive/
@@ -1414,8 +1367,7 @@
       return true;
     }
 
-    // PLAN.md Iteration 3 Phase 6 item 6.1 — `|`/`%` split RIGHT (row),
-    // `-`/`"` split BELOW (column).
+    // `|`/`%` split RIGHT (row), `-`/`"` split BELOW (column).
     if (e.key === "|" || e.key === "%") {
       e.preventDefault();
       splitFocusedPane("row");
@@ -1426,7 +1378,7 @@
       splitFocusedPane("column");
       return true;
     }
-    // Item 6.2 — prefix `o` next-pane, `;` last-pane, arrow keys directional.
+    // Prefix `o` next-pane, `;` last-pane, arrow keys directional.
     if (pk === "o") {
       e.preventDefault();
       cycleFocusedPane();
@@ -1459,8 +1411,8 @@
   }
 
   function handleKey(e: KeyboardEvent) {
-    // PLAN.md Phase 5B: boot is unskippable — "there is no key or click
-    // that jumps past it into the site" (BootSequence.svelte's own header
+    // Boot is unskippable — there is no key or click
+    // that jumps past it into the site (BootSequence.svelte's own header
     // comment). Checked before EVERYTHING else, including copy-mode, which
     // can't legitimately be open yet at this point anyway but is skipped
     // unconditionally here for the same reason the mock's own boot
@@ -1468,7 +1420,7 @@
     // nothing else while booting.
     if (bootRef?.isActive?.()) return;
 
-    // Item 5.3's copy-mode overlay is always-mounted / consulted-early,
+    // The copy-mode overlay is always-mounted / consulted-early,
     // same as GrepOverlay's own contract — checked before the prefix system
     // below, same relative position it has always had.
     if (copyModeRef?.handleKey(e)) return;
@@ -1485,18 +1437,16 @@
     // ever arrives.
     if (e.key === "Control" || e.key === "Shift" || e.key === "Alt" || e.key === "Meta") return;
 
-    // Ctrl-b Ctrl-b — tmux's own default "send-prefix" binding (PLAN.md
-    // Phase 5 item 5.2): while armed, a SECOND Ctrl-b disarms (like any
-    // other prefixed key) but, uniquely, does NOT stop there — it falls
-    // through to the normal view-delegation chain below as a literal
-    // keydown, which is what makes vim's own Ctrl-b (full-page-back,
-    // `isEditorScrollChord` further down) reachable at all: a bare Ctrl-b
-    // is otherwise always consumed by the prefix-arm branch first. This
-    // replaces the old "pressing Ctrl-b again while armed just re-arms"
-    // behavior — re-arming is still what happens for every OTHER prefixed
-    // key (see `armPrefix()`'s own re-entrant reset), just not this one.
+    // Ctrl-b Ctrl-b — tmux's own default "send-prefix" binding: while
+    // armed, a SECOND Ctrl-b disarms (like any other prefixed key) but,
+    // uniquely, does NOT stop there — it falls through to the normal
+    // view-delegation chain below as a literal keydown, which is what makes
+    // vim's own Ctrl-b (full-page-back, `isEditorScrollChord` further down)
+    // reachable at all: a bare Ctrl-b is otherwise always consumed by the
+    // prefix-arm branch first. Every OTHER prefixed key instead re-arms
+    // (see `armPrefix()`'s own re-entrant reset); this one uniquely does not.
     //
-    // Gated behind `!isPromptActive()` (verifier round 2): dispatching a
+    // Gated behind `!isPromptActive()`: dispatching a
     // literal Ctrl-b down the view chain while a status-bar prompt is open
     // could still reach e.g. an open editor's own Ctrl-b page-back sitting
     // behind the prompt — a side effect the prompt-owns-the-keyboard
@@ -1527,17 +1477,16 @@
       // to grep/view handling below as if no prefix were armed.
     }
 
-    // Ctrl-b arms the tmux prefix (PLAN.md Phase 1 "Prefix precedence over
-    // grep") — checked BEFORE grep delegation now, tmux-faithful: the
-    // prefix works everywhere, including while the grep overlay is open
-    // (needed for `Ctrl-b ]`'s paste into the grep query). Only Ctrl-b
-    // itself is preventDefault-ed (global keymap rule: every other modifier
-    // combo falls through untouched). Skipped when `sendPrefixLiteral` is
-    // set above — this exact Ctrl-b keydown is the second half of a
-    // send-prefix chord, not a fresh arm.
+    // Ctrl-b arms the tmux prefix — checked BEFORE grep delegation,
+    // tmux-faithful: the prefix works everywhere, including while the grep
+    // overlay is open (needed for `Ctrl-b ]`'s paste into the grep query).
+    // Only Ctrl-b itself is preventDefault-ed (global keymap rule: every
+    // other modifier combo falls through untouched). Skipped when
+    // `sendPrefixLiteral` is set above — this exact Ctrl-b keydown is the
+    // second half of a send-prefix chord, not a fresh arm.
     //
-    // PLAN.md Iteration 3 Phase 5 item 5.1: "while detached, the Ctrl-b
-    // prefix is INERT — no prefix arming" — `activeSession` gates the arm
+    // While detached, the Ctrl-b prefix is INERT — no prefix arming —
+    // `activeSession` gates the arm
     // itself (not e.g. a check inside `handlePrefixedKey`, which would only
     // stop DISPATCH, not arming): with no arm, `prefixArmed` simply never
     // becomes true while detached, so a bare Ctrl-b just falls through
@@ -1551,8 +1500,8 @@
       return;
     }
 
-    // PLAN.md Iteration 3 Phase 6 item 6.5 (documented keyboard-slot choice)
-    // — choose-tree's own handleKey slot: right after copy-mode AND after
+    // Choose-tree's own handleKey slot (documented keyboard-slot choice):
+    // right after copy-mode AND after
     // the tmux prefix system has had its FULL turn (both dispatch of an
     // armed prefix above, AND arming a bare Ctrl-b immediately above this),
     // but before Cmdline/StatusBar/every view ref. Placing this AFTER the
@@ -1561,7 +1510,7 @@
     // `handleKey` swallows unconditionally (it owns the keyboard while
     // open) — if this check ran any earlier, a bare Ctrl-b could never even
     // ARM while choose-tree is open, making `Ctrl-b d` (detach, which must
-    // still work per PLAN.md 6.5) unreachable. With the slot here, the arm
+    // still work) unreachable. With the slot here, the arm
     // above already returned by the time a plain Ctrl-b would reach this
     // line, and the FOLLOWING prefixed key still dispatches through
     // `handlePrefixedKey` first (same "if (prefixArmed)" block above) before
@@ -1573,25 +1522,25 @@
     // reaches it here since the prefix system above is a no-op for those.
     if (chooseTreeRef?.handleKey(e)) return;
 
-    // PLAN.md Phase 5 item 5.1: a status-line prompt (rename/confirm) OWNS
+    // A status-line prompt (rename/confirm) OWNS
     // the keyboard once it's open — but ONLY AFTER the prefix system above
     // has had its turn. This is "prefix precedence" extended to prompts
-    // (mirroring the Phase 1 "prefix precedence over grep" rule this file
-    // already applies to GrepOverlay): a prompt-open Ctrl-b must still be
-    // able to ARM (the two checks above), and the very next prefixed key
-    // (e.g. `]`, which pasteFromBuffer() below routes into the prompt's own
-    // registered paste target) must still be able to DISPATCH — neither of
-    // which could ever happen if this check ran first and swallowed both
-    // keydowns before the prefix system ever saw them (the bug an
-    // independent verifier caught: `Ctrl-b ]` silently typed a literal `]`
-    // into the rename box instead of pasting, because the old top-of-
-    // function placement here consumed the Ctrl-b that was supposed to arm
-    // it). Every OTHER key — plain typing, Enter, Backspace, Escape — never
-    // matches the prefix system above (it only reacts to an armed prefix or
-    // a bare Ctrl-b) and so still reaches the prompt exactly as before.
-    // PLAN.md Phase 5C item 5C.4: the Cmdline box, once open, is "checked
-    // at the top alongside boot/copy-mode/status prompts" — same relative
-    // position as `statusBarRef.handleKey` immediately below (after the
+    // (mirroring the same rule this file already applies to GrepOverlay):
+    // a prompt-open Ctrl-b must still be able to ARM (the two checks
+    // above), and the very next prefixed key (e.g. `]`, which
+    // pasteFromBuffer() below routes into the prompt's own registered
+    // paste target) must still be able to DISPATCH — neither of which
+    // could happen if this check ran first and swallowed both keydowns
+    // before the prefix system ever saw them (that ordering bug: `Ctrl-b
+    // ]` would silently type a literal `]` into the rename box instead of
+    // pasting, because a top-of-function placement here would consume the
+    // Ctrl-b that was supposed to arm it). Every OTHER key — plain typing,
+    // Enter, Backspace, Escape — never matches the prefix system above (it
+    // only reacts to an armed prefix or a bare Ctrl-b) and so still
+    // reaches the prompt exactly as before.
+    // The Cmdline box, once open, is checked at the top alongside
+    // boot/copy-mode/status prompts — same relative position as
+    // `statusBarRef.handleKey` immediately below (after the
     // prefix system has had its turn, for the same "Ctrl-b ] must still
     // reach it" reason spelled out in that check's own comment), and
     // mutually exclusive with it in practice: opening the box requires no
@@ -1600,7 +1549,7 @@
     // currently starts a rename/kill confirm from inside an open Cmdline).
     if (cmdlineRef?.handleKey(e)) return;
 
-    // PLAN.md Iteration 3 Phase 3 item 3.3: the `?` HelpSearch palette gets
+    // The `?` HelpSearch palette gets
     // the exact same relative slot as Cmdline immediately above it (right
     // after the prefix system, right before the status-bar prompt) — same
     // "Ctrl-b ] must still reach it" reasoning, and mutually exclusive with
@@ -1611,29 +1560,26 @@
     if (statusBarRef?.handleKey(e)) return;
 
     // Ctrl-d/Ctrl-u/Ctrl-f/Ctrl-b are reserved for the Builds/Personnel file
-    // editors' half/full-page scroll (PLAN.md Phase 5 "Editor scrolling",
-    // extended by Phase 3's vim engine with Ctrl-f/b) — the one deliberate
-    // exception to "modifier combos fall through untouched" so far (the
-    // tmux prefix above is Ctrl-b itself, which is why a bare Ctrl-b never
-    // reaches this chord check: it's always consumed by the prefix-arm
-    // branch first — see the executor report for this known Ctrl-b/vim
-    // overlap). Everything else still falls through untouched.
+    // editors' half/full-page scroll (the vim engine's Ctrl-f/b included) —
+    // the one deliberate exception to "modifier combos fall through
+    // untouched" so far (the tmux prefix above is Ctrl-b itself, which is
+    // why a bare Ctrl-b never reaches this chord check: it's always
+    // consumed by the prefix-arm branch first). Everything else still
+    // falls through untouched.
     const isEditorScrollChord =
       e.ctrlKey &&
       !e.metaKey &&
       !e.altKey &&
       (e.key === "d" || e.key === "D" || e.key === "u" || e.key === "U" || e.key === "f" || e.key === "F" || e.key === "b" || e.key === "B");
 
-    /** Tries the FOCUSED pane's own ref (PLAN.md "editor gate consults the
-     * FOCUSED pane only" — replaces the old per-view buildsRef/personnelRef/
-     * profileRef/helpRef branches with one generic lookup through
-     * PaneTree's ref registry), subject to the same "no bare modifier
-     * combos except the editor scroll chord" gate every ref has always
-     * used. Whether the widened (scroll-chord-permitting) gate applies is
-     * now a CAPABILITY check (does this ref export `isEditorOpen` at all?)
-     * rather than an identity check (`view === "builds"/"personnel"`) —
-     * only Builds/Personnel ever do, so the outcome is identical to before
-     * this file's Phase 4 refactor. Returns whether the key was consumed. */
+    /** Tries the FOCUSED pane's own ref — the editor gate consults the
+     * FOCUSED pane only, via one generic lookup through PaneTree's ref
+     * registry, subject to the same "no bare modifier combos except the
+     * editor scroll chord" gate every ref has always used. Whether the
+     * widened (scroll-chord-permitting) gate applies is a CAPABILITY check
+     * (does this ref export `isEditorOpen` at all?) rather than an
+     * identity check (`view === "builds"/"personnel"`) — only
+     * Builds/Personnel ever do. Returns whether the key was consumed. */
     function tryFocusedRef(): boolean {
       const ref = activeRef();
       if (!ref?.handleKey) return false;
@@ -1647,20 +1593,15 @@
       return false;
     }
 
-    // PLAN.md Phase 3 "delegation flip": while the focused pane's vim
-    // Editor is open, it must get first refusal ahead of GrepOverlay so `/`
-    // searches the open buffer instead of opening grep — vim-faithful.
-    // Everywhere else (no editor open), the original order holds: grep is
-    // consulted first, exactly mirroring the prototype's own dispatch order
-    // (Homepage.dc.html line 980: `if (this.state.grep) { this.grepKey(e);
-    // return; }` runs before any view-specific handling), except that the
-    // tmux prefix (above) now runs ahead of it per the retired "prefix
-    // inert while grep open" rule.
+    // Delegation flip: while the focused pane's vim Editor is open, it must
+    // get first refusal ahead of GrepOverlay so `/` searches the open
+    // buffer instead of opening grep — vim-faithful. Everywhere else (no
+    // editor open), grep is consulted first, except that the tmux prefix
+    // (above) runs ahead of it.
     const editorIsOpen = !!activeRef()?.isEditorOpen?.();
 
-    // PLAN.md Iteration 3 Phase 4 Architecture notes: "focused-shell panes
-    // consume printable keys/Enter/Backspace/arrows BEFORE grep's `/`
-    // opener" — a shell pane gets the exact same first-refusal treatment an
+    // Focused-shell panes consume printable keys/Enter/Backspace/arrows
+    // BEFORE grep's `/` opener — a shell pane gets the exact same first-refusal treatment an
     // open vim editor already does (both are "this pane owns its own text
     // input right now"), so `/`/`:`/`?` all type into the shell instead of
     // opening grep/Cmdline/HelpSearch. `editorIsOpen` itself stays scoped to
@@ -1669,8 +1610,8 @@
     // reaches those checks at all (Shell.svelte's handleKey claims every
     // printable character first).
     //
-    // PLAN.md Iteration 3 Phase 5 item 5.1: "keyboard belongs to the host
-    // shell" while detached — `!activeSession` extends the exact same
+    // Keyboard belongs to the host shell while detached — `!activeSession`
+    // extends the exact same
     // greedy treatment to the host shell instance, which `activeRef()`
     // above already resolves to in that case. This is also what makes the
     // tmux prefix's own inertness complete: with the prefix never arming
@@ -1694,25 +1635,25 @@
       return;
     }
 
-    // Covers Builds/Personnel's non-editor handling (e.g. Builds' j/k repo
-    // navigation) AND Profile's `r`/HelpView's j/k (which used to be two
-    // separate unconditional blocks here — both refs simply never export
+    // Covers Builds/Personnel's non-editor handling (e.g. Builds' arrow-key
+    // repo navigation) AND Profile's `r`/HelpView's arrow-key scroll — both
+    // refs simply never export
     // `isEditorOpen`, so `editorIsOpen` is already false for them and this
     // one call reaches them in exactly the same relative position).
     if (!paneIsGreedy && tryFocusedRef()) {
       return;
     }
 
-    // PLAN.md Phase 5C item 5C.1(b) fallback opener: a bare `:` that
-    // NOTHING above already consumed opens the site-wide Cmdline box.
-    // Placed here — after every text-input-owning consumer above has had
-    // its turn (grep's own query, an open editor's `/` search, Personnel's
-    // filter mode, the status-bar rename prompt) — for free: each of those
-    // already swallows every key (including `:`) while it's active, so
-    // this line is simply never reached while any of them own the
-    // keyboard, which is exactly "`:` stays literal inside grep query/
-    // personnel filter/rename prompt" (5C.1(b)) with no extra state probes
-    // needed. `editorIsOpen` (computed above) picks context (a) vs (b):
+    // Fallback opener: a bare `:` that NOTHING above already consumed
+    // opens the site-wide Cmdline box. Placed here — after every
+    // text-input-owning consumer above has had its turn (grep's own query,
+    // an open editor's `/` search, Personnel's filter mode, the status-bar
+    // rename prompt) — for free: each of those already swallows every key
+    // (including `:`) while it's active, so this line is simply never
+    // reached while any of them own the keyboard, which is exactly "`:`
+    // stays literal inside grep query/personnel filter/rename prompt" with
+    // no extra state probes needed. `editorIsOpen` (computed above) picks
+    // context (a) vs (b):
     // ex mode when a file editor is open (even though it no longer
     // intercepts `:` itself — see Editor.svelte's own comment on that),
     // site mode everywhere else. Shift+":" (US-layout Shift+;) must still
@@ -1724,15 +1665,14 @@
       return;
     }
 
-    // PLAN.md Iteration 3 Phase 3 item 3.3 / Locked decision #14: a bare
-    // `?` that NOTHING above already consumed opens the `?` HelpSearch
-    // palette — mirrors the `:` fallback opener immediately above in every
-    // way (same reasoning for why grep/cmdline/a status prompt/copy-mode/
-    // boot are all already guaranteed inactive by the time control reaches
-    // here — each of those consumes `?` itself while active, exactly like
-    // `:`), EXCEPT one: unlike `:` (which still opens Cmdline in "ex" mode
-    // while a file editor is open), `?` must NOT open anything while an
-    // editor is open (Locked #14 "editor open (any mode)" is a full
+    // A bare `?` that NOTHING above already consumed opens the `?`
+    // HelpSearch palette — mirrors the `:` fallback opener immediately
+    // above in every way (same reasoning for why grep/cmdline/a status
+    // prompt/copy-mode/boot are all already guaranteed inactive by the
+    // time control reaches here — each of those consumes `?` itself while
+    // active, exactly like `:`), EXCEPT one: unlike `:` (which still opens
+    // Cmdline in "ex" mode while a file editor is open), `?` must NOT open
+    // anything while an editor is open ("editor open (any mode)" is a full
     // exclusion, not a mode switch) — Editor.svelte's own handleKey already
     // returns `false` for an unrecognized `?` (it's neither a vim motion
     // nor a mutating key), so without this explicit `!editorIsOpen` guard
@@ -1774,18 +1714,15 @@
     }
   }
 
-  /** PLAN.md Risks note "popstate bypasses the switch pipeline today; route
-   * it through selectWindow in Phase 4" — unlike the pre-Phase-4 version
-   * (which just reassigned `view` directly, skipping window-chrome
-   * close-on-switch entirely), this now goes through the exact same
-   * `switchToWindowById` every other window-switch path uses: closes grep/
-   * cmdline/help-palette, then selects the DEFAULT session's window whose id
-   * matches the popped route (a browser back/forward always lands on one of
-   * the six canonical routes, never a mid-shell state) — "maps route ->
-   * session 0 window if present, else no-op" (Architecture notes); no-op is
-   * automatic here since `switchToWindowById` already no-ops for a missing
-   * id. `syncUrl()` inside it never re-pushes: the browser has already
-   * updated `location.pathname` to match by the time this fires. */
+  /** Popstate goes through the exact same `switchToWindowById` every other
+   * window-switch path uses: closes grep/cmdline/help-palette, then
+   * selects the DEFAULT session's window whose id matches the popped
+   * route (a browser back/forward always lands on one of the six
+   * canonical routes, never a mid-shell state) — maps route to session 0's
+   * window if present, else no-op; no-op is automatic here since
+   * `switchToWindowById` already no-ops for a missing id. `syncUrl()`
+   * inside it never re-pushes: the browser has already updated
+   * `location.pathname` to match by the time this fires. */
   function onPopState() {
     switchToWindowById(viewIdToProgram(pathToView(location.pathname)));
   }
@@ -1810,7 +1747,7 @@
 
   <div style="position:relative;z-index:2;height:100vh;overflow:hidden;display:flex;flex-direction:column">
     {#if activeSession}
-      <!-- Attached (PLAN.md Iteration 3 Phase 5 item 5.1) — the non-null
+      <!-- Attached — the non-null
            assertions below are safe: this whole branch only renders while
            `activeSession` (hence `activeWindow`) is defined. -->
       <Notifications
@@ -1858,7 +1795,7 @@
         onReboot={reboot}
       />
     {:else}
-      <!-- Detached (PLAN.md Iteration 3 Phase 5 item 5.1) — the host shell,
+      <!-- Detached — the host shell,
            fullscreen over the dim radar: no Toasts (dashboard-only), no
            PaneTree/StatusBar (no session owns the screen). -->
       <Shell

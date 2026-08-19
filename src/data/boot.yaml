@@ -1,4 +1,4 @@
-# E.D.I.T.H boot sequence copy + config (PLAN.md Phase 5B).
+# E.D.I.T.H boot sequence copy + config.
 # Source: /Users/shev/Desktop/waiting-on-form-answers/project/
 # "Boot Sequence.dc.html", the `booting` sc-if block (lines 167-276) and its
 # `Component` class props/LOG array (lines 283-442). Geometry (ring sizes,
@@ -11,8 +11,7 @@
 # only that row's timing/tag, joined to the content file by `id`.
 
 bootMs: 4600
-# "cyan" is the only variant actually rendered (PLAN.md: "render only the
-# active tint variant; keep red/gold configs in data") — the mock exposed
+# "cyan" is the only variant actually rendered — the mock exposed
 # `coreTint` as a 3-way design-tool enum prop; `tints` below keeps all three
 # palettes on file so a future change of this one value is a data edit, not
 # a code change, even though only `tints[coreTint]` is ever painted.
@@ -39,10 +38,9 @@ phaseLabels:
 
 coreLabel: "E.D.I.T.H"
 
-# Compass ring furniture (PLAN.md 5B.1 "tick marks/compass glyphs/degree
-# labels") — visible glyphs, so they live here even though their positions
-# are pure geometry (inline in the component, like Wallpaper's ring/tick
-# treatment).
+# Compass ring furniture — visible glyphs, so they live here even though
+# their positions are pure geometry (inline in the component, like
+# Wallpaper's ring/tick treatment).
 compass:
   top: "▼"
   bottom: "▲"
@@ -55,8 +53,7 @@ compass:
 # including) the 16-char padded value, so the box's fixed-width alignment
 # is exactly the mock's own ASCII art, unchanged by any of this file's
 # other content. `threshold`/`onlineText` feed
-# src/lib/boot.ts's statusRowValue() (PLAN.md: "16-char padded threshold
-# fills (14/30/44/62/84)").
+# src/lib/boot.ts's statusRowValue().
 statusBox:
   top: "┌─ e.d.i.t.h ───────────────────────┐"
   bottom: "└───────────────────────────────────┘"

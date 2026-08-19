@@ -2,10 +2,10 @@
   // Full-screen nvim-style file viewer (design/Homepage.dc.html lines
   // 317-336 markup, reproduced verbatim: red file tab, gutter + line, status
   // bar with mode indicator / branch / breadcrumb / position / close pill).
-  // The prototype only ever mounts this for a personnel role doc (Phase 6);
-  // this component is built standalone here (PLAN.md Phase 5 scope item 3)
-  // so Phase 5's repo-file browsing and Phase 6's personnel roles share one
-  // implementation. It is deliberately "dumb" about content: every string
+  // The prototype only ever mounts this for a personnel role doc; this
+  // component is built standalone here so Builds' repo-file browsing and
+  // Personnel's role docs can share one implementation. It is deliberately
+  // "dumb" about content: every string
   // comes from the `labels` prop (caller's own data file — builds.yaml for
   // Builds, personnel.yaml for Personnel), every line is already
   // classified+styled by the caller (docline.ts for .md, a flat body color
@@ -13,20 +13,19 @@
   // touches anything the caller doesn't explicitly own (no fetch, no
   // routing).
   //
-  // PLAN.md Phase 3 ("vim-lite engine", item 10) replaces the original
-  // line-only cursor with a real vim-lite NORMAL/VISUAL/VISUAL-LINE modal
+  // This is a real vim-lite NORMAL/VISUAL/VISUAL-LINE modal
   // engine: a column cursor, word/line motions with numeric counts,
   // charwise/linewise visual selection with yank-to-paste-buffer, in-buffer
   // `/` search with `n`/`N`, and a minimal `:` ex-command machine (`:q`/
   // `:q!` close, `:w`/`:wq` show a readonly error, `:<number>` jumps,
   // anything else is an E492-style error) — all of it vim-faithful, none of
   // it able to actually mutate the buffer (every insert/change/delete-
-  // family key just flashes a readonly bell). PLAN.md Phase 5C LIFTS the
-  // ex-command machine's PARSING out to `../lib/cmdline.ts`'s
-  // `parseExCommand` (pure, shared with that module's own unit tests) and
-  // moves its PRESENTATION (the `:` keystroke, the typed text, the
-  // resulting error message) to the site-wide floating Cmdline box
-  // (`Cmdline.svelte`, driven by Terminal.svelte) — this component now only
+  // family key just flashes a readonly bell). The ex-command machine's
+  // PARSING lives in `../lib/cmdline.ts`'s
+  // `parseExCommand` (pure, shared with that module's own unit tests); its
+  // PRESENTATION (the `:` keystroke, the typed text, the
+  // resulting error message) belongs to the site-wide floating Cmdline box
+  // (`Cmdline.svelte`, driven by Terminal.svelte) — this component only
   // exposes `runExCommand()` to APPLY an already-typed command's effect
   // (see that function's own doc comment). The rest of the engine — the
   // actual motion/word/search/range math — lives in `../lib/vim.ts`, a pure
@@ -34,7 +33,7 @@
   // vim.test.ts); this component owns only the stateful parts (mode,
   // cursor, pending key sequences, scroll sync, rendering).
   //
-  // Scrolling is a PLAN.md "Builds interactivity extension" the prototype
+  // Scrolling is an interactivity extension the prototype
   // has no precedent for (its role docs are short enough to never scroll):
   // j/k moves the cursor (scrolled into view), Ctrl-d/u/f/b move a half/full
   // page, gg/G jump top/bottom, and the status line's position indicator
@@ -48,7 +47,7 @@
   // scrolls — a personnel doc always fits). Real repo files can be much
   // longer, so this swaps in `overflow-y:auto` with the scrollbar hidden
   // both ways (Firefox/WebKit) — the only rendering difference from the
-  // prototype's markup, and invisible whenever content fits (Phase 6's
+  // prototype's markup, and invisible whenever content fits (the
   // 06-editor golden, which never scrolls, is unaffected).
   import type { EditorLabels } from "../lib/data";
   import {
@@ -98,8 +97,8 @@
     labels: EditorLabels;
     breadcrumbLeft: string;
     breadcrumbRight: string;
-    /** PLAN.md Iteration 3 Phase 6 item 6.1 — see PaneTree.svelte's own
-     * header comment (multi-instance data-copy-source gating). Defaults to
+    /** See PaneTree.svelte's own header comment (multi-instance
+     * data-copy-source gating). Defaults to
      * `true`: Builds/Personnel are this component's only two call sites and
      * both always pass it explicitly, but a default keeps this file safe if
      * a future caller doesn't. */
@@ -155,7 +154,7 @@
   }
 
   // ---------------------------------------------------------------------
-  // Cursor + mode state (PLAN.md Phase 3 "Cursor model" / "Motions + modes")
+  // Cursor + mode state ("Cursor model" / "Motions + modes")
   // ---------------------------------------------------------------------
 
   let cursor = $state<CursorPos>({ line: 1, col: 0 });
@@ -181,8 +180,7 @@
    *
    * Landing exactly on the first or last line snaps `scrollTop` straight to
    * that edge (0 / scrollHeight) instead of going through
-   * `scrollIntoView({block: "nearest"})` — the pre-Phase-3 `jumpTop()`/
-   * `jumpBottom()` this replaces did the same, because "nearest" only
+   * `scrollIntoView({block: "nearest"})`, because "nearest" only
    * guarantees the row becomes visible, not that the scroller reaches its
    * true edge (it can stop a few px short), which would otherwise leave the
    * footer's Top/Bot indicator showing a stray "0%"/"99%" right after
@@ -223,7 +221,7 @@
   }
 
   // ---------------------------------------------------------------------
-  // Yank -> shared paste buffer + system clipboard (PLAN.md Phase 3 "y/yy")
+  // Yank -> shared paste buffer + system clipboard ("y/yy")
   // ---------------------------------------------------------------------
 
   function yank(text: string, kind: PasteBufferKind) {
@@ -269,14 +267,13 @@
   let countDigits = "";
 
   // ---------------------------------------------------------------------
-  // Readonly mutating-key bell (PLAN.md Phase 3 "readonly bell message").
-  // None of these keys can actually change the buffer — this is a
-  // read-only viewer — so every one of them just flashes
+  // Readonly mutating-key bell. None of these keys can actually change the
+  // buffer — this is a read-only viewer — so every one of them just flashes
   // `labels.readonlyBellMessage` and changes nothing. Deliberately not
   // exhaustive of every real vim mutating command (no `u`/redo — a
   // different message class in real vim, "already at oldest change", not a
-  // readonly error), but covers the full set PLAN.md names plus their
-  // natural case-pair completions.
+  // readonly error), but covers the documented set of mutating keys plus
+  // their natural case-pair completions.
   // ---------------------------------------------------------------------
 
   const MUTATING_KEYS = new Set([
@@ -302,7 +299,7 @@
   ]);
 
   // ---------------------------------------------------------------------
-  // Search (PLAN.md Phase 3 item 3.3). Matches are only recomputed when a
+  // Search. Matches are only recomputed when a
   // query COMMITS (Enter, or `lastSearchQuery` changes) — not on every
   // keystroke of typing — so scanning the whole buffer only happens once
   // per search, not once per character typed.
@@ -311,9 +308,9 @@
   const searchMatches = $derived(findMatches(rawLines, lastSearchQuery));
 
   // ---------------------------------------------------------------------
-  // Ctrl-b ] paste-target registration (PLAN.md Phase 5 item 5.3 / the
-  // design decisions' "grep query, personnel filter, rename prompt, editor
-  // search" list) — active only while the in-buffer `/` search prompt is
+  // Ctrl-b ] paste-target registration (one of the "grep query, personnel
+  // filter, rename prompt, editor search" paste targets) — active only
+  // while the in-buffer `/` search prompt is
   // actually accepting keystrokes, exactly like GrepOverlay's own query and
   // Personnel's own filter registrations.
   // ---------------------------------------------------------------------
@@ -346,10 +343,10 @@
       visualAnchor = null;
       return true;
     }
-    // Bare Esc in NORMAL mode is a vim-faithful no-op — PLAN.md items 15/16
-    // ban q/Esc from ever switching views, and this editor's own close path
-    // is `:q`/`:q!` only (see runExCommand below, invoked through the
-    // site-wide Cmdline box — PLAN.md Phase 5C), never Esc.
+    // Bare Esc in NORMAL mode is a vim-faithful no-op — q/Esc are banned
+    // from ever switching views, and this editor's own close path is
+    // `:q`/`:q!` only (see runExCommand below, invoked through the
+    // site-wide Cmdline box), never Esc.
     return true;
   }
 
@@ -375,16 +372,15 @@
     return true;
   }
 
-  /** Phase 3's own ex-command state machine — LIFTED for PLAN.md Phase 5C:
-   * the `:` keystroke itself, the text entry, and the resulting
-   * error/message PRESENTATION all now belong to the site-wide floating
-   * Cmdline box (src/components/Cmdline.svelte, driven by Terminal.svelte);
-   * this function is what's left once that's stripped out — apply the
-   * already-typed command's EFFECT and report back whether it was
-   * recognized at all (so Terminal.svelte knows whether to fall through to
-   * the site-wide command set — "editor context wins" only for commands
-   * this machine actually recognizes) and, if so, any resulting error
-   * string (using this editor instance's OWN labels, exactly as before —
+  /** The ex-command state machine's EFFECT application: the `:` keystroke
+   * itself, the text entry, and the resulting error/message PRESENTATION
+   * all belong to the site-wide floating Cmdline box
+   * (src/components/Cmdline.svelte, driven by Terminal.svelte); this
+   * function applies the already-typed command's EFFECT and reports back
+   * whether it was recognized at all (so Terminal.svelte knows whether to
+   * fall through to the site-wide command set — "editor context wins" only
+   * for commands this machine actually recognizes) and, if so, any
+   * resulting error string (using this editor instance's OWN labels —
    * `w`/`wq`'s readonly error never moves to a generic site-wide copy).
    * The PARSING itself is `src/lib/cmdline.ts`'s `parseExCommand`, pure and
    * unit-tested on its own — never rebuilt here. */
@@ -408,9 +404,8 @@
   /** Ctrl-d/u/f/b half/full page scroll. Ctrl-b is included for engine
    * completeness/unit-testability (`fullPage(-1)`) even though in the real
    * app `Ctrl-b` is always consumed first by Terminal.svelte's tmux-prefix
-   * arm — see this component's e2e coverage note and the executor report
-   * for the underlying PLAN.md design-decision conflict (vim's Ctrl-b vs.
-   * the tmux prefix, both bound to the same chord). */
+   * arm (vim's Ctrl-b and the tmux prefix are both bound to the same
+   * chord). */
   function handleCtrlChord(e: KeyboardEvent): boolean {
     clearGPending();
     clearYPending();
@@ -585,10 +580,9 @@
     // box now, not this component's own pending state (see runExCommand
     // above) — but a VISUAL/VISUAL-LINE selection must still be dropped
     // back to NORMAL AT THE MOMENT the box opens, same as `/` above
-    // (orchestrator ruling after a live-reproduced defect: leaving the
-    // selection alive under the box let a subsequent `:<n>` jump EXTEND it
-    // — span count grew 1->4 — instead of moving a bare cursor with no
-    // selection, which is the Phase-3-faithful behavior). The reset
+    // (leaving the selection alive under the box let a subsequent `:<n>`
+    // jump EXTEND it — span count grew 1->4 — instead of moving a bare
+    // cursor with no selection). The reset
     // happens here, at keydown time, NOT inside runExCommand (which only
     // ever sees the command text after Enter, long after any selection
     // state would already need to have been cleared).
@@ -633,10 +627,9 @@
    * offering an unconsumed key to whatever comes next, which is exactly
    * how a bare `:` reaches the site-wide Cmdline box's fallback opener —
    * see the `:` comment above). Esc only ever cancels a modal input
-   * (search) or a visual selection — PLAN.md Phase 3 removes the old bare
-   * q/Esc close entirely; `:q`/`:q!` (via runExCommand above, invoked
-   * through the Cmdline box — PLAN.md Phase 5C) is the only way out now,
-   * plus the mouse `[:q]` pill in the footer below.
+   * (search) or a visual selection — there is no bare q/Esc close;
+   * `:q`/`:q!` (via runExCommand above, invoked through the Cmdline box)
+   * is the only way out, plus the mouse `[:q]` pill in the footer below.
    */
   export function handleKey(e: KeyboardEvent): boolean {
     message = null;
@@ -676,12 +669,12 @@
   // ---------------------------------------------------------------------
   // Rendering: cursor block + visual-selection + search-match highlights.
   //
-  // Perf note (PLAN.md Phase 3 "keep performance sane on large files"):
+  // Perf note ("keep performance sane on large files"):
   // this only does character-level segmentation for the small set of
   // "interesting" lines — the cursor's own line, the lines spanned by an
   // active visual selection, and lines containing a search match — every
-  // other line short-circuits back to the exact same single-span markup
-  // the pre-Phase-3 version rendered. A whole-buffer re-scan only ever
+  // other line short-circuits back to a single-span markup. A whole-buffer
+  // re-scan only ever
   // happens once per committed search (via `searchMatches` above), never
   // per keystroke of cursor movement.
   // ---------------------------------------------------------------------
@@ -819,7 +812,7 @@
   }
 
   /** Same precedence as segStyle — one testid per segment, for e2e
-   * assertions (PLAN.md Phase 3.4 "v/V selection highlight appears"). */
+   * assertions ("v/V selection highlight appears"). */
   function segTestId(cls: string): string | undefined {
     if (cls.includes("cursor")) return "editor-cursor";
     if (cls.includes("sel")) return "editor-selection";
@@ -862,7 +855,7 @@
       </div>
     {/each}
   </div>
-  <!-- PLAN.md Phase 5 item 5.3 copy-mode source, text-only. NOT the visible
+  <!-- Copy-mode source, text-only. NOT the visible
        scroller above: a verifier caught that the scroller's per-line gutter
        number and text live as SIBLING flex items in the same row, and
        `innerText` inserts a line break between flex/grid siblings the same

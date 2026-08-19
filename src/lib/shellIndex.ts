@@ -1,6 +1,6 @@
-// Impure fetch+cache boundary for the shell's generated indexes (PLAN.md
-// Iteration 3 Phase 4 item 4.2: "cat resolves content lazily ... (lazy
-// fetch, cache)"). src/lib/shell.ts stays a pure, zero-fetch module (see
+// Impure fetch+cache boundary for the shell's generated indexes — `cat`
+// resolves content lazily (lazy fetch, cache). src/lib/shell.ts stays a
+// pure, zero-fetch module (see
 // its own header comment); every actual `fetch()` call lives here instead,
 // exactly the same split GrepOverlay.svelte/Builds.svelte already use for
 // their own lazy index loads (this file just factors that same pattern out

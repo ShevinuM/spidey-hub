@@ -1,6 +1,5 @@
-// Live status-bar clock formatting (PLAN.md bug fix 2: the prototype
-// hardcodes "23:34" / "15-Aug-26"; we render the real local time/date in the
-// same format and keep it updating). This is formatting logic, not
+// Live status-bar clock formatting — renders the real local time/date (as
+// "23:34" / "15-Aug-26") and keeps it updating. This is formatting logic, not
 // copy — the month abbreviations are a fixed calendar table, not narrative
 // site content, so it lives in src/lib (outside the src/components|layouts|
 // pages audit) same as docline.ts/grep.ts.
@@ -46,10 +45,10 @@ export function msUntilNextMinute(d: Date): number {
 }
 
 // ---------------------------------------------------------------------------
-// Frozen page clock (PLAN.md Iteration 3 Phase 4 "Determinism rules": "no
-// wall-clock timestamps except via the frozen page clock helpers in
-// src/lib/clock.ts" — tmux session `createdAt`, `tmux ls`'s "created {ctime}"
-// column, and neofetch's uptime line all read this ONE epoch, resolved once
+// Frozen page clock — no wall-clock timestamps except via the frozen page
+// clock helpers in src/lib/clock.ts: tmux session `createdAt`, `tmux ls`'s
+// "created {ctime}" column, and neofetch's uptime line all read this ONE
+// epoch, resolved once
 // per page load/reboot, rather than calling `Date.now()` repeatedly at
 // render time. Same sessionStorage-override-with-Date.now()-fallback shape
 // as src/lib/notificationStore.ts's NOTIFICATIONS_INJECT_SEED_STORAGE_KEY/
@@ -92,7 +91,7 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
 /** asctime-style "{Weekday} {Mon} {DD} {HH:MM:SS} {YYYY}" local time, e.g.
  * "Mon Aug 17 23:34:00 2026" — real tmux's own default `created` format for
- * `tmux ls` (PLAN.md tmux fidelity reference). Always fed a Date built from
+ * `tmux ls`. Always fed a Date built from
  * a frozen epoch (`Session.createdAt`, itself from `resolvePageEpoch()`
  * above) — never `new Date()` at call time. */
 export function formatCtime(d: Date): string {

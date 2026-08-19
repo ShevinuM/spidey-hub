@@ -1,6 +1,6 @@
-// Per-tab "has the boot sequence played this session" flag (PLAN.md Phase
-// 5B item 5B.3: "boot plays on first document load per browser tab
-// (sessionStorage flag); reloads/deep-links within the session skip it").
+// Per-tab "has the boot sequence played this session" flag: boot plays on
+// first document load per browser tab (sessionStorage flag); reloads/deep-
+// links within the session skip it.
 // sessionStorage (not localStorage) is exactly "per browser tab" — a new
 // tab (even to the same origin) gets a fresh sessionStorage, matching the
 // spec precisely; a reload of the same tab keeps it.

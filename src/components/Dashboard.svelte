@@ -6,9 +6,9 @@
 
   interface Props {
     dashboard: DashboardData;
-    /** PLAN.md Iteration 3 Phase 6 item 6.1 — whether THIS mounted instance
-     * is the window's focused pane (multiple panes can run "dashboard"
-     * simultaneously, Locked decision #5). Gates `data-copy-source` below so
+    /** Whether THIS mounted instance is the window's focused pane (multiple
+     * panes can run "dashboard" simultaneously). Gates `data-copy-source`
+     * below so
      * `Ctrl-b [`'s untargeted `document.querySelector` only ever finds the
      * focused instance's own menu, never a non-focused sibling's. */
     isFocused: boolean;
@@ -41,8 +41,8 @@
     return viewToTmuxBinding(view, windowNumbers) ?? "";
   }
 
-  // PLAN.md Iteration 3 Phase 2 item 2.1: SPIDEY-HUB wordmark, own arched
-  // rendering (never Marvel's actual logo artwork) — each character gets a
+  // SPIDEY-HUB wordmark, own arched rendering (never Marvel's actual logo
+  // artwork) — each character gets a
   // small rotation + vertical rise so the word bows like a dome, tallest at
   // the middle letter and tilting outward toward the ends, evoking the
   // classic arched Spider-Man wordmark without copying it. Purely

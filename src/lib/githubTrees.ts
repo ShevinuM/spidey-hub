@@ -1,12 +1,11 @@
-// Client-side commit-tree browsing (PLAN.md Phase 4 item 2, "New
-// src/lib/githubTrees.ts"). Mirrors src/lib/githubCommits.ts's shape
+// Client-side commit-tree browsing. Mirrors src/lib/githubCommits.ts's shape
 // (unauthenticated GitHub REST, sessionStorage cache with a 10min TTL,
 // null-on-any-failure — never throws) but for two different endpoints:
 // listing a commit's files (Git Trees API) and reading one file's content at
 // that commit (Contents API).
 //
-// UNVERIFIED-API-FACT check, done before writing this file (PLAN.md
-// explicitly bans encoding this from memory): live curl on 2026-08-17
+// UNVERIFIED-API-FACT check, done before writing this file: live curl on
+// 2026-08-17
 // against a real commit —
 //   curl "https://api.github.com/repos/ShevinuM/transcript-tts/git/trees/<40-char sha>?recursive=1"
 // — returned the tree directly (200, `{sha, tree: [...], truncated: false}`),
@@ -23,8 +22,8 @@
 // indexes, so one rendering path in Builds.svelte serves both tree sources.
 // `truncated: true` (a repo too large for one recursive listing) is not
 // handled — none of the three tracked repos are anywhere near GitHub's
-// ~100k-entry cap, and PLAN.md's stop conditions rule out adding pagination
-// machinery for a case that can't occur with this content.
+// ~100k-entry cap, so pagination machinery for a case that can't occur with
+// this content is intentionally not added.
 
 const TTL_MS = 10 * 60 * 1000;
 const TREE_CACHE_PREFIX = "builds:tree:";
@@ -114,11 +113,10 @@ async function fetchTreeForRef(repo: string, ref: string): Promise<string[] | nu
 
 /**
  * List a repo's files (paths only, no content) at a commit. Tries `sha`
- * first when present, then falls back to `sha8` (PLAN.md: "if a stale
- * snapshot lacks full sha, try sha8 as the ref; degrade gracefully if
- * rejected") — both work directly against the Trees API per the curl finding
- * above, so the fallback never needs a second kind of request. Caches the
- * successful ref's result in sessionStorage (10min TTL). Returns null on
+ * first when present, then falls back to `sha8` if a stale snapshot lacks
+ * the full sha — both work directly against the Trees API per the curl
+ * finding above, so the fallback never needs a second kind of request.
+ * Caches the successful ref's result in sessionStorage (10min TTL). Returns null on
  * total failure (network error, abort, non-2xx, unrecognizable shape, or
  * every candidate ref rejected) — never throws.
  */

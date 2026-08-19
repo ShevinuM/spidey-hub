@@ -1,5 +1,5 @@
-// Behavioral e2e suite for the vim-lite engine in Editor.svelte — PLAN.md
-// Phase 3 (item 10) / 3.4. Parametrized over both places the shared editor
+// Behavioral e2e suite for the vim-lite engine in Editor.svelte.
+// Parametrized over both places the shared editor
 // is mounted from — Builds (a real repo file) and Personnel (a real role
 // doc) — since the engine itself is entry-point-agnostic and both callers
 // must get identical behavior "for free" from the one shared component.
@@ -9,7 +9,7 @@
 // assertions) rather than hardcoding line text, so this suite can't drift
 // from whatever the fixture repos/role docs actually contain.
 import { expect, test, type Page } from "./fixtures.ts";
-// PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
+// This spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's
 // ~4.6s unskippable sequence never runs for these tests — see that
@@ -29,12 +29,11 @@ const pasteBuffer = (page: Page) => page.locator('[data-testid="paste-buffer"]')
 const closePill = (page: Page) => page.locator('[data-testid="editor-close-pill"]');
 const overlay = (page: Page) => page.locator('[data-testid="grep-overlay"]');
 const lineText = (page: Page, n: number) => page.locator(`[data-line="${n}"] [data-testid="editor-line-text"]`);
-// PLAN.md Phase 5C: the `:` ex-command line's PRESENTATION (the typed text,
-// the resulting readonly/E492 error) moved from Editor.svelte's own footer
-// to the site-wide floating Cmdline box — see Cmdline.svelte /
+// The `:` ex-command line's PRESENTATION (the typed text, the resulting
+// readonly/E492 error) lives in the site-wide floating Cmdline box, not
+// Editor.svelte's own footer — see Cmdline.svelte /
 // tests/e2e/cmdline.spec.ts for that box's own dedicated coverage; the
-// handful of assertions below that used to read `modeText`/`message` for
-// ex-command-specific output now read these instead.
+// assertions below read these locators for ex-command-specific output.
 const cmdlineOverlay = (page: Page) => page.locator('[data-testid="cmdline-overlay"]');
 const cmdlineInput = (page: Page) => page.locator('[data-testid="cmdline-input"]');
 const cmdlineError = (page: Page) => page.locator('[data-testid="cmdline-error"]');
@@ -59,22 +58,20 @@ const entryPoints: EntryPoint[] = [
     name: "Builds",
     async open(page) {
       await gotoReady(page, "/builds");
-      // PLAN.md Iteration 4 items 4/5 changed two things this entry point
-      // used to rely on: (1) the default-highlighted panel [3] repo is now
-      // the virtual "all-projects" entry, not a real repo, so pressing
-      // Enter on the default highlight no longer loads a real repo's tree;
-      // (2) the Files pane renders the FULL nested tree at once (no more
-      // cwd-style single-level view), and daily-tech-digest genuinely has
-      // two files named "README.md" (root + "site/README.md") simultaneously
+      // The default-highlighted panel [3] repo is the virtual "all-projects"
+      // entry, not a real repo, so pressing Enter on the default highlight
+      // does not load a real repo's tree. The Files pane also renders the
+      // FULL nested tree at once, and daily-tech-digest genuinely has two
+      // files named "README.md" (root + "site/README.md") simultaneously
       // visible in that tree, which would make the locator below ambiguous.
       // transcript-tts has exactly one README.md and no nested duplicate, so
       // clicking its panel [3] row directly (which both selects it AND loads
-      // its tree, same as before) sidesteps both issues.
+      // its tree) sidesteps both issues.
       await page.locator('[data-testid="builds-repo-row"][data-repo-name="transcript-tts"]').click();
       await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
       // Clicking a file previews it in panel [0] but does NOT open the
-      // editor (PLAN.md Phase 4 item 3 — click-selects/Enter-opens split);
-      // focus panel [2] and press Enter to actually open it.
+      // editor (click-selects/Enter-opens split); focus panel [2] and press
+      // Enter to actually open it.
       await page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]').click();
       await page.keyboard.press("2");
       await page.keyboard.press("Enter");
@@ -94,9 +91,9 @@ const entryPoints: EntryPoint[] = [
       await expect(scroller(page)).toBeVisible();
     },
     async assertParentVisible(page) {
-      // PLAN.md Iteration 4 item 7 deleted the `personnel-path` breadcrumb
-      // this used to assert on. The equivalent anchor (same convention
-      // personnel.spec.ts's own `rowLocator` uses): confirm we're back at
+      // There is no `personnel-path` breadcrumb element. Anchor instead
+      // (same convention personnel.spec.ts's own `rowLocator` uses): confirm
+      // we're back at
       // the exact enaimco/software-developer/ listing, not merely "some"
       // personnel view — role.md is the row this entry point opened, and
       // full-time/ is a sibling directory unique to this exact listing (no
@@ -274,9 +271,9 @@ for (const entry of entryPoints) {
       page,
     }) => {
       await entry.open(page);
-      // The footer mode indicator no longer shows the typed ex-command
-      // text (PLAN.md Phase 5C: that presentation moved to the box) — it
-      // stays "NORMAL" throughout, since the editor's own mode never
+      // The footer mode indicator does not show the typed ex-command text
+      // (that presentation lives in the box) — it stays "NORMAL" throughout,
+      // since the editor's own mode never
       // actually changes for `:` anymore (see Editor.svelte's own comment
       // on that key).
       await expect(modeText(page)).toHaveText("NORMAL");
@@ -299,14 +296,13 @@ for (const entry of entryPoints) {
       await entry.assertParentVisible(page);
     });
 
-    // Regression test (live-reproduced defect, orchestrator ruling): `:`
-    // from an active VISUAL/VISUAL-LINE selection used to leave the
-    // selection alive underneath the box, so a subsequent `:<n>` jump
-    // EXTENDED the selection instead of moving a bare cursor. Phase-3
-    // semantics require the selection to drop to NORMAL AT BOX-OPEN TIME —
-    // asserted immediately after pressing `:`, before typing or executing
-    // any command, so this can't pass by coincidence of the command
-    // itself happening to reset the mode.
+    // Regression test (live-reproduced defect): an active VISUAL/VISUAL-LINE
+    // selection must drop to NORMAL AT BOX-OPEN TIME when `:` is pressed —
+    // otherwise the selection stays alive underneath the box, so a
+    // subsequent `:<n>` jump would EXTEND the selection instead of moving a
+    // bare cursor. Asserted immediately after pressing `:`, before typing or
+    // executing any command, so this can't pass by coincidence of the
+    // command itself happening to reset the mode.
     test("`:` from VISUAL drops the selection to NORMAL at box-open time; :<n> does not extend it", async ({
       page,
     }) => {
@@ -363,8 +359,8 @@ for (const entry of entryPoints) {
       await expect(scroller(page)).toBeVisible();
       await expect(cmdlineError(page)).toContainText("readonly");
       // Editor.svelte's own footer message is unaffected by ex-command
-      // output now (PLAN.md Phase 5C) — only NORMAL-mode mutating-key
-      // bells (i/x/etc, tested below) still use it.
+      // output — only NORMAL-mode mutating-key bells (i/x/etc, tested
+      // below) use it.
       await expect(message(page)).not.toBeVisible();
 
       await page.keyboard.press("Escape"); // dismiss the box's error and close it
@@ -373,9 +369,8 @@ for (const entry of entryPoints) {
       await expect(scroller(page)).toBeVisible();
     });
 
-    // PLAN.md Iteration 4 items 8/22: the bang variants now report the same
-    // E45 readonly error as their bang-less forms — previously they fell
-    // through to the unknown-command E492 branch instead.
+    // The bang variants report the same E45 readonly error as their
+    // bang-less forms, never the unknown-command E492 branch.
     test(":wq! shows the E45 readonly error, not E492, and never closes the editor", async ({ page }) => {
       await entry.open(page);
       await typeCmdline(page, "wq!");

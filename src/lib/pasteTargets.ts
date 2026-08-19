@@ -1,10 +1,9 @@
-// Paste-target registry (PLAN.md Phase 5 item 5.3 / #12 "design a small
-// paste-target registry so Phase 5C's future cmdline can register itself
-// without touching this code again"). `Ctrl-b ]` (Terminal.svelte) inserts
-// the shared paste buffer (src/lib/pasteBuffer.ts) into whichever text input
-// is currently "active" — the grep query, the personnel filter, or the
-// status-bar rename prompt today; a future cmdline box registers itself the
-// same way, with zero changes to Terminal.svelte's paste handler.
+// Paste-target registry, designed so any text input can register itself
+// without touching Terminal.svelte's paste handler. `Ctrl-b ]`
+// (Terminal.svelte) inserts the shared paste buffer (src/lib/pasteBuffer.ts)
+// into whichever text input is currently "active" — the grep query, the
+// personnel filter, the status-bar rename prompt, or the cmdline box, each
+// registering itself the same way.
 //
 // A STACK, not a single slot: more than one candidate target can be "open"
 // at once (e.g. the grep overlay stays open underneath a status-bar rename

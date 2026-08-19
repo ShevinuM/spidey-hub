@@ -1,6 +1,6 @@
-# In-window shell (PLAN.md Iteration 3 Phase 4 items 4.2/4.3 — a program's
-# `:q` drops its pane back to this; Phase 5 reuses the exact same component/
-# data for the detached, fullscreen HOST shell). Every user-visible shell
+# In-window shell — a program's
+# `:q` drops its pane back to this; the detached, fullscreen HOST shell
+# reuses the exact same component/data. Every user-visible shell
 # string lives here (content-purity rule) — src/lib/shell.ts only ever does
 # substitution/formatting, never holds copy of its own.
 
@@ -9,9 +9,8 @@ prompt:
   # `{path}` is "" at the fs root, else "/" followed by the cwd's segments
   # joined with "/" (e.g. "/src/lib").
   paneTemplate: "shev@edith:~/shevinum.dev{path} $ "
-  # Host-mode prompt (PLAN.md Phase 5's detached fullscreen shell) — matches
-  # the user's own mock screenshot verbatim; kept here now (unused until
-  # Phase 5 wires host mode) so that phase needs no new data-file work.
+  # Host-mode prompt (the detached fullscreen shell) — matches
+  # the user's own mock screenshot verbatim.
   hostTemplate: "shev@edith:~/shevinum.dev git:(main) $ "
 
 # `pwd`'s own output prefix — the project directory's display name, reused
@@ -26,23 +25,23 @@ errors:
   catMissingArgMessage: "cat: missing operand"
   catNoSuchFileTemplate: "cat: {path}: No such file or directory"
   catIsADirTemplate: "cat: {path}: Is a directory"
-  # PLAN.md Architecture notes' own exact wording for a path that exists in
+  # Exact wording for a path that exists in
   # the fs tree but has no captured text content (outside the size cap, a
   # binary file, or simply not walked into either generated index).
   catUnindexedTemplate: "cat: {path}: binary or unindexed"
-  # PLAN.md Iteration 4 item 19 — `vim`/`vi`/`nvim <file>` shell builtin,
+  # `vim`/`vi`/`nvim <file>` shell builtin,
   # vim-style wording (this viewer never writes, so there's no "create a new
   # buffer" behavior to offer for a missing path — an error instead).
   vimMissingArgMessage: "vim: missing file operand"
   vimNoSuchFileTemplate: "vim: {path}: No such file or directory"
   vimIsADirTemplate: "vim: {path}: Is a directory"
-  # PLAN.md tmux fidelity reference: `tmux new`/`tmux a` inside a pane shell
+  # `tmux new`/`tmux a` inside a pane shell
   # always refuse with this exact string, regardless of argument.
   nestedTmuxMessage: "sessions should be nested with care, unset $TMUX to force"
   tmuxUnknownSubcommandTemplate: "usage: tmux {cmd}"
 
-# PLAN.md Iteration 3 Phase 5 item 5.1 — the detached HOST shell (`Ctrl-b d`,
-# same Shell.svelte component in `mode: "host"`, PLAN.md Locked decision #3).
+# The detached HOST shell (`Ctrl-b d`,
+# same Shell.svelte component in `mode: "host"`).
 host:
   # Pre-seeded scrollback, shown fullscreen over the dim radar on first
   # detach — a narrative read plausibly as: the user's REAL terminal created
@@ -76,13 +75,12 @@ host:
   exitedMessage: "[exited]"
   # Host `exit` builtin — printed immediately before the page reload.
   logoutMessage: "logout"
-  # A bare view-name command typed in host mode (PLAN.md Architecture
-  # notes) — the site's own UX hint, not a real-tmux string.
+  # A bare view-name command typed in host mode — the site's own UX hint,
+  # not a real-tmux string.
   notAttachedMessage: "not attached — try: tmux a"
   # `open <view>`/`edith` in host mode, when the target session exists but
-  # the specific window was killed at some point (PLAN.md: "attach + message
-  # per your judgment") — attaches anyway, staying on whatever window is
-  # already active there.
+  # the specific window was killed at some point — attaches anyway, staying
+  # on whatever window is already active there.
   windowGoneTemplate: "{view} window not found — attached to session {name}"
 
 sudo:
@@ -141,9 +139,8 @@ help:
       description: "launch that program in this pane (same as open)"
 
 neofetch:
-  # Small hand-authored glyph (never copied artwork — PLAN.md Locked
-  # decision #11's same rule applied here), printed to the left of the info
-  # fields.
+  # Small hand-authored glyph (never copied artwork), printed to the left
+  # of the info fields.
   art:
     - "     /\\"
     - "    /  \\"
@@ -170,7 +167,7 @@ tmux:
   duplicateSessionTemplate: "duplicate session: {name}"
   cantFindSessionTemplate: "can't find session: {name}"
 
-# PLAN.md Iteration 4 item 19 — labels for the read-only vim Editor the
+# Labels for the read-only vim Editor the
 # `vim`/`vi`/`nvim <file>` builtin opens over the shell pane. Byte-for-byte
 # the same block builds.yaml's/personnel.yaml's own `editor:` sections
 # carry (Homepage.dc.html lines 317-336: "NORMAL", "⑂ main") — kept here

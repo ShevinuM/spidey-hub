@@ -1,5 +1,5 @@
-// Unit tests for the pure vim-lite engine (src/lib/vim.ts, PLAN.md Phase 3
-// item 10 / 3.4 "engine purity") — word-boundary motions across
+// Unit tests for the pure vim-lite engine (src/lib/vim.ts) — engine purity,
+// covering word-boundary motions across
 // punctuation/whitespace/line boundaries, numeric counts, 0/^/$ semantics,
 // visual-range normalization (charwise + linewise) and their yanked text,
 // and search + wraparound. Editor.svelte (DOM-dependent, e2e-covered

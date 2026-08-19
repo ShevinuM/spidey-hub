@@ -18,7 +18,7 @@
    Public Domain per the designer's FontSpace listing (no credit/permission
    required) and the license.txt bundled in the download. Self-hosted as a
    subset woff2 (glyphs: A-Z + hyphen only — everything the dashboard's
-   "SPIDEY-HUB" wordmark needs, PLAN.md Locked decision #11) — applied ONLY
+   "SPIDEY-HUB" wordmark needs) — applied ONLY
    to that wordmark (Dashboard.svelte), never site-wide. */
 @font-face {
   font-family: "Webslinger";
@@ -120,12 +120,12 @@ a:hover {
   }
 }
 
-/* Boot-sequence keyframes (PLAN.md Phase 5B, design/"Boot Sequence.dc.html"
-   lines 16-26). `swpR` is `swp`'s reverse — the mock defines it alongside
-   `swp` for rings that spin counter-clockwise; `bFlick` is defined by the
-   mock but never referenced by its own template (dead keyframe) — kept
-   here anyway for 1:1 fidelity with "every keyframe" (PLAN.md 5B.1), never
-   applied by BootSequence.svelte. */
+/* Boot-sequence keyframes (design/"Boot Sequence.dc.html" lines 16-26).
+   `swpR` is `swp`'s reverse — the mock defines it alongside `swp` for
+   rings that spin counter-clockwise; `bFlick` is defined by the mock but
+   never referenced by its own template (dead keyframe) — kept here anyway
+   for 1:1 fidelity with "every keyframe", never applied by
+   BootSequence.svelte. */
 @keyframes swpR {
   to {
     transform: rotate(-360deg);

@@ -1,11 +1,10 @@
 <script lang="ts">
-  // Site-wide `?` fuzzy help palette (PLAN.md Iteration 3 Phase 3 item
-  // 3.3) — same visual family as Cmdline.svelte (bordered floating box,
-  // box-drawing inset title, `>`-style prompt + blinking block cursor,
-  // existing palette) but its OWN component/state: this is the
-  // discoverable/browsable surface Cmdline.svelte's own suggestions list
-  // used to be (removed in item 3.1) — empty query lists the site-wide
-  // commands, typing fuzzy-searches commands + every help scope's keymap row.
+  // Site-wide `?` fuzzy help palette — same visual family as Cmdline.svelte
+  // (bordered floating box, box-drawing inset title, `>`-style prompt +
+  // blinking block cursor, existing palette) but its OWN component/state:
+  // this is the discoverable/browsable surface Cmdline.svelte deliberately
+  // doesn't provide itself — empty query lists the site-wide commands,
+  // typing fuzzy-searches commands + every help scope's keymap row.
   //
   // Always mounted (Terminal.svelte renders this once, unconditionally),
   // exactly like Cmdline/GrepOverlay/CopyMode — Terminal owns a live
@@ -32,9 +31,9 @@
     helpSearch: HelpSearchData;
     cmdline: CmdlineData;
     help: HelpData;
-    /** shell.yaml (PLAN.md 3.3 "+ shell builtins once Phase 4 lands") —
-     * only its own `help.rows[]` is consulted here (see helpSearch.ts's
-     * `shellEntries`); the rest of ShellData is irrelevant to this palette. */
+    /** shell.yaml — only its own `help.rows[]` is consulted here (see
+     * helpSearch.ts's `shellEntries`); the rest of ShellData is irrelevant
+     * to this palette. */
     shell: ShellData;
     /** Runs a resolved command entry's `action` id — Terminal.svelte's own
      * executeSiteAction, reused verbatim (see file header). Never called
@@ -88,7 +87,7 @@
   /** Terminal.svelte's delegation gate — while true, this component's
    * handleKey() below consumes every key, and the tmux prefix system
    * treats it exactly like an open Cmdline box (only the bare Ctrl-b arm
-   * and a prefixed `]` paste are allowed through — Locked decision #14). */
+   * and a prefixed `]` paste are allowed through). */
   export function isOpen(): boolean {
     return open;
   }
@@ -178,8 +177,8 @@
     }
     // Every printable character types, deliberately including q/j/k/? — a
     // second `?` while the palette is already open is just a character
-    // (this is a text input, not a toggle key), matching Locked #14's own
-    // "printable chars type ... `?` types too once open".
+    // (this is a text input, not a toggle key): printable chars type, `?`
+    // types too once open.
     if (e.key.length === 1) {
       e.preventDefault();
       text += e.key;

@@ -1,5 +1,5 @@
 <script lang="ts">
-  // tmux copy-mode overlay (PLAN.md Phase 5 item 5.3 / #12, `Ctrl-b [`).
+  // tmux copy-mode overlay (`Ctrl-b [`).
   // Generic — one instance, always mounted in Terminal.svelte (same
   // always-mounted / bind:this / handleKey():boolean contract as
   // GrepOverlay), reused across every view: each view marks its own
@@ -20,12 +20,12 @@
   // rather than re-deriving cursor math — same engine Editor.svelte's vim-
   // lite mode already uses, applied here to captured plain text instead of
   // a live buffer. Feature set is intentionally smaller than the full
-  // editor (PLAN.md's own wording): h/l/j/k/gg/G/Ctrl-d/u navigation, `v`
-  // charwise selection only (no VISUAL LINE), `y`/Enter yank-and-exit. `q`
-  // IS a valid exit key here — real tmux's copy-mode uses bare `q`, and
-  // PLAN.md explicitly calls this out as "the one place bare q is allowed"
-  // despite items 15/16 banning it everywhere else as a navigation key (this
-  // never navigates a view, only closes the overlay it belongs to).
+  // editor: h/l/j/k/gg/G/Ctrl-d/u navigation, `v` charwise selection only
+  // (no VISUAL LINE), `y`/Enter yank-and-exit. `q` IS a valid exit key
+  // here — real tmux's copy-mode uses bare `q`, and this is the one place
+  // bare `q` is allowed despite it being banned everywhere else as a
+  // navigation key (this never navigates a view, only closes the overlay
+  // it belongs to).
   import {
     clampCursor,
     extractCharRange,
@@ -86,7 +86,7 @@
     open = true;
   }
 
-  /** Exported (PLAN.md Phase 5B item 5B.3) so Terminal.svelte's ↻ reboot
+  /** Exported so Terminal.svelte's ↻ reboot
    * handler can close a stray copy-mode overlay the same way it already
    * closes a stray grep overlay (`grepRef.close()`) before switching to the
    * dashboard and replaying boot — copy-mode's own z-index (50) sits above
@@ -252,8 +252,8 @@
   }
 
   /** Same precedence as segStyle — one testid per segment, mirroring
-   * Editor.svelte's own segTestId (PLAN.md Phase 5.4 e2e coverage: nav
-   * moves the cursor, v/motion highlights a selection). */
+   * Editor.svelte's own segTestId (covers e2e assertions: nav moves the
+   * cursor, v/motion highlights a selection). */
   function segTestId(cls: string): string | undefined {
     if (cls.includes("cursor")) return "copy-mode-cursor";
     if (cls.includes("sel")) return "copy-mode-selection";

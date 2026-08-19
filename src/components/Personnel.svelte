@@ -2,16 +2,14 @@
   // Personnel Files (yazi clone) view — design/Homepage.dc.html lines
   // 274-336 (two-pane file browser: File Browser bottom-aligned entry list +
   // File Preview roles-table/doc pane) and the `xp*` state machine (lines
-  // 899-907, 985-996, 1015-1102). Originally built 2-level, then 3-level
-  // fixed (company -> employment type -> role file). PLAN.md Iteration 3
-  // Phase 1 item 1.3 makes this DEPTH-GENERIC: the browser walks a real
-  // directory tree of arbitrary depth, derived purely from each personnel
-  // entry's on-disk path (`enaimco/software-developer/{role.md, full-time/
-  // role.md, part-time/role.md, co-op/role.md}` — a directory that is
-  // BOTH a role file's parent AND the parent of three more role
+  // 899-907, 985-996, 1015-1102). This browser is DEPTH-GENERIC: it walks a
+  // real directory tree of arbitrary depth, derived purely from each
+  // personnel entry's on-disk path (`enaimco/software-developer/{role.md,
+  // full-time/role.md, part-time/role.md, co-op/role.md}` — a directory
+  // that is BOTH a role file's parent AND the parent of three more role
   // directories — and `memorial-university/<slug>/role.md` × 5, only one
-  // level deep). Grouping is no longer frontmatter-driven (`company`/
-  // `employmentType` are gone from content.config.ts's schema) — every
+  // level deep). Grouping is not frontmatter-driven (`company`/
+  // `employmentType` are not in content.config.ts's schema) — every
   // row at every depth comes from `buildTree()` below, walking each
   // entry's `filePath` relative to `src/content/personnel/`.
   //
@@ -19,8 +17,8 @@
   // it has one) first, then its subdirectories, each ordered by the
   // `order` frontmatter field (a directory's order = the minimum order of
   // any role file nested beneath it) — this reproduces the exact
-  // `{role.md, full-time/, part-time/, co-op/}` listing order PLAN.md
-  // Locked #9 specifies without hardcoding it: role.md sorts first because
+  // `{role.md, full-time/, part-time/, co-op/}` listing order without
+  // hardcoding it: role.md sorts first because
   // files always precede directories, and full-time/part-time/co-op sort
   // by each's own `order` field (0/1/2 — most-recent-first, matching the
   // resume convention). The root's own directories (companies) sort
@@ -28,20 +26,19 @@
   // fall back to at that level and no per-company frontmatter to read an
   // explicit order from.
   //
-  // `../` fidelity: PLAN.md Iteration 4 item 23a revised this from the
-  // original prototype behavior (which excluded `../` from the j/k
-  // selection cycle entirely). `../` is now a REAL first entry in
-  // `displayRows` whenever `pathSegments` is non-empty (item 6 keeps it out
-  // of the root listing) — j/k reaches it like any other row, and
+  // `../` fidelity: unlike the original prototype (which excluded `../`
+  // from the j/k selection cycle entirely), `../` here is a REAL first
+  // entry in `displayRows` whenever `pathSegments` is non-empty (never
+  // shown in the root listing) — j/k reaches it like any other row, and
   // Enter/l/ArrowRight/click all activate it via `activateRow`'s "up"
   // branch, which calls the same `upOrDashboard()` the click handler always
   // called. `h`/Backspace/ArrowLeft remain a SEPARATE "up one level only,
   // never dashboard" action (`upOneLevel`) — the two paths only coincide in
   // practice because `../` is never rendered at the root, where the
-  // dashboard-vs-ascend distinction would otherwise matter. PLAN.md Locked
-  // #3's "mouse-navigable `../` at every level, including one that reaches
-  // the dashboard from the root" still holds; items 15/16 (Iteration 2) ban
-  // the `q`/Esc KEYS for navigation, not click/Enter affordances on `../`
+  // dashboard-vs-ascend distinction would otherwise matter. `../` stays
+  // mouse-navigable at every level, including one that reaches the
+  // dashboard from the root; bare `q`/Esc KEYS are still banned for
+  // navigation, but that doesn't affect click/Enter affordances on `../`
   // itself.
   //
   // q/Esc: bare q/Esc are not navigation anywhere in this browser (only
@@ -80,9 +77,8 @@
   interface Props {
     personnel: PersonnelData;
     personnelEntries: RoleEntry[];
-    /** PLAN.md Iteration 3 Phase 6 item 6.1 — see PaneTree.svelte's own
-     * header comment (multi-instance data-copy-source/paste-target
-     * gating). */
+    /** See PaneTree.svelte's own header comment (multi-instance
+     * data-copy-source/paste-target gating). */
     isFocused: boolean;
     onDashboard: () => void;
   }
@@ -109,8 +105,8 @@
   }
 
   /** The file's own basename, case-preserved, WITH its `.md` extension —
-   * every leaf in this tree is literally named `role.md` (PLAN.md Locked
-   * #9's "lowercase dirs" tree), so this is what actually renders as the
+   * every leaf in this tree is literally named `role.md` (a "lowercase
+   * dirs" tree), so this is what actually renders as the
    * row name and what `data-row-name`/click-to-open assertions match on. */
   function fileNameOf(entry: RoleEntry): string {
     const base = entry.filePath?.split("/").pop();
@@ -155,9 +151,9 @@
   }
 
   /** Sort a directory's children: files always precede directories
-   * (reproduces PLAN.md Locked #9's `{role.md, full-time/, part-time/,
-   * co-op/}` listing order for free — role.md is the only FILE at that
-   * level), then by `order` ascending within each group. */
+   * (reproduces the `{role.md, full-time/, part-time/, co-op/}` listing
+   * order for free — role.md is the only FILE at that level), then by
+   * `order` ascending within each group. */
   function sortChildren(children: TreeNode[]) {
     children.sort((a, b) => {
       if (a.kind !== b.kind) return a.kind === "file" ? -1 : 1;
@@ -187,9 +183,8 @@
 
   /** Every role file nested anywhere beneath `node`, in tree (sorted)
    * order — backs the preview pane's roles table when a directory row is
-   * selected (PLAN.md: selecting a directory previews the full roles table
-   * of everything nested under it, same "preview what you'd enter"
-   * semantic the fixed-level model used at companies/types). */
+   * selected: selecting a directory previews the full roles table of
+   * everything nested under it, the "preview what you'd enter" semantic. */
   function leavesOf(node: TreeNode): RoleEntry[] {
     if (node.kind === "file") return [node.entry];
     return node.children.flatMap(leavesOf);
@@ -231,12 +226,12 @@
     return dir;
   });
 
-  /** PLAN.md Iteration 4 item 23a: `../` is now a REAL row inside the
-   * selectable array rather than a hardcoded, keyboard-unreachable extra
-   * markup block. `kind` distinguishes it from real tree rows (`node` is
-   * null for it) — `displayRows` below always puts it at index 0 whenever
-   * one exists (i.e. whenever `pathSegments` is non-empty; PLAN.md item 6
-   * keeps it OUT of the root listing entirely). */
+  /** `../` is a REAL row inside the selectable array rather than a
+   * hardcoded, keyboard-unreachable extra markup block. `kind`
+   * distinguishes it from real tree rows (`node` is null for it) —
+   * `displayRows` below always puts it at index 0 whenever one exists
+   * (i.e. whenever `pathSegments` is non-empty; it is kept OUT of the root
+   * listing entirely). */
   interface Row {
     name: string;
     meta: string;
@@ -316,12 +311,11 @@
     return template.replace("{dir}", selectedNode.name);
   });
 
-  /** PLAN.md Iteration 4 item 2: a selected DIRECTORY's preview is now an
-   * `ls -l`-style listing of its IMMEDIATE children only (not every leaf
-   * role nested arbitrarily deep beneath it) — `permissions  shev  date
-   * name` per row, name last, dirs get `drwxr-xr-x` + a trailing `/`,
-   * files get `.rw-r--r--` (assumption 3). A selected FILE still shows its
-   * own doc (`previewDoc` below), unchanged. */
+  /** A selected DIRECTORY's preview is an `ls -l`-style listing of its
+   * IMMEDIATE children only (not every leaf role nested arbitrarily deep
+   * beneath it) — `permissions  shev  date  name` per row, name last, dirs
+   * get `drwxr-xr-x` + a trailing `/`, files get `.rw-r--r--`. A selected
+   * FILE still shows its own doc (`previewDoc` below). */
   interface LsRow {
     isDir: boolean;
     name: string;
@@ -356,8 +350,8 @@
   });
 
   /** One padded, monospace-alignable string per row rather than separate
-   * grid cells — PLAN.md item 3 requires each preview row render as a
-   * single line, and building one string (rather than several flex/grid
+   * grid cells — each preview row must render as a single line, and
+   * building one string (rather than several flex/grid
    * cells whose concatenated `textContent` would run permissions/owner/
    * date/name together with no separators) is what lets an e2e assertion
    * regex-match the rendered text directly. `shev`/date are both fixed-
@@ -368,8 +362,8 @@
     return `${perm}  shev  ${row.date}  ${row.name}`;
   }
 
-  /** PLAN.md item 3: every preview row (this doc pane included) is strictly
-   * one line — appended to each line's own color style from `colorFor`. */
+  /** Every preview row (this doc pane included) is strictly one line —
+   * appended to each line's own color style from `colorFor`. */
   const ONE_LINE_STYLE = "white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0";
   const docLines = $derived(activeRoleEntry ? classifyBody(activeRoleEntry.body ?? "", "personnel") : []);
   const previewDoc = $derived(
@@ -430,9 +424,9 @@
    * than relying on `sel` having already been set — this is what lets a
    * single click on ANY row (not just the currently-selected one) activate
    * immediately, for both mouse and keyboard callers, without any same-tick
-   * derived-read subtlety. PLAN.md item 23a: the `../` row is now handled
+   * derived-read subtlety. The `../` row is handled
    * right here, ahead of the dir/file branches, since it's a real member of
-   * `displayRows` — no separate click handler needed anymore. */
+   * `displayRows` — no separate click handler needed. */
   function activateRow(i: number) {
     const row = displayRows[i];
     if (!row) return;
@@ -460,7 +454,7 @@
 
   /** h/Backspace/ArrowLeft — up one level only, never the dashboard
    * (distinct from the `../` row's click action below). No-op at the
-   * root, same as the old fixed model's level-0 behavior. */
+   * root. */
   function upOneLevel() {
     if (pathSegments.length === 0) return;
     pathSegments = pathSegments.slice(0, -1);
@@ -469,14 +463,14 @@
   }
 
   /** The `../` row's own activation (Homepage.dc.html line 1031's `go`):
-   * up one level, or the dashboard at the root. PLAN.md item 23a: `../` is
-   * now a real, keyboard-reachable row via `activateRow`'s "up" branch
-   * (Enter/l/ArrowRight on it call this same function) as well as its own
-   * click handler — mouse and keyboard funnel through the same place. The
+   * up one level, or the dashboard at the root. `../` is a real,
+   * keyboard-reachable row via `activateRow`'s "up" branch (Enter/l/
+   * ArrowRight on it call this same function) as well as its own click
+   * handler — mouse and keyboard funnel through the same place. The
    * dashboard half only ever fires from the root's OWN click/Enter on
-   * `../`, since PLAN.md item 6 means `../` is never rendered at the root
-   * in the first place (`upRowVisible` is false there) — kept here as a
-   * defensive fallback, not a reachable path in practice. */
+   * `../`, since `../` is never rendered at the root in the first place
+   * (`upRowVisible` is false there) — kept here as a defensive fallback,
+   * not a reachable path in practice. */
   function upOrDashboard() {
     if (pathSegments.length === 0) {
       onDashboard();
@@ -502,20 +496,18 @@
   // ---------------------------------------------------------------------
 
   /** Exposed for Terminal.svelte's delegation-order flip — same contract as
-   * Builds.svelte's `isEditorOpen()`. PLAN.md Iteration 4 item 23b: this
-   * export's name predates filter mode, but its actual CONTRACT with
-   * Terminal.svelte is broader than "is the vim Editor open" — it's really
-   * "does this pane currently own its own text input, ahead of the
-   * grep-overlay `/`-opener and the editor-scroll-chord gate" (see
-   * Terminal.svelte's `paneIsGreedy`/`tryFocusedRef`). Filter mode is
-   * exactly that: while `filterMode` is true every keystroke (including
-   * "/") must reach `handleKey` below and land in the query, never open
-   * GrepOverlay out from under it — which is the root cause this executor
-   * traced for the "search box doesn't type" report (see
-   * tests/e2e/personnel.spec.ts's "filter mode" describe block). Returning
-   * `true` here during filter mode makes Personnel "greedy" the same way
-   * an open vim Editor already is, without Terminal.svelte needing any
-   * changes of its own. */
+   * Builds.svelte's `isEditorOpen()`. This export's name predates filter
+   * mode, but its actual CONTRACT with Terminal.svelte is broader than "is
+   * the vim Editor open" — it's really "does this pane currently own its
+   * own text input, ahead of the grep-overlay `/`-opener and the
+   * editor-scroll-chord gate" (see Terminal.svelte's
+   * `paneIsGreedy`/`tryFocusedRef`). Filter mode is exactly that: while
+   * `filterMode` is true every keystroke (including "/") must reach
+   * `handleKey` below and land in the query, never open GrepOverlay out
+   * from under it (see tests/e2e/personnel.spec.ts's "filter mode" describe
+   * block). Returning `true` here during filter mode makes Personnel
+   * "greedy" the same way an open vim Editor already is, without
+   * Terminal.svelte needing any changes of its own. */
   export function isEditorOpen(): boolean {
     return editorOpen || filterMode;
   }

@@ -58,8 +58,7 @@ export interface TreeEntry {
  *
  * Sort: directories before files, then case-insensitive name — a
  * conventional file-browser order (not derived from any prototype markup,
- * since repo browsing has no prototype precedent; see PLAN.md "Builds
- * interactivity extension").
+ * since repo browsing has no prototype precedent).
  */
 export function listDir(files: RepoFile[], dirPath: string): TreeEntry[] {
   const prefix = dirPath === "" ? "" : `${dirPath}/`;
@@ -97,10 +96,10 @@ export function joinPath(segments: string[]): string {
 }
 
 // ---------------------------------------------------------------------------
-// Nested tree + flatten-visible helpers (PLAN.md Iteration 4 item 4: the
-// Files panel becomes a lazygit-style tree — ALL dirs expanded by default,
-// Enter/click on a dir toggles collapse, no `../` entry, j/k walks the
-// FLATTENED list of currently-visible rows). Pure and unit-testable: no
+// Nested tree + flatten-visible helpers: the Files panel is a lazygit-style
+// tree — ALL dirs expanded by default, Enter/click on a dir toggles collapse,
+// no `../` entry, j/k walks the FLATTENED list of currently-visible rows.
+// Pure and unit-testable: no
 // Svelte state here, Builds.svelte owns the collapsed-set and selection.
 // ---------------------------------------------------------------------------
 

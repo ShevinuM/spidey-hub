@@ -1,8 +1,7 @@
-// Behavioral e2e suite for the site-wide `?` fuzzy HelpSearch palette
-// (PLAN.md Iteration 3 Phase 3 item 3.3) — src/components/HelpSearch.svelte,
-// driven by Terminal.svelte. Covers: opening from multiple contexts, the
-// gating rules (Locked decision #14 — editor/grep/Cmdline/status-bar
-// prompt/boot all block it), the empty-query command listing, fuzzy
+// Behavioral e2e suite for the site-wide `?` fuzzy HelpSearch palette —
+// src/components/HelpSearch.svelte, driven by Terminal.svelte. Covers:
+// opening from multiple contexts, the gating rules (editor/grep/Cmdline/
+// status-bar prompt/boot all block it), the empty-query command listing, fuzzy
 // filtering + fuzzy canaries mirroring the pure unit-test canaries in
 // tests/unit/helpSearch.test.ts, Enter's two behaviors (executes a command,
 // no-ops on a keymap row), Esc, and window-chrome close-on-switch. The
@@ -44,7 +43,7 @@ const overlay = (page: Page) => page.locator('[data-testid="help-search-overlay"
 const input = (page: Page) => page.locator('[data-testid="help-search-input"]');
 const results = (page: Page) => page.locator('[data-testid="help-search-result"]');
 
-test.describe("HelpSearch: opening (Locked decision #14)", () => {
+test.describe("HelpSearch: opening", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -97,11 +96,9 @@ test.describe("HelpSearch: gating — does NOT open in these contexts", () => {
 
   test("does not open while a file editor is open", async ({ page }) => {
     await gotoReady(page, "/builds");
-    // PLAN.md Iteration 4 items 4/5: the default-highlighted panel [3] repo
-    // is now the virtual "all-projects" entry (no README.md in its flat
-    // .md-only tree) — click transcript-tts's own row directly (selects AND
-    // loads its tree, same as before) instead of relying on the old
-    // press("3")+Enter default-repo path.
+    // The default-highlighted panel [3] repo is the virtual "all-projects"
+    // entry (no README.md in its flat .md-only tree) — click transcript-tts's
+    // own row directly, which both selects it and loads its tree.
     await page.locator('[data-testid="builds-repo-row"][data-repo-name="transcript-tts"]').click();
     await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
     await page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]').click();
@@ -155,13 +152,11 @@ test.describe("HelpSearch: gating — does NOT open in these contexts", () => {
     await expect(overlay(page)).toBeVisible();
   });
 
-  // PLAN.md Iteration 3 Phase 7 verifier follow-up (Phase 6): mirrors
-  // cmdline.spec.ts's "while the box is open, the prefix is inert" case —
-  // Terminal.svelte's combined `isPromptActive()/cmdlineRef.isOpen()/
+  // Mirrors cmdline.spec.ts's "while the box is open, the prefix is inert"
+  // case — Terminal.svelte's combined `isPromptActive()/cmdlineRef.isOpen()/
   // helpSearchRef.isOpen()` gate (checked BEFORE every prefixed branch,
-  // including `w`) already blocks `Ctrl-b w` from opening choose-tree while
-  // the help palette is up; this pins that with a live e2e probe instead of
-  // relying on the source comment alone.
+  // including `w`) blocks `Ctrl-b w` from opening choose-tree while the help
+  // palette is up; this pins that with a live e2e probe.
   test("Ctrl-b w does not open choose-tree while the help palette is open (window-chrome contract)", async ({
     page,
   }) => {
@@ -181,7 +176,7 @@ test.describe("HelpSearch: empty-query listing + fuzzy filtering", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("empty query lists the site-wide commands, including q (Phase 4 exitProgram)", async ({ page }) => {
+  test("empty query lists the site-wide commands, including q (exitProgram)", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("?");
     const commands = loadCommands();
@@ -196,8 +191,8 @@ test.describe("HelpSearch: empty-query listing + fuzzy filtering", () => {
     await gotoReady(page, "/");
     await page.keyboard.press("?");
     await page.keyboard.type("reboot");
-    // An exact match on the "reboot" command ranks first (PLAN.md 3.3
-    // scoring cascade); other rows whose DESCRIPTION merely mentions the
+    // An exact match on the "reboot" command ranks first (the scoring
+    // cascade); other rows whose DESCRIPTION merely mentions the
     // word "reboot" (e.g. the Global section's own "r" keymap row) can
     // still trail behind it (results are capped at 10), so the only thing
     // asserted here is the top result and that an unrelated command from
@@ -230,7 +225,7 @@ test.describe("HelpSearch: empty-query listing + fuzzy filtering", () => {
     await expect(results(page).first()).toHaveAttribute("data-label", "reboot");
   });
 
-  test('fuzzy canary: "neof" surfaces the shell builtin "neofetch" (PLAN.md 3.3 "+ shell builtins once Phase 4 lands")', async ({
+  test('fuzzy canary: "neof" surfaces the shell builtin "neofetch" (results include shell builtins)', async ({
     page,
   }) => {
     await gotoReady(page, "/");

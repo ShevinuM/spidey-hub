@@ -1,6 +1,6 @@
 <script lang="ts">
-  // choose-tree overlay (PLAN.md Iteration 3 Phase 6 item 6.5, `Ctrl-b w` —
-  // REBINDS the old "go home" binding, Locked decision #3). Always mounted
+  // choose-tree overlay (`Ctrl-b w` — REBINDS the old "go home" binding).
+  // Always mounted
   // (same contract as GrepOverlay/CopyMode/Cmdline/HelpSearch — `bind:this`,
   // `handleKey(): boolean`, `close()`, `isOpen()`), but a FULL window-content
   // overlay rather than a centered box: real tmux's choose-tree replaces the
@@ -8,8 +8,8 @@
   // mirrors with the exact same `bottom:{STATUS_BAR_HEIGHT_PX}px` inset
   // CopyMode.svelte already uses for the same reason.
   //
-  // Keyboard-slot placement (documented choice, PLAN.md 6.5 — "keep it
-  // simple and faithful-enough"): Terminal.svelte consults this component's
+  // Keyboard-slot placement ("keep it simple and faithful-enough"):
+  // Terminal.svelte consults this component's
   // `handleKey()` AFTER copy-mode AND after the tmux prefix system has had
   // its turn (arm + dispatch), but BEFORE Cmdline/StatusBar/every view ref.
   // Concretely this means: while this overlay is open —
@@ -28,17 +28,17 @@
   //     overlay, whose own y/n/Enter keystrokes could then never reach it —
   //     this component's `handleKey()` runs BEFORE StatusBar's/Cmdline's in
   //     the dispatch order, so it would swallow every key first, starving
-  //     the prompt forever (advisor-caught). Gating those four keys avoids
+  //     the prompt forever. Gating those four keys avoids
   //     ever creating that starved state in the first place;
   //   - every UNPREFIXED key (bare j/k/h/l/Enter/x/q/Esc, no Ctrl-b) reaches
   //     THIS component's own `handleKey()` (the prefix system only reacts to
   //     an armed prefix or a bare Ctrl-b, so it's a no-op for these and
   //     falls through), which owns them for its own tree navigation/kill/
-  //     switch/close vocabulary — this is the "choose-tree owns the
-  //     keyboard while open" the plan calls for, in practice.
+  //     switch/close vocabulary — this is what it means for choose-tree to
+  //     own the keyboard while it's open.
   //   - `?` is swallowed here too (this component's own catch-all at the end
-  //     of `handleKey()`) — Locked decision #14 "does NOT open [the help
-  //     palette]... while choose-tree is open" falls out for free, since
+  //     of `handleKey()`) — "does NOT open [the help palette]... while
+  //     choose-tree is open" falls out for free, since
   //     Terminal.svelte's bare-`?` opener is never reached.
   import type { Client } from "../lib/tmux";
   import { allPanes } from "../lib/tmux";
@@ -108,7 +108,7 @@
   // Keeps `selectedIdx` in range whenever `rows` shrinks (an in-overlay kill,
   // or a collapse) — reads `rows.length`, writes a DIFFERENT state var
   // (`selectedIdx`), so this isn't the read-then-write-the-SAME-$state
-  // hazard (PLAN.md Risks note) despite living in an `$effect`.
+  // hazard despite living in an `$effect`.
   $effect(() => {
     if (selectedIdx >= rows.length) selectedIdx = Math.max(0, rows.length - 1);
   });
@@ -133,9 +133,9 @@
   });
 
   /** `Ctrl-b w` — opens the overlay with the current session expanded (every
-   * other session collapsed) and the current window pre-selected (PLAN.md
-   * tmux fidelity reference). A no-op-safe default (row 0) when, for
-   * whatever reason, the attached session/window can't be found. */
+   * other session collapsed) and the current window pre-selected. A
+   * no-op-safe default (row 0) when, for whatever reason, the attached
+   * session/window can't be found. */
   export function openOverlay(): void {
     const attachedId = client.attachedSessionId;
     expandedSessionIds = new Set(attachedId ? [attachedId] : []);
@@ -218,8 +218,8 @@
     if (!open) return false;
     if (e.metaKey || e.ctrlKey || e.altKey) return true; // owns the keyboard — swallow, no action
 
-    // In-overlay kill sub-prompt — PLAN.md tmux fidelity reference's own
-    // documented quirk: confirm is CASE-INSENSITIVE on y here (unlike every
+    // In-overlay kill sub-prompt — a documented quirk: confirm is
+    // CASE-INSENSITIVE on y here (unlike every
     // other kill confirm in the app, which is lowercase-only); ANY other key
     // cancels just this sub-prompt, leaving the overlay itself open.
     if (killPrompt) {
@@ -268,8 +268,8 @@
       return true;
     }
 
-    // Everything else (incl. `?` — Locked decision #14: the help palette
-    // must NOT open while this overlay is open) is silently swallowed.
+    // Everything else (incl. `?` — the help palette must NOT open while
+    // this overlay is open) is silently swallowed.
     if (e.key.length === 1) e.preventDefault();
     return true;
   }

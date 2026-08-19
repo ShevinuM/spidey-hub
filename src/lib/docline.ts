@@ -1,6 +1,6 @@
 // Classifies raw markdown body lines into the prototype's rendering "kinds"
 // (Homepage.dc.html Component.doc / Component.xp[].roles[].doc arrays use
-// tuples of [text, kind]). PLAN.md Phase 2 item 6.
+// tuples of [text, kind]).
 //
 // Rules (mirrors the prototype's hand-authored kind arrays exactly — see
 // tests/unit/docline.fixtures.json, extracted verbatim from the 4 fixture

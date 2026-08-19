@@ -1,5 +1,5 @@
-// Behavioral e2e suite for the E.D.I.T.H boot sequence (PLAN.md Phase 5B,
-// BootSequence.svelte). Deliberately imports the RAW `@playwright/test`
+// Behavioral e2e suite for the E.D.I.T.H boot sequence (BootSequence.svelte).
+// Deliberately imports the RAW `@playwright/test`
 // (not ./fixtures.ts) — every other spec's shared `context` fixture
 // pre-seeds the boot-seen sessionStorage flag specifically so boot never
 // runs during THEIR tests; this file exists to exercise the real thing.
@@ -129,7 +129,7 @@ test.describe("fresh boot", () => {
     // Using real elapsed time instead sidesteps the fake-clock's observed
     // unreliability entirely — this test costs ~1.5 real seconds (well
     // under the 4600ms boot window) rather than being instant, which is an
-    // acceptable, deliberate trade for a boot-specific test (PLAN.md's
+    // acceptable, deliberate trade for a boot-specific test (the
     // "existing suites must not eat 4.6s each" budget targets the *other*
     // ~450 tests via the sessionStorage skip flag, not this file's own).
     await page.goto("/");

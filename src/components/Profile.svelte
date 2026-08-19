@@ -26,8 +26,8 @@
 
   interface Props {
     profile: ProfileData;
-    /** PLAN.md Iteration 3 Phase 6 item 6.1 — see PaneTree.svelte's own
-     * header comment (multi-instance data-copy-source gating). */
+    /** See PaneTree.svelte's own header comment (multi-instance
+     * data-copy-source gating). */
     isFocused: boolean;
   }
 

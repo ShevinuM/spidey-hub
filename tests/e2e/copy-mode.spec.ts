@@ -1,5 +1,5 @@
 // Behavioral e2e suite for the tmux copy-mode overlay (CopyMode.svelte) —
-// PLAN.md Phase 5 item 5.3 / #12, `Ctrl-b [` / `Ctrl-b ]`.
+// `Ctrl-b [` / `Ctrl-b ]`.
 //
 // The "which pane does copy-mode capture" half is deliberately data-driven
 // off each view's OWN rendered `[data-copy-source]` text (read at test time,
@@ -7,7 +7,7 @@
 // content) rather than hardcoded copy, so this suite can't drift from
 // whatever each view's data files actually render.
 import { expect, test, type Page } from "./fixtures.ts";
-// PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
+// This spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's
 // ~4.6s unskippable sequence never runs for these tests — see that
@@ -43,9 +43,9 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  // PLAN.md Phase 5.4: "enter from ≥3 different views" — every
-  // `data-copy-source` pane the design decisions enumerate gets its own
-  // entry point here, each asserted against its own live-read source text.
+  // Copy-mode must be enterable from at least 3 different views — every
+  // `data-copy-source` pane gets its own entry point here, each asserted
+  // against its own live-read source text.
   const entryPoints: { name: string; open: (page: Page) => Promise<void> }[] = [
     {
       name: "dashboard menu",
@@ -99,15 +99,14 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     });
   }
 
-  // PLAN.md Iteration 3 Phase 6 item 6.1 / Locked decision #5: a program can
-  // run in more than one pane at once, so `[data-copy-source]` capture must
-  // resolve to the FOCUSED PANE's own program, not the window's `view`.
-  // Wallpaper's tracker HUD is always in the DOM (just faded) at every view,
-  // so before this was fixed, splitting the retina-v window and focusing the
-  // new (shell) sibling still left Wallpaper's `data-copy-source` attribute
-  // on — CopyMode's `document.querySelector('[data-copy-source]')` would
-  // find the HUD (earlier in the DOM) instead of the focused shell, since
-  // querySelector returns only the first match.
+  // A program can run in more than one pane at once, so `[data-copy-source]`
+  // capture must resolve to the FOCUSED PANE's own program, not the window's
+  // `view`. Wallpaper's tracker HUD is always in the DOM (just faded) at
+  // every view, so without this, splitting the retina-v window and focusing
+  // the new (shell) sibling still leaves Wallpaper's `data-copy-source`
+  // attribute on — CopyMode's `document.querySelector('[data-copy-source]')`
+  // would find the HUD (earlier in the DOM) instead of the focused shell,
+  // since querySelector returns only the first match.
   test("a shell pane split off a retina-v window is the copy-source, not the tracker HUD", async ({ page }) => {
     await gotoReady(page, "/retina-v");
     await expect(page.locator("[data-copy-source]")).toHaveCount(1);
@@ -141,11 +140,9 @@ test.describe("Copy mode (Ctrl-b [)", () => {
   }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await gotoReady(page, "/builds");
-    // PLAN.md Iteration 4 items 4/5: the default-highlighted panel [3] repo
-    // is now the virtual "all-projects" entry (no README.md in its flat
-    // .md-only tree) — click transcript-tts's own row directly (selects AND
-    // loads its tree, same as before) instead of relying on the old
-    // press("3")+Enter default-repo path.
+    // The default-highlighted panel [3] repo is the virtual "all-projects"
+    // entry (no README.md in its flat .md-only tree) — click transcript-tts's
+    // own row directly, which both selects it and loads its tree.
     await page.locator('[data-testid="builds-repo-row"][data-repo-name="transcript-tts"]').click();
     await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
     await page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]').click();
@@ -276,8 +273,8 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     await expect(overlay(page)).not.toBeVisible();
   });
 
-  // PLAN.md Phase 5.4 round-trip requirement: a copy-mode yank in one view,
-  // pasted via Ctrl-b ] into an entirely different overlay's text input.
+  // Round-trip requirement: a copy-mode yank in one view, pasted via
+  // Ctrl-b ] into an entirely different overlay's text input.
   test("round trip: a copy-mode yank pastes into the grep query via Ctrl-b ]", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await gotoReady(page, "/help");
@@ -300,12 +297,11 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     await expect(page.locator('[data-testid="grep-query"]')).toContainText(yanked);
   });
 
-  // FAIL #1 regression coverage (independent verifier, post-Phase-5 review):
-  // Ctrl-b ] must be able to paste into the status-bar rename prompt too —
-  // previously StatusBar's own handleKey() was consulted before Terminal's
-  // prefix system ever got a turn, so a Ctrl-b keydown while the prompt was
-  // open was swallowed as "just another modifier combo" and never armed the
-  // prefix, making `Ctrl-b ]` unreachable (a literal "]" got typed into the
+  // Ctrl-b ] must be able to paste into the status-bar rename prompt too:
+  // if StatusBar's own handleKey() were consulted before Terminal's prefix
+  // system gets a turn, a Ctrl-b keydown while the prompt is open would be
+  // swallowed as "just another modifier combo" and never arm the prefix,
+  // making `Ctrl-b ]` unreachable (a literal "]" would get typed into the
   // window name instead).
   test("round trip: a copy-mode yank pastes into the Ctrl-b , rename prompt via Ctrl-b ]", async ({
     page,

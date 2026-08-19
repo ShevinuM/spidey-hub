@@ -1,18 +1,17 @@
-// Content collections (Astro 7 / astro:content, PLAN.md Phase 2 item 1).
+// Content collections (Astro 7 / astro:content).
 //
 // `projects` is fixture-switched: when PORTFOLIO_FIXTURES=1 (set by
 // `pnpm build:fixtures` / the visual-regression harness) it loads the 4
 // sample projects extracted verbatim from Homepage.dc.html instead of the 3
 // real ones, so 100% pixel comparisons against the prototype's goldens are
-// possible (PLAN.md "Fixture strategy"). See src/lib/commits.ts for how the
+// possible. See src/lib/commits.ts for how the
 // matching per-repo commit snapshots are resolved the same way.
 //
 // `personnel` does NOT fixture-switch: the prototype's `xp` sample data
 // *is* the real content, so both modes read the same directory.
-// `fixtures/personnel` deliberately does not exist — see PLAN.md Phase 2
-// item 3.
+// `fixtures/personnel` deliberately does not exist.
 //
-// PLAN.md Iteration 3 Phase 1 item 1.3: personnel content is now a
+// Personnel content is a
 // variable-depth, path-driven tree (`enaimco/software-developer/{role.md,
 // full-time/role.md, part-time/role.md, co-op/role.md}` and
 // `memorial-university/<role-slug>/role.md` × 5) — Personnel.svelte derives
@@ -37,10 +36,9 @@ const projects = defineCollection({
     base: useFixtures ? "fixtures/projects" : "src/content/projects",
     // Astro's default `generateId` lowercases the slug (getContentEntryIdAndSlug's
     // slugify step), which silently turns "SafePass.md" into entry id
-    // "safepass" — invisible until Phase 5's Builds Files panel started
-    // rendering `${project.id}.md` as that file's displayed name (PLAN.md
-    // Phase 5 scope item 1: "one row per project .md"), where it renders as
-    // the wrong filename ("safepass.md" instead of "SafePass.md"). All of
+    // "safepass" — invisible until the Builds Files panel started
+    // rendering `${project.id}.md` as that file's displayed name, where it
+    // renders as the wrong filename ("safepass.md" instead of "SafePass.md"). All of
     // our project filenames are already the exact string we want to display
     // (see fixtures/projects/*.md and src/content/projects/*.md), so this
     // just uses the entry's own basename verbatim, case and all.
@@ -58,17 +56,15 @@ const personnel = defineCollection({
     pattern: "**/*.md",
     base: "src/content/personnel",
     // Same rationale as `projects` above: directory/file names in this tree
-    // are already the literal, lowercase strings we want to display (per
-    // PLAN.md Locked #9's "lowercase dirs" rule), so this just preserves the
-    // on-disk relative path (minus extension) as-is rather than trusting
+    // are already the literal, lowercase strings we want to display, so this
+    // just preserves the on-disk relative path (minus extension) as-is rather than trusting
     // Astro's default slugify step.
     generateId: ({ entry }) => entry.replace(/\.md$/, ""),
   }),
   schema: z.object({
     // Display title for the role (e.g. "Software Developer",
     // "Research Assistant") — the source data file's role titles verbatim
-    // or lightly shortened per PLAN.md Locked #9's mapping notes, never
-    // invented.
+    // or lightly shortened, never invented.
     role: z.string(),
     dates: z.string(),
     loc: z.string(),

@@ -1,5 +1,5 @@
-// Shared resume-download action — PLAN.md Phase 5C item 5C.2 ("`:resume` /
-// `:cv` (same action as Profile's r — resume download)"). Factored out of
+// Shared resume-download action — used by `:resume`/`:cv` (same action as
+// Profile's r — resume download). Factored out of
 // Profile.svelte so the site-wide cmdline (Terminal.svelte) can trigger the
 // exact same action from any view, not just from inside the mounted
 // Profile component — single source of behavior, no duplicated

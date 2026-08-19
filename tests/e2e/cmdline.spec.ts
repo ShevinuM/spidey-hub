@@ -1,17 +1,16 @@
-// Behavioral e2e suite for the site-wide floating Cmdline (PLAN.md Phase
-// 5C) — src/components/Cmdline.svelte, driven by Terminal.svelte. Covers
+// Behavioral e2e suite for the site-wide floating Cmdline —
+// src/components/Cmdline.svelte, driven by Terminal.svelte. Covers
 // all THREE entry contexts (site `:`, editor ex-mode `:`, tmux
-// command-prompt `Ctrl-b :`), the palette feel (PLAN.md Iteration 3 Phase 3
-// item 3.1: silent Tab completion + zsh-style repeated-Tab cycling — the
-// visible suggestions list this box used to render is GONE, asserted
-// absent throughout this file), and a DATA-DRIVEN sweep over
+// command-prompt `Ctrl-b :`), the palette feel (silent Tab completion +
+// zsh-style repeated-Tab cycling — no suggestions list ever renders,
+// asserted absent throughout this file), and a DATA-DRIVEN sweep over
 // src/data/cmdline.yaml's own `commands` list so a future addition to that
-// file is asserted automatically rather than silently untested (PLAN.md
-// 5C.5 "the e2e sweep is generated FROM the yaml so the list can't drift").
+// file is asserted automatically rather than silently untested ("the e2e
+// sweep is generated FROM the yaml so the list can't drift").
 // The new `?` HelpSearch palette that took over the browsable/discoverable
 // role has its own suite — tests/e2e/help-search.spec.ts.
 import { expect, test, type Page } from "./fixtures.ts";
-// PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported from
+// This spec's `context` fixture (imported from
 // ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's
 // ~4.6s unskippable sequence never runs for these tests — see that file's
@@ -78,7 +77,7 @@ async function openedCalls(page: Page) {
   return page.evaluate(() => (window as unknown as { __opened: unknown[] }).__opened);
 }
 
-test.describe("Cmdline: opening (PLAN.md 5C.1)", () => {
+test.describe("Cmdline: opening", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -98,9 +97,9 @@ test.describe("Cmdline: opening (PLAN.md 5C.1)", () => {
       await page.keyboard.press(":");
       await expect(overlay(page)).toBeVisible();
       await expect(input(page)).toHaveText("▌");
-      // PLAN.md Iteration 3 Phase 3 item 3.1: no suggestions list renders —
-      // typing a real site-wide command and submitting it is the open
-      // assertion now (the data-driven sweep below covers every command).
+      // No suggestions list renders — typing a real site-wide command and
+      // submitting it is the open assertion here (the data-driven sweep
+      // below covers every command).
       await typeAndEnter(page, "dashboard");
       await expect(overlay(page)).not.toBeVisible();
       await expect(page).toHaveURL(/\/$/);
@@ -122,8 +121,7 @@ test.describe("Cmdline: opening (PLAN.md 5C.1)", () => {
 
     // ... but a site-wide-only command name is NOT recognized here — it
     // reports the same E492 unknown-command error as any gibberish text
-    // would (PLAN.md 5C.1(c): "Only cmdline.tmuxCommands are offered/
-    // executed" in this mode).
+    // would ("Only cmdline.tmuxCommands are offered/executed" in this mode).
     await ctrlB(page);
     await page.keyboard.press(":");
     await typeAndEnter(page, "dashboard");
@@ -131,7 +129,7 @@ test.describe("Cmdline: opening (PLAN.md 5C.1)", () => {
     await expect(page).toHaveURL(/\/builds$/);
   });
 
-  test("PLAN.md Iteration 3 Phase 3 item 3.1: no suggestions list ever renders, even mid-type", async ({ page }) => {
+  test("no suggestions list ever renders, even mid-type", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press(":");
     await expect(overlay(page)).toBeVisible();
@@ -169,7 +167,7 @@ test.describe("Cmdline: opening (PLAN.md 5C.1)", () => {
     page,
   }) => {
     // Same "prompt owns the keyboard" gate as an open status-bar prompt
-    // (PLAN.md 5C.1: "reuse/extend the isPromptActive gating pattern") —
+    // (reuses/extends the isPromptActive gating pattern) —
     // mirrors tmux.spec.ts's own "Ctrl-b <digit>/&/x/,/n are all inert
     // while the rename prompt is open" regression test.
     await gotoReady(page, "/");
@@ -190,7 +188,7 @@ test.describe("Cmdline: opening (PLAN.md 5C.1)", () => {
   test("the box never covers the status bar — it stays hit-testable at its own center", async ({ page }) => {
     // Same elementFromPoint hit-test tmux.spec.ts's own "grep is window
     // chrome, the status bar is session chrome" suite uses for the grep
-    // overlay's backdrop (PLAN.md Phase 5 item 5.5, extended by 5C.4).
+    // overlay's backdrop.
     await gotoReady(page, "/");
     await page.keyboard.press(":");
     await expect(overlay(page)).toBeVisible();
@@ -207,7 +205,7 @@ test.describe("Cmdline: opening (PLAN.md 5C.1)", () => {
   });
 });
 
-test.describe("Cmdline: window-chrome contract — closes on every switch path + reboot (PLAN.md Iteration 3 Phase 3 item 3.2)", () => {
+test.describe("Cmdline: window-chrome contract — closes on every switch path + reboot", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -235,7 +233,7 @@ test.describe("Cmdline: window-chrome contract — closes on every switch path +
   });
 });
 
-test.describe("Cmdline: `:` stays literal inside other text inputs (PLAN.md 5C.1(b))", () => {
+test.describe("Cmdline: `:` stays literal inside other text inputs", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -268,7 +266,7 @@ test.describe("Cmdline: `:` stays literal inside other text inputs (PLAN.md 5C.1
   });
 });
 
-test.describe("Cmdline: palette feel — silent Tab completion + zsh-style cycling (PLAN.md Iteration 3 Phase 3 item 3.1)", () => {
+test.describe("Cmdline: palette feel — silent Tab completion + zsh-style cycling", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -334,7 +332,7 @@ test.describe("Cmdline: palette feel — silent Tab completion + zsh-style cycli
   });
 });
 
-test.describe("Cmdline: unknown command (PLAN.md 5C.2 E492)", () => {
+test.describe("Cmdline: unknown command (E492)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -368,7 +366,7 @@ test.describe("Cmdline: unknown command (PLAN.md 5C.2 E492)", () => {
   });
 });
 
-test.describe("Cmdline: Ctrl-b ] pastes into the box (PLAN.md 5C.1(c) paste-target registration)", () => {
+test.describe("Cmdline: Ctrl-b ] pastes into the box (paste-target registration)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
@@ -393,7 +391,7 @@ test.describe("Cmdline: Ctrl-b ] pastes into the box (PLAN.md 5C.1(c) paste-targ
   });
 });
 
-test.describe("Cmdline: editor ex-mode still works through the box (PLAN.md 5C.1(a))", () => {
+test.describe("Cmdline: editor ex-mode still works through the box", () => {
   interface EntryPoint {
     name: string;
     open: (page: Page) => Promise<void>;
@@ -405,16 +403,15 @@ test.describe("Cmdline: editor ex-mode still works through the box (PLAN.md 5C.1
       name: "Builds",
       async open(page) {
         await gotoReady(page, "/builds");
-        // PLAN.md Iteration 4 items 4/5: the default-highlighted panel [3]
-        // repo is now the virtual "all-projects" entry (no README.md in its
-        // flat .md-only tree), and the Files pane renders the FULL nested
-        // tree at once — daily-tech-digest genuinely has two files named
-        // "README.md" (root + "site/README.md") simultaneously visible,
-        // which would make the locator below ambiguous. transcript-tts has
-        // exactly one README.md and no nested duplicate, so clicking its
-        // panel [3] row directly (selects AND loads its tree, same as
-        // before) sidesteps both issues — same fix as editor-vim.spec.ts's
-        // Builds entry point.
+        // The default-highlighted panel [3] repo is the virtual
+        // "all-projects" entry (no README.md in its flat .md-only tree), and
+        // the Files pane renders the FULL nested tree at once —
+        // daily-tech-digest genuinely has two files named "README.md" (root
+        // + "site/README.md") simultaneously visible, which would make the
+        // locator below ambiguous. transcript-tts has exactly one README.md
+        // and no nested duplicate, so clicking its panel [3] row directly
+        // (selects AND loads its tree) sidesteps both issues — same
+        // approach as editor-vim.spec.ts's Builds entry point.
         await page.locator('[data-testid="builds-repo-row"][data-repo-name="transcript-tts"]').click();
         await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
         await page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]').click();
@@ -436,9 +433,9 @@ test.describe("Cmdline: editor ex-mode still works through the box (PLAN.md 5C.1
         await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
       },
       async assertParentVisible(page) {
-        // PLAN.md Iteration 4 item 7 deleted the `personnel-path` breadcrumb
-        // this used to assert on. Equivalent anchor (same replacement used
-        // in editor-vim.spec.ts's Personnel entry point): role.md is the
+        // There is no `personnel-path` breadcrumb element. Anchor instead
+        // (same convention used in editor-vim.spec.ts's Personnel entry
+        // point): role.md is the
         // row this entry point opened, and full-time/ is a sibling
         // directory unique to the enaimco/software-developer/ listing —
         // together they confirm we're back at the exact same listing, not
@@ -468,8 +465,8 @@ test.describe("Cmdline: editor ex-mode still works through the box (PLAN.md 5C.1
         await expect(page.locator('[data-testid="cmdline-suggestions"]')).toHaveCount(0);
         // Tab-completing a site-wide-only command name (not an ex command)
         // still works here, proving the merged exCommands ∪ commands list
-        // (PLAN.md 5C.1(a)/5C.2) is still the completion source even though
-        // nothing renders it as a browsable list anymore.
+        // is still the completion source even though nothing renders it as
+        // a browsable list.
         await page.keyboard.type("dash");
         await page.keyboard.press("Tab");
         await expect(input(page)).toContainText("dashboard");
@@ -495,11 +492,9 @@ test.describe("Cmdline: editor ex-mode still works through the box (PLAN.md 5C.1
         await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
       });
 
-      // PLAN.md Iteration 4 items 8/22: "w!"/"wq!" used to fall through to
-      // the unknown-command E492 branch (a parser bug — bang variants of a
-      // recognized command reporting "not an editor command" reads as
-      // broken, not as "still readonly"); they now report the exact same
-      // E45 readonly error as their bang-less forms, never E492.
+      // Bang variants of a recognized command ("w!"/"wq!") report the exact
+      // same E45 readonly error as their bang-less forms, never the
+      // unknown-command E492.
       test(":wq! shows the E45 readonly error, not E492, and never closes the editor", async ({ page }) => {
         await entry.open(page);
         await page.keyboard.press(":");
@@ -532,7 +527,7 @@ test.describe("Cmdline: editor ex-mode still works through the box (PLAN.md 5C.1
   }
 });
 
-test.describe("Cmdline: tmux command-prompt mode (PLAN.md 5C.1(c) — executes through Phase 5's own flows)", () => {
+test.describe("Cmdline: tmux command-prompt mode (executes through the same flows as the prefix bindings)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -569,12 +564,10 @@ test.describe("Cmdline: tmux command-prompt mode (PLAN.md 5C.1(c) — executes t
     await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(0);
   });
 
-  // PLAN.md Iteration 3 Phase 5 item 5.3 SUPERSEDES the Phase 4 "refuse to
-  // kill the only window" behavior this test used to assert (see
-  // tests/e2e/tmux.spec.ts's own updated "killing every window down to the
-  // last one" test) — killing the session's last window now destroys the
-  // session outright and, with no other session to fall back to, detaches
-  // the client to the host shell printing exactly `[exited]`.
+  // Killing the session's last window destroys the session outright and,
+  // with no other session to fall back to, detaches the client to the host
+  // shell printing exactly `[exited]` (see tests/e2e/tmux.spec.ts's own
+  // "killing every window down to the last one" test).
   test("kill-window on the last remaining window destroys the session and detaches to the host shell ([exited])", async ({
     page,
   }) => {
@@ -642,8 +635,8 @@ test.describe("Cmdline: tmux command-prompt mode (PLAN.md 5C.1(c) — executes t
 });
 
 // ---------------------------------------------------------------------
-// Data-driven sweep over src/data/cmdline.yaml's own `commands` list
-// (PLAN.md 5C.5) — every entry there is executed here by its `action` id,
+// Data-driven sweep over src/data/cmdline.yaml's own `commands` list —
+// every entry there is executed here by its `action` id,
 // so a future addition to that file fails loudly (an unhandled `action`)
 // rather than silently shipping untested.
 // ---------------------------------------------------------------------
@@ -730,10 +723,10 @@ test.describe("Cmdline: data-driven sweep of every src/data/cmdline.yaml command
     }
 
     if (action === "exit-program") {
-      // Locked decision #2 (Phase 4): exits the active pane's program to a
-      // shell in the SAME window — no longer kills it. Behavior on the last
-      // remaining window is its own dedicated test below (no last-window
-      // guard applies, since nothing is being killed).
+      // Exits the active pane's program to a shell in the SAME window
+      // (does not kill it). Behavior on the last remaining window is its own
+      // dedicated test below (no last-window guard applies, since nothing is
+      // being killed).
       test(`:${def.name} exits the active pane's program to a shell in the same window`, async ({ page }) => {
         await gotoReady(page, "/builds");
         await page.keyboard.press(":");
@@ -750,9 +743,9 @@ test.describe("Cmdline: data-driven sweep of every src/data/cmdline.yaml command
     }
 
     // Any future cmdline.yaml command with an `action` this sweep doesn't
-    // yet know how to exercise fails loudly here, by design (PLAN.md 5C.5
-    // "the e2e sweep is generated FROM the yaml so the list can't drift") —
-    // rather than being silently skipped.
+    // yet know how to exercise fails loudly here, by design ("the e2e
+    // sweep is generated FROM the yaml so the list can't drift") — rather
+    // than being silently skipped.
     test(`:${def.name} has sweep coverage for its action "${action}"`, () => {
       throw new Error(
         `cmdline.spec.ts's data-driven sweep doesn't know how to exercise action "${action}" (command "${def.name}") — add a case above.`,

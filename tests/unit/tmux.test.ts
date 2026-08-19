@@ -1,5 +1,5 @@
-// Unit tests for the tmux client/session/window/pane model (PLAN.md
-// Iteration 3 Phase 4 item 4.1) — src/lib/tmux.ts. No DOM, no Svelte state:
+// Unit tests for the tmux client/session/window/pane model
+// — src/lib/tmux.ts. No DOM, no Svelte state:
 // every operation is exercised directly against plain-object Session/Client
 // values (the same shape Terminal.svelte's `$state` proxy wraps at runtime —
 // this file proves the operations themselves are correct independent of
@@ -334,7 +334,7 @@ test("allPanes/findPaneById/focusedPane agree on the single leaf pane", () => {
 });
 
 // ---------------------------------------------------------------------
-// Factory client: attachSeq / hostPane (PLAN.md Iteration 3 Phase 5 item 5.1)
+// Factory client: attachSeq / hostPane
 // ---------------------------------------------------------------------
 
 test("createFactoryClient seeds attachSeq=1, the default session at lastAttachedSeq=1, and an empty hostPane running shell", () => {
@@ -356,8 +356,7 @@ test("createFactoryClient seeds the hostPane's scrollback from hostNarrative whe
 });
 
 // ---------------------------------------------------------------------
-// Sessions: create / attach / detach (PLAN.md Iteration 3 Phase 5 items
-// 5.1/5.2)
+// Sessions: create / attach / detach
 // ---------------------------------------------------------------------
 
 test("createSession adds a new session with one auto-named zsh window (window 0), NOT yet attached", () => {
@@ -376,7 +375,7 @@ test("createSession adds a new session with one auto-named zsh window (window 0)
 });
 
 // ---------------------------------------------------------------------
-// createWindow (PLAN.md Iteration 4 item 16, `Ctrl-b c`)
+// createWindow (`Ctrl-b c`)
 // ---------------------------------------------------------------------
 
 test("createWindow appends a new auto-named zsh window numbered one past the current highest, without touching activeWindowIdx", () => {
@@ -442,9 +441,8 @@ test("detachClient nulls attachedSessionId without touching the session list", (
 });
 
 // ---------------------------------------------------------------------
-// killWindowCascade (PLAN.md Iteration 3 Phase 5 item 5.3 — SUPERSEDES
-// Phase 4's "refuse to kill the only window": real tmux kills the SESSION
-// when its last window dies, not the client's ability to do so at all)
+// killWindowCascade — real tmux kills the SESSION
+// when its last window dies, not the client's ability to do so at all
 // ---------------------------------------------------------------------
 
 test("killWindowCascade on a window that ISN'T the session's last one just removes it (delegates to killWindow)", () => {
@@ -502,10 +500,10 @@ test("killWindowCascade on the attached session's last window, with NO other ses
 });
 
 // ---------------------------------------------------------------------
-// killSession (PLAN.md Iteration 3 Phase 6 item 6.5 — choose-tree `x` on a
-// session row; advisor-added op mirroring killWindowCascade's own
+// killSession — choose-tree `x` on a
+// session row; mirrors killWindowCascade's own
 // "destroy a session outright" bookkeeping, just triggered directly rather
-// than as a side effect of its last window dying).
+// than as a side effect of its last window dying.
 // ---------------------------------------------------------------------
 
 test("killSession on a session that ISN'T attached just removes it, no client-level side effect", () => {
@@ -538,7 +536,7 @@ test("killSession on the attached session with no other left detaches to host", 
 });
 
 // ---------------------------------------------------------------------
-// Splits (PLAN.md Iteration 3 Phase 6 item 6.1)
+// Splits
 // ---------------------------------------------------------------------
 
 test("splitPane wraps a single leaf in a new 'row' split, 50/50, focusing the new pane", () => {
@@ -557,7 +555,7 @@ test("splitPane wraps a single leaf in a new 'row' split, 50/50, focusing the ne
   assert.notEqual(win.activePaneId, originalPaneId);
   assert.equal(win.activePaneId, win.paneOrder[1]);
   assert.equal(win.lastPaneId, originalPaneId);
-  // The new pane always runs a shell (PLAN.md 6.1 "new panes run shell").
+  // The new pane always runs a shell.
   assert.equal(focusedPane(win).program, "shell");
 });
 
@@ -626,7 +624,7 @@ test("splitPane ids never collide after a kill-then-split (paneSeq, not paneOrde
 });
 
 // ---------------------------------------------------------------------
-// Kill-pane (PLAN.md Iteration 3 Phase 6 item 6.3)
+// Kill-pane
 // ---------------------------------------------------------------------
 
 test("killPaneInWindow refuses (last-pane) on a single-pane window", () => {
@@ -711,7 +709,7 @@ test("paneIndexInWindow is live-renumbered (0..n-1, no gaps) after a kill", () =
 });
 
 // ---------------------------------------------------------------------
-// Pane focus / navigation (PLAN.md Iteration 3 Phase 6 item 6.2)
+// Pane focus / navigation
 // ---------------------------------------------------------------------
 
 test("cycleNextPane cycles through paneOrder, wrapping", () => {
@@ -796,7 +794,7 @@ test("computePaneRects / findDirectionalPane resolve geometrically for a main-ve
 });
 
 // ---------------------------------------------------------------------
-// Layout engine (PLAN.md Iteration 3 Phase 6 item 6.4)
+// Layout engine
 // ---------------------------------------------------------------------
 
 function makeTestPanes(n: number): Pane[] {

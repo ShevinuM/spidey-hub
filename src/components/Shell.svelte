@@ -1,14 +1,13 @@
 <script lang="ts">
-  // In-window shell (PLAN.md Iteration 3 Phase 4 items 4.2/4.3) — one
-  // instance per shell PANE (`bind:this` registered into PaneTree's ref
-  // registry, same contract every other program component uses). A
-  // program's `:q` drops its pane's `program` to "shell" (src/lib/tmux.ts's
-  // `exitProgram`); this component then renders whatever that pane's own
-  // `Pane.shell` buffer holds. Designed to ALSO serve as Phase 5's detached
-  // HOST shell (`mode: "host"`, fullscreen, no status bar) without rework —
-  // only `mode` threads through today; host-only behavior (tmux new/attach
-  // actually working, `open <view>`/bare-name attaching instead of
-  // launching) lands in Phase 5.
+  // In-window shell — one instance per shell PANE (`bind:this` registered
+  // into PaneTree's ref registry, same contract every other program
+  // component uses). A program's `:q` drops its pane's `program` to "shell"
+  // (src/lib/tmux.ts's `exitProgram`); this component then renders whatever
+  // that pane's own `Pane.shell` buffer holds. Also serves as the detached
+  // HOST shell (`mode: "host"`, fullscreen, no status bar): `tmux
+  // new`/`attach`, and `open <view>`/bare-name attaching instead of
+  // launching, are all live in host mode via `onAttach`/`onCreateAndAttach`/
+  // `onAttachView` below.
   //
   // Owns exactly the stateful/effectful half of the split with src/lib/
   // shell.ts: keydown handling, the lazy fetch+cache of the generated fs/
@@ -17,7 +16,7 @@
   // Terminal.svelte via props — shell.ts's own `runCommand` never touches
   // the DOM, fetch, or tmux.ts directly.
   //
-  // Svelte 5 hazard (PLAN.md Risks): the async index-warming work never
+  // Svelte 5 hazard: the async index-warming work never
   // lives inside an `$effect` that also reads `pane.shell` — it's triggered
   // directly from the Enter-key handler (`submit()`, an ordinary async
   // event handler), which reads `pane.shell.input` once up front and writes
@@ -55,11 +54,10 @@
     mode: ShellMode;
     viewNames: readonly string[];
     session: { name: string; windowCount: number; createdAt: number; attached: boolean };
-    /** PLAN.md Iteration 3 Phase 5 items 5.2/5.3 — every session the client
-     * currently knows about (`tmux ls`/`new`/`a`/`attach`'s own validation
-     * roster) plus the well-known default session's bare name — threaded
-     * through to BOTH pane-mode and host-mode instances alike (`tmux ls`
-     * works everywhere — PLAN.md tmux fidelity reference), not just the
+    /** Every session the client currently knows about (`tmux
+     * ls`/`new`/`a`/`attach`'s own validation roster) plus the well-known
+     * default session's bare name — threaded through to BOTH pane-mode and
+     * host-mode instances alike (`tmux ls` works everywhere), not just the
      * host shell. */
     sessions: SessionRosterEntry[];
     defaultSessionName: string;
@@ -68,31 +66,29 @@
     onLaunch: (program: string) => void;
     /** `exit` — pane mode: close this pane (cascades to kill-window on a
      * single-pane window, same fallback `Ctrl-b x` already uses); host
-     * mode: prints `logout` then reloads the page (PLAN.md Iteration 3
-     * Phase 5 item 5.3). */
+     * mode: prints `logout` then reloads the page. */
     onExit: () => void;
     onReboot: () => void;
-    /** `tmux a [-t name]` resolved to an existing session — HOST mode only
-     * (PLAN.md Iteration 3 Phase 5 item 5.2); undefined/never called from a
-     * pane-mode instance (that mode's own `runCommand` never emits this
-     * effect there — see shell.ts's own mode gating). */
+    /** `tmux a [-t name]` resolved to an existing session — HOST mode only;
+     * undefined/never called from a pane-mode instance (that mode's own
+     * `runCommand` never emits this effect there — see shell.ts's own mode
+     * gating). */
     onAttach?: (sessionId: string) => void;
     /** `tmux new [-s name]` — HOST mode only, same reasoning as `onAttach`. */
     onCreateAndAttach?: (name: string) => void;
     /** `open <view>` / `edith` — HOST mode only, same reasoning as
      * `onAttach`. */
     onAttachView?: (sessionId: string, view: string, windowExists: boolean) => void;
-    /** PLAN.md Iteration 3 Phase 6 item 6.1 — whether THIS pane is the
-     * window's currently-focused one (always `true` for the one host-mode
-     * instance, which has no siblings). Gates `data-copy-source` AND the
-     * `Ctrl-b ]` paste-target registration below: with splits, more than one
-     * shell pane can be mounted at once, each with its own stable paste-
-     * target id (`shell:${pane.id}`) — without this gate, whichever one
-     * mounted/re-ran its effect LAST would sit on top of the shared paste-
-     * target stack regardless of which pane is actually focused (advisor-
-     * caught multi-instance hazard). Defaults to `true` so the one
-     * call site that doesn't pass it explicitly (none today — both PaneTree
-     * and Terminal's host-mode instance always do) never silently breaks. */
+    /** Whether THIS pane is the window's currently-focused one (always
+     * `true` for the one host-mode instance, which has no siblings). Gates
+     * `data-copy-source` AND the `Ctrl-b ]` paste-target registration
+     * below: with splits, more than one shell pane can be mounted at once,
+     * each with its own stable paste-target id (`shell:${pane.id}`) —
+     * without this gate, whichever one mounted/re-ran its effect LAST would
+     * sit on top of the shared paste-target stack regardless of which pane
+     * is actually focused. Defaults to `true` so the one call site that
+     * doesn't pass it explicitly (none today — both PaneTree and
+     * Terminal's host-mode instance always do) never silently breaks. */
     isFocused?: boolean;
   }
 
@@ -132,9 +128,9 @@
     }
   }
 
-  /** Pre-fetches whatever `target` implies (PLAN.md Architecture notes:
-   * "site files from the grep index, repos/<name>/ files from repo index
-   * JSONs") and returns a synchronous lookup `runCommand` can call — the
+  /** Pre-fetches whatever `target` implies ("site files from the grep
+   * index, repos/<name>/ files from repo index JSONs") and returns a
+   * synchronous lookup `runCommand` can call — the
    * ONE place this component reaches into the network for `cat`. */
   async function buildResolveContent(target: CatTarget): Promise<(t: CatTarget) => string | undefined> {
     if (target.kind === "site") {
@@ -185,7 +181,7 @@
   }
 
   // -----------------------------------------------------------------------
-  // `vim`/`vi`/`nvim <file>` (PLAN.md Iteration 4 item 19) — reuses the
+  // `vim`/`vi`/`nvim <file>` — reuses the
   // exact same "editorFile local state + embedded <Editor>" pattern
   // Builds.svelte/Personnel.svelte already use for the read-only file
   // viewer, so it gets the SAME site-wide Cmdline ex-mode / Ctrl-d/u/f/b
@@ -294,7 +290,7 @@
       fsEntries: entries,
       resolveContent,
       mode,
-      // Determinism rules (PLAN.md Iteration 3 Phase 4): "neofetch uptime
+      // Determinism rules: "neofetch uptime
       // derives from the clock module" — NOT a raw Date.now() read. With a
       // test-pinned CLOCK_EPOCH_STORAGE_KEY, this resolves to the exact same
       // value as the session's own `createdAt` (also `resolvePageEpoch()`,
@@ -327,7 +323,7 @@
     await applyEffect(outcome.effect, target);
   }
 
-  /** Delegation contract (PLAN.md Architecture notes): consumes printable
+  /** Delegation contract: consumes printable
    * keys/Enter/Backspace/arrows BEFORE grep's `/` opener and the bare-`:`/
    * `?` openers — `:`/`?`/`/` all type into the shell like any other
    * character. Modifier chords (Ctrl-b prefix, etc.) fall through
@@ -384,7 +380,7 @@
   // Auto-scroll to the bottom on new output — reads `lines.length` (a
   // $state read) and writes to the DOM node's own `scrollTop` (never back
   // into `pane.shell`), so this is not the read-then-write-same-$state
-  // hazard PLAN.md's Risks section warns about.
+  // hazard.
   $effect(() => {
     const n = pane.shell.lines.length;
     void n;

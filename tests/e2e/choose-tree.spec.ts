@@ -1,7 +1,6 @@
-// Behavioral e2e suite for the choose-tree overlay (PLAN.md Iteration 3
-// Phase 6 item 6.5, `Ctrl-b w` — REBINDS the old "go home" binding, Locked
-// decision #3). Companion to tests/e2e/panes.spec.ts (splits/nav/kill/
-// layouts) and tests/e2e/sessions.spec.ts (the session model itself, whose
+// Behavioral e2e suite for the choose-tree overlay (`Ctrl-b w`). Companion
+// to tests/e2e/panes.spec.ts (splits/nav/kill/layouts) and
+// tests/e2e/sessions.spec.ts (the session model itself, whose
 // `tmux new -s <name>` this file reuses to get a second session to browse).
 import { expect, test, type Page } from "./fixtures.ts";
 
@@ -47,7 +46,7 @@ const killConfirm = (page: Page) => page.locator('[data-testid="choose-tree-kill
 const statusBarWindows = (page: Page) => page.locator('[data-testid="status-bar-windows"]');
 const sessionLabel = (page: Page) => page.locator('[data-testid="status-bar-session"]');
 
-test.describe("choose-tree opening / initial state (PLAN.md tmux fidelity reference)", () => {
+test.describe("choose-tree opening / initial state (real tmux fidelity)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -203,17 +202,15 @@ test.describe("choose-tree does NOT open competing modals while open (window-chr
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  // PLAN.md Iteration 3 Phase 1 "prefix precedence over grep": the tmux
-  // prefix (and therefore choose-tree, opened via it) still works even
-  // while grep is open — closing it, exactly like every other window-switch
-  // prefix key already does (`closeWindowChrome()`). Cmdline is a DIFFERENT
-  // case: opening it already blocks every OTHER prefixed key including
-  // plain digit targets (pre-existing PLAN.md Phase 5C precedent — "the
-  // prefix system should treat it like the status prompts" — verified
-  // separately, unrelated to this phase), so `Ctrl-b w` is correctly inert
-  // while Cmdline is open too, same as `Ctrl-b 2` — there's nothing to
-  // "close on open" in that direction since choose-tree never gets the
-  // chance to open in the first place.
+  // Prefix precedence over grep: the tmux prefix (and therefore choose-tree,
+  // opened via it) still works even while grep is open — closing it, exactly
+  // like every other window-switch prefix key already does
+  // (`closeWindowChrome()`). Cmdline is a DIFFERENT case: opening it already
+  // blocks every OTHER prefixed key including plain digit targets (the
+  // prefix system treats it like the status prompts), so `Ctrl-b w` is
+  // correctly inert while Cmdline is open too, same as `Ctrl-b 2` — there's
+  // nothing to "close on open" in that direction since choose-tree never
+  // gets the chance to open in the first place.
   test("opening choose-tree closes an already-open grep overlay", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");

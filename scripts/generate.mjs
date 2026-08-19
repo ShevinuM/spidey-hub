@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build-time data generation (PLAN.md Phase 2).
+// Build-time data generation.
 //
 // Produces four kinds of artifacts:
 //  1. public/generated/repos/<name>.json   — file tree + text contents for
@@ -8,11 +8,11 @@
 //  1b. public/generated/repos/all-projects.json — same {name, files} shape,
 //     but built from src/content/projects/*.md (one entry per project doc,
 //     path "<id>.md", lines = the raw file text) instead of a submodule
-//     checkout — backs Builds' virtual "all-projects" repo (PLAN.md Phase 4
-//     item 2, "Builds rework"). Deliberately reads straight from
-//     src/content/projects regardless of PORTFOLIO_FIXTURES (this script has
-//     no fixture awareness at all — see generateRepoIndexes() above it,
-//     which has always read the real repos/ submodules unconditionally);
+//     checkout — backs Builds' virtual "all-projects" repo. Deliberately
+//     reads straight from src/content/projects regardless of
+//     PORTFOLIO_FIXTURES (this script has no fixture awareness at all — see
+//     generateRepoIndexes() above it, which has always read the real
+//     repos/ submodules unconditionally);
 //     `pnpm build:fixtures` overwrites this one file post-build from
 //     fixtures/repos/all-projects.json; see that script's cp step.
 //  2. public/generated/grep-index.json     — walks the site's own source so
@@ -22,8 +22,8 @@
 //     recent commits per repo via the GitHub REST API, imported statically
 //     so Builds renders identically offline; on any API failure the existing
 //     committed snapshot is kept untouched and a warning is printed. Each
-//     entry also carries the full 40-char `sha` (PLAN.md Phase 4 item 1)
-//     alongside the pre-existing `sha8`, needed to fetch a commit's tree via
+//     entry also carries the full 40-char `sha` alongside the pre-existing
+//     `sha8`, needed to fetch a commit's tree via
 //     GitHub's Git Trees API (src/lib/githubTrees.ts).
 //
 // Run via `pnpm generate` (also wired to predev/prebuild).
@@ -248,18 +248,13 @@ function generateAllProjectsIndex() {
 //
 // Walks the site's own source: src/**, scripts/**, tests/** (excluding
 // goldens — binary PNGs — and reference — the vendored, never-shipped design
-// handoff copy, see tests/visual/README-PIPELINE.md / PLAN.md Phase 1), plus
-// a short list of root config files and README.md (once it exists).
+// handoff copy, see tests/visual/README-PIPELINE.md), plus a short list of
+// root config files and README.md.
 //
-// Deviation from the PLAN.md exclude list as literally written
-// (`node_modules,.git,dist,.astro,public/generated,repos,tests/**/goldens,
-// pnpm-lock.yaml`): `tests/visual/reference/**` is also excluded even though
-// it isn't named there. That directory is ~3MB of vendored third-party HTML/
-// JS/images explicitly documented as "never shipped (not in src/public)" —
+// `tests/visual/reference/**` is excluded because it's ~3MB of vendored
+// third-party HTML/JS/images that is never shipped (not in src/public) —
 // including it would flood the live grep overlay with the design reference
-// itself rather than "the site's own source". node_modules/dist/.astro/repos
-// don't exist as subdirectories of src/scripts/tests anyway, so they're
-// listed here only for parity with the plan's wording.
+// itself rather than "the site's own source".
 
 const GREP_SKIP_DIRS = new Set([
   "node_modules",
@@ -289,7 +284,7 @@ function generateGrepIndex() {
   }
   for (const rel of GREP_ROOT_FILES) {
     const full = join(ROOT, rel);
-    if (!existsSync(full)) continue; // e.g. README.md doesn't exist until Phase 9
+    if (!existsSync(full)) continue;
     if (!isTextFile(full)) continue;
     const content = readFileSync(full, "utf8");
     files.push({ path: rel, lines: content.split("\n") });
@@ -301,9 +296,9 @@ function generateGrepIndex() {
 }
 
 // ---------------------------------------------------------------------------
-// 2b. Shell fs-index (public/generated/fs-index.json) — PLAN.md Iteration 3
-//     Phase 4 item 4.2: the generated filesystem the in-window shell's
-//     cd/ls/tree/cat walk. A FLAT `{path, size?}[]` list (same shape
+// 2b. Shell fs-index (public/generated/fs-index.json) — the generated
+//     filesystem the in-window shell's cd/ls/tree/cat walk. A FLAT
+//     `{path, size?}[]` list (same shape
 //     convention as the grep/repo indexes' own `{path, lines}[]` — src/lib/
 //     shell.ts derives directory structure from path prefixes, exactly like
 //     src/lib/repoTree.ts's listDir already does for a single repo).
@@ -317,8 +312,8 @@ function generateGrepIndex() {
 // walk's content-vs-structure split looks like).
 //
 // repos/* subtrees come from the per-repo index JSONs already written by
-// generateRepoIndexes() above (path-only — PLAN.md Architecture notes),
-// NOT a second walk of the repos/ submodules on disk, so `cat`'s own lazy
+// generateRepoIndexes() above (path-only), NOT a second walk of the repos/
+// submodules on disk, so `cat`'s own lazy
 // per-repo fetch always agrees with what `ls`/`tree` show here. The virtual
 // "all-projects" entry is excluded — it has no corresponding `repos/
 // all-projects` directory on disk for a real `cd`/`ls` to land in.

@@ -1,5 +1,5 @@
-// Fixture-commits mechanism (PLAN.md Phase 2, item 1; fixed for real builds
-// in Phase 5 — see the comment below for what broke).
+// Fixture-commits mechanism — see the comment below for what a naive
+// implementation would break.
 //
 // Builds renders one project per markdown file in the `projects` collection,
 // each with exactly one repo (see src/content/projects/*.md /
@@ -16,17 +16,15 @@
 //
 // Server-only, same as src/lib/data.ts: this module must never be imported
 // from a Svelte island (Builds.svelte etc.) — `process.env.PORTFOLIO_FIXTURES`
-// doesn't exist in the browser, and this file previously read the snapshot
-// with a `node:fs` path built from `dirname(import.meta.url)`, which is the
-// same bug PLAN.md flagged for src/lib/data.ts: Astro's static build bundles
-// this module into `dist/.prerender/chunks/`, which moves it well away from
-// `src/generated/commits/` on disk, so the fs read 404s (ENOENT) exactly once
-// real pages start calling this getter. Fixed the same way data.ts was: a
-// build-time `import.meta.glob` (eager, JSON parsed natively — no `?raw` +
-// JSON.parse needed, unlike the YAML files in data.ts) instead of a runtime
-// fs read relative to the chunk's own location. Callers live in `.astro`
-// frontmatter (see src/pages/builds.astro), which thread the result down
-// through Terminal.svelte as a plain prop.
+// doesn't exist in the browser. It also can't read the snapshot with a
+// runtime `node:fs` path built from `dirname(import.meta.url)`: Astro's
+// static build bundles this module into `dist/.prerender/chunks/`, which
+// moves it well away from `src/generated/commits/` on disk, so such a read
+// would 404 (ENOENT) as soon as real pages call this getter. Instead it uses
+// a build-time `import.meta.glob` (eager, JSON parsed natively — no `?raw` +
+// JSON.parse needed, unlike the YAML files in data.ts). Callers live in
+// `.astro` frontmatter (see src/pages/builds.astro), which thread the result
+// down through Terminal.svelte as a plain prop.
 const REAL_GLOB = import.meta.glob("../generated/commits/*.json", {
   eager: true,
   import: "default",
@@ -40,13 +38,12 @@ const FIXTURE_GLOB = import.meta.glob("../../fixtures/commits/*.json", {
 const USE_FIXTURES = process.env.PORTFOLIO_FIXTURES === "1";
 
 export interface Commit {
-  /** Full 40-char commit sha — added PLAN.md Phase 4 item 1 (needed by
-   * src/lib/githubTrees.ts to fetch a commit's tree/file contents).
-   * Optional: fixture snapshots (fixtures/commits/*.json, extracted verbatim
-   * from Homepage.dc.html and never re-fetched — see PLAN.md "Fixture
-   * prototype sample data ... stays verbatim") only ever carry `sha8`.
-   * Callers needing a tree ref fall back to `sha8` when this is absent (see
-   * githubTrees.ts's ref-candidate list). */
+  /** Full 40-char commit sha, needed by src/lib/githubTrees.ts to fetch a
+   * commit's tree/file contents. Optional: fixture snapshots
+   * (fixtures/commits/*.json, extracted verbatim from Homepage.dc.html and
+   * never re-fetched) only ever carry `sha8`. Callers needing a tree ref
+   * fall back to `sha8` when this is absent (see githubTrees.ts's
+   * ref-candidate list). */
   sha?: string;
   sha8: string;
   msg: string;

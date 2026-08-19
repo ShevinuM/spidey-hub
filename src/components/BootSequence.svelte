@@ -1,5 +1,5 @@
 <script lang="ts">
-  // E.D.I.T.H boot sequence overlay (PLAN.md Phase 5B). Source of truth:
+  // E.D.I.T.H boot sequence overlay. Source of truth:
   // /Users/shev/Desktop/waiting-on-form-answers/project/
   // "Boot Sequence.dc.html", the `booting`/`outroing` sc-if blocks (lines
   // 167-276) and the `Component` class (lines 283-442) — every color,
@@ -29,9 +29,9 @@
   // mock's own z-index:30, which never had to coexist with this app's
   // other overlay layers.
   //
-  // Session-once behavior (PLAN.md 5B.3, an orchestrator decision — see
-  // src/lib/bootState.ts): a genuine (non-skipped) boot marks the
-  // sessionStorage flag the moment it STARTS, not when it finishes, so
+  // Session-once behavior (see src/lib/bootState.ts): a genuine
+  // (non-skipped) boot marks the sessionStorage flag the moment it STARTS,
+  // not when it finishes, so
   // reloading mid-boot can't be used to replay the full sequence
   // indefinitely. The initial `phase` is decided by reading that flag
   // directly inside the `$state()` initializer (not in a mount effect):
@@ -44,8 +44,8 @@
   // same-tab reload of a deep link resolve before Playwright's own
   // `waitUntil:"load"` navigation settles (verified in tests/e2e/boot.spec
   // .ts). A real, un-faked browser sees at most one raw-HTML-to-hydrated
-  // frame of the boot overlay on a skip; PLAN.md's "skips it" is judged
-  // functionally (no 4.6s wait, no timers run), not frame-perfectly.
+  // frame of the boot overlay on a skip; "skips it" is judged functionally
+  // (no 4.6s wait, no timers run), not frame-perfectly.
   import { untrack } from "svelte";
   import type { BootData, BootStatusRow } from "../lib/data";
   import {
@@ -169,8 +169,8 @@
 
   // Gated to desktopMode like every other timer/listener in the app
   // (Terminal.svelte's own keydown/popstate effect, StatusBar's clock).
-  // `untrack` on the `phase` read is load-bearing (hazard noted in
-  // PLAN.md): finish()/replay() mutate `phase` from OUTSIDE this effect
+  // `untrack` on the `phase` read is load-bearing: finish()/replay()
+  // mutate `phase` from OUTSIDE this effect
   // (an interval callback, an exported method) — if this effect's body
   // read `phase` as a tracked dependency, the write it triggers on
   // transition to "out" would re-run the effect, whose cleanup closure

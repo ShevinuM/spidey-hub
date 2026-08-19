@@ -3,9 +3,9 @@
 # "Mobile policy" (mobile-block card), "Keymap (global)".
 
 statusBar:
-  # PLAN.md Iteration 3 Phase 5 item 5.2 / Locked decision #1: the left
+  # The left
   # cluster stays "Session: 10.42.7.13 ·" for the default session, but the
-  # NAME is now dynamic per attached session (`tmux new -s test` etc.) —
+  # NAME is dynamic per attached session (`tmux new -s test` etc.) —
   # StatusBar.svelte substitutes `{name}` from the live client model.
   sessionTemplate: "Session: {name}"
   separator: "·"
@@ -13,9 +13,8 @@ statusBar:
   # prototype's Retina-V view renders "...4:profile 3:retina-v*" — out of
   # order — because the tracker window is appended after profile instead of
   # rendered in place; we always render 0-5 with the active one highlighted
-  # in place instead of reordered). PLAN.md Phase 1 "Window list becomes
-  # 0:dashboard 1:builds 2:personnel 3:retina-v 4:profile 5:help" — dashboard
-  # and help are real, clickable windows now, not implicit/absent.
+  # in place instead of reordered). Dashboard
+  # and help are real, clickable windows, not implicit/absent.
   windows:
     - number: 0
       id: dashboard
@@ -36,12 +35,12 @@ statusBar:
       id: help
       name: help
   grepHint: "[/] grep"
-  # ↻ reboot (PLAN.md Phase 5B item 5B.3) — status-bar right-cluster control
+  # ↻ reboot — status-bar right-cluster control
   # that replays the boot sequence from any view. Explicitly "reboot", not
   # the mock's own "↻ replay boot" (user's own wording, Homepage.dc.html
   # line 157's mock equivalent renamed per direct request).
   rebootLabel: "↻ reboot"
-  # tmux-style status-line prompt templates (PLAN.md Phase 5 item 5.1 / #12).
+  # tmux-style status-line prompt templates.
   # `{...}` placeholders are the same convention every other data.ts template
   # already uses (grep.yaml's filePosTemplate, builds.yaml's
   # subtitleTemplate, etc.) — StatusBar.svelte does the substitution.
@@ -51,8 +50,7 @@ statusBar:
     renamePrefix: "(rename-window) "
     # Ctrl-b & (kill-window) — window kill still keyed by NAME.
     killWindowTemplate: "kill-window {name}? (y/n)"
-    # Ctrl-b x (PLAN.md Iteration 3 Phase 6 item 6.3 / Locked decision #4) —
-    # REAL kill-pane: ALWAYS prompts, even on a single-pane window, keyed by
+    # Ctrl-b x — REAL kill-pane: ALWAYS prompts, even on a single-pane window, keyed by
     # the pane's stable `pane_index` (Window.paneOrder's own live-renumbered
     # position), never a name — real tmux panes have no name.
     killPaneTemplate: "kill-pane {pane}? (y/n)"
@@ -61,7 +59,7 @@ statusBar:
     # Ctrl-b ] with no active text input, or an empty paste buffer.
     pasteEmptyMessage: "nothing to paste"
 
-# Ctrl-b [ copy-mode overlay (PLAN.md Phase 5 item 5.3 / #12). One generic
+# Ctrl-b [ copy-mode overlay. One generic
 # overlay reused across every view's `data-copy-source` pane — see
 # CopyMode.svelte's header comment for the capture contract.
 copyMode:

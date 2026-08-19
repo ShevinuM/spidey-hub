@@ -1,9 +1,9 @@
-// Shared capture pipeline (PLAN.md "Capture pipeline (identical for
-// goldens and impl)"). Both tests/visual/capture-goldens.mjs (Phase 1,
+// Shared capture pipeline — identical for
+// goldens and impl. Both tests/visual/capture-goldens.mjs (
 // captures from the vendored prototype reference — now historical/guarded,
 // see that file's header) and tests/visual/identical.spec.ts (captures
 // from the real Astro build) call `captureState()` below so the two sides
-// can never drift apart. `captureBootState()` (PLAN.md Phase 6 item 6.1),
+// can never drift apart. `captureBootState()`,
 // further down this file, is a second, deliberately SEPARATE capture
 // function for the two boot-sequence recipes only — see its own header
 // comment for why boot needs a different clock-control sequence entirely.
@@ -36,8 +36,8 @@
 //
 // Total fake-clock advance is 2 * RUN_FOR_MS (10s with the default from
 // recipes.ts) — comfortably under 60s, so the displayed minute stays
-// "23:34" throughout, matching the prototype's hardcoded text and (from
-// Phase 3) the implementation's live clock at this same fixed instant.
+// "23:34" throughout, matching the prototype's hardcoded text and
+// the implementation's live clock at this same fixed instant.
 import { BOOT_HARD_STOP_MS, CLOCK_TIME, RUN_FOR_MS, TOAST_SEED } from "./recipes.ts";
 import { BOOT_SEEN_STORAGE_KEY } from "../../src/lib/bootState.ts";
 import { TOAST_SEED_STORAGE_KEY } from "../../src/lib/notifications.ts";
@@ -98,7 +98,7 @@ export const SIGNAL_ROW_SELECTOR =
  * @returns {Promise<Buffer>} PNG bytes
  */
 export async function captureState(page, url, recipe) {
-  // PLAN.md Phase 5B item 5B.5: pre-seed the boot-seen sessionStorage flag
+  // Pre-seed the boot-seen sessionStorage flag
   // BEFORE navigation so BootSequence.svelte's ~4.6s unskippable sequence
   // never runs during a golden capture — every recipe THIS function
   // captures (the original 10 plus `extraRecipes`/`cmdlineRecipes`) wants
@@ -109,7 +109,7 @@ export async function captureState(page, url, recipe) {
   // prototype reference (capture-goldens.mjs's other caller): that page
   // has no sessionStorage-aware boot code at all, so the flag is simply
   // unread there.
-  // PLAN.md Iteration 3 Phase 7 item 7.1: also pre-seed the toast-seed key
+  // Also pre-seed the toast-seed key
   // (recipes.ts's TOAST_SEED, own header comment) alongside the boot-skip
   // flag — same "set before any navigation via addInitScript" contract,
   // same best-effort try/catch (mirrors tests/e2e/fixtures.ts's combined
@@ -130,8 +130,8 @@ export async function captureState(page, url, recipe) {
   await page.goto(url, { waitUntil: "load" });
   await page.clock.runFor(RUN_FOR_MS);
 
-  // PLAN.md Iteration 3 Phase 2 item 2.1 retired the "SHEVINUM.DEV" plate
-  // title text this marker used to wait on — the dashboard now shows the
+  // The "SHEVINUM.DEV" plate
+  // title text is retired — the dashboard now shows the
   // SPIDEY-HUB wordmark (`[data-testid="dashboard-wordmark"]`) instead. The
   // vendored PROTOTYPE reference this same function also captures from
   // (tests/visual/capture-goldens.mjs, historical/guarded — see its own
@@ -165,11 +165,11 @@ export async function captureState(page, url, recipe) {
   const signalRow = page.locator(SIGNAL_ROW_SELECTOR);
   if (isProfile) {
     // Fail loudly if these selectors stop matching instead of silently
-    // masking nothing, or masking the wrong (non-deterministic) box
-    // (PLAN.md: net-readout + meter-strip masking is pre-authorized
+    // masking nothing, or masking the wrong (non-deterministic) box.
+    // Net-readout + meter-strip masking is pre-authorized
     // because the meter measures real load timing even under a faked
     // Date; readout/meterBars are canaries only, signalRow is the actual
-    // mask target — see SIGNAL_ROW_SELECTOR's comment for why).
+    // mask target — see SIGNAL_ROW_SELECTOR's comment for why.
     const readoutCount = await readout.count();
     const meterCount = await meterBars.count();
     const rowCount = await signalRow.count();
@@ -180,12 +180,12 @@ export async function captureState(page, url, recipe) {
     }
   }
 
-  // PLAN.md Phase 6 item 6.1 hazard note, resolved: "08-tracker" used to
-  // also mask the status-bar windows-list row, because the vendored
+  // Resolved hazard note: "08-tracker" previously
+  // also masked the status-bar windows-list row, because the vendored
   // prototype's UNPATCHED window-ordering bug (Retina-V appended after
   // Profile instead of in numeric order) made that row structurally differ
   // from our bug-fixed implementation in every tracker capture. Since
-  // PLAN.md's re-baseline (6.2) retires the prototype as the goldens'
+  // the goldens' re-baseline retires the prototype as the goldens'
   // authority — both sides of every future comparison are OUR OWN
   // implementation — that discrepancy no longer exists: the row is static,
   // deterministic text with nothing else timing-sensitive about it, so the
@@ -206,7 +206,7 @@ export async function captureState(page, url, recipe) {
 }
 
 /**
- * Boot-sequence golden capture (PLAN.md Phase 6 item 6.1/6.2, recipes.ts's
+ * Boot-sequence golden capture (recipes.ts's
  * `bootRecipes`) — a SEPARATE function from `captureState()` above, not a
  * branch inside it, because boot recipes need a fundamentally different
  * clock-control sequence to be deterministic, discovered by direct
@@ -265,7 +265,7 @@ export async function captureState(page, url, recipe) {
 export async function captureBootState(page, url, bootRecipe) {
   await page.route("**/api.github.com/**", (route) => route.abort());
 
-  // PLAN.md Iteration 3 Phase 7 item 7.1: "14-boot-ready" lands on the
+  // "14-boot-ready" lands on the
   // post-outro READY dashboard (window id "dashboard", Toasts visible —
   // same reasoning as captureState()'s own toast-seed pre-seed above), so
   // this capture path needs the exact same deterministic pin. No boot-seen

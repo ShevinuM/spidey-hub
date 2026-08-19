@@ -5,31 +5,30 @@
 // (tests/visual/pipeline.mjs) used to produce tests/visual/goldens/, so the
 // two sides can never structurally drift apart.
 //
-// PLAN.md Phase 6 item 6.1 wired in the first four recipe arrays from
-// recipes.ts; Iteration 3 Phase 7 item 7.1 adds a fifth — 20 recipes total,
+// This suite wires in five recipe arrays from
+// recipes.ts — 20 recipes total,
 // 40 goldens across both viewports:
 //   - `recipes` (10): the original set, re-baselined against our OWN
-//     implementation as of Phase 6 (see recipes.ts's header comment for the
+//     implementation (see recipes.ts's header comment for the
 //     three action-list fixes this required — "03-builds-j"/"05-personnel-
 //     l1"/"06-editor" — found by actually running them, not by inspection).
 //   - `extraRecipes` (2): "11-help", "12-all-projects" — states the
-//     vendored prototype never had. "11-help" was re-validated at Iteration
-//     3 Phase 7 (its action changed from `?` to `h` — Locked decision #14
-//     freed `?` up for the HelpSearch palette, "20-help-search" below).
-//   - `cmdlineRecipes` (1): "15-cmdline" — the Phase 5C floating command box
-//     (Iteration 3 removed its suggestion list — same actions, new content).
+//     vendored prototype never had. "11-help" was re-validated
+//     (its action changed from `?` to `h` —
+//     freeing `?` up for the HelpSearch palette, "20-help-search" below).
+//   - `cmdlineRecipes` (1): "15-cmdline" — the floating command box
+//     (its suggestion list was removed — same actions, new content).
 //   - `bootRecipes` (2): "13-boot-mid"/"14-boot-ready" — captured through a
 //     SEPARATE function (`captureBootState()`, not `captureState()`) because
 //     they need a different, boot-specific clock-control sequence to be
 //     deterministic — see that function's header comment in pipeline.mjs.
 //   - `iteration3Recipes` (5): "16-shell"/"17-host-shell"/"18-split"/
-//     "19-choose-tree"/"20-help-search" — states Iteration 3 (shell/
-//     sessions/panes/layouts/choose-tree/HelpSearch) added; see
+//     "19-choose-tree"/"20-help-search" — states covering shell/
+//     sessions/panes/layouts/choose-tree/HelpSearch; see
 //     recipes.ts's own header comment on this array for the verified
 //     keystroke sequences.
 //
-// This suite is now the goldens' SOLE authority (PLAN.md 6.2's
-// `--update-snapshots` re-baseline): tests/visual/capture-goldens.mjs's
+// This suite is now the goldens' SOLE authority: tests/visual/capture-goldens.mjs's
 // vendored-prototype path is retired to historical/guarded status (see its
 // own header comment) and is never run as part of normal development.
 import { expect, test } from "@playwright/test";
@@ -39,35 +38,33 @@ import { captureBootState, captureState } from "./pipeline.mjs";
 // The 18 standard (key/type replay) recipes, captured via captureState().
 // bootRecipes are handled by their own describe block below via
 // captureBootState() instead — a different capture function, not just a
-// different recipe shape. PLAN.md Iteration 3 Phase 7 item 7.1 adds
-// `iteration3Recipes` (16-shell/17-host-shell/18-split/19-choose-tree/
+// different recipe shape. `iteration3Recipes` (16-shell/17-host-shell/18-split/19-choose-tree/
 // 20-help-search) to the union — 20 recipes total, 40 goldens across both
 // viewports.
 const keyRecipes = [...recipes, ...extraRecipes, ...cmdlineRecipes, ...iteration3Recipes];
 
-// PLAN.md "Visual-regression harness": "start maxDiffPixels: 0; if
-// antialiasing noise appears, an executor may relax to at most
+// Visual-regression harness policy: start maxDiffPixels: 0; if
+// antialiasing noise appears, relax to at most
 // maxDiffPixelRatio: 0.0005 per shot with a comment justifying it, and the
-// verifier must eyeball the diff images."
+// diff images must be eyeballed.
 //
-// PLAN.md Phase 6 item 6.2 ("revisit RATIO_RELAXED... self-captured
-// baselines should allow tightening to 0"): the PRE-Phase-6 relaxations on
+// The relaxations previously carried on
 // "02-builds"/"03-builds-j"/"06-editor" existed to reconcile Chromium AA
 // jitter between the vendored PROTOTYPE reference and our implementation —
 // two visually near-identical but not byte-identical renderers. Now that
 // the goldens are self-baselines (captured from, and compared against, this
 // SAME implementation), that specific rationale is gone; every recipe here
 // starts at `maxDiffPixels: 0` again. Any entry added back to the set below
-// must cite fresh forensics from the actual 6.2 three-run determinism check
+// must cite fresh forensics from an actual three-run determinism check
 // (which pixels, how many, why — e.g. the README-PIPELINE.md-documented GPU
 // blur-rasterization jitter, which is capture-vs-capture and can in
-// principle still surface here), not the pre-6.2 prototype-skew reasoning.
+// principle still surface here), not prototype-skew reasoning.
 const RATIO_RELAXED = new Set<string>([]);
 
 test.describe("visual: implementation vs goldens", () => {
   test.beforeEach(async ({ page }) => {
-    // Same network-determinism rule as tests/visual/capture-goldens.mjs
-    // (PLAN.md "Network determinism"): the commit-refresh island fires a
+    // Same network-determinism rule as tests/visual/capture-goldens.mjs:
+    // the commit-refresh island fires a
     // fetch on Builds mount, and fixture repos must not depend on
     // api.github.com 404-ing by luck.
     await page.route("**/api.github.com/**", (route) => route.abort());
@@ -84,7 +81,7 @@ test.describe("visual: implementation vs goldens", () => {
   }
 });
 
-// PLAN.md Phase 6 items 6.1/6.2: boot-sequence goldens, captured via
+// Boot-sequence goldens, captured via
 // captureBootState() (pipeline.mjs) rather than captureState() — see that
 // function's header comment for the clock-control hazards specific to a
 // still-running, elapsed-time-driven overlay that the other 13 recipes

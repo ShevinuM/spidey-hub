@@ -1,15 +1,15 @@
 // Pins classifyDoc() (src/lib/docline.ts) to a fixed set of hand-verified
 // kind arrays for 4 fixture project docs + 3 real Enaimco personnel role
-// docs (the 3 sub-role files under enaimco/software-developer/ — PLAN.md
-// Iteration 3 Phase 1 item 1.3 restructured personnel to a path-derived
-// tree; these fixtures were regenerated against the new file paths/content),
-// reading the *actual files on disk* (not re-typed literals) so this test
-// fails the moment a content file's body stops matching the pinned kinds.
+// docs (the 3 sub-role files under enaimco/software-developer/, part of a
+// path-derived personnel tree; these fixtures were regenerated against
+// those file paths/content), reading the *actual files on disk* (not
+// re-typed literals) so this test fails the moment a content file's body
+// stops matching the pinned kinds.
 //
 // tests/unit/docline.fixtures.json holds the expected kind arrays and color
 // maps (the project-doc entries extracted verbatim from the prototype's
-// Component class per PLAN.md Phase 2 item 6; the personnel-doc entries
-// regenerated from classifyDoc() itself against the real files). Run via
+// Component class; the personnel-doc entries regenerated from
+// classifyDoc() itself against the real files). Run via
 // `pnpm test:unit` / `node --test`.
 import { test } from "node:test";
 import assert from "node:assert/strict";

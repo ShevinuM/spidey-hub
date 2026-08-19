@@ -1,5 +1,5 @@
-// Unit tests for the pure shell parser/builtins/fs-navigation logic (PLAN.md
-// Iteration 3 Phase 4 item 4.5) — src/lib/shell.ts. No DOM, no fetch: a
+// Unit tests for the pure shell parser/builtins/fs-navigation logic
+// — src/lib/shell.ts. No DOM, no fetch: a
 // small fixture fs index + a hand-built ShellData-shaped fixture (same
 // "structurally equivalent fixture, not the real yaml" convention
 // tests/unit/cmdline.test.ts already uses) stand in for the generated
@@ -381,7 +381,7 @@ test("runCommand: cat reports missing/dir/unindexed distinctly", () => {
 });
 
 // ---------------------------------------------------------------------
-// vim / vi / nvim (PLAN.md Iteration 4 item 19)
+// vim / vi / nvim
 // ---------------------------------------------------------------------
 
 test("runCommand: vim <existing file> emits an open-editor effect with the resolved path and fetched content", () => {
@@ -523,7 +523,7 @@ test("runCommand: tmux with an unrecognized subcommand shows a usage error", () 
 });
 
 // ---------------------------------------------------------------------
-// Sessions (PLAN.md Iteration 3 Phase 5 items 5.1/5.2)
+// Sessions
 // ---------------------------------------------------------------------
 
 test("nextNumericSessionName: picks the first free positive integer", () => {

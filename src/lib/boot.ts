@@ -1,5 +1,5 @@
-// Pure timing/progress/log math for the E.D.I.T.H boot sequence (PLAN.md
-// Phase 5B, source of truth `Boot Sequence.dc.html`'s `Component` class,
+// Pure timing/progress/log math for the E.D.I.T.H boot sequence (source of
+// truth `Boot Sequence.dc.html`'s `Component` class,
 // `renderVals()`/`pct()`/`progress()`). Kept framework-free and dependency-
 // free (no Svelte imports) — same rationale as src/lib/vim.ts and
 // src/lib/pasteBuffer.ts — so BootSequence.svelte is a thin renderer over

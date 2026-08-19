@@ -16,15 +16,15 @@ modeLine:
   liveGrep: "live_grep · shevinum.dev@main"
   repoFiles: "repo files · shevinum.dev@main"
 
-# Loading/error text for the lazy index fetch (PLAN.md Phase 8: "Load
-# lazily at runtime (fetch on first `/` press)"). No prototype precedent
+# Loading/error text for the lazy index fetch — loaded lazily at runtime
+# (fetch on first `/` press). No prototype precedent
 # (the prototype's repoSrc was inline data, never fetched) — mirrors
-# RepoBrowserData's loadingText/errorText (Phase 5) for the same reason:
+# RepoBrowserData's loadingText/errorText for the same reason:
 # a real network request needs a graceful transient state.
 loadingText: "loading index…"
 errorText: "grep index unavailable"
 
-# Position-pill templates (Phase 5 "Top/Bot must come from data" precedent
+# Position-pill templates (same "Top/Bot must come from data" precedent
 # applied to grep's own two position strings, Component.renderVals() lines
 # 1064/1080 — the literal "{n} lines" *inside* a matched row's snippet
 # text is grep.ts's own tested search() output and stays there unchanged).

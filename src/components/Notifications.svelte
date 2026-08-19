@@ -200,10 +200,10 @@
     showSpamAction: boolean;
   }
 
-  /** Deviation from the mockup (advisor-caught inconsistency in the source:
-   * its own dismissGlyph/dismissTitle are TAB-keyed while dismissItem()
-   * itself is FOLDER-keyed, and they disagree on the alerts tab). This keys
-   * both off the item's actual folder, matching the transition function. */
+  /** Keys the dismiss affordance off the item's actual folder (not the
+   * active tab): the alerts tab is a derived filter of inbox, so a TAB-keyed
+   * affordance would disagree with `dismissItem()`'s own folder-keyed
+   * transition for items shown there. */
   function dismissAffordance(folder: NotificationFolder): { glyph: string; title: string } {
     if (folder === "inbox") return { glyph: ui.dismissGlyphArchive, title: ui.dismissTitleArchive };
     return { glyph: ui.dismissGlyphDelete, title: ui.dismissTitleDelete };

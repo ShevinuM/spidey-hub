@@ -1,6 +1,5 @@
-// Pure parser/completion logic for the site-wide floating Cmdline (PLAN.md
-// Phase 5C, item 5C.4: "pure parser/completion logic in NEW src/lib/
-// cmdline.ts (unit-testable: parse, match/filter, complete)"). No DOM, no
+// Pure parser/completion logic for the site-wide floating Cmdline
+// (unit-testable: parse, match/filter, complete). No DOM, no
 // Svelte state, no side effects — src/components/Cmdline.svelte and
 // Terminal.svelte own the stateful/effectful parts (open/close, text state,
 // dispatching a resolved command to a view switch / grep open / window
@@ -55,7 +54,7 @@ export function resolveCommand(commands: CommandDef[], name: string): CommandDef
 
 /** Prefix-filters `commands` against `prefix` (matched against the name OR
  * any alias, case-insensitively) — the live suggestion list under the
- * input (PLAN.md 5C.3). An empty prefix returns every command, unfiltered
+ * input. An empty prefix returns every command, unfiltered
  * (the box's own resting state: nothing typed yet). */
 export function filterSuggestions(commands: CommandDef[], prefix: string): CommandDef[] {
   const p = prefix.toLowerCase();
@@ -65,7 +64,7 @@ export function filterSuggestions(commands: CommandDef[], prefix: string): Comma
   );
 }
 
-/** Tab completion (PLAN.md 5C.3 "Tab completes the unique/first match").
+/** Tab completion: completes the unique/first match.
  * Completes only the COMMAND NAME token, leaving any already-typed
  * argument text untouched; returns `null` when there's nothing to complete
  * (empty input, or no command matches the typed prefix). An exact
@@ -82,8 +81,8 @@ export function completeInput(commands: CommandDef[], input: string): string | n
   return args ? `${target.name} ${args}` : target.name;
 }
 
-/** zsh-style repeated-Tab cycling (PLAN.md Iteration 3 Phase 3 item 3.1):
- * the suggestions list UI is gone from Cmdline.svelte, so this is now the
+/** zsh-style repeated-Tab cycling: the suggestions list UI is gone from
+ * Cmdline.svelte, so this is now the
  * only way multiple Tab-matches are still reachable from the keyboard.
  * `prev` is the state this same function returned on the IMMEDIATELY
  * preceding Tab press, or `null` on the first Tab press for a given typed
@@ -125,8 +124,8 @@ export function cycleComplete(
 }
 
 /** Merges two command lists for DISPLAY (suggestions), preferring `primary`
- * on a name collision — used to build the editor ex-mode suggestion list
- * (PLAN.md 5C.1(a)/5C.2 "editor context wins"): `exCommands`' own `q`/`w`
+ * on a name collision — used to build the editor ex-mode suggestion list,
+ * where editor context wins: `exCommands`' own `q`/`w`
  * entries shadow `commands`' site-wide `q` (kill-window) so the box shows
  * the EDITOR meaning while one is open. Execution order is independent of
  * this — parseExCommand always gets first refusal regardless of what the
@@ -138,10 +137,8 @@ export function mergeCommandLists(primary: CommandDef[], secondary: CommandDef[]
 }
 
 // ---------------------------------------------------------------------
-// Ex-command parsing (PLAN.md Phase 3's own state machine, LIFTED here as a
-// pure function so it's shared between Editor.svelte's execution and this
-// file's own unit tests — the parsing itself is byte-for-byte identical to
-// Phase 3's original inline executeCmdline(), never rebuilt).
+// Ex-command parsing — a pure function shared between Editor.svelte's
+// execution and this file's own unit tests.
 // ---------------------------------------------------------------------
 
 export type ExCommand =
@@ -152,23 +149,21 @@ export type ExCommand =
 
 export function parseExCommand(cmd: string): ExCommand {
   if (cmd === "q" || cmd === "q!") return { kind: "close" };
-  // PLAN.md Iteration 4 items 8/22: "w!"/"wq!" are treated exactly like
-  // "w"/"wq" — this viewer never writes regardless of the bang, so there is
-  // no distinct "force" behavior to implement; the bang variants existed in
-  // real vim only to override the readonly refusal `writeError` already
-  // reports, and previously fell through to the `unknown`/E492 branch below
-  // instead, which read as a parser bug rather than "still readonly".
+  // "w!"/"wq!" are treated exactly like "w"/"wq" — this viewer never writes
+  // regardless of the bang, so there is no distinct "force" behavior to
+  // implement; the bang variants exist in real vim only to override the
+  // readonly refusal `writeError` already reports.
   if (cmd === "w" || cmd === "wq" || cmd === "w!" || cmd === "wq!") return { kind: "writeError" };
   if (/^\d+$/.test(cmd)) return { kind: "jump", line: Number.parseInt(cmd, 10) };
   return { kind: "unknown" };
 }
 
 // ---------------------------------------------------------------------
-// tmux command-prompt parsing (PLAN.md 5C.1(c) — `Ctrl-b :`).
+// tmux command-prompt parsing (`Ctrl-b :`).
 // ---------------------------------------------------------------------
 
-/** PLAN.md Iteration 3 Phase 6 item 6.4 — the 7 preset names `select-layout`
- * accepts. Deliberately its OWN small literal list, not an import of
+/** The 7 preset names `select-layout` accepts. Deliberately its OWN small
+ * literal list, not an import of
  * src/lib/tmux.ts's `LAYOUT_NAMES` — mirrors src/lib/shell.ts's documented
  * decoupling convention (that file's own `pickMostRecentUnattached` comment:
  * these small pure modules stay independent of tmux.ts's shape, duplicating
@@ -189,7 +184,7 @@ export type TmuxCommand =
   | { kind: "kill-pane" }
   | { kind: "select-window"; index: number }
   /** `select-layout` with no argument — reapplies whatever was last applied
-   * (or no-ops if nothing has been, PLAN.md 6.4). */
+   * (or no-ops if nothing has been). */
   | { kind: "select-layout"; name: undefined }
   | { kind: "select-layout"; name: (typeof LAYOUT_NAMES)[number] }
   | { kind: "select-layout-unknown"; name: string }

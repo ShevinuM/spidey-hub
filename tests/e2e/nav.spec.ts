@@ -1,21 +1,20 @@
-// Behavioral e2e suite against the real-content build (PLAN.md
-// "Verification commands": `pnpm test:e2e` runs `pnpm build` first, then
-// previews `dist/` on port 4322 — see playwright.config.ts's webServer
-// entry and package.json's `test:e2e` script).
+// Behavioral e2e suite against the real-content build (`pnpm test:e2e` runs
+// `pnpm build` first, then previews `dist/` on port 4322 — see
+// playwright.config.ts's webServer entry and package.json's `test:e2e`
+// script).
 //
-// Phase 3 scope: view switching + status bar text per view (including the
+// Scope: view switching + status bar text per view (including the
 // bug-fix-1 regression: Retina-V renders in numeric order, not appended
 // after Profile), modifier-key fall-through, and the live clock (bug fix 2).
 //
-// PLAN.md Phase 1 rewrite: the window list gained two real windows
-// (0:dashboard, 5:help — items 6/13), and bare q/Esc no longer switch views
-// anywhere (items 15/16) — Esc is reserved for modal-exit roles only (grep
-// close, personnel filter exit, prefix cancel), never a view switch. Every
-// test below that used to drive navigation with "q" now uses a status-bar
-// click instead (see `goDashboard()`), and the dedicated q/Esc describe
-// block is inverted to assert NO navigation happens, in every view.
+// The window list has six real windows (0:dashboard through 5:help), and
+// bare q/Esc never switch views anywhere — Esc is reserved for modal-exit
+// roles only (grep close, personnel filter exit, prefix cancel), never a
+// view switch. Every test below drives navigation via a status-bar click
+// instead (see `goDashboard()`), and the dedicated q/Esc describe block
+// asserts NO navigation happens, in every view.
 import { expect, test, type Page } from "./fixtures.ts";
-// PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
+// This spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's
 // ~4.6s unskippable sequence never runs for these tests — see that
@@ -29,11 +28,12 @@ async function statusBarText(page: Page) {
 }
 
 /** The full six-window status-bar line, with `activeId` starred — builds
- * the expected string instead of hand-writing it at each call site (PLAN.md
- * Phase 1 renumbers/extends the window list, touching ~20 literals). */
+ * the expected string instead of hand-writing it at each call site (a
+ * future renumbering/extension of the window list would otherwise touch
+ * ~20 literals). */
 const WINDOWS = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"];
-/** `lastId` (PLAN.md Iteration 3 Phase 4 item 4.3 tmux fidelity reference)
- * is the real tmux `-` flag on the session's PREVIOUSLY active window —
+/** `lastId` (real tmux fidelity) is the real tmux `-` flag on the
+ * session's PREVIOUSLY active window —
  * omit it for assertions made before any in-test window switch (a fresh
  * `gotoReady`/SSR load has no previous window, so no flag renders). */
 function winText(activeId: string, lastId?: string): string {
@@ -62,10 +62,10 @@ async function prefixDigit(page: Page, digit: string) {
   await page.keyboard.press(digit);
 }
 
-/** Returns to the dashboard via a status-bar click (PLAN.md Phase 1 item
- * 1.3) — the mouse-only replacement for the retired q/Esc-to-dashboard
- * fallback, used wherever a test merely needs to get back home as a setup
- * step rather than testing navigation itself. */
+/** Returns to the dashboard via a status-bar click — the only way to reach
+ * the dashboard from elsewhere now that q/Esc never navigate — used
+ * wherever a test merely needs to get back home as a setup step rather
+ * than testing navigation itself. */
 async function goDashboard(page: Page) {
   await page.locator('[data-testid="status-bar-window"][data-window-id="dashboard"]').click();
   await expect(page).toHaveURL(/\/$/);
@@ -157,7 +157,7 @@ test.describe("q / Esc never switch views", () => {
   });
 });
 
-test.describe("status bar navigation (mouse) — PLAN.md Phase 1 item 1.3", () => {
+test.describe("status bar navigation (mouse)", () => {
   test("clicking each window jumps straight to it, from anywhere", async ({ page }) => {
     await gotoReady(page, "/");
     let prev = "dashboard";
@@ -290,13 +290,13 @@ test.describe("modifier fall-through", () => {
       return ev.defaultPrevented;
     });
     expect(prevented).toBe(true);
-    // Opening the grep overlay (PLAN.md Phase 8 — see tests/e2e/grep.spec.ts
+    // Opening the grep overlay (see tests/e2e/grep.spec.ts
     // for its own full behavioral suite) is never a URL/view switch: the
     // overlay sits on top of whichever view/URL was already active.
     await expect(page).toHaveURL(/\/$/);
   });
 
-  // Regression guard (Phase 5): Terminal.svelte's handleKey briefly claimed
+  // Regression guard: Terminal.svelte's handleKey briefly claimed
   // *any* keydown with e.key === "/" as the grep reservation before checking
   // modifiers — `e.key` is "/" regardless of which modifiers are held, so
   // Cmd+/ (a real browser/OS shortcut) was getting preventDefault-ed too.
@@ -313,37 +313,32 @@ test.describe("modifier fall-through", () => {
 });
 
 test.describe("live clock (bug fix 2)", () => {
-  // PLAN.md Phase 6 item 6.5 deflake: this test previously used
-  // `page.clock.runFor()`, which failed once under parallel-worker load
-  // (Phase 2 verification) despite passing every time in isolation. Root
-  // cause, discriminated empirically while building the Phase 6 boot-golden
-  // capture pipeline (see tests/visual/pipeline.mjs's `captureBootState()`
-  // header comment for the full writeup): `page.clock.install()` does NOT
-  // itself freeze `Date.now()` — real wall-clock time keeps advancing until
-  // the FIRST explicit clock-control call, AND after any `runFor()` call
-  // finishes, the clock resumes ticking in REAL time again until the next
-  // control call. StatusBar.svelte's clock is a self-rescheduling
-  // `setTimeout` chain (`msUntilNextMinute`), not a fixed-interval poll, so
-  // between this test's two `runFor()` calls — while it read/asserted the
-  // "before" DOM text — the clock was already ticking in real wall time
-  // again; under enough parallel-worker CPU contention, more than the
-  // intended 61s of real time could elapse before the second `runFor()`
-  // call ever ran, occasionally rolling the minute display past "23:35" to
-  // "23:36" or later by the time it was read.
+  // `page.clock.install()` does NOT itself freeze `Date.now()` — real
+  // wall-clock time keeps advancing until the FIRST explicit clock-control
+  // call, AND after any `runFor()` call finishes, the clock resumes ticking
+  // in REAL time again until the next control call. StatusBar.svelte's
+  // clock is a self-rescheduling `setTimeout` chain (`msUntilNextMinute`),
+  // not a fixed-interval poll, so using `runFor()` between reading/asserting
+  // the "before" DOM text and the final assertion lets the clock keep
+  // ticking in real wall time in between; under enough parallel-worker CPU
+  // contention, more than the intended 61s of real time could elapse,
+  // occasionally rolling the minute display past "23:35" to "23:36" or
+  // later by the time it's read.
   //
-  // Fixed with `page.clock.pauseAt(<absolute time>)` instead of
-  // `runFor(<duration>)` throughout, mirroring `captureBootState()`'s own
-  // fix: `pauseAt` leaves the clock genuinely FROZEN at its target instant
-  // (confirmed empirically: a bare `setInterval`'s counter and `Date.now()`
-  // were byte-identical across two reads separated by a real 500ms wait),
-  // so no amount of real time passing between assertions — however slow
-  // the runner is — can move the displayed clock. The first `pauseAt` runs
-  // BEFORE navigation (eliminating page-load/hydration jitter leaking into
-  // the "starting instant" the same way it does for boot), and each
-  // subsequent `pauseAt` targets an ABSOLUTE offset from that same t0
-  // rather than a relative duration from "whenever this call happens to
-  // run" (this is NOT a retry-mask — it's the same root-cause clock-control
-  // fix documented for the boot pipeline, applied to a second timer chain).
+  // `page.clock.pauseAt(<absolute time>)` avoids this — see
+  // tests/visual/pipeline.mjs's `captureBootState()` header comment for the
+  // full writeup of the same clock-control property applied to the boot
+  // pipeline: `pauseAt` leaves the clock genuinely FROZEN at its target
+  // instant (confirmed empirically: a bare `setInterval`'s counter and
+  // `Date.now()` were byte-identical across two reads separated by a real
+  // 500ms wait), so no amount of real time passing between assertions —
+  // however slow the runner is — can move the displayed clock. The first
+  // `pauseAt` runs BEFORE navigation (eliminating page-load/hydration
+  // jitter leaking into the "starting instant" the same way it does for
+  // boot), and each subsequent `pauseAt` targets an ABSOLUTE offset from
+  // that same t0 rather than a relative duration from "whenever this call
+  // happens to run" (this is NOT a retry-mask — it's the same root-cause
+  // clock-control fix applied to a second timer chain).
   test("status bar minute advances after 60s of (faked) time", async ({ page }) => {
     const CLOCK_TIME = "2026-08-15T23:34:00";
     const t0 = new Date(CLOCK_TIME).getTime();
@@ -366,7 +361,7 @@ test.describe("live clock (bug fix 2)", () => {
   });
 });
 
-test.describe("wallpaper blur/darken behind windowed views (PLAN.md Iteration 4 item 9)", () => {
+test.describe("wallpaper blur/darken behind windowed views", () => {
   async function wallpaperFilter(page: Page): Promise<string> {
     return page.locator('[data-testid="wallpaper-layer"]').evaluate((el) => getComputedStyle(el).filter);
   }
@@ -395,7 +390,7 @@ test.describe("wallpaper blur/darken behind windowed views (PLAN.md Iteration 4 
   });
 });
 
-test.describe("dashboard wordmark restyle + outer chrome removal (PLAN.md Iteration 4 items 10/11)", () => {
+test.describe("dashboard wordmark restyle + outer chrome removal", () => {
   test("SPIDEY-HUB wordmark is unplated: white fill + red stroke, no bordered plate wrapper", async ({ page }) => {
     await gotoReady(page, "/");
     const wordmark = page.locator('[data-testid="dashboard-wordmark"]');

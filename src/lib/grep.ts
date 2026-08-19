@@ -1,7 +1,7 @@
 // Ports Homepage.dc.html's Component.grepHits() (lines 812-832) exactly:
 // same empty-query shape, same path-then-content-hit ordering per file, same
 // 400-row cap, same 24-char left-cut ellipsis/offset math, same trailing-
-// whitespace trim. PLAN.md Phase 2 item 7.
+// whitespace trim.
 
 export interface RepoFile {
   path: string;

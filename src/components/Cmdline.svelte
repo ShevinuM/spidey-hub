@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Site-wide floating Cmdline (PLAN.md Phase 5C) — a noice.nvim-style
+  // Site-wide floating Cmdline — a noice.nvim-style
   // centered box, same visual family as GrepOverlay.svelte (bordered box,
   // box-drawing inset title, existing palette, prompt + blinking block
   // cursor). Always mounted (Terminal.svelte renders this once,
@@ -8,16 +8,16 @@
   // (three different entry contexts, see openSite/openEx/openTmux below)
   // and call handleKey() on every keydown once it's up.
   //
-  // Three entry contexts share this one component (PLAN.md 5C.1), tracked
+  // Three entry contexts share this one component, tracked
   // by `mode`:
   //   "site" — `:` from anywhere with no other text input active. Only
   //            `cmdline.commands` are offered/executed.
   //   "ex"   — `:` while a Builds/Personnel file editor is open. Terminal
-  //            tries the LIFTED Phase-3 ex-command state machine first
+  //            tries the ex-command state machine first
   //            (src/lib/cmdline.ts's parseExCommand, executed by
   //            Editor.svelte's own runExCommand) via the `onSubmit` prop;
   //            only a command that machine doesn't recognize falls through
-  //            to the site-wide set — "editor context wins" (PLAN.md 5C.2).
+  //            to the site-wide set — "editor context wins".
   //            Tab-completion candidates here are exCommands ∪ commands,
   //            exCommands winning name collisions (src/lib/cmdline.ts's
   //            mergeCommandLists) — same "editor context wins" precedence.
@@ -29,12 +29,11 @@
   // resume, window rename/kill/select) — Terminal.svelte owns every one of
   // those side effects, exactly like GrepOverlay's `onNavigate` prop. This
   // component only owns: open/closed + which mode, the typed text, silent
-  // zsh-style Tab-cycling (src/lib/cmdline.ts's pure cycleComplete — see
-  // PLAN.md Iteration 3 Phase 3 item 3.1: the visible suggestions list this
-  // component used to render under the input is GONE, on purpose — the new
-  // `?` HelpSearch.svelte palette is the discoverable/browsable surface
-  // now, this box stays a plain, quiet command line), and rendering the
-  // transient error `onSubmit` hands back.
+  // zsh-style Tab-cycling (src/lib/cmdline.ts's pure cycleComplete —
+  // deliberately no visible suggestions list under the input: the `?`
+  // HelpSearch.svelte palette is the discoverable/browsable surface, this
+  // box stays a plain, quiet command line), and rendering the transient
+  // error `onSubmit` hands back.
   import type { CmdlineData } from "../lib/data";
   import { cycleComplete, mergeCommandLists, type CommandDef, type TabCycleState } from "../lib/cmdline";
   import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
@@ -58,7 +57,7 @@
   let mode = $state<CmdlineMode>("site");
   let text = $state("");
   let error = $state<string | null>(null);
-  /** Tab-cycle state (PLAN.md Iteration 3 Phase 3 item 3.1) — non-null only
+  /** Tab-cycle state — non-null only
    * for the span of consecutive Tab presses that are cycling the SAME
    * match list; reset to `null` by every other keydown (Enter, Backspace,
    * a printable character, Escape, opening the box) so the next Tab press
@@ -77,7 +76,7 @@
     cycle = null;
   }
 
-  /** Terminal.svelte's delegation gate (PLAN.md 5C.4): while true, this
+  /** Terminal.svelte's delegation gate: while true, this
    * component's handleKey() below consumes every key, and the tmux prefix
    * system treats it exactly like an open status-bar prompt (only the bare
    * Ctrl-b arm and a prefixed `]` paste are allowed through). */
@@ -110,8 +109,8 @@
 
   const PASTE_TARGET_ID = "cmdline";
 
-  /** Ctrl-b ] paste-target registration (PLAN.md 5C.1(c) / Phase 5 item
-   * 5.3's paste-target registry) — active only while this box is open. */
+  /** Ctrl-b ] paste-target registration — active only while this box is
+   * open. */
   $effect(() => {
     if (!open) return;
     pushPasteTarget({
@@ -151,12 +150,12 @@
     if (e.metaKey || e.ctrlKey || e.altKey) return true;
 
     // Any key after an error dismisses it and keeps editing the same text
-    // (PLAN.md 5C.2 "cleared by Esc/next open" — a fresh keystroke is
-    // "next open" in spirit: the box stays open, but the stale message
-    // must not linger over new input).
+    // ("cleared by Esc/next open" — a fresh keystroke is "next open" in
+    // spirit: the box stays open, but the stale message must not linger
+    // over new input).
     if (error) error = null;
 
-    // Tab-cycling (PLAN.md Iteration 3 Phase 3 item 3.1) — every key OTHER
+    // Tab-cycling — every key OTHER
     // than Tab invalidates whatever cycle is in progress, so the very next
     // Tab press always starts a FRESH one from whatever's typed at that
     // moment (a stray Enter that only surfaced an error, or a Backspace/
@@ -184,10 +183,9 @@
       text = text.slice(0, -1);
       return true;
     }
-    // j/k (and every other printable character, including the now-removed
-    // suggestion list's old ArrowUp/ArrowDown navigation keys, which simply
-    // fall through to the generic "consumed, no side effect" return below)
-    // just type.
+    // j/k (and every other printable character) just type. ArrowUp/ArrowDown
+    // have no suggestion list to navigate, so they simply fall through to
+    // the generic "consumed, no side effect" return below.
     if (e.key.length === 1) {
       e.preventDefault();
       text += e.key;
@@ -198,7 +196,7 @@
 </script>
 
 {#if open}
-  <!-- Session-chrome rule (PLAN.md Phase 5 item 5.5, extended by 5C.4):
+  <!-- Session-chrome rule:
        `bottom` stops at the status bar's own height so the backdrop never
        dims/covers it, exactly like GrepOverlay/CopyMode's own backdrops.
        `align-items:flex-start` + top padding puts the box itself in the

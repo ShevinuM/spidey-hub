@@ -1,7 +1,7 @@
 // Unit tests for the pure parser/completion logic behind the site-wide
-// floating Cmdline (PLAN.md Phase 5C item 5C.5) — src/lib/cmdline.ts. No
+// floating Cmdline — src/lib/cmdline.ts. No
 // DOM, no Svelte state: parse, prefix-filter, alias resolution, Tab
-// completion, the lifted Phase-3 ex-command machine, and the tmux
+// completion, the lifted ex-command machine, and the tmux
 // command-prompt grammar, each exercised directly against fixture command
 // lists (not the real cmdline.yaml, so this suite can't drift silently if
 // the yaml's wording changes — only its SHAPE matters here).
@@ -125,9 +125,9 @@ test("completeInput returns null for empty input or no match", () => {
 });
 
 // ---------------------------------------------------------------------
-// cycleComplete (zsh-style repeated-Tab cycling — PLAN.md Iteration 3
-// Phase 3 item 3.1: the only way multiple Tab matches are still reachable
-// now that Cmdline.svelte no longer renders a suggestions list)
+// cycleComplete (zsh-style repeated-Tab cycling: the only way multiple Tab
+// matches are still reachable now that Cmdline.svelte no longer renders a
+// suggestions list)
 // ---------------------------------------------------------------------
 
 const ambiguousKill: CommandDef[] = [
@@ -200,7 +200,7 @@ test("mergeCommandLists still includes every non-colliding secondary entry", () 
 });
 
 // ---------------------------------------------------------------------
-// parseExCommand (the lifted Phase-3 ex-command machine)
+// parseExCommand (the ex-command machine)
 // ---------------------------------------------------------------------
 
 test("parseExCommand recognizes q and q! as close", () => {
@@ -213,7 +213,7 @@ test("parseExCommand recognizes w and wq as writeError", () => {
   assert.deepEqual(parseExCommand("wq"), { kind: "writeError" });
 });
 
-test("parseExCommand recognizes w! and wq! as writeError too (Iteration 4 items 8/22 — no distinct force behavior)", () => {
+test("parseExCommand recognizes w! and wq! as writeError too (no distinct force behavior)", () => {
   assert.deepEqual(parseExCommand("w!"), { kind: "writeError" });
   assert.deepEqual(parseExCommand("wq!"), { kind: "writeError" });
 });

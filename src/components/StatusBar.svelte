@@ -11,19 +11,19 @@
   // minute-aligned timer, gated by the same desktop/fine-pointer guard as
   // every other listener/timer in the app (README "Mobile policy").
   //
-  // PLAN.md Phase 1 item 1.3: every window is mouse-clickable (`onSelect`,
+  // Every window is mouse-clickable (`onSelect`,
   // provided by Terminal.svelte as `setView` composed with
   // `windowIdToView()` for the one id — "dashboard" — that doesn't already
   // equal its own ViewId), not just the dashboard menu / tmux prefix.
   //
-  // PLAN.md Phase 5 item 5.1: this component also owns the tmux-style
+  // This component also owns the tmux-style
   // status-LINE prompt states — a transient auto-clearing message, an
   // editable text prompt (`(rename-window) <name>`), and a y/n confirm
   // (`kill-window <name>? (y/n)`) — which REPLACE the normal window-list
   // rendering while active (exactly like real tmux's status line). Terminal
   // .svelte drives all three through the exported `showMessage`/
   // `startRename`/`startConfirm` methods below (the window list itself is
-  // now a live, mutable prop — `windows` — rather than read straight off
+  // a live, mutable prop — `windows` — rather than read straight off
   // `site.statusBar.windows`, so Ctrl-b , 's rename actually sticks and
   // Ctrl-b & 's kill actually removes a row). While a prompt/confirm is
   // active it OWNS the keyboard: Terminal calls this component's
@@ -39,35 +39,33 @@
 
   interface Props {
     site: SiteData;
-    /** PLAN.md Iteration 3 Phase 5 item 5.2 / Locked decision #1: the
-     * ATTACHED session's own bare name — substituted into
+    /** The ATTACHED session's own bare name — substituted into
      * `site.statusBar.sessionTemplate` here rather than passed pre-formatted
      * (this component owns every bit of its own text rendering, same
-     * convention as `activeWindowId`/`lastWindowId` below). Always the
-     * default session's name in Phase 4; dynamic once Phase 5 sessions can
-     * be renamed-via-creation (`tmux new -s test`) or switched. */
+     * convention as `activeWindowId`/`lastWindowId` below). Dynamic: it
+     * changes as sessions are renamed-via-creation (`tmux new -s test`) or
+     * switched. */
     sessionName: string;
     windows: WindowEntry[];
-    /** PLAN.md Iteration 3 Phase 4 item 4.1: the tmux model's own active
-     * window id, passed straight through rather than derived here from a
-     * `view`/ViewId — a window's id and the PROGRAM its pane currently runs
-     * are no longer the same thing once a pane can run any program (or a
-     * shell) in any window (Locked decision #5), so this component must be
-     * told directly which window is active rather than reconstructing it
-     * from the visible program. */
+    /** The tmux model's own active window id, passed straight through
+     * rather than derived here from a `view`/ViewId — a window's id and the
+     * PROGRAM its pane currently runs are not the same thing, since a pane
+     * can run any program (or a shell) in any window, so this component
+     * must be told directly which window is active rather than
+     * reconstructing it from the visible program. */
     activeWindowId: string;
-    /** PLAN.md Iteration 3 Phase 4 item 4.3 tmux fidelity reference: the
-     * real tmux `-` flag marks the PREVIOUSLY active window of the session
-     * (`Session.lastWindowIdx` in tmux.ts), so `Ctrl-b l`/`last-window`
-     * has something to jump back to. Undefined whenever the session hasn't
-     * switched windows yet (fresh session: last === active, no flag). */
+    /** The real tmux `-` flag marks the PREVIOUSLY active window of the
+     * session (`Session.lastWindowIdx` in tmux.ts), so `Ctrl-b l`/`last-
+     * window` has something to jump back to. Undefined whenever the
+     * session hasn't switched windows yet (fresh session: last === active,
+     * no flag). */
     lastWindowId?: string;
     /** Passed the clicked window's own `id` (a site.yaml window id, e.g.
      * "builds") — no ViewId translation happens in this component; the
      * caller (Terminal.svelte) owns turning a window id into a window
      * switch. */
     onSelect: (windowId: string) => void;
-    /** ↻ reboot (PLAN.md Phase 5B item 5B.3) — always rendered in the
+    /** ↻ reboot — always rendered in the
      * right-hand cluster (unlike the window list, which the rename/confirm
      * prompt states below replace), so it must stay clickable regardless
      * of prompt state; Terminal.svelte's handler cancels any open prompt
@@ -104,7 +102,7 @@
   });
 
   // ---------------------------------------------------------------------
-  // Status-line prompt state machine (PLAN.md Phase 5 item 5.1)
+  // Status-line prompt state machine
   // ---------------------------------------------------------------------
 
   const MESSAGE_MS = 2600;
@@ -152,8 +150,8 @@
     return prompt.kind === "rename" || prompt.kind === "confirm";
   }
 
-  /** PLAN.md Phase 5B hazard note: "reboot from a view with a prompt open
-   * should cancel the prompt" — the ↻ reboot control (right cluster) is
+  /** "Reboot from a view with a prompt open should cancel the prompt" —
+   * the ↻ reboot control (right cluster) is
    * always rendered, even while a rename/kill-window/kill-pane prompt has
    * replaced the window list on the left, so Terminal.svelte's reboot
    * handler calls this first. A no-op for the "message"/"none" states
@@ -212,8 +210,7 @@
       return true;
     }
 
-    // confirm — PLAN.md Iteration 3 Phase 6 item 6.3 / Locked decision #4
-    // tmux fidelity reference: "lowercase y confirms, ANY other key
+    // confirm — "lowercase y confirms, ANY other key
     // cancels" — an EXACT `e.key === "y"` check (not case-insensitive:
     // uppercase Y does NOT confirm here, unlike choose-tree's own
     // deliberately case-insensitive quirk), and every other key (not just
@@ -284,7 +281,7 @@
             // Enter that submits a cmdline command typed sometime after this
             // click. Blurring immediately after handling restores normal
             // "the click did its one job" button semantics (found while
-            // testing PLAN.md Iteration 3 Phase 4's reboot-then-shell
+            // testing the reboot-then-shell
             // workflow — a pre-existing latent bug, not introduced there).
             (e.currentTarget as HTMLElement).blur();
           }}

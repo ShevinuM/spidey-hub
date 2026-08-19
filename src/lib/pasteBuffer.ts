@@ -1,8 +1,7 @@
-// Shared paste-buffer store (PLAN.md Phase 3 item 10 "Yanks write to a NEW
-// shared paste-buffer module"). A single module-level variable, not a
-// per-component Svelte store — every importer (Editor.svelte today; PLAN.md
-// Phase 5's tmux copy-mode overlay, `Ctrl-b [`/`Ctrl-b ]`, tomorrow) shares
-// the exact same in-memory buffer, exactly like tmux's own single
+// Shared paste-buffer store. A single module-level variable, not a
+// per-component Svelte store — every importer (Editor.svelte and the tmux
+// copy-mode overlay, `Ctrl-b [`/`Ctrl-b ]`) shares the exact same in-memory
+// buffer, exactly like tmux's own single
 // paste-buffer stack (simplified here to one slot, not a stack, since
 // nothing in this app's spec needs buffer history).
 //
@@ -20,9 +19,9 @@ export interface PasteBufferEntry {
 
 let buffer: PasteBufferEntry | null = null;
 
-/** Records a new yank (or, eventually, copy-mode capture). `kind` mirrors
- * vim's own charwise/linewise register distinction — Phase 5's paste
- * (`Ctrl-b ]`) will use it to decide whether to insert the text inline or
+/** Records a new yank or copy-mode capture. `kind` mirrors
+ * vim's own charwise/linewise register distinction — paste
+ * (`Ctrl-b ]`) uses it to decide whether to insert the text inline or
  * as its own line. */
 export function setPasteBuffer(text: string, kind: PasteBufferKind): void {
   buffer = { text, kind };

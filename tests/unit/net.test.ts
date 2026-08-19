@@ -1,4 +1,4 @@
-// Unit tests for src/lib/net.ts (PLAN.md Phase 7, "Live meter (SIGNAL row)")
+// Unit tests for src/lib/net.ts's live meter (SIGNAL row)
 // — locks in the README's math verbatim (q/lag/hue/bar-height formulas,
 // the Resource Timing throughput sum, the netStats fallback chain, and the
 // readout format) independent of any DOM/rAF plumbing, which

@@ -59,8 +59,8 @@ map:
     label: "ORIGIN // TRK-0"
 
 # Command box, top-left corner of the map (line 76-78).
-# PLAN.md Phase 1 item 11 rename: "spider-tracker" -> "retina-v" (matches the
-# Profile view's own "E.D.I.T.H: RETINA-V" naming for this system).
+# "retina-v" matches the Profile view's own "E.D.I.T.H: RETINA-V" naming for
+# this system.
 commandBox:
   commandLine: "$ retina-v --region latveria --live"
   statusLine: "scanning grid 44.71N / 19.24E ....... 3 signatures resolved"

@@ -1,8 +1,7 @@
 // Behavioral e2e suite for real panes: splits, nav, kill, and the 7 preset
-// layouts (PLAN.md Iteration 3 Phase 6 items 6.1/6.2/6.3/6.4). Companion to
-// tests/e2e/tmux.spec.ts (the prefix state machine itself, whose own
-// single-pane kill-pane smoke test was UPDATED, not duplicated, for the new
-// real semantics) and tests/e2e/choose-tree.spec.ts (item 6.5).
+// layouts. Companion to tests/e2e/tmux.spec.ts (the prefix state machine
+// itself, whose own single-pane kill-pane smoke test covers the new real
+// semantics) and tests/e2e/choose-tree.spec.ts (item 6.5).
 import { expect, test, type Page } from "./fixtures.ts";
 
 async function gotoReady(page: Page, path: string) {
@@ -25,7 +24,7 @@ const panes = (page: Page) => page.locator('[data-testid="pane-leaf"]');
 const focusedPane = (page: Page) => page.locator('[data-testid="pane-leaf"][data-pane-focused="true"]');
 const statusConfirm = (page: Page) => page.locator('[data-testid="status-confirm"]');
 
-test.describe("splits (Ctrl-b | / % / - / \") (PLAN.md Iteration 3 Phase 6 item 6.1)", () => {
+test.describe("splits (Ctrl-b | / % / - / \")", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -103,7 +102,7 @@ test.describe("splits (Ctrl-b | / % / - / \") (PLAN.md Iteration 3 Phase 6 item 
   });
 });
 
-test.describe("pane navigation: prefix o / arrows / ; (PLAN.md Iteration 3 Phase 6 item 6.2)", () => {
+test.describe("pane navigation: prefix o / arrows / ;", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -162,7 +161,7 @@ test.describe("pane navigation: prefix o / arrows / ; (PLAN.md Iteration 3 Phase
   });
 });
 
-test.describe("Ctrl-b x real kill-pane (PLAN.md Iteration 3 Phase 6 item 6.3 / Locked decision #4)", () => {
+test.describe("Ctrl-b x real kill-pane", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -235,7 +234,7 @@ test.describe("Ctrl-b x real kill-pane (PLAN.md Iteration 3 Phase 6 item 6.3 / L
   });
 });
 
-test.describe("layouts: Ctrl-b Space cycles the 7 presets (PLAN.md Iteration 3 Phase 6 item 6.4)", () => {
+test.describe("layouts: Ctrl-b Space cycles the 7 presets", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });

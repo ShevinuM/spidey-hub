@@ -1,5 +1,5 @@
-// Behavioral e2e suite for detach/sessions (PLAN.md Iteration 3 Phase 5) —
-// `Ctrl-b d` detach to the fullscreen HOST shell (src/components/Shell.svelte,
+// Behavioral e2e suite for detach/sessions — `Ctrl-b d` detach to the
+// fullscreen HOST shell (src/components/Shell.svelte,
 // `mode: "host"`) over the dimmed radar, its `tmux ls`/`new [-s name]`/
 // `a [-t name]`/`edith`/`open <view>` builtins, the kill-cascade rules that
 // destroy a session outright once its last window dies, and the host `exit`
@@ -72,7 +72,7 @@ const statusWindow = (page: Page, id: string) => page.locator(`[data-testid="sta
 const statusBarWindows = (page: Page) => page.locator('[data-testid="status-bar-windows"]');
 const sessionLabel = (page: Page) => page.locator('[data-testid="status-bar-session"]');
 
-test.describe("Ctrl-b d detaches to the host shell (PLAN.md Iteration 3 Phase 5 item 5.1)", () => {
+test.describe("Ctrl-b d detaches to the host shell", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -145,8 +145,8 @@ test.describe("Ctrl-b d detaches to the host shell (PLAN.md Iteration 3 Phase 5 
     await expect(statusBarWindows(page)).not.toBeVisible(); // did not attach
   });
 
-  // PLAN.md Locked decision #14 / Architecture notes: "?" opens the
-  // HelpSearch palette EXCEPT while a shell pane is focused (types "?") —
+  // "?" opens the HelpSearch palette EXCEPT while a shell pane is focused
+  // (types "?" instead) —
   // the host shell is exactly such a pane (Shell.svelte's own handleKey
   // claims every printable character before the bare-"?" fallback opener
   // ever runs), so the palette must never appear over the host shell.
@@ -159,7 +159,7 @@ test.describe("Ctrl-b d detaches to the host shell (PLAN.md Iteration 3 Phase 5 
   });
 });
 
-test.describe("tmux ls (PLAN.md tmux fidelity reference)", () => {
+test.describe("tmux ls (real tmux fidelity)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -214,7 +214,7 @@ test.describe("tmux ls (PLAN.md tmux fidelity reference)", () => {
   });
 });
 
-test.describe("nested tmux refusal inside a pane (PLAN.md tmux fidelity reference)", () => {
+test.describe("nested tmux refusal inside a pane (real tmux fidelity)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -336,7 +336,7 @@ test.describe("tmux a / attach (host mode)", () => {
   });
 });
 
-test.describe("kill cascades: destroyed session vs. switch-to-remaining (PLAN.md Iteration 3 Phase 5 item 5.3)", () => {
+test.describe("kill cascades: destroyed session vs. switch-to-remaining", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -409,7 +409,7 @@ test.describe("edith / open <view> (host mode)", () => {
     await expect(page).toHaveURL(/\/builds$/);
   });
 
-  test("open <view> attaches with a status message when that window was killed (PLAN.md 'attach + message')", async ({
+  test("open <view> attaches with a status message when that window was killed (attach + message)", async ({
     page,
   }) => {
     await gotoReady(page, "/");
@@ -447,7 +447,7 @@ test.describe("edith / open <view> (host mode)", () => {
   });
 });
 
-test.describe("host exit / reboot (PLAN.md Iteration 3 Phase 5 items 5.3/5.4)", () => {
+test.describe("host exit / reboot", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });

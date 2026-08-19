@@ -100,8 +100,8 @@ Verification: `pnpm check`, unit, e2e green; screenshots: dashboard/builds/perso
 Verification: `pnpm check`, unit, e2e green; `companies.yaml` gone and Personnel renders identical company list/order (e2e asserts order); rendered site output for profile/help/notifications byte-equivalent modulo intended changes (verifier diffs rendered DOM text of profile + help vs pre-migration capture). `.claude/checklist.md` exists and every rule is imperative + checkable. Commit.
 
 ### Phase 7 — Jargon comment purge
-- [ ] 7.1 Sweep all of `src/` and `scripts/` (61 flagged files): delete or rewrite every comment referencing PLAN.md, Iteration/Phase numbers, "Locked decision", "source of truth" pointers, or old-design comparisons. Keep only constraint-stating comments (rewrite where a real constraint hides inside jargon). YAML header comments included. Tests/ dir included.
-- [ ] 7.2 Guard: add checklist rule + verify grep clean.
+- [x] 7.1 Sweep all of `src/` and `scripts/` (61 flagged files): delete or rewrite every comment referencing PLAN.md, Iteration/Phase numbers, "Locked decision", "source of truth" pointers, or old-design comparisons. Keep only constraint-stating comments (rewrite where a real constraint hides inside jargon). YAML header comments included. Tests/ dir included.
+- [x] 7.2 Guard: add checklist rule + verify grep clean.
 
 Verification: `grep -rn "PLAN.md\|Iteration [0-9]\|Locked decision" src scripts tests` → only legitimate hits (none expected; PLAN.md itself and README excluded); `pnpm check` + unit + e2e still green (comments only — any code change here is a red flag). Commit.
 
@@ -130,5 +130,10 @@ Verification: all four suites green; goldens deterministic 3×. Commit.
 - [ ] One one-line commit per phase, no bodies/trailers.
 
 Stop conditions: no new features beyond the above; no refactors outside listed files except where a step forces a type change (EditorLine); mobile/responsive work out of scope; shell `ls`/`cat` coloring out of scope; Fonts-API migration and a11y CI out of scope (residuals).
+
+## Phase 6 disposition record (borderline files, evaluated field-by-field)
+
+- `shell.yaml` — STAYS config. `host.narrative`: fidelity-locked script — its line 4 must byte-match `detachedTemplate`'s real-detach output, so it cannot be edited as freestanding prose without breaking that invariant; `help.rows[].description` and `sudo.message`: `{placeholder}`-substituted templates / tmux-fidelity strings coupled to builtin behavior, not standalone visitor prose.
+- `tracker.yaml` — STAYS config. `subjects[].sig`, map city/mountain/forest/river labels, `hud.right` status lines: each is one logical map record inseparable from its coordinates (`left/top`, `leftFrac/topFrac`) and threat-driven styling — editing the text independently of the geometry has no meaning.
 
 Conscious deviations to flag in the final report: third per-row action for mark-as-spam (mockup has two); dropped the mockup's unwired "x dismiss" footer hint; vim keys kept in CopyMode (authentic tmux vi copy-mode); help/notification content migrated as frontmatter-structured Markdown.

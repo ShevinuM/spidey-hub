@@ -1,6 +1,6 @@
-// Unit test for the pure mapper in src/lib/githubCommits.ts (PLAN.md Phase 5
-// item 4: client-side commit refresh must "map to same shape" as the
-// build-time snapshot generator, scripts/generate.mjs's fetchCommits()).
+// Unit test for the pure mapper in src/lib/githubCommits.ts: client-side
+// commit refresh must map to the same shape as the
+// build-time snapshot generator, scripts/generate.mjs's fetchCommits().
 // The fetch/sessionStorage side of that module is exercised end-to-end by
 // tests/e2e/builds.spec.ts (route-fulfill / route-abort against a live
 // page), not here — this only pins the shape-mapping logic itself.

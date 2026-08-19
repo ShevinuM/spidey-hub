@@ -1,10 +1,10 @@
 ---
 // Global shell: fonts (via global.css's @fontsource imports) + Tailwind
 // theme/utilities, wired through the real Astro/Vite pipeline. Every route
-// page wraps its Terminal.svelte island in this layout (PLAN.md "Routing
-// assumption") so the five static pages share one <head>/base-style setup.
+// page wraps its Terminal.svelte island in this layout so the five static
+// pages share one <head>/base-style setup.
 //
-// Mobile-block card (README "Mobile policy" / PLAN.md Phase 9): server-
+// Mobile-block card (README "Mobile policy"): server-
 // rendered here (not a Svelte island — it needs no interactivity beyond a
 // static link) and CSS-gated by a `(max-width: 899px), (pointer: coarse)`
 // media query that hides `.terminal-root` (the Terminal island + its
@@ -17,19 +17,16 @@
 // so a blocked-mode visitor gets a page that is inert by construction, not
 // merely visually hidden.
 //
-// Copy comes from src/data/site.yaml's `mobileBlock` (PLAN.md "content out
-// of components" — no user-visible string is hardcoded here), read
+// Copy comes from src/data/site.yaml's `mobileBlock` (no user-visible
+// string is hardcoded here), read
 // directly via getSite() rather than threaded through as a prop from each
 // of the five route pages (this file is the only consumer).
 import "../styles/global.css";
 import { getSite } from "../lib/data";
 
 interface Props {
-  // PLAN.md Phase 6 item 6.4 content-purity fix: was `title?: string` with
-  // a hardcoded `"shevinum.dev"` fallback here — every one of the six route
-  // pages already passes its own explicit title, so the fallback was dead
-  // in practice but still a user-visible string literal sitting in a
-  // layout file. Required now: `astro check` fails loudly if a future page
+  // `title` is required: every one of the six route pages already passes
+  // its own explicit title, so `astro check` fails loudly if a future page
   // ever forgets to pass one, instead of silently falling back to
   // hardcoded copy.
   title: string;

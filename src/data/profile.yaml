@@ -35,11 +35,10 @@ fields:
   - label: "Education:"
     value: "Memorial University of Newfoundland"
 
-# PLAN.md Iteration 4 item 21 removed the shorter "SUMMARY" block that used
-# to sit here (Profile.svelte's own `profile-summary` box) — dossier below
-# is the only bio block left.
+# Dossier below is the only bio block on the page (there is no separate
+# `profile-summary` box in Profile.svelte).
 #
-# PLAN.md Iteration 3 Phase 1 item 1.4: the "Agent Profile → Summary" bio
+# The "Agent Profile → Summary" bio
 # from the user's data file, surfaced near-verbatim (light punctuation-only
 # trims, no rewriting of voice — this is the authoritative first-person
 # bio, distinct from the shorter narrative blurb above).
@@ -51,12 +50,11 @@ dossier:
     - "Outside of coding, I love hiking and the outdoors, and I read a lot — technical books, psychology, and fantasy. I'm particularly fascinated by cognitive psychology — Jung's and Briggs's work never gets old for me. I'm a huge movies and TV person too. I fell off the MCU after Phase 4, but Brand New Day and Doomsday leading into Hickman's Secret Wars have pulled me right back in. I also love board games, though spoiler-alert: I get aggressively competitive, and everyone ends up hating me for it."
     - "What I love most about software is the problem-solving — finding the solution and architecting it. My goal is to work in system design and architecture. Ambitious? Maybe. But at least I'm open about it."
 
-# PLAN.md Iteration 3 Phase 1 (orchestrator ruling on deviation #3, real-
-# data accuracy mandate covers these user-visible numbers too): still
-# hand-authored copy (not computed by the build), but now pinned to
+# Still
+# hand-authored copy (not computed by the build), but pinned to
 # derivable-true values as of this writing — re-verify if the repo/
 # personnel content set changes again:
-#   repos shipped = 8  (the real repos/ submodule set, Locked #10)
+#   repos shipped = 8  (the real repos/ submodule set)
 #   roles logged  = 9  (4 enaimco/software-developer/**/role.md + 5
 #                        memorial-university/*/role.md)
 #   years active  = 4  (first Memorial University role, Oct 2022, per
@@ -84,7 +82,7 @@ cv:
 contact:
   title: "CONTACT"
   rows:
-    # PLAN.md Locked #7: contact data taken from the resume, verbatim — no
+    # Contact data is taken from the resume, verbatim — no
     # phone number is published on the site.
     - icon: "assets/icon-github.svg"
       alt: "GitHub"
@@ -103,8 +101,7 @@ contact:
       text: "shevinum"
       href: null
 
-# PLAN.md Iteration 3 Phase 1 item 1.4: new section below Contact, both
-# entries verbatim from the resume's EDUCATION block.
+# Both entries are verbatim from the resume's EDUCATION block.
 education:
   title: "EDUCATION"
   rows:

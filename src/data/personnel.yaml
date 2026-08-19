@@ -7,23 +7,20 @@
 pathPrefix: "/Users/Shev/Experience/"
 
 insetTitles:
-  # PLAN.md Phase 1 item 11 rename (renumbered from #5 "Renames").
   fileBrowser: "─ Personnel Files ─"
   filePreview: "File Preview"
 
 promptIcon: ">"
 
 # Hint line under the role table / doc pane (Component.renderVals() line
-# 1083). PLAN.md Phase 1 items 15/16 (q/Esc navigation removed sitewide)
-# reword the trailing clause away from "q returns to the dashboard" —
-# navigation is now Ctrl-b / status-bar clicks / the dashboard menu, never a
-# bare key, so the hint points at the help window instead.
+# 1083). Navigation is now Ctrl-b / status-bar clicks / the dashboard menu,
+# never a bare key, so the hint points at the help window instead.
 #
-# PLAN.md Iteration 3 Phase 1 item 1.3: Personnel.svelte is now a
+# Personnel.svelte is a
 # depth-generic directory browser, so there are exactly two row-selected
 # hint shapes rather than one per fixed level — `atDir`/`atFile`, plus
 # `atRoot` for the top-level directory listing specifically (where h/
-# Backspace never do anything, same as the old atCompanyLevel hint).
+# Backspace never do anything).
 # {dir}/{file} are interpolated with the selected row's own name.
 hints:
   atRoot: "enter opens {dir}/ · Ctrl-b ? for help"
@@ -34,7 +31,7 @@ upEntry:
   icon: "▸"
   name: "../"
 
-# PLAN.md Iteration 4 item 1: row icons are now inline SVGs keyed off row
+# Row icons are inline SVGs keyed off row
 # kind directly in Personnel.svelte's template (nvim-tree/lazygit-style
 # folder/file glyphs, since Nerd Fonts aren't bundled) — these two glyph
 # strings (and `upEntry.icon` above) are no longer read by the row markup.
@@ -44,8 +41,8 @@ companyRowIcon: "▸"
 roleRowIcon: "▤"
 
 # Directory row meta at ANY depth: the bare count of role files nested
-# anywhere beneath that directory (PLAN.md Iteration 4 item 25 — drop the
-# "role(s)" word, ls-l-style listings show a bare number here). `roleWord*`
+# anywhere beneath that directory (ls-l-style listings show a bare number,
+# not the "role(s)" word). `roleWord*`
 # below are now unused by Personnel.svelte's row template but kept in the
 # schema (src/lib/data.ts's PersonnelData) rather than pruned out of scope.
 roleCountTemplate: "{n}"
@@ -67,10 +64,10 @@ posTemplate: "{n} / {total}"
 # only ever render "Top" here in practice, but EditorLabels requires every
 # field for Editor.svelte's shared status line.
 #
-# PLAN.md Phase 3 (vim-lite engine) extends this block the same way as
+# This block also carries the same fields as
 # builds.yaml's — see that file's comment for the full rationale (VISUAL/
-# VISUAL-LINE labels, search/cmdline glyphs, the `[:q]` close pill replacing
-# the old "esc to close" hint, and the vim-faithful E21/E45/E492 messages).
+# VISUAL-LINE labels, search/cmdline glyphs, the `[:q]` close pill, and the
+# vim-faithful E21/E45/E492 messages).
 editor:
   modeLabel: "NORMAL"
   modeVisualLabel: "VISUAL"

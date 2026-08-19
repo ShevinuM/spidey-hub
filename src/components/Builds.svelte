@@ -3,9 +3,8 @@
   // (five-panel layout: [1] Status, [2] Files, [3] Local Repositories,
   // [4] Commits, [0] Changes, plus the unnumbered Command log panel).
   //
-  // PLAN.md Phase 4 ("Builds rework") replaces the Phase 5 interaction model
-  // with a lazygit-style flat-repo-list flow, fixing two live user bug
-  // reports along the way:
+  // This view uses a lazygit-style flat-repo-list flow, fixing two live
+  // user bug reports along the way:
   //   - Panel [3] "Local Repositories" is now a FLAT list of every repo
   //     across every project, plus a virtual "all-projects" entry (every
   //     project's .md doc, browsable like a repo — see builds.yaml's
@@ -18,11 +17,10 @@
   //     FILE previews it in panel [0]; Enter opens the full-screen vim
   //     Editor. Dirs/`../` navigate the same way on click or Enter.
   //   - Panel [4] "Commits" tracks ONLY the panel [3] selection — moving
-  //     through files/dirs in [2]/[0] must never change it (2026-08-17 bug
-  //     report: "commits change dynamically when I move across files"; the
-  //     root cause was panel [4] deriving its repo from the same
-  //     project-list selection panel [2] used to double as). Commit rows are
-  //     no longer `<a target="_blank">`: click/Enter fetches that commit's
+  //     through files/dirs in [2]/[0] must never change it: panel [4]'s
+  //     repo comes from panel [3]'s own selection state, never from
+  //     whatever panel [2]/[0] happen to be browsing. Commit rows are
+  //     not `<a target="_blank">`: click/Enter fetches that commit's
   //     tree (src/lib/githubTrees.ts) into panel [2] instead, with a
   //     lazygit-style braille spinner on the panel [3] repo row while any
   //     fetch for that repo is in flight; `o` opens the commit on GitHub
@@ -31,12 +29,11 @@
   //     Selecting the all-projects entry shows a data-driven "local only"
   //     line instead (it isn't a real remote).
   //
-  // Keymap entry point unchanged from Phase 5: Terminal.svelte drives a
-  // single global keydown listener and, while `view === "builds"`, delegates
-  // to this component's exported `handleKey()` via `bind:this` *before* its
-  // own generic q/Esc-to-dashboard fallback (removed sitewide in Phase 1
-  // anyway) — see PLAN.md Phase 3's delegation-flip note for how the file
-  // editor gets first refusal over GrepOverlay while it's open.
+  // Terminal.svelte drives a single global keydown listener and, while
+  // `view === "builds"`, delegates to this component's exported
+  // `handleKey()` via `bind:this` *before* its own generic q/Esc-to-dashboard
+  // fallback (removed sitewide) — this is what lets the file editor get
+  // first refusal over GrepOverlay while it's open.
   import type { CollectionEntry } from "astro:content";
   import type { BuildsData } from "../lib/data";
   import type { Commit } from "../lib/commits";
@@ -61,11 +58,10 @@
     builds: BuildsData;
     projects: CollectionEntry<"projects">[];
     commitsByRepo: Record<string, Commit[]>;
-    /** PLAN.md Iteration 3 Phase 6 item 6.1 — see PaneTree.svelte's own
-     * header comment (multi-instance data-copy-source gating); ANDed with
-     * each panel's own `focusedPanel === N` check below (both must hold:
-     * this pane is the window's focused one, AND this is its focused
-     * panel). */
+    /** See PaneTree.svelte's own header comment (multi-instance
+     * data-copy-source gating); ANDed with each panel's own
+     * `focusedPanel === N` check below (both must hold: this pane is the
+     * window's focused one, AND this is its focused panel). */
     isFocused: boolean;
   }
 
@@ -73,11 +69,11 @@
 
   const sortedProjects = $derived([...projects].sort((a, b) => a.data.order - b.data.order));
 
-  /** The doc panel [0] shows before anything has been browsed (PLAN.md
-   * Phase 4 panel model: "Panel [0] = preview pane (project doc initially;
-   * selected file's content while browsing)"). There is no more
-   * per-project selection UI — panel [2] is the tree browser now — so this
-   * is simply the first project by frontmatter `order`. */
+  /** The doc panel [0] shows before anything has been browsed ("Panel [0] =
+   * preview pane: project doc initially, selected file's content while
+   * browsing"). There is no per-project selection UI — panel [2] is the
+   * tree browser — so this is simply the first project by frontmatter
+   * `order`. */
   const defaultProject = $derived(sortedProjects[0]);
 
   const renderedDoc = $derived(
@@ -100,10 +96,10 @@
     isAllProjects: boolean;
   }
 
-  // PLAN.md Iteration 4 item 5: all-projects is pinned FIRST (not appended
-  // last) and is the default selection (`selectedRepoIdx = $state(0)` below
-  // now points at it) — the Files pane loads its tree on mount too (see the
-  // mount effect further down).
+  // all-projects is pinned FIRST (not appended last) and is the default
+  // selection (`selectedRepoIdx = $state(0)` below points at it) — the
+  // Files pane loads its tree on mount too (see the mount effect further
+  // down).
   const flatRepos = $derived.by((): RepoRow[] => {
     const rows: RepoRow[] = [
       { key: builds.allProjects.name, branch: builds.allProjects.branch, mark: "•", isAllProjects: true },
@@ -127,8 +123,7 @@
   const repoCount = $derived(sortedProjects.reduce((n, p) => n + p.data.repos.length, 0));
 
   // ---------------------------------------------------------------------
-  // In-flight fetch tracking -> panel [3] spinner (PLAN.md Phase 4 item 2).
-  // A counter (not a Set) per repo name: a repo can have more than one fetch
+  // In-flight fetch tracking -> panel [3] spinner. A counter (not a Set) per repo name: a repo can have more than one fetch
   // overlapping (its live-commit refresh alongside a commit-tree fetch, or a
   // tree fetch alongside a file-content fetch), and the spinner must stay up
   // until every one of them has settled.
@@ -186,9 +181,8 @@
     | { kind: "working"; repoName: string }
     | { kind: "commit"; repoName: string; sha: string; sha8: string; paths: string[] };
 
-  // PLAN.md Iteration 4 item 4: the Files pane is now a lazygit-style tree —
-  // the FULL nested tree renders at once (no more cwd-style `path` descent),
-  // ALL dirs expanded by default, and collapse state is opt-in per dir path
+  // The Files pane is a lazygit-style tree — the FULL nested tree renders
+  // at once (not cwd-style `path` descent), ALL dirs expanded by default, and collapse state is opt-in per dir path
   // (`collapsedDirs`, cloned-on-write to stay a fresh Set for Svelte's
   // reactivity, matching this file's existing `{...spread}` convention for
   // plain objects). `selectedIdx` indexes into the FLATTENED visible-rows
@@ -200,11 +194,11 @@
   }
   let repoTree = $state<RepoTreeState | null>(null);
 
-  /** Set when a commit-tree fetch fails — PLAN.md Phase 4 item 4: "on
-   * failure show a transient, data-driven error line ... and keep current
-   * tree" (whatever panel [2] already had stays exactly as it was; this is
-   * a one-off status line in panel [0], not a panel takeover). Cleared at
-   * the start of the next commit-tree attempt. */
+  /** Set when a commit-tree fetch fails: on failure this shows a
+   * transient, data-driven error line and keeps the current tree (whatever
+   * panel [2] already had stays exactly as it was; this is a one-off status
+   * line in panel [0], not a panel takeover). Cleared at the start of the
+   * next commit-tree attempt. */
   let commitFetchError = $state<string | null>(null);
 
   const currentFiles = $derived.by((): RepoFile[] | null => {
@@ -264,8 +258,7 @@
   }
 
   /** Single click OR Enter on a panel [3] row loads that repo's working
-   * tree into panel [2] (PLAN.md Phase 4 item 2 — no more separate
-   * select-then-open step). */
+   * tree into panel [2] — there is no separate select-then-open step. */
   function openRepo(r: RepoRow) {
     repoTree = { source: { kind: "working", repoName: r.key }, collapsedDirs: new Set(), selectedIdx: 0 };
     commitFetchError = null;
@@ -276,8 +269,7 @@
    * Fetch a commit's tree and, on success, swap panel [2] over to it.
    * On failure, panel [2] is left exactly as it was (working tree, a
    * different commit, or empty) and `commitFetchError` carries a transient
-   * message for panel [0] instead — PLAN.md Phase 4 item 4's "keep current
-   * tree" requirement.
+   * message for panel [0] instead.
    */
   async function openCommitTree(repoName: string, commit: Commit) {
     commitFetchError = null;
@@ -369,7 +361,7 @@
 
   // ---------------------------------------------------------------------
   // Editor (full-screen, opened only by Enter on a file — clicking a file
-  // just previews it in panel [0], per PLAN.md Phase 4 item 3).
+  // just previews it in panel [0]).
   // ---------------------------------------------------------------------
 
   interface EditorFileState {
@@ -429,9 +421,9 @@
     }
   }
 
-  /** Enter/click on a dir toggles its collapse state (PLAN.md Iteration 4
-   * item 4); Enter/click on a file previews/opens it, exactly as before.
-   * There is no more "up" entry type — the whole tree renders at once. */
+  /** Enter/click on a dir toggles its collapse state; Enter/click on a
+   * file previews/opens it. There is no "up" entry type — the whole tree
+   * renders at once. */
   function activateEntry(entry: FlatTreeRow, opts: { openEditor: boolean }) {
     if (!repoTree) return;
     if (entry.type === "dir") {
@@ -503,8 +495,8 @@
     openRepo(r);
   }
 
-  // PLAN.md Iteration 4 item 5: all-projects is pinned first AND selected by
-  // default, so the Files pane must show its tree on mount rather than
+  // all-projects is pinned first AND selected by default, so the Files
+  // pane must show its tree on mount rather than
   // waiting for a click/Enter on panel [3]. `untrack()` (this file already
   // relies on it for beginFetch/endFetch above) keeps this a one-shot
   // mount-time effect with no tracked dependencies — it must not re-fire
@@ -518,8 +510,8 @@
   });
 
   /** Panel [4] tracks ONLY this — the repo highlighted in panel [3] — never
-   * anything from panel [2]/[0]'s own navigation (PLAN.md Phase 4 item 4,
-   * fixing the "commits change while browsing files" bug report). */
+   * anything from panel [2]/[0]'s own navigation (this is what fixes the
+   * "commits change while browsing files" bug report). */
   const commits = $derived.by((): Commit[] => {
     const repo = selectedRepo;
     if (!repo || repo.isAllProjects) return [];
@@ -558,9 +550,8 @@
   }
 
   // ---------------------------------------------------------------------
-  // Live commit refresh (PLAN.md "Client commit refresh"), rekeyed to the
-  // panel [3] selection (was the active-project derivation pre-Phase-4 —
-  // exactly the coupling that caused the commits-change-on-file-move bug).
+  // Live commit refresh, rekeyed to the panel [3] selection — anything else
+  // recreates the coupling that caused the commits-change-on-file-move bug.
   // Skipped for the virtual all-projects entry: it isn't a real GitHub
   // repo, so a fetch for it would only fail and waste one of the 60
   // unauthenticated requests/hour.
@@ -632,19 +623,17 @@
   // Keymap
   // ---------------------------------------------------------------------
 
-  /** Exposed for Terminal.svelte's delegation-order flip (PLAN.md Phase 3
-   * item 10): while a file is open in the vim editor, Terminal must give
-   * this component's `handleKey()` (which just forwards to `editorRef`) a
-   * turn BEFORE GrepOverlay's, so `/` searches the buffer instead of
-   * opening grep. */
+  /** Exposed for Terminal.svelte's delegation-order flip: while a file is
+   * open in the vim editor, Terminal must give this component's
+   * `handleKey()` (which just forwards to `editorRef`) a turn BEFORE
+   * GrepOverlay's, so `/` searches the buffer instead of opening grep. */
   export function isEditorOpen(): boolean {
     return !!editorFile;
   }
 
-  /** Forwards to the embedded Editor's own `runExCommand` (PLAN.md Phase 5C
-   * "lift the Phase-3 command state machine from Editor.svelte, do NOT
-   * rebuild parsing") — Terminal.svelte's site-wide Cmdline box calls this
-   * when its ex-mode Enter fires, and only falls through to the site-wide
+  /** Forwards to the embedded Editor's own `runExCommand` — Terminal.svelte's
+   * site-wide Cmdline box calls this when its ex-mode Enter fires, and only
+   * falls through to the site-wide
    * command set when the result comes back `recognized: false`. A no-op
    * (unrecognized) when the editor isn't actually open — shouldn't happen
    * in practice since Terminal only opens ex mode while `isEditorOpen()` is
@@ -1023,28 +1012,26 @@
 
 <style>
   .builds-row {
-    /* PLAN.md Phase 4 item 4.6: rows are flex children of an
-       overflow-y:auto column; without this they were flex-shrinking below
-       their own line box under a full 15-commit live list (only 1 commit
-       ships in the committed snapshot, so this never showed up pre-Phase-4)
-       — glyphs rendered vertically clipped and rows overlapped. Pairs with
-       the containers above switching from overflow:hidden to
-       overflow-y:auto so a genuinely-too-long list scrolls instead of
-       compressing. An explicit line-height (rather than the initial
-       "normal", which resolves through getComputedStyle() as the literal
-       string "normal" — unparseable as a number) also gives the row a
-       concrete, measurable full-glyph height for the e2e assertion this
-       fix shipped with (PLAN.md 4.6: "measuring commit-row bounding-box
-       heights >= computed line-height"). */
+    /* Rows are flex children of an overflow-y:auto column; without this
+       they flex-shrink below their own line box under a full 15-commit
+       live list (only 1 commit ships in the committed snapshot, so this
+       doesn't show up there) — glyphs render vertically clipped and rows
+       overlap. Pairs with the containers above using overflow-y:auto so a
+       genuinely-too-long list scrolls instead of compressing. An explicit
+       line-height (rather than the initial "normal", which resolves
+       through getComputedStyle() as the literal string "normal" —
+       unparseable as a number) also gives the row a concrete, measurable
+       full-glyph height for the e2e assertion that checks commit-row
+       bounding-box heights are >= the computed line-height. */
     flex-shrink: 0;
     line-height: 1.6;
   }
   .builds-row:hover {
     background: rgba(224, 69, 60, 0.12);
   }
-  /* PLAN.md Iteration 4 item 1 (builds part): fixed-width caret slot so
-     dir/file rows' icons+names line up in a column regardless of whether a
-     row is a dir (▾/▸) or a file (blank spacer of the same width). */
+  /* Fixed-width caret slot so dir/file rows' icons+names line up in a
+     column regardless of whether a row is a dir (▾/▸) or a file (blank
+     spacer of the same width). */
   .builds-caret {
     display: inline-block;
     width: 10px;

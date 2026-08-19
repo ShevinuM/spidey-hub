@@ -1,7 +1,7 @@
 <script lang="ts">
   // Grep overlay (design/Homepage.dc.html lines 400-439 markup; Component's
   // grepHits()/grepOpenRow()/grepKey()/gListRef/gPreviewRef/renderVals grep
-  // block, lines 812-832 + 850-893 + 1032-1086). PLAN.md Phase 8.
+  // block, lines 812-832 + 850-893 + 1032-1086).
   //
   // Always mounted (Terminal.svelte renders this once, unconditionally,
   // alongside whichever view is active) rather than conditionally by an
@@ -29,8 +29,8 @@
   //     reaches the browser even though it never reaches the view beneath.
   //
   // Index loading: a single canonical path, `/generated/grep-index.json`,
-  // fetched lazily on first open (not eagerly — PLAN.md "Load lazily at
-  // runtime (fetch on first `/` press)"). The *content* at that path is
+  // fetched lazily on first open (not eagerly — "load lazily at runtime,
+  // fetch on first `/` press"). The *content* at that path is
   // swapped, not the path itself: `pnpm generate` writes the real 71-file
   // site-source index there for a normal build, while `pnpm build:fixtures`
   // (package.json) overwrites the built copy with the fixture's verbatim
@@ -232,7 +232,7 @@
     open = false;
   }
 
-  /** PLAN.md Phase 5 item 5.5: "grep is WINDOW chrome" — Terminal.svelte's
+  /** "grep is WINDOW chrome" — Terminal.svelte's
    * `setView()` calls this unconditionally on every switch (status-bar
    * click, any prefix target) so an open overlay never survives a window
    * change. A no-op when already closed. */
@@ -240,7 +240,7 @@
     closeOverlay();
   }
 
-  /** PLAN.md Phase 5C — the site-wide Cmdline box's `:grep <query>`
+  /** The site-wide Cmdline box's `:grep <query>`
    * command (`cmdline.yaml` "grep" action) reads this to decide whether
    * `:` should fall through to it at all: while grep is already open it
    * already owns every key itself (see handleKey() below), so Terminal's
@@ -252,7 +252,7 @@
     return open;
   }
 
-  /** PLAN.md Phase 5C `:grep <query>` — opens the overlay pre-filled AND
+  /** `:grep <query>` — opens the overlay pre-filled AND
    * already searching (the live `hits`/`countText` derivations react to
    * `query` the instant it's set, same as normal typing). An empty
    * `query` behaves exactly like the bare `/` open path. */
@@ -263,7 +263,7 @@
 
   const PASTE_TARGET_ID = "grep-query";
 
-  /** Ctrl-b ] paste-target registration (PLAN.md Phase 5 item 5.3) — active
+  /** Ctrl-b ] paste-target registration — active
    * only while the overlay itself is open, pushed/popped by id so it never
    * disturbs whatever else is registered above or below it in the stack. */
   $effect(() => {
@@ -355,8 +355,8 @@
 </script>
 
 {#if open}
-  <!-- PLAN.md Phase 5 item 5.5 ("Status bar is SESSION chrome, grep is
-       WINDOW chrome"): `bottom` stops exactly at the status bar's own
+  <!-- "Status bar is SESSION chrome, grep is
+       WINDOW chrome": `bottom` stops exactly at the status bar's own
        height instead of the viewport edge, so the dim/blur backdrop never
        paints over it — the bar stays fully crisp and clickable while grep
        is open. StatusBar.svelte renders at a normal z-index *below* this
@@ -426,7 +426,7 @@
       </div>
 
       <!-- Right pane. `overflow:visible` (not `hidden`) is deliberate here —
-           PLAN.md Phase 1 item 1.5, the grep clipping fix: this container is
+           the grep clipping fix: this container is
            the clipping ancestor of the two absolutely-positioned labels
            below (`grep-file` / `grep-file-pos`, both `top:-9px` so they sit
            astride the border like the left pane's own title), and

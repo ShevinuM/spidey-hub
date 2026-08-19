@@ -1,13 +1,13 @@
-# Site-wide floating Cmdline (PLAN.md Phase 5C). One noice.nvim-style
+# Site-wide floating Cmdline. One noice.nvim-style
 # floating box (src/components/Cmdline.svelte) — same visual family as
 # GrepOverlay (bordered box, box-drawing inset title, `>` prompt + block
 # cursor, existing palette) — shared by THREE entry contexts:
 #
 #   (a) editor ex mode (`:` while a Builds/Personnel file editor is open):
-#       Phase-3's own q/q!/w/wq/:<n> ex-command state machine (PARSED by
+#       the existing q/q!/w/wq/:<n> ex-command state machine (PARSED by
 #       src/lib/cmdline.ts's parseExCommand, EXECUTED by Editor.svelte's own
-#       runExCommand — unchanged behavior from Phase 3, only its
-#       PRESENTATION moves into this box) tried first, falling through to
+#       runExCommand — only its
+#       PRESENTATION lives in this box) tried first, falling through to
 #       `commands` below on anything it doesn't recognize — "editor context
 #       wins": `:q` while an editor is open always closes the editor, never
 #       kills the window, even though `commands` below also defines a
@@ -18,7 +18,7 @@
 #       `commands` below only.
 #   (c) tmux command-prompt mode (`Ctrl-b :`, real tmux's own
 #       "command-prompt" binding): `tmuxCommands` below only, executed
-#       through Phase 5's existing rename/kill/select-window implementations
+#       through the existing rename/kill/select-window implementations
 #       in Terminal.svelte — never duplicated here.
 #
 # `commands[].action`/`exCommands` entries with no `action` are internal
@@ -31,19 +31,17 @@ prompt:
   glyph: ">"
   cursorGlyph: "▌"
 
-# Content-purity fix (PLAN.md Phase 6 item 6.4 audit): the "takes an
-# argument" notation (e.g. "grep <…>") was originally a string literal
-# baked into Cmdline.svelte's own describe() helper — moved here so it's
-# data-driven. Cmdline.svelte itself stopped rendering a command list in
-# PLAN.md Iteration 3 Phase 3 item 3.1 (the suggestions UI is gone), but
-# this string is still consumed the same way by HelpSearch.svelte's own
-# command-row rendering (src/components/HelpSearch.svelte), which took over
-# as the browsable command list. Appended verbatim (with its own leading
-# space) after a command's name when `takesArgs` is true; empty otherwise.
+# The "takes an argument" notation (e.g. "grep <…>") is data-driven rather
+# than a string literal baked into a component. Cmdline.svelte itself does
+# not render a command list (the suggestions UI is gone); this string is
+# consumed instead by HelpSearch.svelte's own command-row rendering
+# (src/components/HelpSearch.svelte), the browsable command list. Appended
+# verbatim (with its own leading space) after a command's name when
+# `takesArgs` is true; empty otherwise.
 argsPlaceholder: " <…>"
 
 # Ex-mode-only display entries (context (a) — see file header). Real
-# execution is Phase 3's own parseExCommand/Editor.svelte, unchanged; these
+# execution is parseExCommand/Editor.svelte's own logic; these
 # exist only so the box's suggestion list has a name+description to show,
 # and so `q`/`w` shadow the site-wide `commands` entries of the same name
 # while an editor is open (src/lib/cmdline.ts's mergeCommandLists).
@@ -55,10 +53,10 @@ exCommands:
     aliases: ["wq"]
     description: "write — readonly, always errors (this viewer never writes)"
 
-# Site-wide command set (PLAN.md 5C.2). Every one of these also works while
-# an editor is open (context (a): "Phase-3 commands PLUS the site-wide set
-# below"), falling through only after the ex-command machine above has had
-# first refusal.
+# Site-wide command set. Every one of these also works while
+# an editor is open (context (a): the ex-mode commands plus the site-wide
+# set below), falling through only after the ex-command machine above has
+# had first refusal.
 commands:
   - name: "dashboard"
     aliases: ["home"]
@@ -94,11 +92,11 @@ commands:
     description: "quit the current program to a shell in this window"
     action: "exit-program"
 
-# tmux command-prompt mode (Ctrl-b :) — PLAN.md 5C.1(c). A distinct, smaller
+# tmux command-prompt mode (Ctrl-b :). A distinct, smaller
 # vocabulary matching real tmux's own command-prompt commands; EXECUTED
-# through Phase 5's existing rename/kill/select-window implementations
+# through the existing rename/kill/select-window implementations
 # (Terminal.svelte's renameWindow/killWindow/killPaneOrWindow/setView) —
-# never duplicated here, per the plan's "single source of behavior".
+# never duplicated here.
 tmuxCommands:
   - name: "rename-window"
     description: "rename-window <name> — rename the current window"
@@ -119,7 +117,7 @@ tmuxCommands:
 # src/data/personnel.yaml — those only ever fire from inside an already-open
 # editor, so they keep using that editor instance's own labels).
 errors:
-  # PLAN.md 5C.2 "unknown → the Phase-3 E492 template" — reused verbatim
+  # The unknown-command message is reused verbatim
   # (same wording as builds.yaml/personnel.yaml's own
   # notAnEditorCommandTemplate) so a gibberish `:` command reads exactly
   # like vim's own ex-command error, in EVERY context, not just inside an
@@ -128,5 +126,5 @@ errors:
   usageRenameWindow: "usage: rename-window <name>"
   usageSelectWindow: "usage: select-window <0-5>"
   noSuchWindowTemplate: "no such window: {arg}"
-  # PLAN.md Iteration 3 Phase 6 item 6.4 — `select-layout <garbage>`.
+  # For `select-layout <garbage>`.
   unknownLayoutTemplate: "unknown layout: {name}"

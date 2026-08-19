@@ -5,14 +5,14 @@
   // panels. Rendered behind the dashboard/etc at reduced opacity and at
   // full opacity + full screen in the Retina-V (tracker) view — the
   // wallpaper markup itself never changes, only its container's opacity
-  // (PLAN.md "tracker-wallpaper opacity logic").
+  // ("tracker-wallpaper opacity logic").
   import type { TrackerData, Subject } from "../lib/data";
   import type { ViewId } from "../lib/views";
 
   interface Props {
     tracker: TrackerData;
     view: ViewId;
-    /** PLAN.md Iteration 3 Phase 5 item 5.1 — the detached HOST shell
+    /** The detached HOST shell
      * renders fullscreen over this same wallpaper, dimmed far below any
      * attached view's own opacity ("very dark, radar faint behind" — the
      * user's own mock). Takes precedence over every `view`-keyed knob below
@@ -21,14 +21,13 @@
      * last had; `dim` is what actually drives the look). Defaults to false
      * so every existing call site (none of which pass it) is unaffected. */
     dim?: boolean;
-    /** PLAN.md Iteration 3 Phase 6 (Locked decision #5 — a program can run in
-     * more than one pane at once, so copy-source capture must resolve to the
-     * *focused pane's* program, not the window's `view`). True only when the
-     * currently focused pane is actually running retina-v — e.g. false in a
-     * split retina-v window while a sibling shell pane is focused, even
-     * though `view` is still "retina-v" for the window as a whole. Defaults
-     * to `view === "retina-v"` so single-pane windows (the only case before
-     * splits existed) keep their old behavior unchanged. */
+    /** A program can run in more than one pane at once, so copy-source
+     * capture must resolve to the *focused pane's* program, not the
+     * window's `view`. True only when the currently focused pane is
+     * actually running retina-v — e.g. false in a split retina-v window
+     * while a sibling shell pane is focused, even though `view` is still
+     * "retina-v" for the window as a whole. Defaults to `view ===
+     * "retina-v"` so single-pane windows keep the same behavior. */
     isRetinaFocused?: boolean;
   }
 
@@ -221,11 +220,11 @@
       <div style="font-size:12px;color:rgba(196,216,232,.45)">{tracker.commandBox.statusLine}</div>
     </div>
 
-    <!-- PLAN.md Phase 5 item 5.3: CopyMode's "tracker readout/HUD"
+    <!-- CopyMode's "tracker readout/HUD"
          data-copy-source, gated to the tracker view only (this markup is
          always in the DOM at every view, just faded via wallOpacity above)
          so `Ctrl-b [` never captures the HUD text while some other view is
-         active. PLAN.md Phase 6: gated on the *focused pane* running
+         active. Gated on the *focused pane* running
          retina-v (isRetinaFocused), not merely the window's view, so a split
          retina-v window with a shell pane focused doesn't let CopyMode
          capture the HUD out from under the focused shell. -->

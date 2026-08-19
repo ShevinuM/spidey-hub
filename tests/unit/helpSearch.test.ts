@@ -1,6 +1,6 @@
 // Unit tests for the pure scoring/search logic behind the site-wide `?`
-// fuzzy help palette (PLAN.md Iteration 3 Phase 3 item 3.5) —
-// src/lib/helpSearch.ts. No DOM, no Svelte state: exercised against
+// fuzzy help palette — src/lib/helpSearch.ts. No DOM, no Svelte state:
+// exercised against
 // fixture command/section lists (not the real cmdline.yaml/help content,
 // same "shape, not wording" isolation tests/unit/cmdline.test.ts already
 // uses) so this suite can't drift silently if either source's copy changes.
@@ -52,9 +52,9 @@ const sections: HelpSectionSource[] = [
   },
 ];
 
-// shell.yaml's own `help.rows[]` shape (PLAN.md 3.3 "+ shell builtins once
-// Phase 4 lands") — a small representative subset, "shape not wording" per
-// this file's own header comment.
+// shell.yaml's own `help.rows[]` shape, including shell builtins — a small
+// representative subset, "shape not wording" per this file's own header
+// comment.
 const shellRows: ShellHelpRowSource[] = [
   { cmd: "cd <path>", description: "change directory" },
   { cmd: "neofetch", description: "system info card" },
@@ -65,7 +65,7 @@ const shellRows: ShellHelpRowSource[] = [
 // commandEntries / keymapEntries / buildEntries
 // ---------------------------------------------------------------------
 
-test("commandEntries includes q as of Phase 4 (exitProgram meaning)", () => {
+test("commandEntries includes q (exitProgram meaning)", () => {
   const entries = commandEntries(commands);
   assert.equal(entries.length, commands.length);
   assert.ok(entries.some((e) => e.label === "q" && e.action === "exit-program"));
@@ -155,7 +155,7 @@ test('searchHelp: "rbt" subsequence-matches "reboot" with no better-tier competi
   assert.equal(results[0].label, "reboot");
 });
 
-test('searchHelp: "neof" prefix-matches the shell builtin "neofetch" (PLAN.md 3.3 shell-builtins canary)', () => {
+test('searchHelp: "neof" prefix-matches the shell builtin "neofetch" (shell-builtins canary)', () => {
   const entries = buildEntries(commands, sections, shellRows);
   const results = searchHelp("neof", entries, commands);
   assert.equal(results[0].kind, "keymap");

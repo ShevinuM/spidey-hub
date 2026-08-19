@@ -1,13 +1,13 @@
-// Behavioral e2e suite for the Profile ("Agent Profile") view — PLAN.md
-// Phase 7. Against the real-content build (pnpm build -> astro preview,
-// same as every other tests/e2e spec — see nav.spec.ts's header comment).
+// Behavioral e2e suite for the Profile ("Agent Profile") view. Against the
+// real-content build (pnpm build -> astro preview, same as every other
+// tests/e2e spec — see nav.spec.ts's header comment).
 //
 // Uses real timers throughout (no `page.clock.install`): the live meter's
 // rAF loop and 2500ms probe interval are exactly the thing under test here,
 // and the visual suite (tests/visual/identical.spec.ts) already covers the
 // pixel-frozen path via the faked clock + SIGNAL-row mask.
 import { expect, test, type Page } from "./fixtures.ts";
-// PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
+// This spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's
 // ~4.6s unskippable sequence never runs for these tests — see that
@@ -21,8 +21,8 @@ async function statusBarText(page: Page) {
 }
 
 const WINDOWS = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"];
-/** `lastId` (PLAN.md Iteration 3 Phase 4 item 4.3 tmux fidelity reference)
- * is the real tmux `-` flag on the session's PREVIOUSLY active window —
+/** `lastId` (real tmux fidelity) is the real tmux `-` flag on the
+ * session's PREVIOUSLY active window —
  * omit it for assertions made before any in-test window switch. */
 function winText(activeId: string, lastId?: string): string {
   return WINDOWS.map((id, i) => `${i}:${id}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
@@ -77,8 +77,8 @@ test.describe("Profile: resume hotkey + CV link", () => {
 });
 
 test.describe("Profile: contact rows", () => {
-  // PLAN.md Locked #7: contact data taken from the resume, verbatim — no
-  // phone number is published on the site.
+  // Contact data taken from the resume, verbatim — no phone number is
+  // published on the site.
   test("github/linkedin/mail hrefs are exact (resume values); discord is not a link", async ({ page }) => {
     await openProfile(page);
     const links = page.locator('[data-testid="profile-contact-link"]');
@@ -110,7 +110,7 @@ test.describe("Profile: contact rows", () => {
   });
 });
 
-test.describe("Profile: EDUCATION section (PLAN.md Iteration 3 Phase 1 item 1.4)", () => {
+test.describe("Profile: EDUCATION section", () => {
   test("both resume entries render (degree, school, location, dates)", async ({ page }) => {
     await openProfile(page);
     const rows = page.locator('[data-testid="profile-education-row"]');
@@ -165,16 +165,16 @@ test.describe("Profile: live meter (SIGNAL row)", () => {
   });
 });
 
-// PLAN.md Iteration 4 item 21 removed the separate SUMMARY box entirely —
-// the dossier below is the only bio block left.
-test.describe("Profile: summary section removed (Iteration 4 item 21)", () => {
+// There is no separate SUMMARY box — the dossier below is the only bio
+// block.
+test.describe("Profile: summary section removed", () => {
   test("profile-summary testid no longer exists", async ({ page }) => {
     await openProfile(page);
     await expect(page.locator('[data-testid="profile-summary"]')).toHaveCount(0);
   });
 });
 
-test.describe("Profile: DOSSIER panel (PLAN.md Iteration 3 Phase 1 item 1.4)", () => {
+test.describe("Profile: DOSSIER panel", () => {
   test("renders the content collection's real bio, from src/content/profile (not hardcoded)", async ({ page }) => {
     await openProfile(page);
     const dossier = page.locator('[data-testid="profile-dossier"]');
@@ -194,9 +194,8 @@ test.describe("Profile: DOSSIER panel (PLAN.md Iteration 3 Phase 1 item 1.4)", (
     expect(overflowY).toBe("auto");
   });
 
-  // PLAN.md Iteration 4 item 21: the paragraphs used to render with no
-  // visible gap between them (a 5px flex `gap`, easy to mistake for line-
-  // height) — bumped to a clearly-visible 12px.
+  // Paragraphs have a clearly-visible 12px flex `gap` between them (not a
+  // 5px gap, which is easy to mistake for line-height).
   test("paragraphs have visible spacing between them", async ({ page }) => {
     await openProfile(page);
     const dossier = page.locator('[data-testid="profile-dossier"]');
@@ -205,7 +204,7 @@ test.describe("Profile: DOSSIER panel (PLAN.md Iteration 3 Phase 1 item 1.4)", (
   });
 });
 
-test.describe("Profile: q/Esc never navigate, no close pill (PLAN.md Phase 1 items 15/16)", () => {
+test.describe("Profile: q/Esc never navigate, no close pill", () => {
   test("q does nothing — stays on profile", async ({ page }) => {
     await openProfile(page);
     await page.keyboard.press("q");

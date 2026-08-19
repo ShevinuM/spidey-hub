@@ -1,8 +1,7 @@
 // Build-time loader for src/data/*.yaml — every user-visible string that
-// isn't part of a content collection lives in one of these files (PLAN.md
-// "Architecture — content out of components"). Astro pages/layouts read
-// this module and pass plain data down as props; Svelte islands never read
-// the filesystem themselves.
+// isn't part of a content collection lives in one of these files. Astro
+// pages/layouts read this module and pass plain data down as props; Svelte
+// islands never read the filesystem themselves.
 //
 // Each file is a static `?raw` import (inlined as a string by Vite at
 // build time) rather than a runtime `node:fs` read relative to
@@ -10,11 +9,9 @@
 // `dist/.prerender/chunks/`, which moves it well away from `src/data/` on
 // disk, so a `readFileSync(dirname(import.meta.url) + "../data/...")` path
 // resolves under `dist/` and 404s (ENOENT) exactly once real pages start
-// calling these getters — `astro sync`/dev never bundles this file, so
-// Phase 2's `astro sync`-only verification didn't exercise this path).
-// `?raw` imports have no such problem: Vite resolves and inlines the file
-// content at the *import's* location during bundling, independent of
-// where the chunk ends up at runtime.
+// calling these getters. `?raw` imports have no such problem: Vite resolves
+// and inlines the file content at the *import's* location during bundling,
+// independent of where the chunk ends up at runtime.
 import YAML from "yaml";
 import type { CollectionEntry } from "astro:content";
 import siteRaw from "../data/site.yaml?raw";
@@ -250,8 +247,8 @@ export interface ContactRow {
   href: string | null;
 }
 
-/** PLAN.md Iteration 3 Phase 1 item 1.4: one EDUCATION entry (degree,
- * school, location, dates) — both rows sourced verbatim from the resume. */
+/** One EDUCATION entry (degree, school, location, dates) — both rows
+ * sourced verbatim from the resume. */
 export interface EducationRow {
   degree: string;
   school: string;
@@ -326,13 +323,12 @@ export interface RepoBrowserData {
   fileIcon: string;
   loadingText: string;
   errorText: string;
-  /** Panel [2] before any repo has been opened (PLAN.md Phase 4: panel [2]
-   * is the tree browser now, with no default content of its own — the old
-   * always-visible project list is gone). */
+  /** Panel [2] before any repo has been opened — the tree browser has no
+   * default content of its own. */
   emptyText: string;
 }
 
-/** Panel [3]'s virtual "all-projects" row (PLAN.md Phase 4 item 2/4) — every
+/** Panel [3]'s virtual "all-projects" row — every
  * project's .md doc in one browsable tree, backed by
  * public/generated/repos/all-projects.json (fixtures/repos/all-projects.json
  * in a fixture build). Not a real repo: no branch to track, no commits. */
@@ -380,9 +376,8 @@ export interface EditorLabels {
 export interface BuildsData {
   panels: {
     status: { title: string };
-    // PLAN.md Phase 4: panel [2] is the tree browser now (no more static
-    // "- projects/*.md" subtitle / git-status-letter row prefix) — its
-    // subtitle is "<repo>" or "<repo> @<sha8>" once a repo/commit is open.
+    // Panel [2] is the tree browser — its subtitle is "<repo>" or
+    // "<repo> @<sha8>" once a repo/commit is open.
     files: { title: string; subtitleTemplate: string };
     repos: { title: string };
     commits: { title: string; subtitle: string; authorInitials: string; localOnlyText: string };
@@ -434,15 +429,14 @@ export interface PersonnelData {
   pathPrefix: string;
   insetTitles: { fileBrowser: string; filePreview: string };
   promptIcon: string;
-  // PLAN.md Iteration 3 Phase 1 item 1.3: Personnel.svelte is now a
-  // depth-generic directory browser (variable-depth tree derived from
-  // content file paths), so the hint line has exactly two shapes rather
-  // than one per fixed level: `atDir` for any directory row (root or
-  // nested — {dir} is interpolated with the directory's own name, "h goes
-  // back" is simply omitted by the template text at the root since there's
-  // nowhere to go back to) and `atFile` for a role file row. `atRoot` covers
-  // the top level specifically, where h/Backspace never do anything (no
-  // "goes back" clause, same wording rule the old atCompanyLevel hint used).
+  // Personnel.svelte is a depth-generic directory browser (variable-depth
+  // tree derived from content file paths), so the hint line has exactly two
+  // shapes: `atDir` for any directory row (root or nested — {dir} is
+  // interpolated with the directory's own name, "h goes back" is simply
+  // omitted by the template text at the root since there's nowhere to go
+  // back to) and `atFile` for a role file row. `atRoot` covers the top level
+  // specifically, where h/Backspace never do anything (no "goes back"
+  // clause).
   hints: { atRoot: string; atDir: string; atFile: string };
   upEntry: { icon: string; name: string };
   companyRowIcon: string;
@@ -621,9 +615,8 @@ export interface CmdlineErrors {
 export interface CmdlineData {
   title: string;
   prompt: { glyph: string; cursorGlyph: string };
-  /** PLAN.md Phase 6 item 6.4 content-purity fix: appended after a
-   * command's name in the suggestion list when its `takesArgs` is true
-   * (e.g. "grep <…>") — was previously hardcoded in Cmdline.svelte. */
+  /** Appended after a command's name in the suggestion list when its
+   * `takesArgs` is true (e.g. "grep <…>"). */
   argsPlaceholder: string;
   exCommands: CmdlineCommandDef[];
   commands: CmdlineCommandDef[];
@@ -649,7 +642,7 @@ export interface HelpSearchData {
 export const getHelpSearch = (): HelpSearchData => loadYaml<HelpSearchData>("helpsearch.yaml");
 
 // ---------------------------------------------------------------------------
-// shell.yaml (PLAN.md Iteration 3 Phase 4 items 4.2/4.3)
+// shell.yaml
 // ---------------------------------------------------------------------------
 
 export interface ShellErrors {
@@ -714,16 +707,16 @@ export interface ShellData {
     cantFindSessionTemplate: string;
   };
   host: ShellHostData;
-  /** PLAN.md Iteration 4 item 19 — labels for the read-only vim Editor the
-   * `vim`/`vi`/`nvim <file>` builtin opens over the shell pane; same shape
-   * builds.yaml's/personnel.yaml's own `editor:` blocks already use. */
+  /** Labels for the read-only vim Editor the `vim`/`vi`/`nvim <file>`
+   * builtin opens over the shell pane; same shape builds.yaml's/
+   * personnel.yaml's own `editor:` blocks already use. */
   editor: EditorLabels;
 }
 
 export const getShell = (): ShellData => loadYaml<ShellData>("shell.yaml");
 
 // ---------------------------------------------------------------------------
-// choosetree.yaml (PLAN.md Iteration 3 Phase 6 item 6.5)
+// choosetree.yaml
 // ---------------------------------------------------------------------------
 
 export interface ChooseTreeData {

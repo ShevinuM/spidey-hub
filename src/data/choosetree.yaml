@@ -1,5 +1,5 @@
-# choose-tree overlay (PLAN.md Iteration 3 Phase 6 item 6.5, `Ctrl-b w` —
-# REBINDS the old "go home" binding, Locked decision #3). One generic
+# choose-tree overlay (`Ctrl-b w` —
+# REBINDS the old "go home" binding). One generic
 # always-mounted overlay (src/components/ChooseTree.svelte), same visual
 # family as GrepOverlay/CopyMode (bordered box, box-drawing inset title) but
 # a FULL window-content overlay (status bar stays visible below it, unlike
@@ -16,15 +16,15 @@ titlePrefix: "CHOOSE TREE "
 titleTilde: "~"
 
 # Session row: "{name}: {n} windows" (+ attachedSuffix when it's the
-# currently-ATTACHED session — PLAN.md tmux fidelity reference). Window row:
+# currently-ATTACHED session). Window row:
 # "{index}: {name}" — the `*`/`-` active/last-active flags are appended by
 # the component itself (same characters StatusBar.svelte already uses).
 sessionTemplate: "{name}: {n} windows"
 sessionAttachedSuffix: ", (attached)"
 windowTemplate: "{index}: {name}"
 
-# Bottom preview strip (PLAN.md: "describing the selection — for a window:
-# its pane programs + layout; for a session: its window count").
+# Bottom preview strip — describing the selection: for a window, its pane
+# programs + layout; for a session, its window count.
 preview:
   windowPanesLabel: "panes:"
   windowLayoutLabel: "layout:"
@@ -37,7 +37,7 @@ preview:
 
 hint: "↑/↓ move · h/← collapse · l/→ expand · Enter switch · x kill (y/n) · q/Esc close"
 
-# In-overlay kill confirm (PLAN.md tmux fidelity reference — note the
+# In-overlay kill confirm (note the
 # CAPITAL "Kill" and the WINDOW INDEX, not its name: this is a deliberately
 # different string shape from the status-line's own lowercase
 # `kill-window {name}? (y/n)` — real tmux's choose-tree prompt really is

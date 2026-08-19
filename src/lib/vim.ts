@@ -1,12 +1,12 @@
-// Pure vim-lite motion/word/search/visual-range engine for Editor.svelte
-// (PLAN.md Phase 3 item 10 / 3.4 "engine purity"). Deliberately has zero DOM
-// dependency so it is unit-testable in isolation (tests/unit/vim.test.ts) —
+// Pure vim-lite motion/word/search/visual-range engine for Editor.svelte.
+// Deliberately has zero DOM dependency so it is unit-testable in isolation
+// (tests/unit/vim.test.ts) —
 // Editor.svelte owns all state (cursor position, mode, pending timers,
 // scroll sync) and calls into these pure functions for the actual motion
 // math. Every position is `{ line, col }` with a 1-based `line` (matching
-// the rest of the codebase's existing line-cursor convention, e.g.
-// Editor.svelte's pre-Phase-3 `cursorLine`) and a 0-based `col` (a plain
-// character index into that line's string), converted to a 1-based display
+// the rest of the codebase's existing line-cursor convention) and a 0-based
+// `col` (a plain character index into that line's string), converted to a
+// 1-based display
 // column only at the UI layer (`positionTemplate`'s `{col}`).
 //
 // `lines` throughout is a plain `string[]` (0-indexed, `lines[line - 1]` is

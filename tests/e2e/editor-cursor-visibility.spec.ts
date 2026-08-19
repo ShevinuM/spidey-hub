@@ -1,5 +1,5 @@
-// Regression test for PLAN.md Iteration 4 item 13 ("pressing j or vim
-// commands makes the vim cursor disappear on some pages").
+// Regression test: pressing j or other vim commands must never make the vim
+// cursor disappear on some pages.
 //
 // Root cause (found via runtime repro, not static analysis): the editor's
 // per-line row (Editor.svelte, the `<div data-line={l.n} ...>` the cursor
@@ -62,7 +62,7 @@ async function fileRowUnderDir(page: Page, dirName: string, fileName: string) {
   throw new Error(`file "${fileName}" not found directly under "${dirName}"`);
 }
 
-test.describe("Editor cursor visibility (PLAN.md item 13 regression)", () => {
+test.describe("Editor cursor visibility (regression)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
