@@ -13,9 +13,9 @@
 //     three action-list fixes this required — "03-builds-j"/"05-personnel-
 //     l1"/"06-editor" — found by actually running them, not by inspection).
 //   - `extraRecipes` (2): "11-help", "12-all-projects" — states the
-//     vendored prototype never had. "11-help" was re-validated
-//     (its action changed from `?` to `h` —
-//     freeing `?` up for the HelpSearch palette, "20-help-search" below).
+//     vendored prototype never had. "11-help" is reached with `Ctrl-b 5`
+//     (dashboard single-key shortcuts are removed entirely) — a bare `?`
+//     opens the HelpSearch palette instead ("20-help-search" below).
 //   - `cmdlineRecipes` (1): "15-cmdline" — the floating command box
 //     (its suggestion list was removed — same actions, new content).
 //   - `bootRecipes` (2): "13-boot-mid"/"14-boot-ready" — captured through a

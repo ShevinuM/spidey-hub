@@ -159,6 +159,34 @@ export async function captureState(page, url, recipe) {
   await page.evaluate(() => document.fonts.ready);
   await page.waitForLoadState("networkidle");
 
+  // Proves the recipe's actions actually reached the state it claims to
+  // capture, not just "some page loaded" — see `RecipeCheck`'s own doc
+  // comment in recipes.ts for the zero-value-golden failure mode this
+  // guards against. Runs against the vendored prototype too when invoked
+  // through capture-goldens.mjs's guarded override path; a `check` built
+  // from real-implementation data-testids/routes will fail there (the
+  // prototype has neither), which is expected — that path is historical
+  // and opt-in, not part of normal development.
+  if (recipe.check) {
+    if (recipe.check.url) {
+      const actual = new URL(page.url()).pathname;
+      if (!recipe.check.url.test(actual)) {
+        throw new Error(
+          `recipe "${recipe.name}" expected URL matching ${recipe.check.url} but got "${actual}"`,
+        );
+      }
+    }
+    if (recipe.check.visible) {
+      const locator = page.locator(recipe.check.visible).first();
+      const visible = await locator.isVisible().catch(() => false);
+      if (!visible) {
+        throw new Error(
+          `recipe "${recipe.name}" expected element matching "${recipe.check.visible}" to be visible, but it was not found/visible`,
+        );
+      }
+    }
+  }
+
   const isProfile = recipe.name === "07-profile";
   const readout = page.locator(NET_READOUT_SELECTOR);
   const meterBars = page.locator(METER_BARS_SELECTOR);

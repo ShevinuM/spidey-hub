@@ -305,6 +305,23 @@ test.describe("Builds: panel [2] lazygit-style tree — expand/collapse, no ../ 
     await expect(page.locator('[data-testid="builds-tree-row"][data-entry-type="up"]')).toHaveCount(0);
   });
 
+  test("bare j does not move the tree selection while ArrowDown does", async ({ page }) => {
+    await gotoReady(page, "/builds");
+    const rows = page.locator('[data-testid="builds-tree-row"]');
+    const highlighted = /rgba\(\s*224,\s*69,\s*60,\s*0?\.18\)/;
+
+    await expect(rows.first()).toHaveAttribute("style", highlighted);
+    await expect(rows.nth(1)).not.toHaveAttribute("style", highlighted);
+
+    await page.keyboard.press("j");
+    await expect(rows.first()).toHaveAttribute("style", highlighted);
+    await expect(rows.nth(1)).not.toHaveAttribute("style", highlighted);
+
+    await page.keyboard.press("ArrowDown");
+    await expect(rows.first()).not.toHaveAttribute("style", highlighted);
+    await expect(rows.nth(1)).toHaveAttribute("style", highlighted);
+  });
+
   test("tree rows render SVG folder/file icons and a ▾/▸ caret, not a plain glyph in the icon slot (Item 1)", async ({
     page,
   }) => {

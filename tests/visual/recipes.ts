@@ -8,66 +8,107 @@
 //   { type: string }  -> page.keyboard.type(text)
 export type RecipeAction = { key: string } | { type: string };
 
+/**
+ * A recipe-specific proof that the action list actually landed on the
+ * intended on-screen state — not just "some page loaded" — checked by
+ * `captureState()` (pipeline.mjs) right before the screenshot. Added after
+ * a stale "03-builds-j" recipe (see git history) shipped a byte-identical,
+ * zero-value golden because nothing verified its actions actually changed
+ * the view. `url` and `visible` are independent: a recipe
+ * that stays on the dashboard's route (an overlay) can supply `visible`
+ * alone, one whose route changes but has no single distinguishing element
+ * can supply `url` alone, and one where the route alone can't tell two
+ * recipes apart (e.g. two Personnel depths, both "/personnel") should
+ * supply both.
+ */
+export interface RecipeCheck {
+  /** The page's pathname must match this after the recipe's actions run. */
+  url?: RegExp;
+  /** A Playwright locator selector that must resolve to a visible element
+   * after the recipe's actions run. */
+  visible?: string;
+}
+
 export interface Recipe {
   /** Golden filename stem, e.g. "01-dashboard" -> "01-dashboard.png". */
   name: string;
   actions: RecipeAction[];
+  /** Optional "did this actually reach its intended view" proof — see
+   * `RecipeCheck`. Only recipes converted off a removed single-key
+   * dashboard/Builds shortcut to the `C-b N`/arrow equivalent carry one;
+   * older recipes are left as-is rather than retrofitted. */
+  check?: RecipeCheck;
 }
 
 /**
- * The ORIGINAL 10 recipes (20 goldens at 2 viewports), captured against
- * BOTH the vendored prototype reference (tests/visual/capture-goldens.mjs
- * — now guarded/historical, see that file's header) and the real
- * implementation (tests/visual/identical.spec.ts). Kept deliberately
- * scoped to states the prototype itself can reach (no help window, no
- * all-projects, no boot sequence, no cmdline box — none of those existed
- * yet when the prototype was vendored), so capture-goldens.mjs's guarded
- * "restore prototype parity" path never has to attempt a state the
- * prototype has no code for. "11-help",
- * "12-all-projects", the boot recipes, and "15-cmdline" all live in their
- * own sibling arrays below instead of being appended here for exactly that
+ * The ORIGINAL 10 recipes (20 goldens at 2 viewports). Historically also
+ * captured against the vendored prototype reference
+ * (tests/visual/capture-goldens.mjs — guarded/historical, see that file's
+ * header); that guarded path replays this same array unmodified, so any
+ * `check` added below (which asserts against real-implementation
+ * data-testids/routes the frozen prototype markup doesn't have) will fail
+ * if that path is ever actually invoked — acceptable, since it already
+ * requires an explicit override flag and is not part of normal
+ * development. "11-help", "12-all-projects", the boot recipes, and
+ * "15-cmdline" all live in their own sibling arrays below instead of being
+ * appended here for the same "prototype has no code path for this state"
  * reason — identical.spec.ts imports and asserts the union of every array
- * on this page (15 recipes total), capture-goldens.mjs only ever this one.
+ * on this page, capture-goldens.mjs only ever this one.
  *
- * Audited by actually running
- * every recipe against the current implementation, not by reading source
- * alone — see the fixed three below:
- *   - "03-builds-j": the Builds rework changed the default focused
- *     panel on entry to [2] Files (empty until a repo is opened), so the
- *     OLD action list `[{key:"b"},{key:"j"}]` pressed "j" against an empty,
- *     unfocused-for-input panel — confirmed empirically byte-IDENTICAL to
- *     "02-builds"'s own screenshot (Buffer.compare === 0), i.e. a
- *     zero-value golden. Fixed to explicitly focus panel [3] (Local
- *     Repositories, `{key:"3"}`) before "j", which moves the repo-list
- *     selection highlight — confirmed to produce a distinct screenshot.
- *   - "05-personnel-l1"/"06-editor": 05/06
- *     personnel now need the 3-level path — Personnel gained a middle
- *     employmentType level, so content reachable
- *     in 1/2 Enters from the companies level now needs 2/3. Confirmed
- *     empirically: the OLD "06-editor" action list left `hasEditor: false`
- *     (it landed on the level-2 role-files LIST, one Enter short of
- *     `activateRoleRow`'s `editorOpen = true`) — i.e. "06-editor" never
- *     actually opened Editor.svelte, defeating the recipe's entire purpose
- *     (identical.spec.ts's own header comment already claims this is "the
- *     first pixel test of Editor.svelte itself"). Fixed by adding the one
- *     extra `Enter` each recipe needs to reach the equivalent depth as
- *     before the extra level was inserted — "05" now reaches the level-2
- *     role-files listing (the yazi-style file-browser pane at its OTHER
- *     depth, matching "04"'s dir listing at the companies level), "06"
- *     continues one more Enter into the actual editor.
+ * Dashboard single-key view shortcuts (b/p/x/i/t/h) and Builds' bare `j`
+ * tree-navigation are removed from the app entirely — windows switch via
+ * `Ctrl-b <N>` (window numbers: 1 builds, 2 personnel, 3 retina-v, 4
+ * profile, 5 help) or a click, and Builds panels navigate via ArrowUp/
+ * ArrowDown. Every recipe below that used to press one of the removed keys
+ * is rewritten accordingly, and carries a `check` (see `RecipeCheck`)
+ * proving its `Ctrl-b <N>` chord actually landed on the intended view
+ * rather than silently no-opping on the dashboard — the failure mode that
+ * let a previous "03-builds-j" recipe ship a zero-value golden undetected
+ * for months (see git history). "03-builds-arrow" (was "03-builds-j")
+ * explicitly focuses panel [3] (Local Repositories, bare `3`, unrelated to
+ * the `Ctrl-b` prefix) before `ArrowDown`, which moves the repo-list
+ * selection highlight. "05-personnel-l1"/"06-editor" account for
+ * Personnel's 3-level path (companies -> employment type -> role files):
+ * "05" reaches the level-2 role-files listing after 2 Enters, "06"
+ * continues one more Enter into the actual editor.
  */
 export const recipes: Recipe[] = [
   { name: "01-dashboard", actions: [] },
-  { name: "02-builds", actions: [{ key: "b" }] },
-  { name: "03-builds-j", actions: [{ key: "b" }, { key: "3" }, { key: "j" }] },
-  { name: "04-personnel-l0", actions: [{ key: "x" }] },
-  { name: "05-personnel-l1", actions: [{ key: "x" }, { key: "Enter" }, { key: "Enter" }] },
+  {
+    name: "02-builds",
+    actions: [{ key: "Control+b" }, { key: "1" }],
+    check: { url: /\/builds$/, visible: '[data-testid="builds-panel-2"][data-copy-source]' },
+  },
+  {
+    name: "03-builds-arrow",
+    actions: [{ key: "Control+b" }, { key: "1" }, { key: "3" }, { key: "ArrowDown" }],
+    check: { url: /\/builds$/, visible: '[data-testid="builds-panel-3"][data-copy-source]' },
+  },
+  {
+    name: "04-personnel-l0",
+    actions: [{ key: "Control+b" }, { key: "2" }],
+    check: { url: /\/personnel$/, visible: '[data-testid="personnel-row"]' },
+  },
+  {
+    name: "05-personnel-l1",
+    actions: [{ key: "Control+b" }, { key: "2" }, { key: "Enter" }, { key: "Enter" }],
+    check: { url: /\/personnel$/, visible: '[data-testid="personnel-up-row"]' },
+  },
   {
     name: "06-editor",
-    actions: [{ key: "x" }, { key: "Enter" }, { key: "Enter" }, { key: "Enter" }],
+    actions: [{ key: "Control+b" }, { key: "2" }, { key: "Enter" }, { key: "Enter" }, { key: "Enter" }],
+    check: { url: /\/personnel$/, visible: '[data-testid="editor-scroller"]' },
   },
-  { name: "07-profile", actions: [{ key: "i" }] },
-  { name: "08-tracker", actions: [{ key: "t" }] },
+  {
+    name: "07-profile",
+    actions: [{ key: "Control+b" }, { key: "4" }],
+    check: { url: /\/profile$/, visible: '[data-testid="profile-dossier"]' },
+  },
+  {
+    name: "08-tracker",
+    actions: [{ key: "Control+b" }, { key: "3" }],
+    check: { url: /\/retina-v$/, visible: '[data-testid="wallpaper-layer"]' },
+  },
   { name: "09-grep-empty", actions: [{ key: "/" }] },
   {
     name: "10-grep-query",
@@ -86,35 +127,33 @@ export const recipes: Recipe[] = [
  * refuse-by-default override flag (see that file's header comment).
  * identical.spec.ts is the only consumer.
  *
- * "12-all-projects": the virtual
- * all-projects repo is now the FIRST row in panel [3]'s flat list (it was
- * the LAST), and is the default selection (`selectedRepoIdx = $state(0)`
- * in Builds.svelte) — so plain "02-builds" (`{key:"b"}`) already lands on
- * the all-projects tree with panel [3] unfocused (no row highlighted).
- * The OLD action list here (`{key:"3"},{key:"k"},{key:"Enter"}`) relied on
- * wraparound from idx 0 to reach all-projects as the LAST row; with
- * all-projects now AT idx 0, that same `k` instead wraps backward to the
- * last REAL repo and activates that one — confirmed empirically to load
- * the wrong repo (a distinct, unrelated repo's tree, not all-projects'
- * fixture markdown files). Fixed to focus panel [3] (highlighting the
- * all-projects row) and re-activate it with `Enter`, which keeps this
- * golden meaningfully distinct from "02-builds" (that highlighted-row
- * state) while still exercising all-projects explicitly rather than only
- * via the page-load default. Verified empirically: lands on `/builds`,
- * panel [2]'s subtitle reads "- all-projects", and its tree lists the
- * fixture project markdown files.
+ * "11-help": the dashboard has no bare-key Help shortcut anymore (`h` and
+ * every other single-key dashboard shortcut are removed) — the Help window
+ * is reached with `Ctrl-b 5`, verified against views.ts's window-number
+ * mapping and nav.spec.ts's own "Ctrl-b 5 switches to help" test.
+ *
+ * "12-all-projects": the virtual all-projects repo is the FIRST row in
+ * panel [3]'s flat list and the default selection
+ * (`selectedRepoIdx = $state(0)` in Builds.svelte), so plain "02-builds"
+ * already lands on the all-projects tree with panel [3] unfocused (no row
+ * highlighted). This recipe focuses panel [3] (bare `3`, unrelated to the
+ * `Ctrl-b` prefix that switches windows) and re-activates the highlighted
+ * all-projects row with `Enter`, which keeps this golden meaningfully
+ * distinct from "02-builds" (that highlighted-row state) while still
+ * exercising all-projects explicitly rather than only via the page-load
+ * default.
  */
 export const extraRecipes: Recipe[] = [
-  // `?` is no longer the dashboard's
-  // Help-WINDOW hotkey — a bare
-  // `?` now opens the site-wide HelpSearch palette everywhere, including
-  // the dashboard. "20-help-search" below captures THAT state; this recipe
-  // stays "11-help" (the Help WINDOW, "Help — Keymap Reference") and is
-  // reached with `h`, the dashboard's own current Help hotkey
-  // (views.ts's HOTKEY_TO_VIEW, dashboard.yaml's `hotkey: "h"`) — verified
-  // empirically by actually running it, not by reading source alone.
-  { name: "11-help", actions: [{ key: "h" }] },
-  { name: "12-all-projects", actions: [{ key: "b" }, { key: "3" }, { key: "Enter" }] },
+  {
+    name: "11-help",
+    actions: [{ key: "Control+b" }, { key: "5" }],
+    check: { url: /\/help$/, visible: '[data-testid="help-title"]' },
+  },
+  {
+    name: "12-all-projects",
+    actions: [{ key: "Control+b" }, { key: "1" }, { key: "3" }, { key: "Enter" }],
+    check: { url: /\/builds$/, visible: '[data-testid="builds-panel-2"]:has-text("all-projects")' },
+  },
 ];
 
 /**
