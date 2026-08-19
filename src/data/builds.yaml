@@ -66,7 +66,7 @@ commandLog:
         href: "https://github.com/shevinum"
       - text: "shevinum.dev"
         href: "https://shevinum.dev"
-  - text: "Press t for E.D.I.T.H: Retina-V · Ctrl-b ? for help."
+  - text: "Press t for Retina-V · Ctrl-b ? for help."
     emphasize: ["t"]
 
 # Repo file-tree browsing (panel [3] -> panel [2] -> pane [0]) and the

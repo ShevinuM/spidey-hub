@@ -52,19 +52,21 @@ export function msUntilNextMinute(d: Date): number {
 // column, and neofetch's uptime line all read this ONE epoch, resolved once
 // per page load/reboot, rather than calling `Date.now()` repeatedly at
 // render time. Same sessionStorage-override-with-Date.now()-fallback shape
-// as src/lib/notifications.ts's TOAST_SEED_STORAGE_KEY/resolveToastSeed()
-// and src/lib/bootState.ts's BOOT_SEEN_STORAGE_KEY — a test fixture pins the
-// key, production falls through to the real clock.
+// as src/lib/notificationStore.ts's NOTIFICATIONS_INJECT_SEED_STORAGE_KEY/
+// resolveInjectRand() and src/lib/bootState.ts's BOOT_SEEN_STORAGE_KEY — a
+// test fixture pins the key, production falls through to the real clock.
 // ---------------------------------------------------------------------------
 
 /** sessionStorage key a test fixture can set to pin the page epoch (ms since
  * Unix epoch, as a decimal string) — read once at client-factory time (initial
- * mount AND every `reboot`), same pattern as TOAST_SEED_STORAGE_KEY. */
+ * mount AND every `reboot`), same pattern as the notification store's own
+ * sessionStorage overrides. */
 export const CLOCK_EPOCH_STORAGE_KEY = "edith:clock-epoch";
 
 /** Parse a raw sessionStorage string into a valid epoch-ms number, or null if
  * missing/unparseable — pure, no storage access, unit-testable without a
- * DOM/sessionStorage shim (mirrors parseToastSeed's own shape). */
+ * DOM/sessionStorage shim (mirrors src/lib/notificationStore.ts's
+ * parseInjectSeed shape). */
 export function parseClockEpoch(raw: string | null | undefined): number | null {
   if (raw === null || raw === undefined || raw === "") return null;
   const n = Number(raw);

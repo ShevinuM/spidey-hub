@@ -70,6 +70,9 @@
     /** Window id (a `ProgramName`) -> its live tmux window number — threaded
      * straight through to Dashboard.svelte's own hotkey-column lookup. */
     windowNumberById: Record<string, number>;
+    /** Live total pane count across the whole session — threaded straight
+     * through to Dashboard.svelte's footer sync line. */
+    paneCount: number;
     builds: BuildsData;
     personnel: PersonnelData;
     profile: ProfileData;
@@ -110,6 +113,7 @@
     refs,
     dashboard,
     windowNumberById,
+    paneCount,
     builds,
     personnel,
     profile,
@@ -162,6 +166,7 @@
           {refs}
           {dashboard}
           {windowNumberById}
+          {paneCount}
           {builds}
           {personnel}
           {profile}
@@ -193,7 +198,7 @@
       : ''}"
   >
     {#if node.pane.program === "dashboard"}
-      <Dashboard {dashboard} {isFocused} windowNumbers={windowNumberById} onSelect={(v) => onWindowSwitch(viewIdToProgram(v))} />
+      <Dashboard {dashboard} {isFocused} windowNumbers={windowNumberById} {paneCount} onSelect={(v) => onWindowSwitch(viewIdToProgram(v))} />
     {:else if node.pane.program === "retina-v"}
       <!-- The full-opacity map/HUD is Wallpaper's own view-gated opacity
            (rendered once, behind every window, by Terminal.svelte) — this

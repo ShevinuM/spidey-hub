@@ -23,7 +23,7 @@ const commands: CommandSource[] = [
   { name: "builds", description: "jump to Builds", action: "view:builds" },
   { name: "personnel", description: "jump to Personnel Files", action: "view:personnel" },
   { name: "profile", description: "jump to Profile", action: "view:profile" },
-  { name: "retina-v", description: "jump to E.D.I.T.H: Retina-V", action: "view:retina-v" },
+  { name: "retina-v", description: "jump to Retina-V", action: "view:retina-v" },
   { name: "help", description: "jump to Help", action: "view:help" },
   { name: "grep", description: "open the grep overlay", action: "grep", takesArgs: true },
   { name: "reboot", description: "replay the E.D.I.T.H boot sequence", action: "reboot" },

@@ -5,8 +5,7 @@
 //
 // Phase 3 scope: view switching + status bar text per view (including the
 // bug-fix-1 regression: Retina-V renders in numeric order, not appended
-// after Profile), toast dismissal, modifier-key fall-through, and the live
-// clock (bug fix 2).
+// after Profile), modifier-key fall-through, and the live clock (bug fix 2).
 //
 // PLAN.md Phase 1 rewrite: the window list gained two real windows
 // (0:dashboard, 5:help — items 6/13), and bare q/Esc no longer switch views
@@ -15,35 +14,13 @@
 // test below that used to drive navigation with "q" now uses a status-bar
 // click instead (see `goDashboard()`), and the dedicated q/Esc describe
 // block is inverted to assert NO navigation happens, in every view.
-import fs from "node:fs";
-import { fileURLToPath } from "node:url";
-import YAML from "yaml";
-import { expect, test, E2E_TOAST_SEED, type Page } from "./fixtures.ts";
-import { pickToastPair, TOAST_AUTO_DISMISS_MS } from "../../src/lib/notifications.ts";
-import type { NotificationEntry } from "../../src/lib/data.ts";
+import { expect, test, type Page } from "./fixtures.ts";
 // PLAN.md Phase 5B item 5B.5: this spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's
 // ~4.6s unskippable sequence never runs for these tests — see that
 // file's header comment for why this is a context-fixture override
-// rather than a per-goto-helper change. It ALSO pre-seeds the toast-seed
-// key (PLAN.md Iteration 3 Phase 2 item 2.4) to `E2E_TOAST_SEED`, so the
-// toast-dismissal tests below can compute the exact pinned pair themselves
-// (parsing the real notifications.yaml + the real picker) instead of
-// hardcoding any notification copy.
-
-const NOTIFICATIONS_YAML_PATH = fileURLToPath(
-  new URL("../../src/data/notifications.yaml", import.meta.url),
-);
-
-function loadNotificationPool(): NotificationEntry[] {
-  const doc = YAML.parse(fs.readFileSync(NOTIFICATIONS_YAML_PATH, "utf8")) as {
-    pool: NotificationEntry[];
-  };
-  return doc.pool;
-}
-
-const [pinnedToast0, pinnedToast1] = pickToastPair(loadNotificationPool(), E2E_TOAST_SEED);
+// rather than a per-goto-helper change.
 
 const STATUS_BAR = '[data-testid="status-bar-windows"]';
 
@@ -250,84 +227,40 @@ test.describe("URL sync + back/forward", () => {
   });
 });
 
-test.describe("toast notifications (seeded pool pick, PLAN.md Iteration 3 Phase 2 item 2.3/2.4; fixed-overlay/auto-dismiss presentation, PLAN.md Iteration 4 item 12)", () => {
-  test("the pinned pair renders from the notifications pool", async ({ page }) => {
-    await gotoReady(page, "/");
-    await expect(page.locator('[data-testid="toast-0"]')).toContainText(pinnedToast0.text);
-    await expect(page.locator('[data-testid="toast-1"]')).toContainText(pinnedToast1.text);
+// The old amber toast-strip system (seeded pool pick + fixed auto-dismiss
+// overlay) is retired — see tests/e2e/notifications.spec.ts for the
+// Mockup-B bell/panel/toast system that replaced it (badge, open/close,
+// tabs, read/unread/spam persistence, dismiss semantics, mark-all-read,
+// 2-new-per-visit injection, toast auto-dismiss).
+
+test.describe("dashboard rename + live footer pane count", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  // Item 12: tmux `display-message` never has a close control — messages
-  // only ever expire on their own. Both toast IDs are still rendered as
-  // plain content divs (see the pinned-pair test above), so this asserts
-  // the dismiss AFFORDANCE specifically is gone, not the toast itself.
-  test("no manual dismiss control exists on either toast", async ({ page }) => {
+  test("the tracker menu row reads plain 'Retina-V', not 'E.D.I.T.H: Retina-V'", async ({ page }) => {
     await gotoReady(page, "/");
-    await expect(page.locator('[data-testid="toast-0"]')).toBeVisible();
-    await expect(page.locator('[data-testid="toast-1"]')).toBeVisible();
-    await expect(page.locator('[data-testid="toast-0-dismiss"]')).toHaveCount(0);
-    await expect(page.locator('[data-testid="toast-1-dismiss"]')).toHaveCount(0);
+    const row = page.locator('[data-testid="dashboard-menu-row"][data-menu-id="tracker"]');
+    await expect(row).toHaveText(/Retina-V/);
+    await expect(row).not.toHaveText(/E\.D\.I\.T\.H/);
   });
 
-  // Item 12: fixed overlay, not document flow — the toast stack must never
-  // push PaneTree/the dashboard content down when it appears or up when it
-  // disappears. `dashboard-wordmark`'s bounding box is a stable proxy for
-  // "did anything in the document-flow layout move".
-  //
-  // Uses the repo's own documented fake-clock idiom (`pauseAt` on an
-  // ABSOLUTE instant, not `runFor` — see the "live clock" describe block
-  // below for why: `runFor` lets real wall-clock time leak back in between
-  // calls, which flaked once under parallel-worker load; `pauseAt` freezes
-  // the clock genuinely still) to drive the ~4s auto-dismiss deterministically.
-  test("toast overlay is a fixed, non-layout-shifting stack that auto-dismisses without input", async ({ page }) => {
-    const CLOCK_TIME = "2026-08-15T23:34:00";
-    const t0 = new Date(CLOCK_TIME).getTime();
-
-    await page.clock.install({ time: CLOCK_TIME });
-    await page.clock.pauseAt(t0); // freeze immediately, before navigation
+  test("footer reads '⚡ synced N/N panes in 48.23ms' with N the live pane count, and it grows after a split", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
+    const footer = page.getByText(/⚡ synced \d+\/\d+ panes in 48\.23ms/);
+    await expect(footer).toHaveText("⚡ synced 6/6 panes in 48.23ms");
 
-    const stack = page.locator('[data-testid="toast-stack"]');
-    await expect(stack).toBeVisible();
-    await expect(page.locator('[data-testid="toast-0"]')).toBeVisible();
-    await expect(page.locator('[data-testid="toast-1"]')).toBeVisible();
-
-    expect(await stack.evaluate((el) => getComputedStyle(el).position)).toBe("fixed");
-
-    const wordmark = page.locator('[data-testid="dashboard-wordmark"]');
-    const boxBefore = await wordmark.boundingBox();
-    expect(boxBefore).not.toBeNull();
-
-    await page.clock.pauseAt(t0 + TOAST_AUTO_DISMISS_MS + 250);
-
-    await expect(page.locator('[data-testid="toast-0"]')).toHaveCount(0);
-    await expect(page.locator('[data-testid="toast-1"]')).toHaveCount(0);
-    await expect(page.locator('[data-testid="toast-stack"]')).toHaveCount(0);
-
-    const boxAfter = await wordmark.boundingBox();
-    expect(boxAfter).not.toBeNull();
-    expect(boxAfter).toEqual(boxBefore);
-  });
-
-  test("dismissed toasts do not resurrect after leaving/returning to the dashboard", async ({ page }) => {
-    const CLOCK_TIME = "2026-08-15T23:34:00";
-    const t0 = new Date(CLOCK_TIME).getTime();
-
-    await page.clock.install({ time: CLOCK_TIME });
-    await page.clock.pauseAt(t0);
-    await gotoReady(page, "/");
-    await expect(page.locator('[data-testid="toast-0"]')).toBeVisible();
-
-    await page.clock.pauseAt(t0 + TOAST_AUTO_DISMISS_MS + 250);
-    await expect(page.locator('[data-testid="toast-0"]')).toHaveCount(0);
-    await expect(page.locator('[data-testid="toast-1"]')).toHaveCount(0);
-
-    await prefixDigit(page, "1");
-    await expect(page).toHaveURL(/\/builds$/);
-    await goDashboard(page);
-
-    await expect(page.locator('[data-testid="toast-0"]')).toHaveCount(0);
-    await expect(page.locator('[data-testid="toast-1"]')).toHaveCount(0);
+    // Split the dashboard's own pane, then come back to it — the count
+    // reads the live tmux model (session-wide, not per-window), so it must
+    // grow from 6 to 7.
+    await page.keyboard.down("Control");
+    await page.keyboard.press("b");
+    await page.keyboard.up("Control");
+    await page.keyboard.press("%");
+    await expect(page.locator('[data-testid="pane-leaf"]')).toHaveCount(2);
+    await expect(footer).toHaveText("⚡ synced 7/7 panes in 48.23ms");
   });
 });
 

@@ -121,8 +121,7 @@ export interface MenuEntry {
 export interface DashboardData {
   plate: { title: string };
   menu: MenuEntry[];
-  footer: { syncLine: string; switchingTemplate: string };
-  toasts: { closeIcon: string };
+  footer: { syncLineTemplate: string; switchingTemplate: string };
 }
 
 export const getDashboard = (): DashboardData => loadYaml<DashboardData>("dashboard.yaml");
@@ -131,15 +130,50 @@ export const getDashboard = (): DashboardData => loadYaml<DashboardData>("dashbo
 // notifications.yaml
 // ---------------------------------------------------------------------------
 
-export interface NotificationEntry {
+/** A notification pool entry (src/lib/notificationStore.ts's `PoolEntry`,
+ * re-declared here rather than imported so this build-time loader stays
+ * framework/runtime agnostic — same convention every other *Data interface
+ * in this file follows). */
+export interface NotificationPoolEntry {
   id: string;
-  icon: string;
+  sev: "alert" | "warn" | "info";
+  title: string;
+  body: string;
+  src: string;
+}
+
+export interface NotificationsFooterHint {
+  key: string;
+  label: string;
+}
+
+export interface NotificationsUi {
+  bellTitle: string;
   badge: string;
-  text: string;
+  title: string;
+  version: string;
+  feedStatusUnread: string;
+  feedStatusClear: string;
+  closeGlyph: string;
+  tabs: { inbox: string; alerts: string; archive: string; spam: string };
+  spamBanner: string;
+  emptyGlyph: string;
+  empty: { inbox: string; alerts: string; archive: string; spam: string };
+  readTitleMarkRead: string;
+  readTitleMarkUnread: string;
+  dismissTitleArchive: string;
+  dismissTitleDelete: string;
+  dismissGlyphArchive: string;
+  dismissGlyphDelete: string;
+  spamActionTitle: string;
+  spamActionGlyph: string;
+  footerHints: NotificationsFooterHint[];
+  markAllRead: string;
 }
 
 export interface NotificationsData {
-  pool: NotificationEntry[];
+  ui: NotificationsUi;
+  pool: NotificationPoolEntry[];
 }
 
 export const getNotifications = (): NotificationsData => loadYaml<NotificationsData>("notifications.yaml");

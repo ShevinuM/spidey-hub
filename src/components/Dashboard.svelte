@@ -16,10 +16,16 @@
      * row's hotkey column can show the real `C-b N` binding for that view
      * instead of a fixed table. */
     windowNumbers: Record<string, number>;
+    /** Live count of every pane across every window of the active session
+     * (src/lib/tmux.ts `allPanes`, summed) — the footer's "synced N/N panes"
+     * reads real session state instead of a hardcoded number. */
+    paneCount: number;
     onSelect: (view: ViewId) => void;
   }
 
-  const { dashboard, isFocused, windowNumbers, onSelect }: Props = $props();
+  const { dashboard, isFocused, windowNumbers, paneCount, onSelect }: Props = $props();
+
+  const syncLine = $derived(dashboard.footer.syncLineTemplate.replaceAll("{n}", String(paneCount)));
 
   function pick(menuId: string) {
     const view = menuIdToView(menuId);
@@ -104,7 +110,7 @@
     </div>
 
     <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
-      <div style="font-size:clamp(11px,2.2vh,14px);color:rgba(224,69,60,.9)">{dashboard.footer.syncLine}</div>
+      <div style="font-size:clamp(11px,2.2vh,14px);color:rgba(224,69,60,.9)">{syncLine}</div>
     </div>
   </div>
 </div>

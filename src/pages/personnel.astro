@@ -24,6 +24,10 @@ const chooseTree = getChooseTree();
 const projects = await getCollection("projects");
 const personnelEntries = await getCollection("personnel");
 const commitsByRepo = getCommitsByRepo(projects);
+// PORTFOLIO_FIXTURES gates the notification system into a fixed,
+// hand-authored state for deterministic golden capture (Notifications.svelte's
+// own header comment) — read server-side only, never client-side.
+const notificationsFixtureMode = process.env.PORTFOLIO_FIXTURES === "1";
 ---
 
 <Shell title="Personnel — shevinum.dev">
@@ -33,6 +37,7 @@ const commitsByRepo = getCommitsByRepo(projects);
     {site}
     {dashboard}
     {notifications}
+    {notificationsFixtureMode}
     {tracker}
     {profile}
     {builds}

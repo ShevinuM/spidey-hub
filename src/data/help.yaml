@@ -440,7 +440,7 @@ scopes:
         desc: "Plays once automatically when you open the site; can't be skipped."
       - name: "Reboot"
         keys: ["r"]
-        desc: "Restarts the session from a blank terminal, from anywhere."
+        desc: "Restarts the session."
       - name: "Reboot (mouse)"
         keys: ["click ↻"]
         desc: "Switches to the dashboard and restarts the session."

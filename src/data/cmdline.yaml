@@ -74,7 +74,7 @@ commands:
     description: "jump to Profile"
     action: "view:profile"
   - name: "retina-v"
-    description: "jump to E.D.I.T.H: Retina-V"
+    description: "jump to Retina-V"
     action: "view:retina-v"
   - name: "help"
     description: "jump to Help"

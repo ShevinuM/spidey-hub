@@ -23,33 +23,52 @@
 // instead of this module — it exists to exercise the real (non-skipped)
 // boot sequence.
 //
-// PLAN.md Iteration 3 Phase 2 item 2.4: also pre-seeds
-// TOAST_SEED_STORAGE_KEY (src/lib/notifications.ts) so the dashboard's
-// seeded 2-of-pool toast pick (Locked decision #12) is pinned to a known
-// value for every test importing this module — Toasts.svelte reads the key
-// at pick time (onMount), same "set before any navigation" contract as the
-// boot-seen flag above. `E2E_TOAST_SEED` is exported so specs can compute
-// the expected pinned pair themselves via `pickToastPair(pool, E2E_TOAST_SEED)`
-// instead of hardcoding toast copy (content-purity: no notification string
-// lives in a test file either).
+// Also pre-seeds two src/lib/notificationStore.ts sessionStorage overrides
+// so every test importing this module gets deterministic notification
+// behavior without sleeping through real severity timers:
+//   - NOTIFICATIONS_INJECT_SEED_STORAGE_KEY pins WHICH 2 unseen pool entries
+//     get injected per visit (Notifications.svelte reads it via
+//     resolveInjectRand() at mount, same "set before any navigation"
+//     contract as the boot-seen flag). `E2E_NOTIFICATIONS_INJECT_SEED` is
+//     exported so a spec can compute the exact expected picks itself via
+//     `pickRandomUnseen(pool, seenIds, 2, mulberry32(seed))` instead of
+//     hardcoding notification copy.
+//   - TOAST_DURATION_SCALE_STORAGE_KEY shrinks every toast's dismiss timer
+//     (alert 10s/warn 5s/info 3s) by this factor, so a spec can observe an
+//     auto-dismissal in well under a second instead of waiting out the real
+//     duration. `E2E_TOAST_DURATION_SCALE` is exported for the same reason.
 import { test as base, expect, type Page, type BrowserContext } from "@playwright/test";
 import { BOOT_SEEN_STORAGE_KEY } from "../../src/lib/bootState.ts";
-import { TOAST_SEED_STORAGE_KEY } from "../../src/lib/notifications.ts";
+import { NOTIFICATIONS_INJECT_SEED_STORAGE_KEY, TOAST_DURATION_SCALE_STORAGE_KEY } from "../../src/lib/notificationStore.ts";
 
-export const E2E_TOAST_SEED = 424242;
+export const E2E_NOTIFICATIONS_INJECT_SEED = 424242;
+// 0.3 keeps even the shortest (info, 3s) severity's scaled duration (900ms)
+// comfortably longer than the toast's own FIXED (never scaled) .34s
+// entrance animation — too aggressive a scale (e.g. 0.02) lets a toast's
+// dismiss timer fire WHILE it's still mid-entrance-transform, which starves
+// Playwright's hover() actionability check (it requires a stable bounding
+// box) and flakes with "element was detached from the DOM, retrying".
+export const E2E_TOAST_DURATION_SCALE = 0.3;
 
 export const test = base.extend<{ context: BrowserContext }>({
   context: async ({ context }, use) => {
     await context.addInitScript(
-      ({ bootKey, toastSeedKey, toastSeed }) => {
+      ({ bootKey, injectSeedKey, injectSeed, durationScaleKey, durationScale }) => {
         try {
           sessionStorage.setItem(bootKey, "1");
-          sessionStorage.setItem(toastSeedKey, String(toastSeed));
+          sessionStorage.setItem(injectSeedKey, String(injectSeed));
+          sessionStorage.setItem(durationScaleKey, String(durationScale));
         } catch {
           // ignore — same best-effort contract as src/lib/bootState.ts
         }
       },
-      { bootKey: BOOT_SEEN_STORAGE_KEY, toastSeedKey: TOAST_SEED_STORAGE_KEY, toastSeed: E2E_TOAST_SEED },
+      {
+        bootKey: BOOT_SEEN_STORAGE_KEY,
+        injectSeedKey: NOTIFICATIONS_INJECT_SEED_STORAGE_KEY,
+        injectSeed: E2E_NOTIFICATIONS_INJECT_SEED,
+        durationScaleKey: TOAST_DURATION_SCALE_STORAGE_KEY,
+        durationScale: E2E_TOAST_DURATION_SCALE,
+      },
     );
     await use(context);
   },

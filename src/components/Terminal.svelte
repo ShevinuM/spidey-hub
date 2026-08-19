@@ -78,7 +78,7 @@
   import StatusBar from "./StatusBar.svelte";
   import PaneTree from "./PaneTree.svelte";
   import Shell from "./Shell.svelte";
-  import Toasts from "./Toasts.svelte";
+  import Notifications from "./Notifications.svelte";
   import GrepOverlay from "./GrepOverlay.svelte";
   import CopyMode from "./CopyMode.svelte";
   import ChooseTree from "./ChooseTree.svelte";
@@ -117,6 +117,12 @@
     site: SiteData;
     dashboard: DashboardData;
     notifications: NotificationsData;
+    /** Server-computed `process.env.PORTFOLIO_FIXTURES === "1"` (read in the
+     * page's Astro frontmatter, never client-side — see Notifications.svelte's
+     * own header comment for why). Gates the notification system into a
+     * fixed, hand-authored state with no localStorage, no per-visit
+     * injection, and no toasts, for deterministic golden capture. */
+    notificationsFixtureMode: boolean;
     tracker: TrackerData;
     profile: ProfileData;
     builds: BuildsData;
@@ -139,6 +145,7 @@
     site,
     dashboard,
     notifications,
+    notificationsFixtureMode,
     tracker,
     profile,
     builds,
@@ -345,8 +352,7 @@
       hostNarrative: seedHostNarrative(shell, DEFAULT_SESSION_NAME),
     }),
   );
-  let offToast0 = $state(false);
-  let offToast1 = $state(false);
+  let notificationsRef = $state<{ handleKey: (e: KeyboardEvent) => boolean; close?: () => void } | null>(null);
 
   // Mobile-block JS guard (README "Mobile policy"): listeners/timers only
   // attach while the viewport is desktop-sized with a fine pointer. The
@@ -411,6 +417,11 @@
    * accent (a single-pane window shows no border, matching real tmux — see
    * PaneTree.svelte's own header comment). */
   const multiPane = $derived(activeWindow ? allPanes(activeWindow.root).length > 1 : false);
+
+  /** Live pane count across every window of the active session — the
+   * dashboard footer's "synced N/N panes" line reads this instead of a
+   * hardcoded number. 0 while detached (no session owns any panes then). */
+  const totalPaneCount = $derived(activeSession ? activeSession.windows.reduce((sum, w) => sum + allPanes(w.root).length, 0) : 0);
 
   /** StatusBar's real tmux `-` flag (PLAN.md Iteration 3 Phase 4 item 4.3
    * tmux fidelity reference) — the session's previously-active window.
@@ -626,9 +637,11 @@
    * seed above uses) rather than merely switching the EXISTING client back
    * to the dashboard window (this function's interim Phase 4.1-4.3 form) —
    * every window/pane/program/shell buffer resets, not just the active
-   * one. Toast dismissals (`offToast0`/`offToast1`) are the other half of
-   * "factory state" this phase's Locked decision covers (in-memory, no
-   * persistence) and reset alongside it. `grepRef` is closed explicitly
+   * one. The signal-inbox PANEL (open/closed, queued toasts) is in-memory,
+   * ephemeral UI state, closed here alongside every other overlay — the
+   * persisted read/unread/archive/spam data in localStorage is untouched
+   * (reboot resets the session, not the visitor's inbox history).
+   * `grepRef` is closed explicitly
    * here (unlike every other window-switch entry point, which gets it for
    * free from `switchActiveWindow`'s own `closeWindowChrome()` — reboot no
    * longer routes through that helper now that it rebuilds `client`
@@ -640,6 +653,7 @@
     helpSearchRef?.close?.();
     chooseTreeRef?.close?.();
     grepRef?.close?.();
+    notificationsRef?.close?.();
     client = createFactoryClient({
       sessionId: DEFAULT_SESSION_ID,
       sessionName: DEFAULT_SESSION_NAME,
@@ -648,8 +662,6 @@
       activeWindowId: "dashboard",
       hostNarrative: seedHostNarrative(shell, DEFAULT_SESSION_NAME),
     });
-    offToast0 = false;
-    offToast1 = false;
     syncUrl();
     bootRef?.replay();
   }
@@ -1741,6 +1753,17 @@
     // keys fall through untouched).
     if (e.metaKey || e.ctrlKey || e.altKey) return;
 
+    // Signal-inbox bell/panel (Decision 6, dashboard view only): a bare `n`
+    // toggles the panel, `Esc` closes it (Notifications.svelte's own
+    // handleKey only consumes Esc while the panel is actually open, so it
+    // falls through otherwise). Placed in this same bare-key backstop
+    // section as the reboot check below so it only ever fires once every
+    // pane/overlay/input above has refused the keydown — an open editor,
+    // shell pane, grep query, etc. all still win first refusal over `n`/Esc.
+    if (view === "home" && notificationsRef?.handleKey(e)) {
+      return;
+    }
+
     const k = e.key.toLowerCase();
 
     // Global reboot backstop: a bare `r` reboots from anywhere, but only
@@ -1779,19 +1802,26 @@
 >
   <Wallpaper {tracker} view={view ?? "home"} dim={!activeSession} isRetinaFocused={activeProgram === "retina-v"} />
 
+  {#if view === "home"}
+    <!-- Dashboard-only central red glow (Mockup B, Decision 7) — a fixed
+         layer between the wallpaper and the pane content, never intercepting
+         clicks. -->
+    <div
+      aria-hidden="true"
+      style="position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(900px 520px at 50% 42%,rgba(229,72,77,.10),transparent 70%),radial-gradient(700px 400px at 82% 78%,rgba(79,209,197,.05),transparent 70%)"
+    ></div>
+  {/if}
+
   <div style="position:relative;z-index:2;height:100vh;overflow:hidden;display:flex;flex-direction:column">
     {#if activeSession}
       <!-- Attached (PLAN.md Iteration 3 Phase 5 item 5.1) — the non-null
            assertions below are safe: this whole branch only renders while
            `activeSession` (hence `activeWindow`) is defined. -->
-      <Toasts
-        toasts={dashboard.toasts}
+      <Notifications
+        bind:this={notificationsRef}
         {notifications}
         view={view!}
-        {offToast0}
-        {offToast1}
-        onHideToast0={() => (offToast0 = true)}
-        onHideToast1={() => (offToast1 = true)}
+        fixtureMode={notificationsFixtureMode}
       />
 
       <PaneTree
@@ -1801,6 +1831,7 @@
         refs={paneRefs}
         {dashboard}
         {windowNumberById}
+        paneCount={totalPaneCount}
         {builds}
         {personnel}
         {profile}

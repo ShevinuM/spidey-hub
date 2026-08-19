@@ -10,24 +10,13 @@
 // reboot's factory-reset of BOTH the tmux client and every pane's shell
 // buffer, and the window-chrome delegation contract ("?"/":" type into a
 // focused shell instead of opening HelpSearch/Cmdline/Grep).
-import { expect, test, E2E_TOAST_SEED, type Page } from "./fixtures.ts";
+import { expect, test, type Page } from "./fixtures.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 import { listDir, renderTree, type FsEntry } from "../../src/lib/shell.ts";
-import { pickToastPair, TOAST_AUTO_DISMISS_MS } from "../../src/lib/notifications.ts";
-import type { NotificationEntry } from "../../src/lib/data.ts";
 
 const ROOT = join(import.meta.dirname, "../..");
-
-function loadNotificationPool(): NotificationEntry[] {
-  const doc = YAML.parse(readFileSync(join(ROOT, "src/data/notifications.yaml"), "utf8")) as {
-    pool: NotificationEntry[];
-  };
-  return doc.pool;
-}
-
-const [pinnedToast0, pinnedToast1] = pickToastPair(loadNotificationPool(), E2E_TOAST_SEED);
 
 // Reboot replays the real (unskippable) boot sequence with real wall-clock
 // timers — a MANUAL trigger independent of the boot-seen sessionStorage flag
@@ -415,36 +404,9 @@ test.describe("reboot factory-resets the tmux client AND every pane's shell stat
     await expect(page.locator('[data-testid="shell-line"]')).toHaveCount(0);
   });
 
-  test("reboot also clears toast dismissals (PLAN.md item 4.4's own 'and clears toast dismissals')", async ({
-    page,
-  }) => {
-    // PLAN.md Iteration 4 item 12 replaced the manual per-toast ✕ dismiss
-    // with a single tmux `display-message`-style auto-dismiss timer that
-    // clears BOTH toasts together (no more independent per-toast dismiss
-    // state to exercise one at a time) — this test now reaches "dismissed"
-    // state by letting that timer fire instead of clicking a control that
-    // no longer exists, but still asserts the same underlying contract:
-    // reboot factory-resets the in-memory dismissal state.
-    await page.clock.install({ time: CLOCK_TIME });
-    await gotoReady(page, "/");
-    await expect(page.locator('[data-testid="toast-0"]')).toContainText(pinnedToast0.text);
-    await expect(page.locator('[data-testid="toast-1"]')).toContainText(pinnedToast1.text);
-
-    await page.clock.runFor(TOAST_AUTO_DISMISS_MS + 100);
-    await expect(page.locator('[data-testid="toast-0"]')).toHaveCount(0);
-    await expect(page.locator('[data-testid="toast-1"]')).toHaveCount(0);
-
-    await page.locator('[data-testid="status-bar-reboot"]').click();
-    await expect(page.locator('[data-testid="boot-sequence"]')).toBeVisible();
-    await page.clock.runFor(HARD_STOP_MS + OUT_MS + 100);
-    await expect(page.locator('[data-testid="boot-sequence"]')).toHaveCount(0);
-
-    // Both toasts render again — the dismissal was in-memory, factory-reset
-    // by reboot, same seeded pair (the toast-seed sessionStorage key this
-    // spec's shared context fixture pins is untouched by reboot).
-    await expect(page.locator('[data-testid="toast-0"]')).toContainText(pinnedToast0.text);
-    await expect(page.locator('[data-testid="toast-1"]')).toContainText(pinnedToast1.text);
-  });
+  // The old amber toast system's "reboot clears in-memory dismissals" case
+  // is retired along with it — see tests/e2e/notifications.spec.ts's own
+  // reboot-closes-the-panel coverage for the Mockup-B replacement.
 });
 
 test.describe("window-chrome delegation: a focused shell owns `?`/`:`/`/` (PLAN.md Architecture notes)", () => {
