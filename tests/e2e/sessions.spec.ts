@@ -165,7 +165,11 @@ test.describe("tmux ls (real tmux fidelity)", () => {
   });
 
   test("lists the default session with NO (attached) suffix while detached — exact format", async ({ page }) => {
-    await page.clock.install({ time: CLOCK_TIME });
+    // `clock.install` alone drifts with real wall-clock time (see
+    // nav.spec.ts's "live clock" test) — `setFixedTime` pins `Date.now()`
+    // outright, which this exact ctime-string equality requires. No fake
+    // timers are needed here, so `install` is skipped entirely.
+    await page.clock.setFixedTime(CLOCK_TIME);
     await gotoReady(page, "/");
     await detach(page);
     await runInShell(page, "tmux ls");
@@ -178,7 +182,9 @@ test.describe("tmux ls (real tmux fidelity)", () => {
   });
 
   test("shows (attached) for the currently attached session from inside a PANE shell", async ({ page }) => {
-    await page.clock.install({ time: CLOCK_TIME });
+    // See the sibling "no (attached) suffix" test above for why
+    // `setFixedTime` is required here too.
+    await page.clock.setFixedTime(CLOCK_TIME);
     await gotoReady(page, "/");
     await page.keyboard.press(":");
     await runInShell(page, "q");
@@ -195,7 +201,12 @@ test.describe("tmux ls (real tmux fidelity)", () => {
   test("lists EVERY session while detached — two rows, correct formats, NO (attached) suffix on either", async ({
     page,
   }) => {
-    await page.clock.install({ time: CLOCK_TIME });
+    // Frozen for the WHOLE test (not just at load): the second session is
+    // created later, mid-test, and must stamp the identical ctime as the
+    // first — `install` alone would let real time drift in between under
+    // parallel-worker load, splitting the two rows' seconds. `setFixedTime`
+    // pins `Date.now()` outright with no fake-timer machinery needed.
+    await page.clock.setFixedTime(CLOCK_TIME);
     await gotoReady(page, "/");
     await detach(page);
     await runInShell(page, "tmux new -s test"); // creates + attaches "test"
