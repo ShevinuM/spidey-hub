@@ -71,6 +71,7 @@
   import type { PersonnelData, CompanyEntry } from "../lib/data";
   import { classifyBody, colorFor } from "../lib/docline";
   import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
+  import { iconSvgForPath } from "../lib/fileIcons";
   import Editor, { type EditorLine } from "./Editor.svelte";
 
   type RoleEntry = CollectionEntry<"personnel">;
@@ -623,22 +624,6 @@
   >
 {/snippet}
 
-{#snippet fileIcon()}
-  <svg
-    data-icon="file"
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    aria-hidden="true"
-    ><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" /><path d="M14 2v5h5" /></svg
-  >
-{/snippet}
-
 {#snippet upIcon()}
   <svg
     data-icon="up"
@@ -690,8 +675,8 @@
               }}
               style={rowStyle(i === sel)}
             >
-              <span style="width:14px;flex:none;color:rgba(196,216,232,.55);display:inline-flex">
-                {#if row.kind === "file"}{@render fileIcon()}{:else if row.kind === "dir"}{@render folderIcon()}{:else}{@render upIcon()}{/if}
+              <span style="width:14px;height:14px;flex:none;color:rgba(196,216,232,.55);display:inline-flex" aria-hidden="true">
+                {#if row.kind === "file"}{@html iconSvgForPath(row.name)}{:else if row.kind === "dir"}{@render folderIcon()}{:else}{@render upIcon()}{/if}
               </span>
               <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{row.name}</span>
               <span style="flex:none;white-space:nowrap;color:rgba(95,198,180,.75)">{row.meta}</span>

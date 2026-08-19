@@ -42,7 +42,8 @@
     type ShellMode,
     type FsEntry,
   } from "../lib/shell";
-  import { loadFsIndex, loadGrepFiles, loadRepoFiles } from "../lib/shellIndex";
+  import { loadFsIndex, loadGrepFiles, loadRepoIndex } from "../lib/shellIndex";
+  import { repoFileText, type TokenSpan } from "../lib/repoTree";
   import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
   import { resolvePageEpoch } from "../lib/clock";
   import { classifyDoc, colorFor, docColors } from "../lib/docline";
@@ -141,13 +142,36 @@
       return (t) => (t.kind === "site" ? files.find((f) => f.path === t.path)?.lines.join("\n") : undefined);
     }
     if (target.kind === "repo") {
-      const files = await loadRepoFiles(target.repo).catch(() => []);
-      return (t) => (t.kind === "repo" && t.repo === target.repo ? files.find((f) => f.path === t.path)?.lines.join("\n") : undefined);
+      const files = await loadRepoIndex(target.repo)
+        .then((i) => i.files)
+        .catch(() => []);
+      return (t) => {
+        if (t.kind !== "repo" || t.repo !== target.repo) return undefined;
+        const file = files.find((f) => f.path === t.path);
+        return file ? repoFileText(file).join("\n") : undefined;
+      };
     }
     return () => undefined;
   }
 
-  function applyEffect(effect: ShellEffect) {
+  /** `vim repos/<name>/…` reuses the SAME tokenized lines Builds' own editor
+   * shows for that file (the repo index is already warmed by
+   * `buildResolveContent` above by the time this runs) — a site file (`cat`/
+   * `vim` over grep-index.json) has no tokens to find and always falls back
+   * flat, same as any other cache-miss/fetch-failure this shell tolerates. */
+  async function tokensFor(target: CatTarget | null): Promise<{ tokens?: TokenSpan[][]; palette?: string[] }> {
+    if (!target || target.kind !== "repo") return {};
+    try {
+      const index = await loadRepoIndex(target.repo);
+      const file = index.files.find((f) => f.path === target.path);
+      if (!file?.tok) return {};
+      return { tokens: file.lines as TokenSpan[][], palette: index.palette };
+    } catch {
+      return {};
+    }
+  }
+
+  async function applyEffect(effect: ShellEffect, target: CatTarget | null) {
     if (effect.kind === "launch") onLaunch(effect.program);
     else if (effect.kind === "exit-pane") onExit();
     else if (effect.kind === "reboot") onReboot();
@@ -155,7 +179,8 @@
     else if (effect.kind === "create-and-attach") onCreateAndAttach?.(effect.name);
     else if (effect.kind === "attach-view") onAttachView?.(effect.sessionId, effect.view, effect.windowExists);
     else if (effect.kind === "open-editor") {
-      editorFile = { path: effect.path, content: effect.content };
+      const { tokens, palette } = await tokensFor(target);
+      editorFile = { path: effect.path, content: effect.content, tokens, palette };
     }
   }
 
@@ -173,6 +198,11 @@
   interface EditorFileState {
     path: string;
     content: string;
+    /** Present only for a `vim repos/<name>/…` open whose file generate.mjs
+     * tokenized — a plain `cat`/`vim` site-file open never has these (see
+     * tokensFor's own comment). */
+    tokens?: TokenSpan[][];
+    palette?: string[];
   }
   let editorFile = $state<EditorFileState | null>(null);
   let editorRef = $state<{
@@ -188,8 +218,14 @@
       const kinds = classifyDoc(lines, "project");
       return lines.map((raw, i) => ({ n: i + 1, t: raw === "" ? " " : raw, style: colorFor(kinds[i], "project") }));
     }
+    if (editorFile.tokens) {
+      const tokens = editorFile.tokens;
+      return lines.map((raw, i) => ({ n: i + 1, t: raw === "" ? " " : tokens[i], style: docColors.p }));
+    }
     return lines.map((raw, i) => ({ n: i + 1, t: raw === "" ? " " : raw, style: docColors.p }));
   });
+
+  const editorPalette = $derived(editorFile?.palette ?? []);
 
   const editorFileName = $derived(editorFile ? editorFile.path.split("/").pop()! : "");
 
@@ -249,8 +285,9 @@
     const entries = await ensureFsEntries();
     const { cmd, args } = parseLine(raw);
     let resolveContent: (t: CatTarget) => string | undefined = () => undefined;
+    let target: CatTarget | null = null;
     if ((cmd === "cat" || cmd === "vim" || cmd === "vi" || cmd === "nvim") && args[0]) {
-      const target = resolveCatTarget(entries, pane.shell.cwd, args[0]);
+      target = resolveCatTarget(entries, pane.shell.cwd, args[0]);
       resolveContent = await buildResolveContent(target);
     }
     const outcome = runCommand(pane.shell, raw, {
@@ -287,7 +324,7 @@
       historyIndex: pane.shell.historyIndex,
       draftBeforeHistory: pane.shell.draftBeforeHistory,
     };
-    applyEffect(outcome.effect);
+    await applyEffect(outcome.effect, target);
   }
 
   /** Delegation contract (PLAN.md Architecture notes): consumes printable
@@ -362,6 +399,7 @@
     bind:this={editorRef}
     fileName={editorFileName}
     lines={editorLines}
+    palette={editorPalette}
     labels={shell.editor}
     breadcrumbLeft={mode === "host" ? "host" : "shell"}
     breadcrumbRight={editorFile.path}

@@ -73,12 +73,12 @@ Verification: `pnpm check`, `pnpm test:unit`, `pnpm test:e2e` green; no-wrap pro
 Verification: `pnpm check`, unit, e2e green; screenshot pass at both viewports comparing panel/toasts to mockup; verifier confirms sim buttons/auto-emit absent; localStorage persistence proven by reload test. Commit.
 
 ### Phase 4 — File icons + syntax highlighting
-- [ ] 4.1 `pnpm add -D shiki material-file-icons` (+ needed `@shikijs/langs/*`/theme helpers if separate).
-- [ ] 4.2 generate.mjs: build ext→icon map (`material-file-icons.getIcon`) over all extensions/filenames present in fs-index, repos indexes, and site grep-index → write `src/generated/file-icons.json` (only used icons). Folder/caret icons stay as-is.
-- [ ] 4.3 Icons wired into Builds tree rows, Personnel browser rows, GrepOverlay rows (replacing `grep.yaml` fileKinds glyphs). Sized to current row metrics; `aria-hidden`.
-- [ ] 4.4 generate.mjs: Shiki `createHighlighterCore` + JS regex engine + per-language grammars for every TEXT_EXTENSIONS language; custom terminal theme mapped to site palette; `codeToTokensBase` per file → per-line token arrays `[ [colorIndex, text], … ]` + one palette array per repo JSON; skip files > existing SIZE_CAP (flat fallback). Markdown NOT tokenized (docline path kept).
-- [ ] 4.5 `Editor.svelte`: `EditorLine.t: string | tokens`; token render path via `{#each}` spans (no `{@html}`). `Builds.svelte` editorLines derivation + the shell `vim` path (which opens the Editor) pass tokens for code files. Shell `cat` output stays PLAIN text (real terminals don't colorize cat; residual if ever wanted).
-- [ ] 4.6 Regenerate indexes; unit tests for token pipeline (a fixture file tokenizes deterministically; palette-index round-trip); update fixtures for visual/e2e as needed.
+- [x] 4.1 `pnpm add -D shiki material-file-icons` (+ needed `@shikijs/langs/*`/theme helpers if separate).
+- [x] 4.2 generate.mjs: build ext→icon map (`material-file-icons.getIcon`) over all extensions/filenames present in fs-index, repos indexes, and site grep-index → write `src/generated/file-icons.json` (only used icons). Folder/caret icons stay as-is.
+- [x] 4.3 Icons wired into Builds tree rows, Personnel browser rows, GrepOverlay rows (replacing `grep.yaml` fileKinds glyphs). Sized to current row metrics; `aria-hidden`.
+- [x] 4.4 generate.mjs: Shiki `createHighlighterCore` + JS regex engine + per-language grammars for every TEXT_EXTENSIONS language; custom terminal theme mapped to site palette; `codeToTokensBase` per file → per-line token arrays `[ [colorIndex, text], … ]` + one palette array per repo JSON; skip files > existing SIZE_CAP (flat fallback). Markdown NOT tokenized (docline path kept).
+- [x] 4.5 `Editor.svelte`: `EditorLine.t: string | tokens`; token render path via `{#each}` spans (no `{@html}`). `Builds.svelte` editorLines derivation + the shell `vim` path (which opens the Editor) pass tokens for code files. Shell `cat` output stays PLAIN text (real terminals don't colorize cat; residual if ever wanted).
+- [x] 4.6 Regenerate indexes; unit tests for token pipeline (a fixture file tokenizes deterministically; palette-index round-trip); update fixtures for visual/e2e as needed.
 
 Verification: `pnpm check`, unit, e2e green; `pnpm generate` succeeds; probe: open a .ts file in Builds editor → multiple distinct token colors in DOM; open .md → docline colors unchanged; repo JSON size growth reported (must stay < 3× current per file); icons visible in Builds/Personnel/Grep screenshots. Commit.
 
@@ -86,6 +86,7 @@ Verification: `pnpm check`, unit, e2e green; `pnpm generate` succeeds; probe: op
 - [ ] 5.1 Wallpaper constants per Decision 8.
 - [ ] 5.2 Personnel filter: REPRODUCE the click bug first — an `onclick` already exists on the prompt span (Personnel.svelte:752-759), so the real failure is likely focus/pane gating or a tiny hit target; root-cause, then fix. Then: bordered filter row (matches site panel border style `rgba(224,69,60,.35)`) with `> ` prompt, blinking cursor, right-aligned `N / N` count; whole row clickable to enter filter mode (f still works); filter box visible in both idle and active states.
 - [ ] 5.3 Update personnel e2e for the new filter affordance.
+- [ ] 5.4 Fix-forward from Phase 3: `builds.yaml` commandLog still says "Press t for Retina-V" and references removed j/k nav — reword truthfully (arrows/click, no t). Also finish the README keymap truthfulness pass: Builds j/k and gg/G rows, choose-tree j/k row, Grep overlay gg/G row, Personnel "returns to normal j/k navigation" line (README is user-facing via the site's cat/grep).
 
 Verification: `pnpm check`, unit, e2e green; screenshots: dashboard/builds/personnel show more visible tracker background; personnel filter row has visible border + count; click-only filter entry proven in e2e. Commit.
 

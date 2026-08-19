@@ -43,10 +43,11 @@
   // `build:fixtures`).
   import type { ViewId } from "../lib/views";
   import { grepPathToView } from "../lib/views";
-  import type { GrepData, FileKind } from "../lib/data";
+  import type { GrepData } from "../lib/data";
   import { search, formatCount, type RepoFile } from "../lib/grep";
   import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
   import { STATUS_BAR_HEIGHT_PX } from "../lib/layout";
+  import { iconSvgForPath } from "../lib/fileIcons";
 
   interface Props {
     grep: GrepData;
@@ -102,15 +103,9 @@
         : "",
   );
 
-  function kindOf(path: string): FileKind {
-    const ext = path.split(".").pop() ?? "";
-    return grep.fileKinds[ext] ?? grep.fileKindFallback;
-  }
-
   interface Row {
     idx: number;
     icon: string;
-    iconColor: string;
     path: string;
     pathColor: string;
     selected: boolean;
@@ -125,13 +120,11 @@
     hits.slice(start, start + listVis).map((h, i): Row => {
       const at = start + i;
       const selected = at === gsel;
-      const kind = kindOf(h.path);
       return {
         idx: at,
-        icon: kind[0],
-        iconColor: kind[1],
+        icon: iconSvgForPath(h.path),
         path: h.path,
-        pathColor: selected ? "#f4ece9" : kind[1],
+        pathColor: selected ? "#f4ece9" : "rgba(196,216,232,.66)",
         selected,
         pos: h.line ? grep.rowPosTemplate.replace("{line}", String(h.line)).replace("{col}", String(h.col)) : "",
         pre: h.pre,
@@ -408,7 +401,7 @@
                 }}
                 style={r.style}
               >
-                <span style={`color:${r.iconColor};font-size:11px;width:14px;flex:none;text-align:center`}>{r.icon}</span>
+                <span style="width:14px;height:14px;flex:none;display:inline-flex" aria-hidden="true">{@html r.icon}</span>
                 <span style={`flex:none;color:${r.pathColor}`}>{r.path}</span>
                 <span style="flex:none;color:#5fc6b4">{r.pos}</span>
                 <span style="min-width:0;overflow:hidden;text-overflow:ellipsis"

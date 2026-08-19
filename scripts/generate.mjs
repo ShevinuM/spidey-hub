@@ -38,6 +38,8 @@ import {
 } from "node:fs";
 import { join, relative, extname, basename, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { getIcon, defaultIcon } from "material-file-icons";
+import { tokenizeFile, PaletteBuilder } from "../src/lib/highlight.ts";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SIZE_CAP = 200 * 1024; // 200KB
@@ -164,7 +166,23 @@ const REPOS = [
   "Data-Structures-And-Algorithms",
 ];
 
-function generateRepoIndexes() {
+/**
+ * Tokenizes one already-walked file entry in place: on success replaces
+ * `lines: string[]` with `{tok: 1, lines: TokenSpan[][]}` (colors resolved
+ * against `palette`, shared across the whole repo JSON); any fallback case
+ * (no grammar for the extension, over SIZE_CAP, tokenizer throws, or a
+ * lossless round-trip check fails) leaves the entry as flat plain-text
+ * lines, unchanged.
+ */
+async function tokenizeRepoFile(file, palette) {
+  const ext = extname(file.path).slice(1).toLowerCase();
+  const text = file.lines.join("\n");
+  const tokenLines = await tokenizeFile(ext, text, palette, SIZE_CAP);
+  if (!tokenLines) return file;
+  return { path: file.path, tok: 1, lines: tokenLines };
+}
+
+async function generateRepoIndexes() {
   const outDir = join(ROOT, "public/generated/repos");
   mkdirSync(outDir, { recursive: true });
   for (const name of REPOS) {
@@ -179,9 +197,17 @@ function generateRepoIndexes() {
     // beyond that, but pass an empty set for symmetry/clarity.
     walk(repoDir, new Set(), files, repoDir);
     files.sort((a, b) => a.path.localeCompare(b.path));
-    const index = { name, files };
+    const palette = new PaletteBuilder();
+    const tokenized = [];
+    for (const file of files) {
+      tokenized.push(await tokenizeRepoFile(file, palette));
+    }
+    const index = { name, palette: palette.palette, files: tokenized };
     writeFileSync(join(outDir, `${name}.json`), JSON.stringify(index) + "\n");
-    console.log(`[generate] public/generated/repos/${name}.json — ${files.length} text files`);
+    const tokCount = tokenized.filter((f) => f.tok === 1).length;
+    console.log(
+      `[generate] public/generated/repos/${name}.json — ${files.length} text files (${tokCount} tokenized)`,
+    );
   }
 }
 
@@ -450,9 +476,88 @@ async function generateCommitSnapshots() {
 }
 
 // ---------------------------------------------------------------------------
+// 4. File icons (src/generated/file-icons.json) — a curated ext/filename ->
+//    Material-icon-theme SVG map, resolved from material-file-icons at
+//    generate time so the client bundle only ever carries the icons this
+//    site actually shows (never the library's full ~380-icon set).
+//
+// Two-level indirection (`icons` keyed by icon NAME, `byExt`/`byName` keyed
+// by the lookup the UI actually has on hand) so a dozen extensions sharing
+// one icon (jpg/jpeg/png/gif -> "image") only store that SVG once. `byName`
+// only gets an entry when the exact filename resolves to a DIFFERENT icon
+// than a generic same-extension file would (e.g. "package.json" -> its own
+// nodejs icon vs a plain "json" for any other .json file) — every caller
+// checks `byName[basename]` first, then `byExt[ext]`, then `fallback`.
+// ---------------------------------------------------------------------------
+
+function collectIconFilenames() {
+  const names = new Set();
+  const reposDir = join(ROOT, "public/generated/repos");
+  if (existsSync(reposDir)) {
+    for (const file of readdirSync(reposDir)) {
+      if (!file.endsWith(".json")) continue;
+      const index = JSON.parse(readFileSync(join(reposDir, file), "utf8"));
+      for (const f of index.files) names.add(basename(f.path));
+    }
+  }
+  const grepIndexPath = join(ROOT, "public/generated/grep-index.json");
+  if (existsSync(grepIndexPath)) {
+    for (const f of JSON.parse(readFileSync(grepIndexPath, "utf8"))) names.add(basename(f.path));
+  }
+  const fsIndexPath = join(ROOT, "public/generated/fs-index.json");
+  if (existsSync(fsIndexPath)) {
+    const { entries } = JSON.parse(readFileSync(fsIndexPath, "utf8"));
+    for (const e of entries) names.add(basename(e.path));
+  }
+  return names;
+}
+
+function generateFileIcons() {
+  const filenames = collectIconFilenames();
+  const icons = {};
+  const byExt = {};
+  const byName = {};
+
+  const registerIcon = (name, svg) => {
+    if (!(name in icons)) icons[name] = svg;
+  };
+
+  for (const name of filenames) {
+    const exact = getIcon(name);
+    registerIcon(exact.name, exact.svg);
+
+    const dot = name.lastIndexOf(".");
+    const ext = dot > 0 ? name.slice(dot + 1).toLowerCase() : "";
+    if (!ext) {
+      // Extensionless (Dockerfile, LICENSE, README, .gitignore, …): no
+      // shared bucket to fall back to, so the exact name IS the lookup key.
+      byName[name] = exact.name;
+      continue;
+    }
+    // A neutral same-extension stem tells apart "this extension always
+    // gets icon X" from "this ONE filename is special-cased" (e.g.
+    // "package.json" -> its own icon vs any other "*.json" -> "json").
+    const generic = getIcon(`x.${ext}`);
+    registerIcon(generic.name, generic.svg);
+    byExt[ext] = generic.name;
+    if (generic.name !== exact.name) byName[name] = exact.name;
+  }
+
+  registerIcon(defaultIcon.name, defaultIcon.svg);
+
+  const outDir = join(ROOT, "src/generated");
+  mkdirSync(outDir, { recursive: true });
+  const data = { icons, byExt, byName, fallback: defaultIcon.name };
+  writeFileSync(join(outDir, "file-icons.json"), JSON.stringify(data) + "\n");
+  console.log(
+    `[generate] src/generated/file-icons.json — ${Object.keys(icons).length} icons, ${Object.keys(byExt).length} extensions, ${Object.keys(byName).length} exact names`,
+  );
+}
+
+// ---------------------------------------------------------------------------
 
 async function main() {
-  generateRepoIndexes();
+  await generateRepoIndexes();
   generateAllProjectsIndex();
   // Commit snapshots must complete before the grep index is generated: the
   // grep indexer walks src/generated/commits/*.json as part of the site's
@@ -464,6 +569,9 @@ async function main() {
   // wrote for the repos/* path-only subtrees (see generateFsIndex's own
   // header comment).
   generateFsIndex();
+  // File icons run last: it reads back every index generated above to find
+  // every filename actually shown anywhere in the site.
+  generateFileIcons();
 }
 
 main().catch((err) => {

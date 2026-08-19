@@ -1,19 +1,43 @@
-// Pure helpers for browsing a submodule's file index (PLAN.md Phase 5,
-// "Repo browsing"). The index itself (public/generated/repos/<name>.json,
-// produced by scripts/generate.mjs) is a FLAT list of {path, lines} — one
-// entry per text file, posix-separated relative path, no directory nodes.
-// Builds.svelte fetches that JSON lazily (client-side, real `fetch`, not a
-// build-time import — the file lives under `public/`) and calls the
-// functions below to derive one directory "level" at a time, mirroring how
-// the Files/Personnel panels already present one flat list per screen.
+// Pure helpers for browsing a submodule's file index. The index itself
+// (public/generated/repos/<name>.json, produced by scripts/generate.mjs) is
+// a FLAT list of {path, lines} — one entry per text file, posix-separated
+// relative path, no directory nodes. Builds.svelte fetches that JSON lazily
+// (client-side, real `fetch`, not a build-time import — the file lives
+// under `public/`) and calls the functions below to derive one directory
+// "level" at a time, mirroring how the Files/Personnel panels already
+// present one flat list per screen.
+//
+// A file's `lines` is plain text UNLESS `tok` is set, in which case it's a
+// per-line token stream (`[paletteIndex, text][]`) resolved against the
+// index's own `palette` — code files generate.mjs successfully tokenized.
+// `import type` keeps this a type-only reference (erased at build time), so
+// pulling in TokenSpan's shape never drags shiki itself into the client
+// bundle — only scripts/generate.mjs ever imports highlight.ts's runtime
+// exports.
+import type { TokenSpan } from "./highlight";
+
+export type { TokenSpan };
+
 export interface RepoFile {
   path: string;
-  lines: string[];
+  tok?: 1;
+  lines: string[] | TokenSpan[][];
 }
 
 export interface RepoIndex {
   name: string;
+  /** Hex colors referenced by every tokenized file's `lines` in this index;
+   * absent (or empty) when nothing in the index was tokenized. */
+  palette?: string[];
   files: RepoFile[];
+}
+
+/** Plain text for one file, whichever form `lines` is in — the single
+ * reconstruction point every caller needing raw text (previews, the editor's
+ * vim engine, shell cat/vim) goes through instead of re-deriving it. */
+export function repoFileText(file: RepoFile): string[] {
+  if (!file.tok) return file.lines as string[];
+  return (file.lines as TokenSpan[][]).map((line) => line.map(([, text]) => text).join(""));
 }
 
 export type TreeEntryType = "dir" | "file";

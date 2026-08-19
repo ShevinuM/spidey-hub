@@ -379,8 +379,6 @@ export const getBuilds = (): BuildsData => loadYaml<BuildsData>("builds.yaml");
 // grep.yaml
 // ---------------------------------------------------------------------------
 
-export type FileKind = [glyph: string, color: string];
-
 export interface GrepData {
   leftPane: { titlePrefix: string; titleTilde: string; promptIcon: string; cursorGlyph: string };
   modeLine: { liveGrep: string; repoFiles: string };
@@ -392,8 +390,6 @@ export interface GrepData {
   filePosTemplate: string;
   fileLinesTemplate: string;
   footer: { hintsLeft: string; closeHint: string };
-  fileKinds: Record<string, FileKind>;
-  fileKindFallback: FileKind;
 }
 
 export const getGrep = (): GrepData => loadYaml<GrepData>("grep.yaml");

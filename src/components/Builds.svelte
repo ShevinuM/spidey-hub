@@ -45,12 +45,15 @@
     findFile,
     buildTree,
     flattenVisible,
+    repoFileText,
     type RepoFile,
     type RepoIndex,
     type FlatTreeRow,
+    type TokenSpan,
   } from "../lib/repoTree";
   import { fetchLiveCommits } from "../lib/githubCommits";
   import { fetchCommitTree, fetchCommitFileContent } from "../lib/githubTrees";
+  import { iconSvgForPath } from "../lib/fileIcons";
   import Editor, { type EditorLine } from "./Editor.svelte";
 
   interface Props {
@@ -325,7 +328,7 @@
         return;
       }
       const file = findFile(st.index.files, path);
-      preview = file ? { repoName, path, status: "ready", lines: file.lines } : null;
+      preview = file ? { repoName, path, status: "ready", lines: repoFileText(file) } : null;
       return;
     }
 
@@ -372,6 +375,11 @@
     repoName: string;
     path: string;
     lines: string[];
+    /** Present only for a working-tree file generate.mjs tokenized —
+     * commit-tree/GitHub-fetched content is never tokenized (no build step
+     * runs over it), so it always falls back to flat `lines` rendering. */
+    tokens?: TokenSpan[][];
+    palette?: string[];
   }
   let editorFile = $state<EditorFileState | null>(null);
   let editorRef = $state<{
@@ -390,7 +398,13 @@
       if (!st || st.status !== "ready") return;
       const file = findFile(st.index.files, path);
       if (!file) return;
-      editorFile = { repoName, path, lines: file.lines };
+      editorFile = {
+        repoName,
+        path,
+        lines: repoFileText(file),
+        tokens: file.tok ? (file.lines as TokenSpan[][]) : undefined,
+        palette: file.tok ? st.index.palette : undefined,
+      };
       return;
     }
 
@@ -445,8 +459,22 @@
         style: colorFor(kinds[i], "project"),
       }));
     }
+    if (editorFile.tokens) {
+      const tokens = editorFile.tokens;
+      return editorFile.lines.map((raw, i) => ({
+        n: i + 1,
+        // A blank line reconstructs to an empty token line ([]); keep the
+        // same "render blank lines as a single space" convention flat text
+        // already uses, so the cursor cell and vim column math never see an
+        // empty string only tokenized files could produce.
+        t: raw === "" ? " " : tokens[i],
+        style: docColors.p,
+      }));
+    }
     return editorFile.lines.map((raw, i) => ({ n: i + 1, t: raw === "" ? " " : raw, style: docColors.p }));
   });
+
+  const editorPalette = $derived(editorFile?.palette ?? []);
 
   const editorFileName = $derived(editorFile ? editorFile.path.split("/").pop()! : "");
 
@@ -707,6 +735,7 @@
     bind:this={editorRef}
     fileName={editorFileName}
     lines={editorLines}
+    palette={editorPalette}
     labels={builds.editor}
     breadcrumbLeft={editorFile.repoName}
     breadcrumbRight={editorFile.path}
@@ -801,21 +830,12 @@
                     </span>
                   {:else}
                     <span class="builds-caret builds-caret-spacer" aria-hidden="true"></span>
-                    <span class="builds-icon" data-testid="builds-tree-icon" style="color:#5fc6b4" aria-hidden="true">
-                      <svg width="12" height="12" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"
-                        ><path
-                          d="M4 1.5h5.379a1 1 0 0 1 .707.293l2.121 2.121a1 1 0 0 1 .293.707V13.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1Z"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="1.1"
-                        /><path
-                          d="M9.5 1.7V4a1 1 0 0 0 1 1h2.3"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="1.1"
-                        /></svg
-                      >
-                    </span>
+                    <span
+                      class="builds-icon"
+                      data-testid="builds-tree-icon"
+                      style="width:12px;height:12px"
+                      aria-hidden="true">{@html iconSvgForPath(entry.name)}</span
+                    >
                   {/if}
                   {entry.name}
                 </div>

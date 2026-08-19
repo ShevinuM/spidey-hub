@@ -76,16 +76,25 @@
   import { setPasteBuffer, writeToSystemClipboard, type PasteBufferKind } from "../lib/pasteBuffer";
   import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
   import { parseExCommand } from "../lib/cmdline";
+  import type { TokenSpan } from "../lib/repoTree";
 
   export interface EditorLine {
     n: number;
-    t: string;
+    /** Plain text (docs, flat code fallback), or a tokenized code line —
+     * `[paletteIndex, text]` runs resolved against the `palette` prop.
+     * Either way `rawLines` below reconstructs the plain text every vim
+     * motion/search/yank operates on, so the engine never has to know
+     * which form a given line came in as. */
+    t: string | TokenSpan[];
     style: string;
   }
 
   interface Props {
     fileName: string;
     lines: EditorLine[];
+    /** Hex colors indexed by a tokenized EditorLine.t's paletteIndex.
+     * Unused (and safe to omit) when no line is tokenized. */
+    palette?: string[];
     labels: EditorLabels;
     breadcrumbLeft: string;
     breadcrumbRight: string;
@@ -98,9 +107,22 @@
     onClose: () => void;
   }
 
-  const { fileName, lines, labels, breadcrumbLeft, breadcrumbRight, isFocused = true, onClose }: Props = $props();
+  const {
+    fileName,
+    lines,
+    palette = [],
+    labels,
+    breadcrumbLeft,
+    breadcrumbRight,
+    isFocused = true,
+    onClose,
+  }: Props = $props();
 
-  const rawLines = $derived(lines.map((l) => l.t));
+  function lineText(t: string | TokenSpan[]): string {
+    return typeof t === "string" ? t : t.map(([, text]) => text).join("");
+  }
+
+  const rawLines = $derived(lines.map((l) => lineText(l.t)));
 
   let scrollerEl = $state<HTMLDivElement | null>(null);
   let scrollTopPx = $state(0);
@@ -666,7 +688,26 @@
 
   type LineDecoration =
     | { kind: "full-select" }
-    | { kind: "segments"; segments: { text: string; cls: string }[] };
+    | { kind: "segments"; segments: { text: string; cls: string; color?: string }[] };
+
+  /** Token boundary offsets + per-offset palette color for one tokenized
+   * line, or `null` for a plain-text line — folded into the same cut-point
+   * segmentation cursor/selection/search already use below, so a
+   * highlighted line keeps its per-token colors everywhere EXCEPT the
+   * literal cursor/selection/match cells (which force their own color,
+   * same as a plain line always has). */
+  function tokenSpansFor(lineNo: number): { start: number; end: number; color: string }[] | null {
+    const t = lines[lineNo - 1]?.t;
+    if (typeof t === "string") return null;
+    const spans: { start: number; end: number; color: string }[] = [];
+    let pos = 0;
+    for (const [idx, text] of t) {
+      const start = pos;
+      pos += text.length;
+      spans.push({ start, end: pos, color: palette[idx] ?? "" });
+    }
+    return spans;
+  }
 
   const selectionRange = $derived.by(():
     | { kind: "char"; range: VisualRange }
@@ -716,8 +757,9 @@
       }
 
       const lineMatches = matchesByLine.get(lineNo) ?? [];
+      const tokenSpans = tokenSpansFor(lineNo);
 
-      if (selPart && !selPart.partial && !isCursorLine && lineMatches.length === 0) {
+      if (selPart && !selPart.partial && !isCursorLine && lineMatches.length === 0 && !tokenSpans) {
         map.set(lineNo, { kind: "full-select" });
         continue;
       }
@@ -743,8 +785,14 @@
         cuts.add(Math.min(text.length, m.col));
         cuts.add(Math.min(text.length, m.col + m.length));
       }
+      if (tokenSpans) {
+        for (const s of tokenSpans) {
+          cuts.add(Math.min(text.length, s.start));
+          cuts.add(Math.min(text.length, s.end));
+        }
+      }
       const points = [...cuts].sort((a, b) => a - b);
-      const segments: { text: string; cls: string }[] = [];
+      const segments: { text: string; cls: string; color?: string }[] = [];
       for (let i = 0; i < points.length - 1; i++) {
         const s = points[i];
         const eIdx = points[i + 1];
@@ -754,17 +802,19 @@
         if (inSel) classes.push("sel");
         if (lineMatches.some((m) => s >= m.col && eIdx <= m.col + m.length)) classes.push("match");
         if (isCursorLine && s >= cursor.col && eIdx <= cursor.col + 1) classes.push("cursor");
-        segments.push({ text: text.slice(s, eIdx), cls: classes.join(" ") });
+        const color = tokenSpans?.find((sp) => s >= sp.start && eIdx <= sp.end)?.color;
+        segments.push({ text: text.slice(s, eIdx), cls: classes.join(" "), color });
       }
       map.set(lineNo, { kind: "segments", segments });
     }
     return map;
   });
 
-  function segStyle(cls: string): string | undefined {
+  function segStyle(cls: string, color?: string): string | undefined {
     if (cls.includes("cursor")) return "background:#e0453c;color:#0b0f14";
     if (cls.includes("sel")) return "background:rgba(224,69,60,.22);color:#f4ece9";
     if (cls.includes("match")) return "background:rgba(95,198,180,.35);color:#eafaf6";
+    if (color) return `color:${color}`;
     return undefined;
   }
 
@@ -797,13 +847,15 @@
       {@const d = decorations.get(l.n)}
       <div data-line={l.n} style="display:flex;gap:16px;white-space:pre">
         <span style="flex:none;width:26px;text-align:right;color:rgba(224,69,60,.4)">{l.n}</span
-        >{#if !d}<span data-testid="editor-line-text" style={l.style}>{l.t}</span
-        >{:else if d.kind === "full-select"}<span
+        >{#if !d}{#if typeof l.t === "string"}<span data-testid="editor-line-text" style={l.style}>{l.t}</span
+          >{:else}<span data-testid="editor-line-text"
+            >{#each l.t as [idx, text]}<span style={`color:${palette[idx] ?? ""}`}>{text}</span>{/each}</span
+          >{/if}{:else if d.kind === "full-select"}<span
             data-testid="editor-line-text"
             style={`${l.style};background:rgba(224,69,60,.22)`}
-            ><span data-testid="editor-selection">{l.t}</span></span
+            ><span data-testid="editor-selection">{lineText(l.t)}</span></span
           >{:else}<span data-testid="editor-line-text" style={l.style}
-            >{#each d.segments as seg}<span style={segStyle(seg.cls)} data-testid={segTestId(seg.cls)}
+            >{#each d.segments as seg}<span style={segStyle(seg.cls, seg.color)} data-testid={segTestId(seg.cls)}
                 >{seg.text}</span
               >{/each}</span
           >{/if}

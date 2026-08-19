@@ -117,18 +117,23 @@ test.describe("Personnel: icons (item 1)", () => {
     await openPersonnel(page);
     await expect(rowLocator(page, "enaimco/").locator('svg[data-icon="folder"]')).toBeVisible();
     await expect(rowLocator(page, "memorial-university/").locator('svg[data-icon="folder"]')).toBeVisible();
-    await expect(rowLocator(page, "enaimco/").locator('svg[data-icon="file"]')).toHaveCount(0);
+    await expect(rowLocator(page, "enaimco/").locator('svg[data-icon="folder"]')).toHaveCount(1);
     // No stray glyph text anywhere in the icon slot.
     await expect(rowLocator(page, "enaimco/")).not.toContainText("▸");
   });
 
-  test("a mixed listing renders file icons for role.md and folder icons for directories; ../ gets its own icon", async ({
+  test("a mixed listing renders per-extension file icons for role.md and folder icons for directories; ../ gets its own icon", async ({
     page,
   }) => {
     await openPersonnel(page);
     await page.keyboard.press("Enter"); // -> enaimco/
     await page.keyboard.press("Enter"); // -> enaimco/software-developer/
-    await expect(rowLocator(page, "role.md").locator('svg[data-icon="file"]')).toBeVisible();
+    // role.md's icon is resolved from material-file-icons (no data-icon
+    // marker of its own — that attribute is only on the hand-drawn
+    // folder/up glyphs) — a bare <svg> in the icon slot is enough to prove
+    // it rendered something other than the folder/up icons.
+    await expect(rowLocator(page, "role.md").locator("svg")).toBeVisible();
+    await expect(rowLocator(page, "role.md").locator("svg[data-icon]")).toHaveCount(0);
     await expect(rowLocator(page, "full-time/").locator('svg[data-icon="folder"]')).toBeVisible();
     await expect(rowLocator(page, "part-time/").locator('svg[data-icon="folder"]')).toBeVisible();
     await expect(rowLocator(page, "co-op/").locator('svg[data-icon="folder"]')).toBeVisible();
