@@ -44,9 +44,9 @@ Ship UI v2 across Builds→Repositories, Employment Records, Help, Dashboard, an
 Phases run in order; each phase = fresh executor, then verifier, then commit(s) already made by executor are checked. Golden rebaselines happen ONLY where marked ⟲, deliberately, with before/after review.
 
 ### Phase A — Test safety net (pre-refactor)
-- [ ] A1. Add `tests/e2e/terminal.spec.ts`: keydown dispatch order (prefix `C-b` mode entry/exit, digit window jump, key reaching the active view not others), view routing on navigation, reboot `r`, status-bar active-window highlight. ~10-14 tests, follow style of `tests/e2e/nav.spec.ts` (use its helpers; avoid the known clock.install+pauseAt race — use setFixedTime pattern from b43d519).
-- [ ] A2. Add `tests/e2e/dashboard.spec.ts`: menu labels + key hints from `src/data/dashboard.yaml`, menu click/keyboard navigation to each view, synced-panes line, wordmark presence. ~6-10 tests.
-- [ ] A3. Commit each spec separately (e.g. `Add terminal e2e spec`, `Add dashboard e2e spec`).
+- [x] A1. Add `tests/e2e/terminal.spec.ts`: keydown dispatch order (prefix `C-b` mode entry/exit, digit window jump, key reaching the active view not others), view routing on navigation, reboot `r`, status-bar active-window highlight. ~10-14 tests, follow style of `tests/e2e/nav.spec.ts` (use its helpers; avoid the known clock.install+pauseAt race — use setFixedTime pattern from b43d519).
+- [x] A2. Add `tests/e2e/dashboard.spec.ts`: menu labels + key hints from `src/data/dashboard.yaml`, menu click/keyboard navigation to each view, synced-panes line, wordmark presence. ~6-10 tests.
+- [x] A3. Commit each spec separately (e.g. `Add terminal e2e spec`, `Add dashboard e2e spec`).
 - Verify: `pnpm check` clean; `pnpm test:e2e` green incl. new specs (run new specs first in isolation: `pnpm exec playwright test tests/e2e/terminal.spec.ts tests/e2e/dashboard.spec.ts`); new tests assert real behavior (verifier spot-reads them); no source files changed except tests.
 
 ### Phase B — Component refactor (pure relocation; goldens are the gate, NEVER rebaseline here)
