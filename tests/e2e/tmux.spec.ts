@@ -785,7 +785,7 @@ test.describe("mobile block (README \"Mobile policy\")", () => {
     await page.goto("/");
     await expect(page.locator('[data-testid="mobile-block"]')).toBeVisible();
 
-    await expect(page.locator('[data-testid="mobile-block-heading"]')).toHaveText("E.D.I.T.H: RETINA-V");
+    await expect(page.locator('[data-testid="mobile-block-heading"]')).toHaveText("RETINA-V");
     await expect(page.locator('[data-testid="mobile-block-body"]')).toHaveText(
       "viewport too small — this session requires a desktop terminal (≥900px).",
     );

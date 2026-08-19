@@ -1753,7 +1753,7 @@
     // keys fall through untouched).
     if (e.metaKey || e.ctrlKey || e.altKey) return;
 
-    // Signal-inbox bell/panel (Decision 6, dashboard view only): a bare `n`
+    // Signal-inbox bell/panel (dashboard view only): a bare `n`
     // toggles the panel, `Esc` closes it (Notifications.svelte's own
     // handleKey only consumes Esc while the panel is actually open, so it
     // falls through otherwise). Placed in this same bare-key backstop
@@ -1803,9 +1803,8 @@
   <Wallpaper {tracker} view={view ?? "home"} dim={!activeSession} isRetinaFocused={activeProgram === "retina-v"} />
 
   {#if view === "home"}
-    <!-- Dashboard-only central red glow (Mockup B, Decision 7) — a fixed
-         layer between the wallpaper and the pane content, never intercepting
-         clicks. -->
+    <!-- Dashboard-only central red glow — a fixed layer between the
+         wallpaper and the pane content, never intercepting clicks. -->
     <div
       aria-hidden="true"
       style="position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(900px 520px at 50% 42%,rgba(229,72,77,.10),transparent 70%),radial-gradient(700px 400px at 82% 78%,rgba(79,209,197,.05),transparent 70%)"

@@ -287,7 +287,7 @@
     data-unread-count={unreadCount}
     onclick={togglePanel}
     title={ui.bellTitle}
-    style="position:relative;width:44px;height:44px;display:grid;place-items:center;background:rgba(13,15,18,.85);border:1px solid rgba(229,72,77,.45);border-radius:0;cursor:pointer;box-shadow:0 0 0 1px rgba(0,0,0,.6),0 8px 24px rgba(0,0,0,.6)"
+    style="position:relative;width:44px;height:44px;display:grid;place-items:center;border-radius:0;cursor:pointer;box-shadow:0 0 0 1px rgba(0,0,0,.6),0 8px 24px rgba(0,0,0,.6)"
   >
     {#if hasUnread}
       <span
@@ -324,9 +324,10 @@
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#4fd1c5;opacity:.75">{feedStatus}</span>
         <button
+          class="eh-close"
           data-testid="notifications-close"
           onclick={togglePanel}
-          style="width:20px;height:20px;display:grid;place-items:center;background:transparent;border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.55);font:700 10px/1 'JetBrains Mono',monospace;cursor:pointer"
+          style="width:20px;height:20px;display:grid;place-items:center;background:transparent;font:700 10px/1 'JetBrains Mono',monospace;cursor:pointer"
           >{ui.closeGlyph}</button
         >
       </div>
@@ -340,6 +341,7 @@
     <div style="display:flex;align-items:stretch;gap:1px;padding:6px 8px 0;background:rgba(255,255,255,.015)">
       {#each tabDefs as t (t.id)}
         <button
+          class="eh-tab"
           data-testid="notifications-tab"
           data-tab={t.id}
           data-active={tab === t.id}
@@ -368,10 +370,11 @@
       {/if}
       {#each rows as r (r.id)}
         <div
+          class="eh-row"
           data-testid="notification-row"
           data-severity={r.sev}
           data-notification-id={r.id}
-          style="position:relative;display:flex;align-items:stretch;border-bottom:1px solid rgba(255,255,255,.05);background:{r.rowBg}"
+          style="position:relative;display:flex;align-items:stretch;border-bottom:1px solid rgba(255,255,255,.05);--row-bg:{r.rowBg}"
         >
           <div style="width:2px;background:{r.bar}"></div>
           <div style="width:26px;display:flex;align-items:flex-start;justify-content:center;padding-top:11px;font:700 10px/1 'JetBrains Mono',monospace;color:{r.color};opacity:{r.dim}">
@@ -393,26 +396,29 @@
           </div>
           <div style="display:flex;flex-direction:column;justify-content:center;gap:4px;padding:0 8px 0 4px">
             <button
+              class="eh-toggle-read"
               data-testid="notification-toggle-read"
               onclick={() => mutate((s) => toggleRead(s, r.id))}
               title={r.readTitle}
-              style="width:22px;height:22px;display:grid;place-items:center;background:transparent;border:1px solid rgba(255,255,255,.12);color:{r.color};font:700 10px/1 'JetBrains Mono',monospace;cursor:pointer;opacity:.55"
+              style="width:22px;height:22px;display:grid;place-items:center;background:transparent;color:{r.color};font:700 10px/1 'JetBrains Mono',monospace;cursor:pointer"
               >{r.readGlyph}</button
             >
             {#if r.showSpamAction}
               <button
+                class="eh-mark-spam"
                 data-testid="notification-mark-spam"
                 onclick={() => mutate((s) => markSpam(s, r.id))}
                 title={ui.spamActionTitle}
-                style="width:22px;height:22px;display:grid;place-items:center;background:transparent;border:1px solid rgba(255,255,255,.12);color:#e8b04b;font:700 10px/1 'JetBrains Mono',monospace;cursor:pointer;opacity:.55"
+                style="width:22px;height:22px;display:grid;place-items:center;background:transparent;color:#e8b04b;font:700 10px/1 'JetBrains Mono',monospace;cursor:pointer"
                 >{ui.spamActionGlyph}</button
               >
             {/if}
             <button
+              class="eh-dismiss"
               data-testid="notification-dismiss"
               onclick={() => mutate((s) => dismiss(s, r.id))}
               title={r.dismissTitle}
-              style="width:22px;height:22px;display:grid;place-items:center;background:transparent;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);font:700 10px/1 'JetBrains Mono',monospace;cursor:pointer;opacity:.55"
+              style="width:22px;height:22px;display:grid;place-items:center;background:transparent;font:700 10px/1 'JetBrains Mono',monospace;cursor:pointer"
               >{r.dismissGlyph}</button
             >
           </div>
@@ -435,9 +441,10 @@
         {/each}
       </div>
       <button
+        class="eh-mark-all-read"
         data-testid="notifications-mark-all-read"
         onclick={() => mutate((s) => markAllRead(s))}
-        style="padding:4px 9px;background:transparent;border:1px solid rgba(79,209,197,.4);color:#4fd1c5;font:700 9.5px/1.3 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;cursor:pointer"
+        style="padding:4px 9px;border:1px solid rgba(79,209,197,.4);font:700 9.5px/1.3 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;cursor:pointer"
         >{ui.markAllRead}</button
       >
     </div>
@@ -479,7 +486,7 @@
         <div style="height:2px;background:rgba(255,255,255,.06)">
           <div
             class="eh-toast-drain"
-            style="height:2px;background:{meta.color};box-shadow:0 0 10px {meta.color};animation:drain {t.durationMs}ms linear forwards"
+            style="height:2px;background:{meta.color};box-shadow:0 0 10px {meta.color};--drain-ms:{t.durationMs}ms"
           ></div>
         </div>
       </div>
@@ -546,9 +553,74 @@
       transform: translateX(220%);
     }
   }
+  /* Base declarations for properties a :hover rule below also sets are kept
+     out of each element's inline `style` on purpose — an inline style
+     declaration always wins the cascade over a stylesheet rule for the same
+     property (short of `!important`), so a hover rule can only ever take
+     effect on a property the inline style never touches. This mirrors the
+     row/tab hover convention already used in Builds.svelte, Dashboard.svelte
+     and Personnel.svelte. */
+  .eh-bell {
+    background: rgba(13, 15, 18, 0.85);
+    border: 1px solid rgba(229, 72, 77, 0.45);
+  }
   .eh-bell:hover {
     border-color: #ff5c66;
     background: rgba(24, 12, 14, 0.95);
+  }
+  .eh-tab:hover {
+    filter: brightness(1.25);
+  }
+  .eh-row {
+    background: var(--row-bg);
+  }
+  .eh-row:hover {
+    background: rgba(255, 255, 255, 0.045);
+  }
+  .eh-close {
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.55);
+  }
+  .eh-close:hover {
+    border-color: #e5484d;
+    color: #ff5c66;
+  }
+  .eh-toggle-read {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    opacity: 0.55;
+  }
+  .eh-toggle-read:hover {
+    opacity: 1;
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+  .eh-mark-spam {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    opacity: 0.55;
+  }
+  .eh-mark-spam:hover {
+    opacity: 1;
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+  .eh-dismiss {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.6);
+    opacity: 0.55;
+  }
+  .eh-dismiss:hover {
+    opacity: 1;
+    border-color: #e5484d;
+    color: #ff5c66;
+  }
+  .eh-mark-all-read {
+    background: transparent;
+    color: #4fd1c5;
+  }
+  .eh-mark-all-read:hover {
+    background: #4fd1c5;
+    color: #06110f;
+  }
+  .eh-toast-drain {
+    animation: drain var(--drain-ms) linear forwards;
   }
   .eh-toast:hover .eh-toast-drain {
     animation-play-state: paused;

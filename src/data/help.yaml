@@ -17,7 +17,7 @@ legend:
 scopes:
   - id: "global"
     label: "Global"
-    hint: "works anywhere"
+    hint: "most views"
     rows:
       - name: "Reboot"
         keys: ["r"]

@@ -344,16 +344,12 @@ never a view.
 
 | key | action |
 |---|---|
-| `b` / `p` | Builds (from the dashboard) |
-| `x` | Personnel Files (from the dashboard) |
-| `i` | Profile (from the dashboard) |
-| `t` | E.D.I.T.H: Retina-V (from the dashboard) |
-| `h` | Help window (from the dashboard) — replaces the old `?` binding, which now opens the site-wide HelpSearch palette instead (see below) |
+| `Ctrl-b` then `1`-`5` / `0` | jump straight to a window — Builds / Personnel / Retina-V / Profile / Help / dashboard; there are no bare-key shortcuts (see "tmux prefix" below) |
 | `?` | open the floating HelpSearch palette (from any view, including the dashboard) — see "Help search" below |
-| `r` | reboot (from the dashboard only — replays the E.D.I.T.H boot sequence and factory-resets the whole client: sessions/windows/panes/programs/shell buffers/toast picks); Profile has its own `r` for downloading the resume, unrelated |
+| `r` | reboot — replays the E.D.I.T.H boot sequence and factory-resets the whole client (sessions/windows/panes/programs/shell buffers/toast picks); global from any view where a bare key isn't already claimed by a focused pane/overlay/input — Profile's own `r` downloads the resume instead |
 | `/` | open the grep overlay (from any view — inside the vim file editor, `/` searches the open buffer instead; a focused shell pane/host shell types it literally instead) |
 | `:` | open the floating Cmdline box (from any view, and inside an open file editor as its ex-command line) — a literal `:` still types normally inside the grep query, the Personnel filter, the rename prompt, and a focused shell |
-| `j` / `k` / arrows | move selection within the active pane |
+| arrows | move selection within the active pane — `j`/`k` vim motions only work inside the file editor and copy-mode, nowhere else |
 | `Enter` | open / drill in |
 | `Esc` | exits whatever's open — grep, a filter, a status-line prompt, copy-mode, the cmdline/help-search box, choose-tree, the tmux prefix — never a view switch |
 | held ⌘/Ctrl/Alt + key | falls through untouched (browser/OS shortcuts still work) |
@@ -554,7 +550,6 @@ open.
 | `h` / `Backspace` (repo tree) | up one directory |
 | click a commit / `Enter` on a commit (panel [4]) | load that commit's tree into panel [2] (a lazygit-style `Pulling ··●` spinner shows on the repo row) — no new tab |
 | `o` (panel [4], commits) | opens the selected commit on GitHub in a new tab — the only remaining external-link path in Builds |
-| `t` | E.D.I.T.H: Retina-V (works from Builds too, not only the dashboard) |
 | `gg` / `G` | jump to the first / last row of the open tree in panel [2] (also inside the file editor) |
 
 Panel [4] Commits tracks **only** panel [3]'s repo selection — it never

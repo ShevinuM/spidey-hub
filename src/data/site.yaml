@@ -71,8 +71,8 @@ copyMode:
   emptyText: "(nothing to copy)"
 
 mobileBlock:
-  # README.md "Mobile policy" example copy, quoted verbatim.
-  heading: "E.D.I.T.H: RETINA-V"
+  # Copy shown on a viewport under the 900px minimum.
+  heading: "RETINA-V"
   body: "viewport too small — this session requires a desktop terminal (≥900px)."
   escapeHatchText: "github.com/shevinum"
   escapeHatchHref: "https://github.com/shevinum"
