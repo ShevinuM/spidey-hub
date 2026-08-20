@@ -113,11 +113,12 @@ src/components/repositories/
   Repositories.svelte           orchestrator — keymap, panel focus/digit-key routing
   repositoriesState.svelte.ts   RepositoriesState — repo/file/commit selection, tree cache
   StatusPanel.svelte            panel [0]
-  RepositoriesPanel.svelte      panel [1]
+  ReposPanel.svelte             panel [1]
   FilesPanel.svelte             panel [2]
   PreviewPanel.svelte           panel [3]
   CommitsPanel.svelte           panel [4]
   CommandLog.svelte             panel [5]
+  RepositoriesPanel.svelte      shared chrome wrapper (border + PanelBadge) used by all six panels above
 
 src/components/employment-records/
   EmploymentRecords.svelte          orchestrator
