@@ -382,3 +382,17 @@ final committed goldens with no changes in between:
   pipeline's `2 * RUN_FOR_MS` (10000ms) capture point.
 - `RATIO_RELAXED` (identical.spec.ts) stays EMPTY — no recipe needed a
   tolerance relaxation, including the newly-blurred wallpaper layer.
+
+## Current baseline: 21 recipes / 42 goldens
+
+The counts in the determinism-check sections above (20 recipes / 40 goldens)
+are accurate as of the re-baselines they each describe — left as-is rather
+than rewritten, since they're historical records of what was true at that
+point. Since the last of those, the sitewide `builds`→`repositories` /
+"Personnel Files"→"Employment Records" rename (`docs/changes/
+employment-records-v2.md`) rebaselined every recipe that touches either
+view's status-bar/copy text without changing the recipe count, and one more
+recipe was added: `21-notifications-panel-open` (the signal-inbox panel open
+on the dashboard, PLAN.md Phase G2 — see its own header comment in
+`recipes.ts`). The current total is **21 recipes / 42 goldens**, and that is
+the number any future re-baseline's "N/N passed" report should match.
