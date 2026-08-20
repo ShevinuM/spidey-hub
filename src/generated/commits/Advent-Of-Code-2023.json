@@ -4,104 +4,119 @@
     "sha8": "5b141d3d",
     "msg": "Completed Day 24 part 2",
     "html_url": "https://github.com/ShevinuM/Advent-Of-Code-2023/commit/5b141d3d65b1d3ee09a80375e218c73b94614090",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2023-12-26T17:56:26Z"
   },
   {
     "sha": "71e269fd251bcc4c81fb7b3a18d1d41e9abcb17c",
     "sha8": "71e269fd",
     "msg": "Completed Day 25",
     "html_url": "https://github.com/ShevinuM/Advent-Of-Code-2023/commit/71e269fd251bcc4c81fb7b3a18d1d41e9abcb17c",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2023-12-26T17:05:53Z"
   },
   {
     "sha": "4ba42cfa16bd1bc049a3a9d55be4e02a7aef46f9",
     "sha8": "4ba42cfa",
     "msg": "Reformatted Code",
     "html_url": "https://github.com/ShevinuM/Advent-Of-Code-2023/commit/4ba42cfa16bd1bc049a3a9d55be4e02a7aef46f9",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2023-12-24T15:58:14Z"
   },
   {
     "sha": "d7f86e995722f7ac0a22c9945e7a2798642a52e2",
     "sha8": "d7f86e99",
     "msg": "Completed Day 24 Part 1",
     "html_url": "https://github.com/ShevinuM/Advent-Of-Code-2023/commit/d7f86e995722f7ac0a22c9945e7a2798642a52e2",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2023-12-24T15:23:33Z"
   },
   {
     "sha": "9f034c5ea729fc79e90518fe8e91c3d2c0fdf1ee",
     "sha8": "9f034c5e",
     "msg": "Completed Day 23",
     "html_url": "https://github.com/ShevinuM/Advent-Of-Code-2023/commit/9f034c5ea729fc79e90518fe8e91c3d2c0fdf1ee",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2023-12-24T02:45:03Z"
   },
   {
     "sha": "572efce9b80793070a57c54f28dcff01908d8f16",
     "sha8": "572efce9",
     "msg": "Completed Day 23 Part 1",
     "html_url": "https://github.com/ShevinuM/Advent-Of-Code-2023/commit/572efce9b80793070a57c54f28dcff01908d8f16",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2023-12-23T21:15:07Z"
   },
   {
     "sha": "192b7aa0f70faf6f66e327a6e186a5eec75ffd36",
     "sha8": "192b7aa0",
     "msg": "commit",
     "html_url": "https://github.com/ShevinuM/Advent-Of-Code-2023/commit/192b7aa0f70faf6f66e327a6e186a5eec75ffd36",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2023-12-23T20:21:32Z"
   },
   {
     "sha": "d9b23676f3b72c64a9a76347251280c082f8fda9",
     "sha8": "d9b23676",
     "msg": "Completed Part 1 of Day 21",
     "html_url": "https://github.com/ShevinuM/Advent-Of-Code-2023/commit/d9b23676f3b72c64a9a76347251280c082f8fda9",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2023-12-22T02:55:31Z"
   },
   {
     "sha": "5910de5687ed843ea2db15da2743944b5700558c",
     "sha8": "5910de56",
     "msg": "Completed Day 19 Part 1",
     "html_url": "https://github.com/ShevinuM/Advent-Of-Code-2023/commit/5910de5687ed843ea2db15da2743944b5700558c",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2023-12-21T15:36:25Z"
   },
   {
     "sha": "2dc440df69c2a499cd05bd50c89f37f117047134",
     "sha8": "2dc440df",
     "msg": "reformatted code",
     "html_url": "https://github.com/ShevinuM/Advent-Of-Code-2023/commit/2dc440df69c2a499cd05bd50c89f37f117047134",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2023-12-21T03:01:58Z"
   },
   {
     "sha": "ee1c8667ed36596cfa3c4c76ec22e044fda8e832",
     "sha8": "ee1c8667",
     "msg": "day 2 part 2 bug fixed",
     "html_url": "https://github.com/ShevinuM/Advent-Of-Code-2023/commit/ee1c8667ed36596cfa3c4c76ec22e044fda8e832",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2023-12-21T03:01:06Z"
   },
   {
     "sha": "c862b942252e9043ef50c8f54233d0b980572b41",
     "sha8": "c862b942",
     "msg": "halfway implemented day 18",
     "html_url": "https://github.com/ShevinuM/Advent-Of-Code-2023/commit/c862b942252e9043ef50c8f54233d0b980572b41",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2023-12-21T02:49:39Z"
   },
   {
     "sha": "96761df3742e29d9f11250ec8715aa537c46f73b",
     "sha8": "96761df3",
     "msg": "Combined solutions for P1 and P2, P2 still not giving the proper output for some reason",
     "html_url": "https://github.com/ShevinuM/Advent-Of-Code-2023/commit/96761df3742e29d9f11250ec8715aa537c46f73b",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2023-12-20T20:56:53Z"
   },
   {
     "sha": "dc1812250744e38162ba97d4bda5be5e9dd91890",
     "sha8": "dc181225",
     "msg": "Completed Day 17 P1",
     "html_url": "https://github.com/ShevinuM/Advent-Of-Code-2023/commit/dc1812250744e38162ba97d4bda5be5e9dd91890",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2023-12-20T20:05:42Z"
   },
   {
     "sha": "98757fbd8a09dba219982e28ebf3fe64569c84d1",
     "sha8": "98757fbd",
     "msg": "Completed Day 16 Part 2",
     "html_url": "https://github.com/ShevinuM/Advent-Of-Code-2023/commit/98757fbd8a09dba219982e28ebf3fe64569c84d1",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2023-12-19T18:25:24Z"
   }
 ]

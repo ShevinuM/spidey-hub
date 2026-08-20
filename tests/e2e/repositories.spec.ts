@@ -6,7 +6,7 @@
 // Legend-of-Arlo-Guardians-Gauntlet, SpotifyPal, Advent-of-Code-2024,
 // Advent-Of-Code-2023, Sheldon, Data-Structures-And-Algorithms — all
 // github.com/ShevinuM/<name>, matching the git submodules under repos/), so
-// panel [3]'s flat repo list is those 8 rows PLUS the virtual "all-projects"
+// panel [1]'s flat repo list is those 8 rows PLUS the virtual "all-projects"
 // entry, pinned to the FRONT of that list, and it's the default selection on
 // load: `selectedRepoIdx = $state(0)` points at it, and a mount effect
 // in Repositories.svelte loads its tree into panel [2] immediately, no click or
@@ -85,7 +85,7 @@ const dailyTechDigestHead = loadCommitSnapshot("daily-tech-digest")[0];
 const COMMIT_URL_RE =
   /^https:\/\/github\.com\/ShevinuM\/(daily-tech-digest|transcript-tts|Legend-of-Arlo-Guardians-Gauntlet|SpotifyPal|Advent-of-Code-2024|Advent-Of-Code-2023|Sheldon|Data-Structures-And-Algorithms)\/commit\/[0-9a-f]{7,40}$/;
 
-/** Clicks a panel [3] repo row — this both selects it (panel [4]'s commits
+/** Clicks a panel [1] repo row — this both selects it (panel [4]'s commits
  * now track it) AND loads its working tree into panel [2] (no separate
  * select-then-open step). Waits for the tree to actually render — the working-tree index is fetched
  * asynchronously (`/generated/repos/<repo>.json`), so a bare click leaves a
@@ -122,7 +122,7 @@ async function blurActive(page: Page) {
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
 }
 
-test.describe("Repositories: panel [3] repo list — all-projects pinned first + default-selected", () => {
+test.describe("Repositories: panel [1] repo list — all-projects pinned first + default-selected", () => {
   test.beforeEach(async ({ context }) => {
     // Default for every test in this file: no real network call to GitHub.
     // Tests that specifically exercise the mocked fulfill/abort paths
@@ -175,9 +175,9 @@ test.describe("Repositories: panel [3] repo list — all-projects pinned first +
     );
 
     // "Loaded" isn't the same claim as "selected" (Item 5 requires both) —
-    // focus panel [3] with zero j/k presses and confirm row 0 (all-projects)
+    // focus panel [1] with zero j/k presses and confirm row 0 (all-projects)
     // already carries the highlighted-selection background.
-    await page.keyboard.press("3");
+    await page.keyboard.press("1");
     await expect(page.locator('[data-testid="repositories-repo-row"]').first()).toHaveAttribute(
       "style",
       /rgba\(224, 69, 60, 0\.22\)/,
@@ -203,8 +203,8 @@ test.describe("Repositories: panel [3] repo list — all-projects pinned first +
     await expect(treeRow(page, "README.md")).toBeVisible();
 
     await blurActive(page); // see helper doc — avoids a stale-focus double-fire on Enter below
-    await page.keyboard.press("3"); // focus panel [3]
-    await expect(page.locator('[data-testid="repositories-panel-3"]')).toHaveAttribute(
+    await page.keyboard.press("1"); // focus panel [1]
+    await expect(page.locator('[data-testid="repositories-panel-1"]')).toHaveAttribute(
       "style",
       /border: 1px solid rgb\(224, 69, 60\)/,
     );
@@ -237,7 +237,7 @@ test.describe("Repositories: panel [3] repo list — all-projects pinned first +
 
   test("all-projects: commits panel shows the data-driven local-only line, not commit rows", async ({ page }) => {
     await gotoReady(page, "/repositories");
-    await page.keyboard.press("3");
+    await page.keyboard.press("1");
     await page.locator('[data-testid="repositories-repo-row"][data-repo-name="all-projects"]').click();
     await expect(page.locator('[data-testid="repositories-repo-row"][data-all-projects="true"]')).toHaveAttribute(
       "style",
@@ -344,12 +344,12 @@ test.describe("Repositories: panel [2] lazygit-style tree — expand/collapse, n
   });
 });
 
-test.describe("Repositories: panel [2] file preview + panel [0] preview", () => {
+test.describe("Repositories: panel [2] file preview + panel [3] preview", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("clicking a file previews its content in panel [0] without opening the editor", async ({ page }) => {
+  test("clicking a file previews its content in panel [3] without opening the editor", async ({ page }) => {
     await gotoReady(page, "/repositories");
     await openRepoTree(page, "transcript-tts");
     await treeRow(page, "server.py").click();
@@ -428,22 +428,22 @@ test.describe("Repositories: panel [2] file preview + panel [0] preview", () => 
   });
 });
 
-test.describe("Repositories: panel [4] commits track ONLY panel [3] (bug fix)", () => {
+test.describe("Repositories: panel [4] commits track ONLY panel [1] (bug fix)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("commits stay fixed while navigating panel [2]/[0]; change only on panel [3] selection", async ({ page }) => {
+  test("commits stay fixed while navigating panel [2]/[3]; change only on panel [1] selection", async ({ page }) => {
     await gotoReady(page, "/repositories");
     const shaOf = () => page.locator('[data-testid="repositories-commit-row"]').first().getAttribute("data-sha8");
 
-    // Selecting + opening daily-tech-digest via panel [3] IS a legitimate
-    // panel [3] selection change, so commits update to match it once.
+    // Selecting + opening daily-tech-digest via panel [1] IS a legitimate
+    // panel [1] selection change, so commits update to match it once.
     await openRepoTree(page, "daily-tech-digest");
     const afterSelect = await shaOf();
     expect(afterSelect).toBeTruthy();
 
-    // Browsing WITHIN that same repo's tree/preview — panel [2]/[0],
+    // Browsing WITHIN that same repo's tree/preview — panel [2]/[3],
     // including toggling a dir's collapse state — must not move panel [4]
     // again (2026-08-17 bug report: "commits change dynamically when I move
     // across files").
@@ -453,11 +453,11 @@ test.describe("Repositories: panel [4] commits track ONLY panel [3] (bug fix)", 
     await expect(shaOf()).resolves.toBe(afterSelect);
     await treeRow(page, "dev_to.py").click();
     await expect(shaOf()).resolves.toBe(afterSelect);
-    await page.keyboard.press("0"); // focus the preview panel too
+    await page.keyboard.press("3"); // focus the preview (Content) panel too
     await expect(shaOf()).resolves.toBe(afterSelect);
 
-    // Only moving the panel [3] selection changes commits again.
-    await page.keyboard.press("3");
+    // Only moving the panel [1] selection changes commits again.
+    await page.keyboard.press("1");
     await page.keyboard.press("ArrowDown"); // daily-tech-digest -> transcript-tts
     await expect.poll(shaOf).not.toBe(afterSelect);
   });
@@ -601,7 +601,7 @@ test.describe("Repositories: commit-tree / file-content fetch failures preserve 
   });
 });
 
-test.describe("Repositories: panel [3] spinner while a fetch is in flight", () => {
+test.describe("Repositories: panel [1] spinner while a fetch is in flight", () => {
   test("spinner appears on the repo row during a delayed fetch and disappears after", async ({ page }) => {
     const fakeCommit = {
       sha: "deadbeef00001111222233334444555566667777",
@@ -687,27 +687,36 @@ test.describe("Repositories: t is not bound", () => {
   });
 });
 
-test.describe("Repositories: panel focus border (panels 0 and 1)", () => {
+test.describe("Repositories: panel focus border (panels 0 and 3)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("0 focuses the Changes panel (border); 1 focuses the Status panel (border)", async ({ page }) => {
+  test("0 focuses the Status panel (border); 3 focuses the Content panel (border)", async ({ page }) => {
     await gotoReady(page, "/repositories");
     const FOCUSED = /border: 1px solid rgb\(224, 69, 60\)/;
     const UNFOCUSED = /border: 1px solid rgba\(224, 69, 60, 0\.35\)/;
 
+    // The style ATTRIBUTE only reflects the browser's normalized rgba()
+    // serialization (spaces + leading zero) once its value has genuinely
+    // CHANGED since the page loaded — an attribute whose computed value
+    // never differs from its server-rendered default stays raw/un-
+    // normalized text forever (Svelte skips the redundant DOM write).
+    // `focusedPanel`'s own default is 2 (Files), so panel [2] — not [3] —
+    // is the one guaranteed to actually flip focused->unfocused the moment
+    // panel [0] takes focus; asserting against [3] here instead would
+    // silently read back its still-pristine SSR string and never match.
     await page.keyboard.press("0");
     await expect(page.locator('[data-testid="repositories-panel-0"]')).toHaveAttribute("style", FOCUSED);
     await expect(page.locator('[data-testid="repositories-panel-2"]')).toHaveAttribute("style", UNFOCUSED);
 
-    await page.keyboard.press("1");
-    await expect(page.locator('[data-testid="repositories-panel-1"]')).toHaveAttribute("style", FOCUSED);
+    await page.keyboard.press("3");
+    await expect(page.locator('[data-testid="repositories-panel-3"]')).toHaveAttribute("style", FOCUSED);
     await expect(page.locator('[data-testid="repositories-panel-0"]')).toHaveAttribute("style", UNFOCUSED);
   });
 });
 
-test.describe("Repositories: client-side commit refresh (panel [3] selection only)", () => {
+test.describe("Repositories: client-side commit refresh (panel [1] selection only)", () => {
   // daily-tech-digest is not the default-selected repo (all-projects is),
   // so every test here explicitly selects it first to match its own
   // committed snapshot head (`dailyTechDigestHead`

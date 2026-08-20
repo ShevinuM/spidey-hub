@@ -440,12 +440,14 @@ async function fetchCommits(repo) {
     const sha = c.sha || "";
     const message = c.commit?.message || "";
     const authorName = c.author?.login || c.commit?.author?.name || "Sh";
+    const date = c.commit?.author?.date || c.commit?.committer?.date;
     return {
       sha,
       sha8: sha.slice(0, 8),
       msg: message.split("\n")[0],
       html_url: c.html_url,
       initials: initialsFrom(authorName),
+      ...(date ? { date } : {}),
     };
   });
 }

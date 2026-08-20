@@ -126,7 +126,7 @@ test.describe("tmux prefix: arm, digit dispatch, single-shot disarm", () => {
     // An unprefixed "2" right after does NOT re-arm/jump to employment — it's
     // consumed (if at all) by Repositories' own bare-digit panel-focus handling,
     // exactly like tmux.spec.ts's "a prefixed ArrowDown" test proves the
-    // reverse precedence (prefix-consumes-first) using panel [3].
+    // reverse precedence (prefix-consumes-first) using panel [1].
     await page.keyboard.press("2");
     await expect(page).toHaveURL(/\/repositories$/);
     expect(await statusBarText(page)).toBe(winText("repositories", "dashboard"));

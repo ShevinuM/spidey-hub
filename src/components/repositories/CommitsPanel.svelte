@@ -19,46 +19,80 @@
 <RepositoriesPanel
   testid="repositories-panel-4"
   copySource={isFocused && state.focusedPanel === 4}
-  flex="1.3"
+  flex="0.95"
   minHeight
-  padding="12px 12px 9px"
+  padding="18px 14px 9px"
   columnBody
   border={state.panelBorder(4)}
-  titleColor={state.panelTitleColor(4)}
+  n={4}
+  label={repositories.panels.commits.label}
 >
-  {#snippet title()}
-    {repositories.panels.commits.title}
-    <span style="color:rgba(196,216,232,.4)">{repositories.panels.commits.subtitle}</span>
-  {/snippet}
   {#snippet children()}
-    <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px">
+    {#if !state.selectedRepo?.isAllProjects}
+      <div
+        data-testid="repositories-commits-caption"
+        style="color:rgba(143,208,245,.6);font-size:11px;padding-bottom:6px;margin-bottom:2px;border-bottom:1px solid rgba(224,69,60,.14)"
+      >
+        {state.commitsSubtitle}
+      </div>
+    {/if}
+    <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden">
       {#if state.selectedRepo?.isAllProjects}
         <div style="color:rgba(196,216,232,.5)">{repositories.panels.commits.localOnlyText}</div>
         <div style="color:rgba(196,216,232,.35)">{repositories.allProjects.description}</div>
       {:else}
-        {#each state.commits as c, i (c.sha8)}
-          <div
-            role="button"
-            tabindex="0"
-            class="repositories-row"
-            data-testid="repositories-commit-row"
-            data-sha8={c.sha8}
-            data-sha={c.sha ?? ""}
-            data-html-url={c.html_url}
-            onclick={() => void state.activateCommit(i)}
-            onkeydown={(e) => {
-              if (e.key === "Enter" || e.key === " ") void state.activateCommit(i);
-            }}
-            style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;{state.focusedPanel ===
-              4 && i === state.clampedCommitIdx
-              ? 'background:rgba(224,69,60,.22)'
-              : ''}"
-          >
-            <span style="color:rgba(217,176,74,.85)">{c.sha8}</span> <span style="color:#9a7fd4"
-              >{repositories.panels.commits.authorInitials}</span
-            > <span style="color:rgba(196,216,232,.7)">{c.msg}</span>
-          </div>
-        {/each}
+        <!-- Spine graph (Decision 3): a plain vertical line + one node per
+             REAL visible commit row below — deliberately NOT the mockup's
+             fake merge/branch topology (curved forks, HEAD/tag pills), which
+             has no basis in our actual commit data. Lives in the SAME
+             scrolling container as the rows (not a sibling positioned
+             outside it) so the graph scrolls in lockstep with them instead
+             of drifting once the list is taller than the panel. -->
+        <div style="position:relative">
+          {#if state.commits.length > 0}
+            <svg
+              width="28"
+              height={state.commits.length * 22}
+              style="position:absolute;left:0;top:0;overflow:visible"
+              aria-hidden="true"
+            >
+              {#if state.commits.length > 1}
+                <path
+                  d="M14 11 V {(state.commits.length - 1) * 22 + 11}"
+                  stroke="#4a9fe0"
+                  stroke-width="2"
+                  fill="none"
+                />
+              {/if}
+              {#each state.commits as c, i (c.sha8)}
+                <circle cx="14" cy={i * 22 + 11} r="4.5" fill="#4a9fe0" />
+              {/each}
+            </svg>
+          {/if}
+          {#each state.commits as c, i (c.sha8)}
+            <div
+              role="button"
+              tabindex="0"
+              class="repositories-row"
+              data-testid="repositories-commit-row"
+              data-sha8={c.sha8}
+              data-sha={c.sha ?? ""}
+              data-html-url={c.html_url}
+              onclick={() => void state.activateCommit(i)}
+              onkeydown={(e) => {
+                if (e.key === "Enter" || e.key === " ") void state.activateCommit(i);
+              }}
+              style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:34px;{state.focusedPanel ===
+                4 && i === state.clampedCommitIdx
+                ? 'background:rgba(224,69,60,.22)'
+                : ''}"
+            >
+              <span style="color:rgba(217,176,74,.85)">{c.sha8}</span> <span style="color:#9a7fd4"
+                >{repositories.panels.commits.authorInitials}</span
+              > <span style="color:rgba(196,216,232,.7)">{c.msg}</span>
+            </div>
+          {/each}
+        </div>
       {/if}
     </div>
   {/snippet}
@@ -66,19 +100,13 @@
 
 <style>
   .repositories-row {
-    /* Rows are flex children of an overflow-y:auto column; without this
-       they flex-shrink below their own line box under a full 15-commit
-       live list (only 1 commit ships in the committed snapshot, so this
-       doesn't show up there) — glyphs render vertically clipped and rows
-       overlap. Pairs with the containers above using overflow-y:auto so a
-       genuinely-too-long list scrolls instead of compressing. An explicit
-       line-height (rather than the initial "normal", which resolves
-       through getComputedStyle() as the literal string "normal" —
-       unparseable as a number) also gives the row a concrete, measurable
-       full-glyph height for the e2e assertion that checks commit-row
-       bounding-box heights are >= the computed line-height. */
-    flex-shrink: 0;
-    line-height: 1.6;
+    /* Fixed height AND matching line-height (not display:flex — the
+       existing markup joins its three spans with plain inline whitespace,
+       not a flex gap) so the spine SVG's node `cy` math (`i*22+11`) lands
+       exactly on each row's own vertical center regardless of glyph
+       metrics. */
+    height: 22px;
+    line-height: 22px;
   }
   .repositories-row:hover {
     background: rgba(224, 69, 60, 0.12);

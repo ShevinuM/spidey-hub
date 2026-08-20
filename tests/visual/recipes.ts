@@ -65,7 +65,7 @@ export interface Recipe {
  * rather than silently no-opping on the dashboard — the failure mode that
  * let a previous "03-builds-j" recipe ship a zero-value golden undetected
  * for months (see git history). "03-repositories-arrow" (was "03-builds-j")
- * explicitly focuses panel [3] (Local Repositories, bare `3`, unrelated to
+ * explicitly focuses panel [1] (Repositories, bare `1`, unrelated to
  * the `Ctrl-b` prefix) before `ArrowDown`, which moves the repo-list
  * selection highlight. "05-employment-l1"/"06-editor" account for
  * Employment Records' 3-level path (companies -> employment type -> role files):
@@ -81,8 +81,8 @@ export const recipes: Recipe[] = [
   },
   {
     name: "03-repositories-arrow",
-    actions: [{ key: "Control+b" }, { key: "1" }, { key: "3" }, { key: "ArrowDown" }],
-    check: { url: /\/repositories$/, visible: '[data-testid="repositories-panel-3"][data-copy-source]' },
+    actions: [{ key: "Control+b" }, { key: "1" }, { key: "1" }, { key: "ArrowDown" }],
+    check: { url: /\/repositories$/, visible: '[data-testid="repositories-panel-1"][data-copy-source]' },
   },
   {
     name: "04-employment-l0",
@@ -133,10 +133,10 @@ export const recipes: Recipe[] = [
  * mapping and nav.spec.ts's own "Ctrl-b 5 switches to help" test.
  *
  * "12-all-projects": the virtual all-projects repo is the FIRST row in
- * panel [3]'s flat list and the default selection
+ * panel [1]'s flat list and the default selection
  * (`selectedRepoIdx = $state(0)` in Repositories.svelte), so plain "02-repositories"
- * already lands on the all-projects tree with panel [3] unfocused (no row
- * highlighted). This recipe focuses panel [3] (bare `3`, unrelated to the
+ * already lands on the all-projects tree with panel [1] unfocused (no row
+ * highlighted). This recipe focuses panel [1] (bare `1`, unrelated to the
  * `Ctrl-b` prefix that switches windows) and re-activates the highlighted
  * all-projects row with `Enter`, which keeps this golden meaningfully
  * distinct from "02-repositories" (that highlighted-row state) while still
@@ -151,7 +151,7 @@ export const extraRecipes: Recipe[] = [
   },
   {
     name: "12-all-projects",
-    actions: [{ key: "Control+b" }, { key: "1" }, { key: "3" }, { key: "Enter" }],
+    actions: [{ key: "Control+b" }, { key: "1" }, { key: "1" }, { key: "Enter" }],
     check: { url: /\/repositories$/, visible: '[data-testid="repositories-panel-2"]:has-text("all-projects")' },
   },
 ];

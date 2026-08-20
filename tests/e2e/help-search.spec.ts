@@ -96,7 +96,7 @@ test.describe("HelpSearch: gating — does NOT open in these contexts", () => {
 
   test("does not open while a file editor is open", async ({ page }) => {
     await gotoReady(page, "/repositories");
-    // The default-highlighted panel [3] repo is the virtual "all-projects"
+    // The default-highlighted panel [1] repo is the virtual "all-projects"
     // entry (no README.md in its flat .md-only tree) — click transcript-tts's
     // own row directly, which both selects it and loads its tree.
     await page.locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]').click();

@@ -375,21 +375,22 @@ export interface EditorLabels {
 
 export interface RepositoriesData {
   panels: {
-    status: { title: string };
-    // Panel [2] is the tree browser — its subtitle is "<repo>" or
+    status: { label: string };
+    // Panel [2] is the tree browser — its caption is "<repo>" or
     // "<repo> @<sha8>" once a repo/commit is open.
-    files: { title: string; subtitleTemplate: string };
-    repos: { title: string };
-    commits: { title: string; subtitle: string; authorInitials: string; localOnlyText: string };
-    changes: { title: string; subtitleTemplate: string };
-    commandLog: { title: string };
+    files: { label: string; subtitleTemplate: string };
+    repos: { label: string };
+    commits: { label: string; subtitleTemplate: string; authorInitials: string; localOnlyText: string };
+    changes: { label: string; subtitleTemplate: string };
+    commandLog: { label: string };
   };
   statusLine: {
     prefix: string;
     arrow: string;
     reposSuffix: string;
-    separator: string;
-    projectsSuffix: string;
+    mainLabel: string;
+    lastPushTemplate: string;
+    connectedLabel: string;
   };
   commandLog: CommandLogLine[];
   repoBrowser: RepoBrowserData;

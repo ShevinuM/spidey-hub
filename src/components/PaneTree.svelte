@@ -66,6 +66,7 @@
      * through to Dashboard.svelte's footer sync line. */
     paneCount: number;
     repositories: RepositoriesData;
+    repositoriesFixtureMode: boolean;
     personnel: PersonnelData;
     profile: ProfileData;
     help: HelpData;
@@ -106,6 +107,7 @@
     windowNumberById,
     paneCount,
     repositories,
+    repositoriesFixtureMode,
     personnel,
     profile,
     help,
@@ -158,6 +160,7 @@
           {windowNumberById}
           {paneCount}
           {repositories}
+          {repositoriesFixtureMode}
           {personnel}
           {profile}
           {help}
@@ -196,7 +199,14 @@
            window (StatusBar still pinned to the bottom). -->
       <div style="flex:1;min-height:0"></div>
     {:else if node.pane.program === "repositories"}
-      <Repositories bind:this={leafRef} {repositories} {projects} {commitsByRepo} {isFocused} />
+      <Repositories
+        bind:this={leafRef}
+        {repositories}
+        {projects}
+        {commitsByRepo}
+        {isFocused}
+        fixtureMode={repositoriesFixtureMode}
+      />
     {:else if node.pane.program === "employment"}
       <EmploymentRecords
         bind:this={leafRef}

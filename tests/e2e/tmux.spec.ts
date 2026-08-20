@@ -217,7 +217,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
   test("Ctrl-b Ctrl-b pages back in the open vim editor (send-prefix reaches vim's Ctrl-b)", async ({ page }) => {
     await page.route("**/api.github.com/**", (route) => route.abort());
     await gotoReady(page, "/repositories");
-    // The default-highlighted panel [3] repo is the virtual "all-projects"
+    // The default-highlighted panel [1] repo is the virtual "all-projects"
     // entry (no README.md in its flat .md-only tree) — click transcript-tts's
     // own row directly (selects AND loads its tree; its README.md is 56
     // lines, still well over this test's 8-line floor).
@@ -281,12 +281,12 @@ test.describe("tmux prefix (Ctrl-b)", () => {
 
   // Panel [2] is the tree browser (empty until a repo is opened, so it has
   // no default arrow-navigable content), so this exercises the "prefix
-  // consumes the key first" invariant against panel [3]'s repo selection
-  // instead — panel [3] still has default content (the flat repo list) to
+  // consumes the key first" invariant against panel [1]'s repo selection
+  // instead — panel [1] still has default content (the flat repo list) to
   // move a highlight across.
-  test("a prefixed ArrowDown does not move the Repositories repo selection (panel [3])", async ({ page }) => {
+  test("a prefixed ArrowDown does not move the Repositories repo selection (panel [1])", async ({ page }) => {
     await gotoReady(page, "/repositories");
-    await page.keyboard.press("3"); // focus panel [3], Local Repositories
+    await page.keyboard.press("1"); // focus panel [1], Repositories
     const firstRow = page.locator('[data-testid="repositories-repo-row"]').first();
     await expect(firstRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.22\)/);
 
@@ -396,7 +396,7 @@ test.describe("Ctrl-b , rename-window", () => {
     page,
   }) => {
     await gotoReady(page, "/repositories");
-    await page.keyboard.press("3");
+    await page.keyboard.press("1");
     const firstRow = page.locator('[data-testid="repositories-repo-row"]').first();
     await expect(firstRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.22\)/);
 

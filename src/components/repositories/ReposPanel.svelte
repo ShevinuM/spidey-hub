@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Panel [3]: flat repo list rows + fetch spinner — moved out of
+  // Panel [1]: flat repo list rows + fetch spinner — moved out of
   // Repositories.svelte during the folder+state-class relocation refactor. Pure
   // relocation: same DOM, testids, classes, and inline styles as the
   // original inline markup.
@@ -17,18 +17,16 @@
 </script>
 
 <RepositoriesPanel
-  testid="repositories-panel-3"
-  copySource={isFocused && state.focusedPanel === 3}
-  flex="1"
+  testid="repositories-panel-1"
+  copySource={isFocused && state.focusedPanel === 1}
+  flex="1.1"
   minHeight
-  padding="12px 12px 9px"
+  padding="12px 10px 8px"
   columnBody
-  border={state.panelBorder(3)}
-  titleColor={state.panelTitleColor(3)}
+  border={state.panelBorder(1)}
+  n={1}
+  label={repositories.panels.repos.label}
 >
-  {#snippet title()}
-    {repositories.panels.repos.title}
-  {/snippet}
   {#snippet children()}
     <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px">
       {#each state.flatRepos as repo, i (repo.key)}
@@ -40,14 +38,14 @@
           data-repo-name={repo.key}
           data-all-projects={repo.isAllProjects ? "true" : "false"}
           onclick={() => {
-            state.focusedPanel = 3;
+            state.focusedPanel = 1;
             state.activateRepo(i);
           }}
           onkeydown={(e) => {
             if (e.key === "Enter" || e.key === " ") state.activateRepo(i);
           }}
           style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(196,216,232,.75);{state.focusedPanel ===
-            3 && i === state.selectedRepoIdx
+            1 && i === state.selectedRepoIdx
             ? 'background:rgba(224,69,60,.22)'
             : ''}"
         >
@@ -62,6 +60,22 @@
             >
               {repositories.spinner.label} {repositories.spinner.frames[state.spinnerFrame]}
             </span>
+          {:else if !repo.isAllProjects}
+            {#if state.repoTree?.source.repoName === repo.key}
+              <span
+                data-testid="repositories-repo-open-dot"
+                style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ffca28;margin-left:6px;animation:{state.fixtureMode
+                  ? 'none'
+                  : 'pls 1.6s ease-in-out infinite'}"
+              ></span>
+            {:else}
+              <span
+                data-testid="repositories-repo-idle-dot"
+                style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:6px;background:{state.idleDotColor(
+                  repo.key,
+                )}"
+              ></span>
+            {/if}
           {/if}
         </div>
       {/each}
@@ -70,6 +84,15 @@
 </RepositoriesPanel>
 
 <style>
+  @keyframes pls {
+    0%,
+    100% {
+      opacity: 0.45;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
   .repositories-row {
     /* Rows are flex children of an overflow-y:auto column; without this
        they flex-shrink below their own line box under a full 15-commit

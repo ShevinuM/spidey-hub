@@ -4,104 +4,119 @@
     "sha8": "35430f06",
     "msg": "Implemented monthly playlist generator",
     "html_url": "https://github.com/ShevinuM/SpotifyPal/commit/35430f06067aab0154092f2bb60cb2ac0f3d5909",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2024-02-15T20:03:10Z"
   },
   {
     "sha": "f71114602dbe86e950ac550d4e6e28acc796969d",
     "sha8": "f7111460",
     "msg": "Implemented automatic smart sorting after filtering playlists",
     "html_url": "https://github.com/ShevinuM/SpotifyPal/commit/f71114602dbe86e950ac550d4e6e28acc796969d",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2024-02-15T14:03:40Z"
   },
   {
     "sha": "9b3ce90e0968522dba89bab9d993dffa6f66d434",
     "sha8": "9b3ce90e",
     "msg": "Edited ReadMe.md",
     "html_url": "https://github.com/ShevinuM/SpotifyPal/commit/9b3ce90e0968522dba89bab9d993dffa6f66d434",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2024-02-14T20:49:59Z"
   },
   {
     "sha": "84afe0b2d977cf3eaee915debb61777a9bc1009a",
     "sha8": "84afe0b2",
     "msg": "Reformatted files and edited ReadME.md",
     "html_url": "https://github.com/ShevinuM/SpotifyPal/commit/84afe0b2d977cf3eaee915debb61777a9bc1009a",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2024-02-14T20:49:28Z"
   },
   {
     "sha": "b6c3262e3f70097c72884713a2751fbbe5c90910",
     "sha8": "b6c3262e",
     "msg": "Completed the functionality to filtre playlists based on saved tracks",
     "html_url": "https://github.com/ShevinuM/SpotifyPal/commit/b6c3262e3f70097c72884713a2751fbbe5c90910",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2024-02-14T20:00:58Z"
   },
   {
     "sha": "456235b0f422748e544e294caf6a6a1c512a50be",
     "sha8": "456235b0",
     "msg": "Completed storeUserSavedTracks.py",
     "html_url": "https://github.com/ShevinuM/SpotifyPal/commit/456235b0f422748e544e294caf6a6a1c512a50be",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2024-02-14T19:26:35Z"
   },
   {
     "sha": "678f2177c247bc4175dbef1b4f6a6e045842b55f",
     "sha8": "678f2177",
     "msg": "Merge branch 'main' of https://github.com/ShevinuM/SpotifyPal",
     "html_url": "https://github.com/ShevinuM/SpotifyPal/commit/678f2177c247bc4175dbef1b4f6a6e045842b55f",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2024-01-05T14:29:32Z"
   },
   {
     "sha": "cc2eb574438670bc0258cec24d367493dd63dec1",
     "sha8": "cc2eb574",
     "msg": "Update README.md",
     "html_url": "https://github.com/ShevinuM/SpotifyPal/commit/cc2eb574438670bc0258cec24d367493dd63dec1",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2024-01-05T14:28:33Z"
   },
   {
     "sha": "14546747489a5abbb265b8d2b2ce7de88171f0ca",
     "sha8": "14546747",
     "msg": "Update README.md",
     "html_url": "https://github.com/ShevinuM/SpotifyPal/commit/14546747489a5abbb265b8d2b2ce7de88171f0ca",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2024-01-05T14:13:12Z"
   },
   {
     "sha": "3dfbb8a3ed3a11403f789f36897d1dc12e8413db",
     "sha8": "3dfbb8a3",
     "msg": "SmartSort feature works",
     "html_url": "https://github.com/ShevinuM/SpotifyPal/commit/3dfbb8a3ed3a11403f789f36897d1dc12e8413db",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2024-01-05T13:54:54Z"
   },
   {
     "sha": "dd483fed7b071aafb2af951c80310fc39041e628",
     "sha8": "dd483fed",
     "msg": "Create LICENSE",
     "html_url": "https://github.com/ShevinuM/SpotifyPal/commit/dd483fed7b071aafb2af951c80310fc39041e628",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2024-01-05T13:27:59Z"
   },
   {
     "sha": "dc18cc17da161a7dec9815b563d0f434808d1e02",
     "sha8": "dc18cc17",
     "msg": "Update README.md",
     "html_url": "https://github.com/ShevinuM/SpotifyPal/commit/dc18cc17da161a7dec9815b563d0f434808d1e02",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2024-01-05T13:26:11Z"
   },
   {
     "sha": "9434d9e574453a90128cc7a711931a47b9507f0a",
     "sha8": "9434d9e5",
     "msg": "Update README.md",
     "html_url": "https://github.com/ShevinuM/SpotifyPal/commit/9434d9e574453a90128cc7a711931a47b9507f0a",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2024-01-05T12:54:13Z"
   },
   {
     "sha": "8dec3b7963fefb64d32f68de8f7462607500bb3d",
     "sha8": "8dec3b79",
     "msg": "Update README.md",
     "html_url": "https://github.com/ShevinuM/SpotifyPal/commit/8dec3b7963fefb64d32f68de8f7462607500bb3d",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2024-01-05T00:30:26Z"
   },
   {
     "sha": "083695914aa36cff4a61d4fcc61223e4c2a799b9",
     "sha8": "08369591",
     "msg": "Updated ReadMe",
     "html_url": "https://github.com/ShevinuM/SpotifyPal/commit/083695914aa36cff4a61d4fcc61223e4c2a799b9",
-    "initials": "Sh"
+    "initials": "Sh",
+    "date": "2024-01-05T00:27:36Z"
   }
 ]

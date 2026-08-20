@@ -69,7 +69,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
       name: "Repositories focused panel",
       async open(page) {
         await gotoReady(page, "/repositories");
-        await page.keyboard.press("1"); // focus panel [1] Status
+        await page.keyboard.press("1"); // focus panel [1] Repositories
       },
     },
     {
@@ -140,7 +140,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
   }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await gotoReady(page, "/repositories");
-    // The default-highlighted panel [3] repo is the virtual "all-projects"
+    // The default-highlighted panel [1] repo is the virtual "all-projects"
     // entry (no README.md in its flat .md-only tree) — click transcript-tts's
     // own row directly, which both selects it and loads its tree.
     await page.locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]').click();

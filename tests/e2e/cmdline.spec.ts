@@ -403,13 +403,13 @@ test.describe("Cmdline: editor ex-mode still works through the box", () => {
       name: "Repositories",
       async open(page) {
         await gotoReady(page, "/repositories");
-        // The default-highlighted panel [3] repo is the virtual
+        // The default-highlighted panel [1] repo is the virtual
         // "all-projects" entry (no README.md in its flat .md-only tree), and
         // the Files pane renders the FULL nested tree at once —
         // daily-tech-digest genuinely has two files named "README.md" (root
         // + "site/README.md") simultaneously visible, which would make the
         // locator below ambiguous. transcript-tts has exactly one README.md
-        // and no nested duplicate, so clicking its panel [3] row directly
+        // and no nested duplicate, so clicking its panel [1] row directly
         // (selects AND loads its tree) sidesteps both issues — same
         // approach as editor-vim.spec.ts's Repositories entry point.
         await page.locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]').click();

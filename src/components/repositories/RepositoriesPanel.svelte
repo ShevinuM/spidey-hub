@@ -1,11 +1,13 @@
 <script lang="ts">
-  // Shared panel chrome (bordered box + floating title) for the six Repositories
-  // panels — moved out of Repositories.svelte during the folder+state-class
-  // relocation refactor. Every panel's outer wrapper + floating title div
-  // followed this exact shape inline; this component reproduces the same
-  // interpolated style string byte-for-byte per caller-supplied pieces so
-  // the rendered DOM is unchanged.
+  // Shared panel chrome (bordered box + top-straddling PanelBadge) for the
+  // six Repositories panels. UI v2 (Builds-Panel-Changes.md): every panel's
+  // OLD corner-bracket floating title ("─[N]─Label") is replaced by the
+  // shared PanelBadge pill straddling the panel's own top border, centered,
+  // reading "{n} · {label}" — same badge, same position, on every one of
+  // the six panels (only the panel BORDER color reflects focus; the badge
+  // itself never varies with it, matching the mockup exactly).
   import type { Snippet } from "svelte";
+  import PanelBadge from "../PanelBadge.svelte";
 
   interface Props {
     testid?: string;
@@ -15,12 +17,14 @@
     padding: string;
     columnBody?: boolean;
     border: string;
-    titleColor: string;
-    title: Snippet;
+    /** Badge panel number, e.g. `0` for "0 · Status". */
+    n: number;
+    /** Badge label, e.g. "Status". */
+    label: string;
     children?: Snippet;
   }
 
-  const { testid, copySource, flex, minHeight = false, padding, columnBody = false, border, titleColor, title, children }: Props =
+  const { testid, copySource, flex, minHeight = false, padding, columnBody = false, border, n, label, children }: Props =
     $props();
 </script>
 
@@ -31,10 +35,6 @@
     ? ';display:flex;flex-direction:column'
     : ''}"
 >
-  <div
-    style="position:absolute;top:-8px;left:10px;background:#0a0e13;padding:0 6px;font-size:12px;color:{titleColor}"
-  >
-    {@render title()}
-  </div>
+  <PanelBadge {n} {label} />
   {#if children}{@render children()}{/if}
 </div>

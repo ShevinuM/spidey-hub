@@ -58,18 +58,18 @@ const entryPoints: EntryPoint[] = [
     name: "Repositories",
     async open(page) {
       await gotoReady(page, "/repositories");
-      // The default-highlighted panel [3] repo is the virtual "all-projects"
+      // The default-highlighted panel [1] repo is the virtual "all-projects"
       // entry, not a real repo, so pressing Enter on the default highlight
       // does not load a real repo's tree. The Files pane also renders the
       // FULL nested tree at once, and daily-tech-digest genuinely has two
       // files named "README.md" (root + "site/README.md") simultaneously
       // visible in that tree, which would make the locator below ambiguous.
       // transcript-tts has exactly one README.md and no nested duplicate, so
-      // clicking its panel [3] row directly (which both selects it AND loads
+      // clicking its panel [1] row directly (which both selects it AND loads
       // its tree) sidesteps both issues.
       await page.locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]').click();
       await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')).toBeVisible();
-      // Clicking a file previews it in panel [0] but does NOT open the
+      // Clicking a file previews it in panel [3] but does NOT open the
       // editor (click-selects/Enter-opens split); focus panel [2] and press
       // Enter to actually open it.
       await page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]').click();

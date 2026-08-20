@@ -5,7 +5,7 @@
   //
   // This view uses a lazygit-style flat-repo-list flow, fixing two live
   // user bug reports along the way:
-  //   - Panel [3] "Local Repositories" is now a FLAT list of every repo
+  //   - Panel [1] "Local Repositories" is now a FLAT list of every repo
   //     across every project, plus a virtual "all-projects" entry (every
   //     project's .md doc, browsable like a repo — see repositories.yaml's
   //     `allProjects` key and scripts/generate.mjs's all-projects.json).
@@ -14,15 +14,15 @@
   //   - Panel [2] "Files" is the tree browser for whatever's selected in
   //     [3] (its title reads "<repo>" or "<repo> @<sha8>" while browsing a
   //     commit snapshot instead of the working tree). Selecting/clicking a
-  //     FILE previews it in panel [0]; Enter opens the full-screen vim
+  //     FILE previews it in panel [3]; Enter opens the full-screen vim
   //     Editor. Dirs/`../` navigate the same way on click or Enter.
-  //   - Panel [4] "Commits" tracks ONLY the panel [3] selection — moving
+  //   - Panel [4] "Commits" tracks ONLY the panel [1] selection — moving
   //     through files/dirs in [2]/[0] must never change it: panel [4]'s
-  //     repo comes from panel [3]'s own selection state, never from
+  //     repo comes from panel [1]'s own selection state, never from
   //     whatever panel [2]/[0] happen to be browsing. Commit rows are
   //     not `<a target="_blank">`: click/Enter fetches that commit's
   //     tree (src/lib/githubTrees.ts) into panel [2] instead, with a
-  //     lazygit-style braille spinner on the panel [3] repo row while any
+  //     lazygit-style braille spinner on the panel [1] repo row while any
   //     fetch for that repo is in flight; `o` opens the commit on GitHub
   //     (the only surviving external-link path, documented in the Help
   //     window's Repositories scope).
@@ -39,12 +39,12 @@
   import type { Commit } from "../../lib/commits";
   import Editor from "../editor/Editor.svelte";
   import { RepositoriesState } from "./repositoriesState.svelte";
+  import StatusPanel from "./StatusPanel.svelte";
   import FilesPanel from "./FilesPanel.svelte";
   import ReposPanel from "./ReposPanel.svelte";
   import CommitsPanel from "./CommitsPanel.svelte";
   import PreviewPanel from "./PreviewPanel.svelte";
   import CommandLog from "./CommandLog.svelte";
-  import RepositoriesPanel from "./RepositoriesPanel.svelte";
 
   interface Props {
     repositories: RepositoriesData;
@@ -55,14 +55,21 @@
      * `focusedPanel === N` check below (both must hold: this pane is the
      * window's focused one, AND this is its focused panel). */
     isFocused: boolean;
+    /** `PORTFOLIO_FIXTURES=1` — gates the two new infinite `pls` opacity
+     * animations (Status panel's "connected" dot, panel [1]'s open-repo
+     * gold dot) to `none`, same convention as the notifications sense-ring/
+     * header-sweep (src/components/notifications/NotificationBell.svelte).
+     * Read server-side only in the `.astro` frontmatter, never client-side. */
+    fixtureMode: boolean;
   }
 
-  const { repositories, projects, commitsByRepo, isFocused }: Props = $props();
+  const { repositories, projects, commitsByRepo, isFocused, fixtureMode }: Props = $props();
 
   const state = new RepositoriesState(
     () => repositories,
     () => projects,
     () => commitsByRepo,
+    () => fixtureMode,
   );
 
   // ---------------------------------------------------------------------
@@ -96,8 +103,8 @@
 
     if (e.metaKey || e.ctrlKey || e.altKey) return false;
 
-    if (e.key === "0" || e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4") {
-      const n = Number(e.key) as 0 | 1 | 2 | 3 | 4;
+    if (e.key === "0" || e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4" || e.key === "5") {
+      const n = Number(e.key) as 0 | 1 | 2 | 3 | 4 | 5;
       state.focusedPanel = n;
       return true;
     }
@@ -126,7 +133,7 @@
       return false;
     }
 
-    if (state.focusedPanel === 3) {
+    if (state.focusedPanel === 1) {
       if (e.key === "ArrowDown") {
         state.selectRepo(1);
         return true;
@@ -180,48 +187,29 @@
   />
 {:else}
   <div style="flex:1;min-height:0;display:flex">
-    <div style="flex:1;min-height:0;display:flex;gap:12px;padding:16px 16px 14px;font-size:13px">
-      <div style="width:38%;min-width:0;display:flex;flex-direction:column;gap:14px">
-        <!-- [1] Status -->
-        <RepositoriesPanel
-          testid="repositories-panel-1"
-          copySource={isFocused && state.focusedPanel === 1}
-          flex="none"
-          padding="10px 12px 9px"
-          border={state.panelBorder(1)}
-          titleColor={state.panelTitleColor(1)}
-        >
-          {#snippet title()}
-            {repositories.panels.status.title}
-          {/snippet}
-          {#snippet children()}
-            <div style="color:#5fc6b4">
-              {repositories.statusLine.prefix}
-              <span style="color:rgba(196,216,232,.5)">{repositories.statusLine.arrow}</span>
-              <span style="color:#e0453c">{state.repoCount} {repositories.statusLine.reposSuffix}</span>
-              <span style="color:rgba(196,216,232,.5)"
-                >{repositories.statusLine.separator} {state.projectCount} {repositories.statusLine.projectsSuffix}</span
-              >
-            </div>
-          {/snippet}
-        </RepositoriesPanel>
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:12px;font-size:13px">
+      <!-- [0] Status — full-width bar above the two-column row (UI v2) -->
+      <StatusPanel {repositories} {state} {isFocused} />
 
-        <!-- [2] Files (tree browser) -->
-        <FilesPanel {repositories} {state} {isFocused} />
+      <div style="flex:1;min-height:0;display:flex;gap:12px">
+        <div style="width:31%;min-width:0;display:flex;flex-direction:column;gap:12px">
+          <!-- [1] Repositories (flat list + all-projects) -->
+          <ReposPanel {repositories} {state} {isFocused} />
 
-        <!-- [3] Local Repositories (flat list + all-projects) -->
-        <ReposPanel {repositories} {state} {isFocused} />
+          <!-- [2] Files (tree browser) -->
+          <FilesPanel {repositories} {state} {isFocused} />
+        </div>
 
-        <!-- [4] Commits (tracks ONLY the panel [3] selection) -->
-        <CommitsPanel {repositories} {state} {isFocused} />
-      </div>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:12px">
+          <!-- [3] Content (preview) -->
+          <PreviewPanel {repositories} {state} {isFocused} />
 
-      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:14px">
-        <!-- [0] Changes (preview) -->
-        <PreviewPanel {repositories} {state} {isFocused} />
+          <!-- [4] Commits (tracks ONLY the panel [1] selection) -->
+          <CommitsPanel {repositories} {state} {isFocused} />
 
-        <!-- Command log -->
-        <CommandLog {repositories} />
+          <!-- [5] Command Log -->
+          <CommandLog {repositories} {state} {isFocused} />
+        </div>
       </div>
     </div>
   </div>

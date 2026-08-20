@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Panel [0]: file/doc preview + commit-fetch error line — moved out of
+  // Panel [3]: file/doc preview + commit-fetch error line — moved out of
   // Repositories.svelte during the folder+state-class relocation refactor. Pure
   // relocation: same DOM, testids, and inline styles as the original inline
   // markup.
@@ -17,20 +17,23 @@
 </script>
 
 <RepositoriesPanel
-  testid="repositories-panel-0"
-  copySource={isFocused && state.focusedPanel === 0}
-  flex="2.4"
+  testid="repositories-panel-3"
+  copySource={isFocused && state.focusedPanel === 3}
+  flex="1.95"
   minHeight
-  padding="12px 14px 10px"
+  padding="18px 14px 9px"
   columnBody
-  border={state.panelBorder(0)}
-  titleColor={state.panelTitleColor(0)}
+  border={state.panelBorder(3)}
+  n={3}
+  label={repositories.panels.changes.label}
 >
-  {#snippet title()}
-    {repositories.panels.changes.title}
-    <span style="color:rgba(196,216,232,.4)">{state.changesSubtitle}</span>
-  {/snippet}
   {#snippet children()}
+    <div
+      data-testid="repositories-content-caption"
+      style="color:rgba(143,208,245,.6);font-size:11px;padding-bottom:6px;margin-bottom:4px;border-bottom:1px solid rgba(224,69,60,.14);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+    >
+      {state.changesSubtitle}
+    </div>
     <div data-testid="repositories-changes-body" style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:2px">
       {#if state.commitFetchError}
         <div data-testid="repositories-commit-error" style="color:#e0453c">{state.commitFetchError}</div>

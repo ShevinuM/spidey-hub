@@ -49,6 +49,14 @@ export interface Commit {
   msg: string;
   html_url: string;
   initials: string;
+  /** ISO commit date (author date), when the source captured it. Real
+   * snapshots (src/generated/commits/*.json, scripts/generate.mjs) always
+   * carry it; frozen fixture snapshots (fixtures/commits/*.json, extracted
+   * verbatim from Homepage.dc.html) never do — callers deriving a "last
+   * push" value must treat its absence as "not available", not "epoch
+   * zero", so fixture builds render no last-push segment at all (keeps
+   * goldens stable regardless of wall-clock time). */
+  date?: string;
 }
 
 function byBasename(glob: Record<string, unknown>): Record<string, Commit[]> {

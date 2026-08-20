@@ -21,6 +21,7 @@ import {
 } from "../../lib/repoTree";
 import { fetchLiveCommits } from "../../lib/githubCommits";
 import { fetchCommitTree, fetchCommitFileContent } from "../../lib/githubTrees";
+import { agoLabel } from "../../lib/notificationStore";
 
 // Mirrors Editor.svelte's own `EditorLine` export structurally — a plain
 // .ts module can't import a named type from a .svelte file under `tsc`
@@ -83,9 +84,35 @@ export class RepositoriesState {
     private readonly repositoriesFn: () => RepositoriesData,
     private readonly projectsFn: () => CollectionEntry<"repositories">[],
     private readonly commitsByRepoFn: () => Record<string, Commit[]>,
+    private readonly fixtureModeFn: () => boolean,
   ) {
     // ---------------------------------------------------------------------
-    // In-flight fetch tracking -> panel [3] spinner.
+    // Status panel [0]: "last push" relative time, derived once client-side
+    // from the freshest commit date across every repo's committed snapshot
+    // (commitsByRepo — NOT liveCommits, which only ever covers whichever one
+    // repo is currently selected in panel [1]). Computed in a mount-time
+    // effect rather than a plain $derived (same reasoning as StatusBar.svelte's
+    // own clock: an SSR-rendered value baked in at build time would mismatch
+    // whatever the visitor's own clock reads at hydration). Frozen fixture
+    // commit snapshots carry no `date` field at all (see Commit's own doc
+    // comment) — this stays null then, and the caller renders no last-push
+    // segment, which is what keeps the goldens stable regardless of
+    // wall-clock time.
+    $effect(() => {
+      untrack(() => {
+        const dates = Object.values(this.commitsByRepoFn())
+          .map((commits) => commits[0]?.date)
+          .filter((d): d is string => !!d)
+          .map((d) => Date.parse(d))
+          .filter((n) => !Number.isNaN(n));
+        if (dates.length === 0) return;
+        const ago = agoLabel(Math.max(...dates), Date.now());
+        this.lastPushLabel = this.repositoriesFn().statusLine.lastPushTemplate.replace("{value}", `${ago} ago`);
+      });
+    });
+
+    // ---------------------------------------------------------------------
+    // In-flight fetch tracking -> panel [1] spinner.
     // ---------------------------------------------------------------------
     $effect(() => {
       if (Object.keys(this.fetchingRepos).length === 0) return;
@@ -141,7 +168,7 @@ export class RepositoriesState {
 
     // all-projects is pinned first AND selected by default, so the Files
     // pane must show its tree on mount rather than
-    // waiting for a click/Enter on panel [3]. `untrack()` (this file already
+    // waiting for a click/Enter on panel [1]. `untrack()` (this file already
     // relies on it for beginFetch/endFetch above) keeps this a one-shot
     // mount-time effect with no tracked dependencies — it must not re-fire
     // every time `flatRepos` is recomputed. Runs client-side only (an
@@ -180,12 +207,36 @@ export class RepositoriesState {
   get commitsByRepo(): Record<string, Commit[]> {
     return this.commitsByRepoFn();
   }
+  get fixtureMode(): boolean {
+    return this.fixtureModeFn();
+  }
+
+  /** Set once, client-side, by the mount effect above; `null` until then
+   * (first paint) or forever when no commit snapshot carries a `date` (every
+   * frozen fixture snapshot) — the caller renders no last-push segment at
+   * all in that case. */
+  lastPushLabel = $state<string | null>(null);
+
+  /** Idle (non-open) panel [1] row dot color — real-data two-tone: a repo
+   * pushed to within the last ~30 days reads as "recently active" (brighter
+   * blue), anything older (or a repo/fixture with no known commit date at
+   * all) reads as "quiet" (dimmer blue). Distinct from the single gold
+   * pulsing dot, which marks whichever row is the currently OPEN repo (see
+   * ReposPanel.svelte), not this idle styling. */
+  idleDotColor(repoKey: string): string {
+    const date = this.commitsByRepo[repoKey]?.[0]?.date;
+    if (!date) return "#3c78aa";
+    const ageMs = Date.now() - Date.parse(date);
+    if (Number.isNaN(ageMs)) return "#3c78aa";
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    return ageMs <= THIRTY_DAYS_MS ? "#4a9fe0" : "#3c78aa";
+  }
 
   sortedProjects = $derived([...this.projects].sort((a, b) => a.data.order - b.data.order));
 
-  /** The doc panel [0] shows before anything has been browsed ("Panel [0] =
+  /** The doc panel [3] shows before anything has been browsed (Panel [3] =
    * preview pane: project doc initially, selected file's content while
-   * browsing"). There is no per-project selection UI — panel [2] is the
+   * browsing). There is no per-project selection UI — panel [2] is the
    * tree browser — so this is simply the first project by frontmatter
    * `order`. */
   defaultProject = $derived(this.sortedProjects[0]);
@@ -197,7 +248,7 @@ export class RepositoriesState {
   );
 
   // ---------------------------------------------------------------------
-  // Panel [3]: flat repo list (every project's repos, in frontmatter
+  // Panel [1]: flat repo list (every project's repos, in frontmatter
   // `order`) + the virtual all-projects entry.
   // ---------------------------------------------------------------------
 
@@ -219,8 +270,11 @@ export class RepositoriesState {
 
   selectedRepoIdx = $state(0);
   selectedCommitIdx = $state(0);
-  /** 0-4, matching the five panel numbers (0 = Changes, 1 = Status, etc.). */
-  focusedPanel = $state<0 | 1 | 2 | 3 | 4>(2);
+  /** 0-5, matching the six UI v2 panel numbers in reading order: 0 = Status,
+   * 1 = Repositories, 2 = Files, 3 = Content, 4 = Commits, 5 = Command Log.
+   * Default stays 2 (Files) — the mount effect below loads the all-projects
+   * tree into it immediately, same as before the renumbering. */
+  focusedPanel = $state<0 | 1 | 2 | 3 | 4 | 5>(2);
 
   selectedRepo = $derived(this.flatRepos[this.selectedRepoIdx]);
 
@@ -228,7 +282,7 @@ export class RepositoriesState {
   repoCount = $derived(this.sortedProjects.reduce((n, p) => n + p.data.repos.length, 0));
 
   // ---------------------------------------------------------------------
-  // In-flight fetch tracking -> panel [3] spinner. A counter (not a Set) per repo name: a repo can have more than one fetch
+  // In-flight fetch tracking -> panel [1] spinner. A counter (not a Set) per repo name: a repo can have more than one fetch
   // overlapping (its live-commit refresh alongside a commit-tree fetch, or a
   // tree fetch alongside a file-content fetch), and the spinner must stay up
   // until every one of them has settled.
@@ -279,7 +333,7 @@ export class RepositoriesState {
   /** Set when a commit-tree fetch fails: on failure this shows a
    * transient, data-driven error line and keeps the current tree (whatever
    * panel [2] already had stays exactly as it was; this is a one-off status
-   * line in panel [0], not a panel takeover). Cleared at the start of the
+   * line in panel [3], not a panel takeover). Cleared at the start of the
    * next commit-tree attempt. */
   commitFetchError = $state<string | null>(null);
 
@@ -339,7 +393,7 @@ export class RepositoriesState {
     }
   }
 
-  /** Single click OR Enter on a panel [3] row loads that repo's working
+  /** Single click OR Enter on a panel [1] row loads that repo's working
    * tree into panel [2] — there is no separate select-then-open step. */
   openRepo(r: RepoRow) {
     this.repoTree = { source: { kind: "working", repoName: r.key }, collapsedDirs: new Set(), selectedIdx: 0 };
@@ -351,7 +405,7 @@ export class RepositoriesState {
    * Fetch a commit's tree and, on success, swap panel [2] over to it.
    * On failure, panel [2] is left exactly as it was (working tree, a
    * different commit, or empty) and `commitFetchError` carries a transient
-   * message for panel [0] instead.
+   * message for panel [3] instead.
    */
   async openCommitTree(repoName: string, commit: Commit) {
     this.commitFetchError = null;
@@ -370,7 +424,7 @@ export class RepositoriesState {
   }
 
   // ---------------------------------------------------------------------
-  // Panel [0]: file preview (working-tree files resolve synchronously;
+  // Panel [3]: file preview (working-tree files resolve synchronously;
   // commit-tree files are fetched lazily per selection).
   // ---------------------------------------------------------------------
 
@@ -393,7 +447,7 @@ export class RepositoriesState {
 
   // ---------------------------------------------------------------------
   // Editor (full-screen, opened only by Enter on a file — clicking a file
-  // just previews it in panel [0]).
+  // just previews it in panel [3]).
   // ---------------------------------------------------------------------
 
   editorFile = $state<EditorFileState | null>(null);
@@ -499,7 +553,7 @@ export class RepositoriesState {
   }
 
   // ---------------------------------------------------------------------
-  // Panel [3] / [4] selection
+  // Panel [1] / [4] selection
   // ---------------------------------------------------------------------
 
   selectRepo(delta: number) {
@@ -517,7 +571,7 @@ export class RepositoriesState {
     this.openRepo(r);
   }
 
-  /** Panel [4] tracks ONLY this — the repo highlighted in panel [3] — never
+  /** Panel [4] tracks ONLY this — the repo highlighted in panel [1] — never
    * anything from panel [2]/[0]'s own navigation (this is what fixes the
    * "commits change while browsing files" bug report). */
   commits = $derived.by((): Commit[] => {
@@ -526,6 +580,16 @@ export class RepositoriesState {
     return this.liveCommits[repo.key] ?? this.commitsByRepo[repo.key] ?? [];
   });
   clampedCommitIdx = $derived(this.commits.length ? Math.min(this.selectedCommitIdx, this.commits.length - 1) : 0);
+
+  /** Panel [4]'s caption line: "{branch} · {count} commits", both real —
+   * branch off the panel [1] selection's own RepoRow (all-projects' is
+   * "local"), count off the actually-rendered commit list (0 for
+   * all-projects, matching its "local only" body text). */
+  commitsSubtitle = $derived(
+    this.repositories.panels.commits.subtitleTemplate
+      .replace("{branch}", this.selectedRepo?.branch ?? "")
+      .replace("{count}", String(this.commits.length)),
+  );
 
   selectCommit(delta: number) {
     const n = this.commits.length;
@@ -558,7 +622,7 @@ export class RepositoriesState {
   }
 
   // ---------------------------------------------------------------------
-  // Live commit refresh, rekeyed to the panel [3] selection — anything else
+  // Live commit refresh, rekeyed to the panel [1] selection — anything else
   // recreates the coupling that caused the commits-change-on-file-move bug.
   // Skipped for the virtual all-projects entry: it isn't a real GitHub
   // repo, so a fetch for it would only fail and waste one of the 60
@@ -571,10 +635,7 @@ export class RepositoriesState {
   // Focus styling helpers
   // ---------------------------------------------------------------------
 
-  panelBorder(n: 0 | 1 | 2 | 3 | 4): string {
+  panelBorder(n: 0 | 1 | 2 | 3 | 4 | 5): string {
     return this.focusedPanel === n ? "#e0453c" : "rgba(224,69,60,.35)";
-  }
-  panelTitleColor(n: 0 | 1 | 2 | 3 | 4): string {
-    return this.focusedPanel === n ? "#e0453c" : "rgba(224,69,60,.85)";
   }
 }

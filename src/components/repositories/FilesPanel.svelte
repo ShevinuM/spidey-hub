@@ -19,18 +19,23 @@
 <RepositoriesPanel
   testid="repositories-panel-2"
   copySource={isFocused && state.focusedPanel === 2}
-  flex="1.1"
+  flex="1.5"
   minHeight
-  padding="12px 12px 9px"
+  padding="18px 10px 8px"
   columnBody
   border={state.panelBorder(2)}
-  titleColor={state.panelTitleColor(2)}
+  n={2}
+  label={repositories.panels.files.label}
 >
-  {#snippet title()}
-    {repositories.panels.files.title}
-    {#if state.repoTree}<span style="color:rgba(196,216,232,.4)">{state.filesSubtitle}</span>{/if}
-  {/snippet}
   {#snippet children()}
+    {#if state.repoTree}
+      <div
+        data-testid="repositories-files-caption"
+        style="color:rgba(143,208,245,.6);font-size:11px;padding:0 4px 6px;margin-bottom:2px;border-bottom:1px solid rgba(224,69,60,.14);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+      >
+        {state.filesSubtitle}
+      </div>
+    {/if}
     <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px">
       {#if !state.repoTree}
         <div style="color:rgba(196,216,232,.5)">{repositories.repoBrowser.emptyText}</div>
