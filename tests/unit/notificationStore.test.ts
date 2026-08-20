@@ -16,6 +16,7 @@ import {
   markSpam,
   mulberry32,
   NOTIFICATIONS_STORAGE_KEY,
+  oldestArchivedEntry,
   parseInjectSeed,
   parseStoredState,
   parseToastDurationScale,
@@ -176,12 +177,95 @@ test("injectVisit: never re-injects an id already present in state", () => {
   for (const i of injected) assert.ok(!seenIds.has(i.id));
 });
 
-test("injectVisit: pool exhausted injects none and leaves state unchanged", () => {
-  const existing: NotificationItem[] = POOL.map((p) => item({ id: p.id }));
+// ---------------------------------------------------------------------------
+// Decision 6: pool-exhaustion re-circulation
+// ---------------------------------------------------------------------------
+
+test("oldestArchivedEntry: returns null when nothing is archived", () => {
+  const items = POOL.map((p) => item({ id: p.id, folder: "inbox" }));
+  assert.equal(oldestArchivedEntry(items), null);
+});
+
+test("oldestArchivedEntry: ignores spam-folder items entirely", () => {
+  const items = POOL.map((p) => item({ id: p.id, folder: "spam", ts: 1 }));
+  assert.equal(oldestArchivedEntry(items), null);
+});
+
+test("oldestArchivedEntry: picks the lowest ts among archived items", () => {
+  const items = [
+    item({ id: "a", folder: "archive", ts: 300 }),
+    item({ id: "b", folder: "archive", ts: 100 }),
+    item({ id: "c", folder: "archive", ts: 200 }),
+    item({ id: "d", folder: "spam", ts: 50 }),
+  ];
+  assert.equal(oldestArchivedEntry(items)?.id, "b");
+});
+
+test("injectVisit: exhausted pool re-injects exactly one oldest archived non-spam entry", () => {
+  const existing: NotificationItem[] = POOL.map((p, i) =>
+    item({ id: p.id, folder: i < 3 ? "archive" : "inbox", ts: i < 3 ? 100 + i : 9000 }),
+  );
+  const before: NotificationState = { items: existing };
+  const { state, injected } = injectVisit(before, POOL, 5000, Math.random);
+  assert.equal(injected.length, 1);
+  assert.equal(injected[0].id, "pool-0"); // ts 100, the lowest among the 3 archived
+  // Re-circulation revives in place — total item count is unchanged (one
+  // item MOVES from archive to inbox, none is newly created from the pool).
+  assert.equal(state.items.length, existing.length);
+});
+
+test("injectVisit: re-injected item is unread, in the inbox folder, restamped `now`, and returned in injected[]", () => {
+  const existing: NotificationItem[] = POOL.map((p, i) => item({ id: p.id, folder: i === 0 ? "archive" : "inbox", ts: 1, read: true }));
+  const { state, injected } = injectVisit({ items: existing }, POOL, 7777, Math.random);
+  assert.equal(injected.length, 1);
+  const revived = injected[0];
+  assert.equal(revived.read, false);
+  assert.equal(revived.folder, "inbox");
+  assert.equal(revived.ts, 7777);
+  const inState = state.items.find((i) => i.id === revived.id);
+  assert.deepEqual(inState, revived);
+});
+
+test("injectVisit: exhausted pool with only spam archived injects none and leaves state unchanged", () => {
+  const existing: NotificationItem[] = POOL.map((p, i) => item({ id: p.id, folder: i === 0 ? "spam" : "inbox" }));
   const before: NotificationState = { items: existing };
   const { state, injected } = injectVisit(before, POOL, 1, Math.random);
   assert.deepEqual(injected, []);
   assert.equal(state, before);
+});
+
+test("injectVisit: repeat visits re-circulate oldest-first, deterministically, until the archive drains", () => {
+  const existing: NotificationItem[] = POOL.map((p, i) =>
+    item({ id: p.id, folder: i < 3 ? "archive" : "inbox", ts: i < 3 ? 100 + i * 10 : 9000 }),
+  );
+  let state: NotificationState = { items: existing };
+
+  const first = injectVisit(state, POOL, 1000, Math.random);
+  assert.equal(first.injected[0].id, "pool-0"); // ts 100
+  state = first.state;
+
+  const second = injectVisit(state, POOL, 2000, Math.random);
+  assert.equal(second.injected[0].id, "pool-1"); // ts 110
+  state = second.state;
+
+  const third = injectVisit(state, POOL, 3000, Math.random);
+  assert.equal(third.injected[0].id, "pool-2"); // ts 120
+  state = third.state;
+
+  // Archive is now empty (all three revived to inbox) — a fourth visit
+  // injects nothing.
+  const fourth = injectVisit(state, POOL, 4000, Math.random);
+  assert.deepEqual(fourth.injected, []);
+  assert.equal(fourth.state, state);
+});
+
+test("injectVisit: re-circulated state round-trips through save/load", () => {
+  withLocalStorage({}, () => {
+    const existing: NotificationItem[] = POOL.map((p, i) => item({ id: p.id, folder: i === 0 ? "archive" : "inbox", ts: 1 }));
+    const { state } = injectVisit({ items: existing }, POOL, 4242, Math.random);
+    saveState(state);
+    assert.deepEqual(loadState(), state);
+  });
 });
 
 test("injectVisit: pool with exactly 1 unseen entry injects only that 1", () => {

@@ -162,7 +162,10 @@ export function mulberry32(seed: number): () => number {
 
 // ---------------------------------------------------------------------------
 // Injection: each visit injects up to 2 unseen pool entries, chosen
-// randomly by id; once every entry has been seen, a visit injects none.
+// randomly by id. Once every pool entry has been seen (Decision 6), a visit
+// instead re-circulates the single oldest archived (never spam-folder)
+// entry back to the inbox as a fresh unread item — only once the archive is
+// ALSO empty (or holds spam only) does a visit inject nothing.
 // ---------------------------------------------------------------------------
 
 /** Picks up to `count` entries from `pool` whose `id` isn't in `seenIds`,
@@ -188,11 +191,32 @@ export function pickRandomUnseen(
   return picked;
 }
 
+/** Returns the oldest (lowest `ts`) archived item in `items`, or `null` if
+ * the archive is empty — spam-folder items are never candidates, so a
+ * spam-only archive also returns `null`. Ties broken by array order (the
+ * first item at the minimum `ts` wins), so the result is deterministic for
+ * a given input. Used by `injectVisit`'s pool-exhaustion re-circulation
+ * (Decision 6). */
+export function oldestArchivedEntry(items: readonly NotificationItem[]): NotificationItem | null {
+  let oldest: NotificationItem | null = null;
+  for (const i of items) {
+    if (i.folder !== "archive") continue;
+    if (oldest === null || i.ts < oldest.ts) oldest = i;
+  }
+  return oldest;
+}
+
 /** Injects up to `count` unseen pool entries into `state` as new, unread
  * inbox items timestamped `now`, returning both the next state and the
  * items just injected (so the caller can spawn toasts for exactly those —
- * never for anything already in `state`). No-ops (returns `state` unchanged,
- * `injected: []`) once every pool entry has already been seen. */
+ * never for anything already in `state`).
+ *
+ * Once every pool entry has already been seen, this instead re-circulates
+ * (Decision 6) the single oldest archived entry: it's moved back to the
+ * inbox, marked unread, restamped `now`, and returned in `injected` exactly
+ * like a fresh pool pick — so the caller spawns a toast for it too. Spam-
+ * folder entries are never eligible, so a spam-only (or empty) archive
+ * falls through to the final no-op case: `state` unchanged, `injected: []`. */
 export function injectVisit(
   state: NotificationState,
   pool: readonly PoolEntry[],
@@ -202,9 +226,15 @@ export function injectVisit(
 ): { state: NotificationState; injected: NotificationItem[] } {
   const seen = new Set(state.items.map((i) => i.id));
   const picks = pickRandomUnseen(pool, seen, count, rand);
-  if (picks.length === 0) return { state, injected: [] };
-  const injected: NotificationItem[] = picks.map((p) => ({ ...p, ts: now, read: false, folder: "inbox" }));
-  return { state: { items: [...injected, ...state.items] }, injected };
+  if (picks.length > 0) {
+    const injected: NotificationItem[] = picks.map((p) => ({ ...p, ts: now, read: false, folder: "inbox" }));
+    return { state: { items: [...injected, ...state.items] }, injected };
+  }
+  const stale = oldestArchivedEntry(state.items);
+  if (!stale) return { state, injected: [] };
+  const revived: NotificationItem = { ...stale, ts: now, read: false, folder: "inbox" };
+  const rest = state.items.filter((i) => i !== stale);
+  return { state: { items: [revived, ...rest] }, injected: [revived] };
 }
 
 // ---------------------------------------------------------------------------
