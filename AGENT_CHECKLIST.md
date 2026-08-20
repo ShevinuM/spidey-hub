@@ -113,6 +113,9 @@ in the same change as any `docs/` edit that affects a convention below.
 
 ## Testing
 
+- [ ] Every time a bug surfaces (self-found or user-reported), write a test that
+      covers it — a unit test if the bug is reachable that way, else an
+      integration/e2e test, in that order of preference.
 - [ ] Write a unit test for pure logic with no DOM/browser dependency.
 - [ ] Write an e2e test only for user-observable behavior, exercised against a
       real build.
