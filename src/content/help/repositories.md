@@ -5,12 +5,13 @@ order: 3
 rows:
   - name: Focus a panel
     keys:
+      - "0"
       - "1"
       - "2"
       - "3"
       - "4"
-      - "0"
-    desc: Switches focus between panels [1] Status, [2] Files, [3] Repositories, [4] Commits, [0] Changes.
+      - "5"
+    desc: Switches focus between panels [0] Status, [1] Repositories, [2] Files, [3] Content, [4] Commits, [5] Command Log.
   - name: Move selection
     keys:
       - ↑
@@ -24,7 +25,7 @@ rows:
   - name: Preview a file
     keys:
       - click
-    desc: Shows the file's contents in panel [0] without opening the editor.
+    desc: Shows the file's contents in panel [3] without opening the editor.
   - name: Open a file
     keys:
       - Enter

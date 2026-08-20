@@ -11,7 +11,7 @@ rows:
       - "3"
       - "4"
       - "5"
-    desc: Switches straight to Builds, Personnel, Retina-V, Profile, or Help.
+    desc: Switches straight to Repositories, Employment Records, Retina-V, Profile, or Help.
   - name: Next window
     keys:
       - C-b
