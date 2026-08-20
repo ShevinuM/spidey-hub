@@ -19,15 +19,15 @@
 // against a repo with subdirectories, daily-tech-digest); this module keeps
 // only the blobs — directories are re-synthesized from file-path prefixes by
 // ../lib/repoTree.ts's listDir(), exactly like the existing working-tree
-// indexes, so one rendering path in Builds.svelte serves both tree sources.
+// indexes, so one rendering path in Repositories.svelte serves both tree sources.
 // `truncated: true` (a repo too large for one recursive listing) is not
 // handled — none of the three tracked repos are anywhere near GitHub's
 // ~100k-entry cap, so pagination machinery for a case that can't occur with
 // this content is intentionally not added.
 
 const TTL_MS = 10 * 60 * 1000;
-const TREE_CACHE_PREFIX = "builds:tree:";
-const CONTENT_CACHE_PREFIX = "builds:content:";
+const TREE_CACHE_PREFIX = "repositories:tree:";
+const CONTENT_CACHE_PREFIX = "repositories:content:";
 /** "ShevinuM" — see the matching NOTE in githubCommits.ts (fixture repos
  * referenced by fixtures/commits/*.json don't exist on GitHub at all; a tree
  * fetch for them fails closed, same as any other API failure). */

@@ -20,8 +20,8 @@ statusBar:
       id: dashboard
       name: dashboard
     - number: 1
-      id: builds
-      name: builds
+      id: repositories
+      name: repos
     - number: 2
       id: employment
       name: employment
@@ -42,7 +42,7 @@ statusBar:
   rebootLabel: "↻ reboot"
   # tmux-style status-line prompt templates.
   # `{...}` placeholders are the same convention every other data.ts template
-  # already uses (grep.yaml's filePosTemplate, builds.yaml's
+  # already uses (grep.yaml's filePosTemplate, repositories.yaml's
   # subtitleTemplate, etc.) — StatusBar.svelte does the substitution.
   prompts:
     # "(rename-window) " prefix in front of the editable, prefilled window

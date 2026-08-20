@@ -93,8 +93,8 @@ test.describe("signal inbox: dashboard-only visibility", () => {
   test("the bell doesn't render on a non-dashboard view", async ({ page }) => {
     await gotoReady(page, "/");
     await expect(bell(page)).toBeVisible();
-    await prefixDigit(page, "1"); // -> builds
-    await expect(page).toHaveURL(/\/builds$/);
+    await prefixDigit(page, "1"); // -> repositories
+    await expect(page).toHaveURL(/\/repositories$/);
     await expect(bell(page)).toHaveCount(0);
   });
 
@@ -103,8 +103,8 @@ test.describe("signal inbox: dashboard-only visibility", () => {
     await bell(page).click();
     await expect(panel(page)).toBeVisible();
 
-    await prefixDigit(page, "1"); // -> builds
-    await expect(page).toHaveURL(/\/builds$/);
+    await prefixDigit(page, "1"); // -> repositories
+    await expect(page).toHaveURL(/\/repositories$/);
     await expect(panel(page)).toHaveCount(0);
     await expect(bell(page)).toHaveCount(0);
 

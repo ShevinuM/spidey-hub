@@ -1,23 +1,23 @@
 <script lang="ts">
   // Panel [3]: flat repo list rows + fetch spinner — moved out of
-  // Builds.svelte during the folder+state-class relocation refactor. Pure
+  // Repositories.svelte during the folder+state-class relocation refactor. Pure
   // relocation: same DOM, testids, classes, and inline styles as the
   // original inline markup.
-  import type { BuildsData } from "../../lib/data";
-  import type { BuildsState } from "./buildsState.svelte";
-  import BuildsPanel from "./BuildsPanel.svelte";
+  import type { RepositoriesData } from "../../lib/data";
+  import type { RepositoriesState } from "./repositoriesState.svelte";
+  import RepositoriesPanel from "./RepositoriesPanel.svelte";
 
   interface Props {
-    builds: BuildsData;
-    state: BuildsState;
+    repositories: RepositoriesData;
+    state: RepositoriesState;
     isFocused: boolean;
   }
 
-  const { builds, state, isFocused }: Props = $props();
+  const { repositories, state, isFocused }: Props = $props();
 </script>
 
-<BuildsPanel
-  testid="builds-panel-3"
+<RepositoriesPanel
+  testid="repositories-panel-3"
   copySource={isFocused && state.focusedPanel === 3}
   flex="1"
   minHeight
@@ -27,7 +27,7 @@
   titleColor={state.panelTitleColor(3)}
 >
   {#snippet title()}
-    {builds.panels.repos.title}
+    {repositories.panels.repos.title}
   {/snippet}
   {#snippet children()}
     <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px">
@@ -35,8 +35,8 @@
         <div
           role="button"
           tabindex="0"
-          class="builds-row"
-          data-testid="builds-repo-row"
+          class="repositories-row"
+          data-testid="repositories-repo-row"
           data-repo-name={repo.key}
           data-all-projects={repo.isAllProjects ? "true" : "false"}
           onclick={() => {
@@ -55,22 +55,22 @@
           <span style="color:rgba(217,176,74,.75)">{repo.branch}</span>
           {#if state.isFetching(repo.key)}
             <span
-              data-testid="builds-repo-spinner"
+              data-testid="repositories-repo-spinner"
               role="status"
-              aria-label={builds.spinner.ariaLabel}
+              aria-label={repositories.spinner.ariaLabel}
               style="color:#5fc6b4"
             >
-              {builds.spinner.label} {builds.spinner.frames[state.spinnerFrame]}
+              {repositories.spinner.label} {repositories.spinner.frames[state.spinnerFrame]}
             </span>
           {/if}
         </div>
       {/each}
     </div>
   {/snippet}
-</BuildsPanel>
+</RepositoriesPanel>
 
 <style>
-  .builds-row {
+  .repositories-row {
     /* Rows are flex children of an overflow-y:auto column; without this
        they flex-shrink below their own line box under a full 15-commit
        live list (only 1 commit ships in the committed snapshot, so this
@@ -85,7 +85,7 @@
     flex-shrink: 0;
     line-height: 1.6;
   }
-  .builds-row:hover {
+  .repositories-row:hover {
     background: rgba(224, 69, 60, 0.12);
   }
 </style>

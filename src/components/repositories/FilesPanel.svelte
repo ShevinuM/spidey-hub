@@ -1,23 +1,23 @@
 <script lang="ts">
-  // Panel [2]: tree browser rows — moved out of Builds.svelte during the
+  // Panel [2]: tree browser rows — moved out of Repositories.svelte during the
   // folder+state-class relocation refactor. Pure relocation: same DOM,
   // testids, classes, and inline styles as the original inline markup.
-  import type { BuildsData } from "../../lib/data";
-  import type { BuildsState } from "./buildsState.svelte";
+  import type { RepositoriesData } from "../../lib/data";
+  import type { RepositoriesState } from "./repositoriesState.svelte";
   import { iconSvgForPath } from "../../lib/fileIcons";
-  import BuildsPanel from "./BuildsPanel.svelte";
+  import RepositoriesPanel from "./RepositoriesPanel.svelte";
 
   interface Props {
-    builds: BuildsData;
-    state: BuildsState;
+    repositories: RepositoriesData;
+    state: RepositoriesState;
     isFocused: boolean;
   }
 
-  const { builds, state, isFocused }: Props = $props();
+  const { repositories, state, isFocused }: Props = $props();
 </script>
 
-<BuildsPanel
-  testid="builds-panel-2"
+<RepositoriesPanel
+  testid="repositories-panel-2"
   copySource={isFocused && state.focusedPanel === 2}
   flex="1.1"
   minHeight
@@ -27,24 +27,24 @@
   titleColor={state.panelTitleColor(2)}
 >
   {#snippet title()}
-    {builds.panels.files.title}
+    {repositories.panels.files.title}
     {#if state.repoTree}<span style="color:rgba(196,216,232,.4)">{state.filesSubtitle}</span>{/if}
   {/snippet}
   {#snippet children()}
     <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px">
       {#if !state.repoTree}
-        <div style="color:rgba(196,216,232,.5)">{builds.repoBrowser.emptyText}</div>
+        <div style="color:rgba(196,216,232,.5)">{repositories.repoBrowser.emptyText}</div>
       {:else if state.workingTreeStatus === "loading"}
-        <div style="color:rgba(196,216,232,.5)">{builds.repoBrowser.loadingText}</div>
+        <div style="color:rgba(196,216,232,.5)">{repositories.repoBrowser.loadingText}</div>
       {:else if state.workingTreeStatus === "error"}
-        <div style="color:#e0453c">{builds.repoBrowser.errorText}</div>
+        <div style="color:#e0453c">{repositories.repoBrowser.errorText}</div>
       {:else}
         {#each state.currentRows as entry, i (entry.type + ":" + entry.path)}
           <div
             role="button"
             tabindex="0"
-            class="builds-row"
-            data-testid="builds-tree-row"
+            class="repositories-row"
+            data-testid="repositories-tree-row"
             data-entry-type={entry.type}
             data-entry-name={entry.name}
             data-depth={entry.depth}
@@ -63,10 +63,10 @@
               : 'color:rgba(196,216,232,.7)'}"
           >
             {#if entry.type === "dir"}
-              <span class="builds-caret" data-testid="builds-tree-caret" aria-hidden="true"
+              <span class="repositories-caret" data-testid="repositories-tree-caret" aria-hidden="true"
                 >{entry.expanded ? "▾" : "▸"}</span
               >
-              <span class="builds-icon" data-testid="builds-tree-icon" style="color:#5fc6b4" aria-hidden="true">
+              <span class="repositories-icon" data-testid="repositories-tree-icon" style="color:#5fc6b4" aria-hidden="true">
                 <svg width="12" height="12" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"
                   ><path
                     d="M1.5 3.5a1 1 0 0 1 1-1h3.379a1 1 0 0 1 .707.293L7.914 4.12a1 1 0 0 0 .707.293H13.5a1 1 0 0 1 1 1v7.086a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V3.5Z"
@@ -75,10 +75,10 @@
                 >
               </span>
             {:else}
-              <span class="builds-caret builds-caret-spacer" aria-hidden="true"></span>
+              <span class="repositories-caret repositories-caret-spacer" aria-hidden="true"></span>
               <span
-                class="builds-icon"
-                data-testid="builds-tree-icon"
+                class="repositories-icon"
+                data-testid="repositories-tree-icon"
                 style="width:12px;height:12px"
                 aria-hidden="true">{@html iconSvgForPath(entry.name)}</span
               >
@@ -89,10 +89,10 @@
       {/if}
     </div>
   {/snippet}
-</BuildsPanel>
+</RepositoriesPanel>
 
 <style>
-  .builds-row {
+  .repositories-row {
     /* Rows are flex children of an overflow-y:auto column; without this
        they flex-shrink below their own line box under a full 15-commit
        live list (only 1 commit ships in the committed snapshot, so this
@@ -107,18 +107,18 @@
     flex-shrink: 0;
     line-height: 1.6;
   }
-  .builds-row:hover {
+  .repositories-row:hover {
     background: rgba(224, 69, 60, 0.12);
   }
   /* Fixed-width caret slot so dir/file rows' icons+names line up in a
      column regardless of whether a row is a dir (▾/▸) or a file (blank
      spacer of the same width). */
-  .builds-caret {
+  .repositories-caret {
     display: inline-block;
     width: 10px;
     text-align: center;
   }
-  .builds-icon {
+  .repositories-icon {
     display: inline-flex;
     align-items: center;
     margin: 0 3px 0 1px;

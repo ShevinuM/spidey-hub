@@ -3,7 +3,7 @@
 //
 // The "which pane does copy-mode capture" half is deliberately data-driven
 // off each view's OWN rendered `[data-copy-source]` text (read at test time,
-// same convention grep.spec.ts/builds.spec.ts already use for on-disk
+// same convention grep.spec.ts/repositories.spec.ts already use for on-disk
 // content) rather than hardcoded copy, so this suite can't drift from
 // whatever each view's data files actually render.
 import { expect, test, type Page } from "./fixtures.ts";
@@ -66,9 +66,9 @@ test.describe("Copy mode (Ctrl-b [)", () => {
       },
     },
     {
-      name: "Builds focused panel",
+      name: "Repositories focused panel",
       async open(page) {
-        await gotoReady(page, "/builds");
+        await gotoReady(page, "/repositories");
         await page.keyboard.press("1"); // focus panel [1] Status
       },
     },
@@ -139,13 +139,13 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     context,
   }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     // The default-highlighted panel [3] repo is the virtual "all-projects"
     // entry (no README.md in its flat .md-only tree) — click transcript-tts's
     // own row directly, which both selects it and loads its tree.
-    await page.locator('[data-testid="builds-repo-row"][data-repo-name="transcript-tts"]').click();
-    await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
-    await page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]').click();
+    await page.locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]').click();
+    await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')).toBeVisible();
+    await page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]').click();
     await page.keyboard.press("2");
     await page.keyboard.press("Enter");
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
@@ -308,7 +308,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     context,
   }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await openCopyMode(page);
     await page.keyboard.press("v");
     await page.keyboard.press("l");
@@ -321,7 +321,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     await ctrlB(page);
     await page.keyboard.press(",");
     const prompt = page.locator('[data-testid="status-prompt"]');
-    await expect(prompt).toContainText("(rename-window) builds");
+    await expect(prompt).toContainText("(rename-window) repos");
 
     await ctrlB(page);
     await page.keyboard.press("]");

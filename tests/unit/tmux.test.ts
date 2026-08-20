@@ -52,7 +52,7 @@ import {
 
 const SIX_WINDOWS: WindowSeed[] = [
   { number: 0, id: "dashboard", name: "dashboard" },
-  { number: 1, id: "builds", name: "builds" },
+  { number: 1, id: "repositories", name: "repositories" },
   { number: 2, id: "employment", name: "employment" },
   { number: 3, id: "retina-v", name: "retina-v" },
   { number: 4, id: "profile", name: "profile" },
@@ -83,7 +83,7 @@ function splitTimes(window: Window, direction: "row" | "column", n: number): voi
 // createFactoryClient
 // ---------------------------------------------------------------------
 
-test("createFactoryClient builds one session with six windows in seed order, dashboard active by default", () => {
+test("createFactoryClient repositories one session with six windows in seed order, dashboard active by default", () => {
   const client = freshClient();
   assert.equal(client.sessions.length, 1);
   const session = activeSessionOf(client)!;
@@ -91,7 +91,7 @@ test("createFactoryClient builds one session with six windows in seed order, das
   assert.equal(session.windows.length, 6);
   assert.deepEqual(
     session.windows.map((w) => w.id),
-    ["dashboard", "builds", "employment", "retina-v", "profile", "help"],
+    ["dashboard", "repositories", "employment", "retina-v", "profile", "help"],
   );
   assert.equal(session.activeWindowIdx, 0);
   assert.equal(session.lastWindowIdx, 0);
@@ -118,15 +118,15 @@ test("createFactoryClient pane ids are deterministic — a function of (windowId
     sessionA.windows.map((w) => focusedPane(w).id),
     sessionB.windows.map((w) => focusedPane(w).id),
   );
-  assert.equal(focusedPane(sessionA.windows[1]).id, "builds#0");
+  assert.equal(focusedPane(sessionA.windows[1]).id, "repositories#0");
 });
 
-test("createFactoryClient honors activeWindowId (e.g. a direct /builds SSR route) with no extra bookkeeping", () => {
+test("createFactoryClient honors activeWindowId (e.g. a direct /repositories SSR route) with no extra bookkeeping", () => {
   const client = createFactoryClient({
     sessionName: "10.42.7.13",
     windows: SIX_WINDOWS,
     epoch: 0,
-    activeWindowId: "builds",
+    activeWindowId: "repositories",
   });
   const session = activeSessionOf(client)!;
   assert.equal(session.activeWindowIdx, 1);
@@ -192,13 +192,13 @@ test("cycleWindow(1) advances and wraps; cycleWindow(-1) is the exact reverse", 
 
 test("renameWindowManual sets the name and permanently disables autoName", () => {
   const session = freshSession();
-  renameWindowManual(session, "builds", "builds-x");
-  const win = session.windows.find((w) => w.id === "builds")!;
-  assert.equal(win.name, "builds-x");
+  renameWindowManual(session, "repositories", "repositories-x");
+  const win = session.windows.find((w) => w.id === "repositories")!;
+  assert.equal(win.name, "repositories-x");
   assert.equal(win.autoName, false);
   // A later program change no longer touches the name.
   setPaneProgram(session, focusedPane(win).id, "employment");
-  assert.equal(win.name, "builds-x");
+  assert.equal(win.name, "repositories-x");
 });
 
 test("renameWindowManual is a no-op for an unknown window id", () => {
@@ -230,9 +230,9 @@ test("killWindow on the active window falls back to the window that sat right af
   assert.deepEqual(result, { ok: true });
   assert.deepEqual(
     session.windows.map((w) => w.id),
-    ["builds", "employment", "retina-v", "profile", "help"],
+    ["repositories", "employment", "retina-v", "profile", "help"],
   );
-  assert.equal(session.windows[session.activeWindowIdx].id, "builds");
+  assert.equal(session.windows[session.activeWindowIdx].id, "repositories");
 });
 
 test("killWindow on the active LAST window wraps to the first remaining window", () => {
@@ -254,13 +254,13 @@ test("killWindow reproduces the exact 'kill down to one' sequence byte-for-byte"
     survivors.push(session.windows[session.activeWindowIdx].id);
   }
   assert.equal(session.windows.length, 1);
-  assert.deepEqual(survivors, ["builds", "employment", "retina-v", "profile", "help"]);
+  assert.deepEqual(survivors, ["repositories", "employment", "retina-v", "profile", "help"]);
 });
 
 test("killWindow on a NON-active window shifts activeWindowIdx/lastWindowIdx down without switching", () => {
   const session = freshSession();
   selectWindowIndex(session, 4); // profile active; lastWindowIdx = 0 (dashboard)
-  killWindow(session, "builds"); // idx 1, before both 4 and 0... only before 4
+  killWindow(session, "repositories"); // idx 1, before both 4 and 0... only before 4
   assert.deepEqual(
     session.windows.map((w) => w.id),
     ["dashboard", "employment", "retina-v", "profile", "help"],
@@ -276,7 +276,7 @@ test("killWindow on a NON-active window shifts activeWindowIdx/lastWindowIdx dow
 // ---------------------------------------------------------------------
 
 test("programDisplayName is the program's own name, except shell -> zsh", () => {
-  assert.equal(programDisplayName("builds"), "builds");
+  assert.equal(programDisplayName("repositories"), "repositories");
   assert.equal(programDisplayName("dashboard"), "dashboard");
   assert.equal(programDisplayName("shell"), "zsh");
 });
@@ -292,7 +292,7 @@ test("exitProgram drops a pane to shell and auto-renames the window to zsh", () 
 
 test("launchProgram relaunches a program in-pane and restores the auto-rename text", () => {
   const session = freshSession();
-  const win = session.windows.find((w) => w.id === "builds")!;
+  const win = session.windows.find((w) => w.id === "repositories")!;
   const pane = focusedPane(win);
   exitProgram(session, pane.id);
   assert.equal(win.name, "zsh");
@@ -303,8 +303,8 @@ test("launchProgram relaunches a program in-pane and restores the auto-rename te
 
 test("launchProgram into a manually-renamed window changes the program but never the name", () => {
   const session = freshSession();
-  const win = session.windows.find((w) => w.id === "builds")!;
-  renameWindowManual(session, "builds", "scratch");
+  const win = session.windows.find((w) => w.id === "repositories")!;
+  renameWindowManual(session, "repositories", "scratch");
   launchProgram(session, focusedPane(win).id, "help");
   assert.equal(focusedPane(win).program, "help");
   assert.equal(win.name, "scratch");

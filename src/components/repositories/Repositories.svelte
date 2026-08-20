@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Builds (lazygit clone) view — design/Homepage.dc.html lines 338-397
+  // Repositories (lazygit clone) view — design/Homepage.dc.html lines 338-397
   // (five-panel layout: [1] Status, [2] Files, [3] Local Repositories,
   // [4] Commits, [0] Changes, plus the unnumbered Command log panel).
   //
@@ -7,7 +7,7 @@
   // user bug reports along the way:
   //   - Panel [3] "Local Repositories" is now a FLAT list of every repo
   //     across every project, plus a virtual "all-projects" entry (every
-  //     project's .md doc, browsable like a repo — see builds.yaml's
+  //     project's .md doc, browsable like a repo — see repositories.yaml's
   //     `allProjects` key and scripts/generate.mjs's all-projects.json).
   //     A single click OR Enter loads that repo's working tree into panel
   //     [2] — no more separate "select" vs "open" step.
@@ -25,29 +25,29 @@
   //     lazygit-style braille spinner on the panel [3] repo row while any
   //     fetch for that repo is in flight; `o` opens the commit on GitHub
   //     (the only surviving external-link path, documented in the Help
-  //     window's Builds scope).
+  //     window's Repositories scope).
   //     Selecting the all-projects entry shows a data-driven "local only"
   //     line instead (it isn't a real remote).
   //
   // Terminal.svelte drives a single global keydown listener and, while
-  // `view === "builds"`, delegates to this component's exported
+  // `view === "repositories"`, delegates to this component's exported
   // `handleKey()` via `bind:this` *before* its own generic q/Esc-to-dashboard
   // fallback (removed sitewide) — this is what lets the file editor get
   // first refusal over GrepOverlay while it's open.
   import type { CollectionEntry } from "astro:content";
-  import type { BuildsData } from "../../lib/data";
+  import type { RepositoriesData } from "../../lib/data";
   import type { Commit } from "../../lib/commits";
   import Editor from "../editor/Editor.svelte";
-  import { BuildsState } from "./buildsState.svelte";
+  import { RepositoriesState } from "./repositoriesState.svelte";
   import FilesPanel from "./FilesPanel.svelte";
   import ReposPanel from "./ReposPanel.svelte";
   import CommitsPanel from "./CommitsPanel.svelte";
   import PreviewPanel from "./PreviewPanel.svelte";
   import CommandLog from "./CommandLog.svelte";
-  import BuildsPanel from "./BuildsPanel.svelte";
+  import RepositoriesPanel from "./RepositoriesPanel.svelte";
 
   interface Props {
-    builds: BuildsData;
+    repositories: RepositoriesData;
     projects: CollectionEntry<"repositories">[];
     commitsByRepo: Record<string, Commit[]>;
     /** See PaneTree.svelte's own header comment (multi-instance
@@ -57,10 +57,10 @@
     isFocused: boolean;
   }
 
-  const { builds, projects, commitsByRepo, isFocused }: Props = $props();
+  const { repositories, projects, commitsByRepo, isFocused }: Props = $props();
 
-  const state = new BuildsState(
-    () => builds,
+  const state = new RepositoriesState(
+    () => repositories,
     () => projects,
     () => commitsByRepo,
   );
@@ -172,7 +172,7 @@
     fileName={state.editorFileName}
     lines={state.editorLines}
     palette={state.editorPalette}
-    labels={builds.editor}
+    labels={repositories.editor}
     breadcrumbLeft={state.editorFile.repoName}
     breadcrumbRight={state.editorFile.path}
     {isFocused}
@@ -183,8 +183,8 @@
     <div style="flex:1;min-height:0;display:flex;gap:12px;padding:16px 16px 14px;font-size:13px">
       <div style="width:38%;min-width:0;display:flex;flex-direction:column;gap:14px">
         <!-- [1] Status -->
-        <BuildsPanel
-          testid="builds-panel-1"
+        <RepositoriesPanel
+          testid="repositories-panel-1"
           copySource={isFocused && state.focusedPanel === 1}
           flex="none"
           padding="10px 12px 9px"
@@ -192,36 +192,36 @@
           titleColor={state.panelTitleColor(1)}
         >
           {#snippet title()}
-            {builds.panels.status.title}
+            {repositories.panels.status.title}
           {/snippet}
           {#snippet children()}
             <div style="color:#5fc6b4">
-              {builds.statusLine.prefix}
-              <span style="color:rgba(196,216,232,.5)">{builds.statusLine.arrow}</span>
-              <span style="color:#e0453c">{state.repoCount} {builds.statusLine.reposSuffix}</span>
+              {repositories.statusLine.prefix}
+              <span style="color:rgba(196,216,232,.5)">{repositories.statusLine.arrow}</span>
+              <span style="color:#e0453c">{state.repoCount} {repositories.statusLine.reposSuffix}</span>
               <span style="color:rgba(196,216,232,.5)"
-                >{builds.statusLine.separator} {state.projectCount} {builds.statusLine.projectsSuffix}</span
+                >{repositories.statusLine.separator} {state.projectCount} {repositories.statusLine.projectsSuffix}</span
               >
             </div>
           {/snippet}
-        </BuildsPanel>
+        </RepositoriesPanel>
 
         <!-- [2] Files (tree browser) -->
-        <FilesPanel {builds} {state} {isFocused} />
+        <FilesPanel {repositories} {state} {isFocused} />
 
         <!-- [3] Local Repositories (flat list + all-projects) -->
-        <ReposPanel {builds} {state} {isFocused} />
+        <ReposPanel {repositories} {state} {isFocused} />
 
         <!-- [4] Commits (tracks ONLY the panel [3] selection) -->
-        <CommitsPanel {builds} {state} {isFocused} />
+        <CommitsPanel {repositories} {state} {isFocused} />
       </div>
 
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:14px">
         <!-- [0] Changes (preview) -->
-        <PreviewPanel {builds} {state} {isFocused} />
+        <PreviewPanel {repositories} {state} {isFocused} />
 
         <!-- Command log -->
-        <CommandLog {builds} />
+        <CommandLog {repositories} />
       </div>
     </div>
   </div>

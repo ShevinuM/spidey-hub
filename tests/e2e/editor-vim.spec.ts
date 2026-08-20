@@ -1,11 +1,11 @@
 // Behavioral e2e suite for the vim-lite engine in Editor.svelte.
 // Parametrized over both places the shared editor
-// is mounted from — Builds (a real repo file) and Employment (a real role
+// is mounted from — Repositories (a real repo file) and Employment (a real role
 // doc) — since the engine itself is entry-point-agnostic and both callers
 // must get identical behavior "for free" from the one shared component.
 //
 // Assertions read real, on-disk content at test time (the same convention
-// builds.spec.ts / employment.spec.ts already use for their own editor
+// repositories.spec.ts / employment.spec.ts already use for their own editor
 // assertions) rather than hardcoding line text, so this suite can't drift
 // from whatever the fixture repos/role docs actually contain.
 import { expect, test, type Page } from "./fixtures.ts";
@@ -55,9 +55,9 @@ interface EntryPoint {
 
 const entryPoints: EntryPoint[] = [
   {
-    name: "Builds",
+    name: "Repositories",
     async open(page) {
-      await gotoReady(page, "/builds");
+      await gotoReady(page, "/repositories");
       // The default-highlighted panel [3] repo is the virtual "all-projects"
       // entry, not a real repo, so pressing Enter on the default highlight
       // does not load a real repo's tree. The Files pane also renders the
@@ -67,18 +67,18 @@ const entryPoints: EntryPoint[] = [
       // transcript-tts has exactly one README.md and no nested duplicate, so
       // clicking its panel [3] row directly (which both selects it AND loads
       // its tree) sidesteps both issues.
-      await page.locator('[data-testid="builds-repo-row"][data-repo-name="transcript-tts"]').click();
-      await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
+      await page.locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]').click();
+      await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')).toBeVisible();
       // Clicking a file previews it in panel [0] but does NOT open the
       // editor (click-selects/Enter-opens split); focus panel [2] and press
       // Enter to actually open it.
-      await page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]').click();
+      await page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]').click();
       await page.keyboard.press("2");
       await page.keyboard.press("Enter");
       await expect(scroller(page)).toBeVisible();
     },
     async assertParentVisible(page) {
-      await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
+      await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')).toBeVisible();
     },
   },
   {

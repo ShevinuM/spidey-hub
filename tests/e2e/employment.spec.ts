@@ -59,7 +59,7 @@ async function openEmployment(page: Page) {
  * the frontmatter block), so the editor assertion below is checked against
  * ground truth, not a second copy of the same string. Employment role content
  * files start with a `---`-delimited frontmatter block (unlike the repo files
- * builds.spec.ts reads), so a naive `split("\n")[0]` would return "---"
+ * repositories.spec.ts reads), so a naive `split("\n")[0]` would return "---"
  * instead of the doc's own first line. */
 function firstBodyLineOf(relPath: string): string {
   const content = readFileSync(join(ROOT, "src/content/personnel", relPath), "utf8");

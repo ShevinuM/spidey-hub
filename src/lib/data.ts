@@ -17,7 +17,7 @@ import type { CollectionEntry } from "astro:content";
 import siteRaw from "../data/site.yaml?raw";
 import dashboardRaw from "../data/dashboard.yaml?raw";
 import trackerRaw from "../data/tracker.yaml?raw";
-import buildsRaw from "../data/builds.yaml?raw";
+import repositoriesRaw from "../data/repositories.yaml?raw";
 import grepRaw from "../data/grep.yaml?raw";
 import personnelRaw from "../data/personnel.yaml?raw";
 import helpRaw from "../data/help.yaml?raw";
@@ -32,7 +32,7 @@ const RAW: Record<string, string> = {
   "site.yaml": siteRaw,
   "dashboard.yaml": dashboardRaw,
   "tracker.yaml": trackerRaw,
-  "builds.yaml": buildsRaw,
+  "repositories.yaml": repositoriesRaw,
   "grep.yaml": grepRaw,
   "personnel.yaml": personnelRaw,
   "help.yaml": helpRaw,
@@ -303,7 +303,7 @@ export const buildProfile = (entry: CollectionEntry<"profile">): ProfileData => 
 };
 
 // ---------------------------------------------------------------------------
-// builds.yaml
+// repositories.yaml
 // ---------------------------------------------------------------------------
 
 export interface CommandLogLine {
@@ -373,7 +373,7 @@ export interface EditorLabels {
   notAnEditorCommandTemplate: string;
 }
 
-export interface BuildsData {
+export interface RepositoriesData {
   panels: {
     status: { title: string };
     // Panel [2] is the tree browser — its subtitle is "<repo>" or
@@ -400,7 +400,7 @@ export interface BuildsData {
   editor: EditorLabels;
 }
 
-export const getBuilds = (): BuildsData => loadYaml<BuildsData>("builds.yaml");
+export const getRepositories = (): RepositoriesData => loadYaml<RepositoriesData>("repositories.yaml");
 
 // ---------------------------------------------------------------------------
 // grep.yaml
@@ -708,7 +708,7 @@ export interface ShellData {
   };
   host: ShellHostData;
   /** Labels for the read-only vim Editor the `vim`/`vi`/`nvim <file>`
-   * builtin opens over the shell pane; same shape builds.yaml's/
+   * builtin opens over the shell pane; same shape repositories.yaml's/
    * personnel.yaml's own `editor:` blocks already use. */
   editor: EditorLabels;
 }

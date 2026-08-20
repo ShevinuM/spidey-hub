@@ -35,12 +35,12 @@ async function gotoReady(page: Page, path: string) {
 const scroller = (page: Page) => page.locator('[data-testid="editor-scroller"]');
 const editorCursor = (page: Page) => page.locator('[data-testid="editor-cursor"]');
 
-/** Finds a tree row's flat index by walking `builds-tree-row`s in DOM order
+/** Finds a tree row's flat index by walking `repositories-tree-row`s in DOM order
  * and matching a file directly nested one level under a named directory —
  * avoids ambiguity from repos that reuse a filename across directories. */
 async function fileRowUnderDir(page: Page, dirName: string, fileName: string) {
-  await expect(page.locator('[data-testid="builds-tree-row"]').first()).toBeVisible();
-  const rows = page.locator('[data-testid="builds-tree-row"]');
+  await expect(page.locator('[data-testid="repositories-tree-row"]').first()).toBeVisible();
+  const rows = page.locator('[data-testid="repositories-tree-row"]');
   const count = await rows.count();
   let dirDepth = -1;
   let dirIdx = -1;
@@ -84,9 +84,9 @@ test.describe("Editor cursor visibility (regression)", () => {
     const indentedLineNo = realLines.findIndex((l) => /^[ \t]/.test(l)) + 1; // 1-based, vim convention
     expect(indentedLineNo, "fixture must contain at least one indented line for this test to be meaningful").toBeGreaterThan(0);
 
-    await gotoReady(page, "/builds");
-    await page.locator(`[data-testid="builds-repo-row"][data-repo-name="${repoName}"]`).click();
-    const jsDir = page.locator('[data-testid="builds-tree-row"][data-entry-name="js"]');
+    await gotoReady(page, "/repositories");
+    await page.locator(`[data-testid="repositories-repo-row"][data-repo-name="${repoName}"]`).click();
+    const jsDir = page.locator('[data-testid="repositories-tree-row"][data-entry-name="js"]');
     await expect(jsDir).toBeVisible();
     const fileRow = await fileRowUnderDir(page, "js", "main.js");
     await fileRow.click();

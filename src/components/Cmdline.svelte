@@ -12,7 +12,7 @@
   // by `mode`:
   //   "site" — `:` from anywhere with no other text input active. Only
   //            `cmdline.commands` are offered/executed.
-  //   "ex"   — `:` while a Builds/Personnel file editor is open. Terminal
+  //   "ex"   — `:` while a Repositories/Personnel file editor is open. Terminal
   //            tries the ex-command state machine first
   //            (src/lib/cmdline.ts's parseExCommand, executed by
   //            Editor.svelte's own runExCommand) via the `onSubmit` prop;

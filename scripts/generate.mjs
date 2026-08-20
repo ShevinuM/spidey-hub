@@ -3,12 +3,12 @@
 //
 // Produces four kinds of artifacts:
 //  1. public/generated/repos/<name>.json   — file tree + text contents for
-//     each of the three submodules under repos/ (lazy-fetched by the Builds
+//     each of the three submodules under repos/ (lazy-fetched by the Repositories
 //     island when a repo is opened).
 //  1b. public/generated/repos/all-projects.json — same {name, files} shape,
 //     but built from src/content/repositories/*.md (one entry per project doc,
 //     path "<id>.md", lines = the raw file text) instead of a submodule
-//     checkout — backs Builds' virtual "all-projects" repo. Deliberately
+//     checkout — backs Repositories' virtual "all-projects" repo. Deliberately
 //     reads straight from src/content/repositories regardless of
 //     PORTFOLIO_FIXTURES (this script has no fixture awareness at all — see
 //     generateRepoIndexes() above it, which has always read the real
@@ -20,7 +20,7 @@
 //     prototype's hand-written repoSrc snapshot.
 //  3. src/generated/commits/<repo>.json    — a snapshot of the 15 most
 //     recent commits per repo via the GitHub REST API, imported statically
-//     so Builds renders identically offline; on any API failure the existing
+//     so Repositories renders identically offline; on any API failure the existing
 //     committed snapshot is kept untouched and a warning is printed. Each
 //     entry also carries the full 40-char `sha` alongside the pre-existing
 //     `sha8`, needed to fetch a commit's tree via
@@ -218,7 +218,7 @@ async function generateRepoIndexes() {
  * file text (frontmatter included — this is a literal file snapshot, not a
  * parsed content-collection entry) split on "\n". Same {name, files} shape
  * as generateRepoIndexes() so src/lib/repoTree.ts's listDir/findFile and the
- * Builds component's existing fetch-and-browse flow work on it unmodified.
+ * Repositories component's existing fetch-and-browse flow work on it unmodified.
  */
 function generateAllProjectsIndex() {
   const srcDir = join(ROOT, "src/content/repositories");
@@ -464,7 +464,7 @@ async function generateCommitSnapshots() {
       if (existsSync(outFile)) {
         console.warn(`[generate] WARNING: commit fetch failed for ${repo} (${err.message}); keeping existing snapshot.`);
       } else {
-        console.warn(`[generate] WARNING: commit fetch failed for ${repo} (${err.message}); no existing snapshot — Builds will have no commits for this repo until this succeeds.`);
+        console.warn(`[generate] WARNING: commit fetch failed for ${repo} (${err.message}); no existing snapshot — Repositories will have no commits for this repo until this succeeds.`);
       }
     }
   }

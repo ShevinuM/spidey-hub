@@ -31,13 +31,24 @@ async function statusBarText(page: Page) {
  * the expected string instead of hand-writing it at each call site (a
  * future renumbering/extension of the window list would otherwise touch
  * ~20 literals). */
-const WINDOWS = ["dashboard", "builds", "employment", "retina-v", "profile", "help"];
+const WINDOWS = ["dashboard", "repositories", "employment", "retina-v", "profile", "help"];
+/** Display NAME per window id — every id equals its own name except
+ * "repositories", whose site.yaml name is the shorter "repos" (status bar
+ * real estate). */
+const WINDOW_NAMES: Record<string, string> = {
+  dashboard: "dashboard",
+  repositories: "repos",
+  employment: "employment",
+  "retina-v": "retina-v",
+  profile: "profile",
+  help: "help",
+};
 /** `lastId` (real tmux fidelity) is the real tmux `-` flag on the
  * session's PREVIOUSLY active window —
  * omit it for assertions made before any in-test window switch (a fresh
  * `gotoReady`/SSR load has no previous window, so no flag renders). */
 function winText(activeId: string, lastId?: string): string {
-  return WINDOWS.map((id, i) => `${i}:${id}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
+  return WINDOWS.map((id, i) => `${i}:${WINDOW_NAMES[id]}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
 }
 
 /**
@@ -78,11 +89,11 @@ test.describe("view switching + status bar (bug fix 1: numeric order)", () => {
     expect(await statusBarText(page)).toBe(winText("dashboard"));
   });
 
-  test("Ctrl-b 1 switches to builds", async ({ page }) => {
+  test("Ctrl-b 1 switches to repositories", async ({ page }) => {
     await gotoReady(page, "/");
     await prefixDigit(page, "1");
-    await expect(page).toHaveURL(/\/builds$/);
-    expect(await statusBarText(page)).toBe(winText("builds", "dashboard"));
+    await expect(page).toHaveURL(/\/repositories$/);
+    expect(await statusBarText(page)).toBe(winText("repositories", "dashboard"));
   });
 
   test("Ctrl-b 2 switches to employment", async ({ page }) => {
@@ -162,7 +173,7 @@ test.describe("status bar navigation (mouse)", () => {
     await gotoReady(page, "/");
     let prev = "dashboard";
     for (const [id, route] of [
-      ["builds", "/builds"],
+      ["repositories", "/repositories"],
       ["employment", "/employment"],
       ["retina-v", "/retina-v"],
       ["profile", "/profile"],
@@ -185,10 +196,10 @@ test.describe("status bar navigation (mouse)", () => {
   });
 
   test("clicking the already-active window is a no-op", async ({ page }) => {
-    await gotoReady(page, "/builds");
-    await page.locator('[data-testid="status-bar-window"][data-window-id="builds"]').click();
-    await expect(page).toHaveURL(/\/builds$/);
-    expect(await statusBarText(page)).toBe(winText("builds"));
+    await gotoReady(page, "/repositories");
+    await page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]').click();
+    await expect(page).toHaveURL(/\/repositories$/);
+    expect(await statusBarText(page)).toBe(winText("repositories"));
   });
 });
 
@@ -366,13 +377,13 @@ test.describe("wallpaper blur/darken behind windowed views", () => {
     return page.locator('[data-testid="wallpaper-layer"]').evaluate((el) => getComputedStyle(el).filter);
   }
 
-  test("dashboard/builds/employment views blur+darken the wallpaper", async ({ page }) => {
+  test("dashboard/repositories/employment views blur+darken the wallpaper", async ({ page }) => {
     await gotoReady(page, "/");
     let filter = await wallpaperFilter(page);
     expect(filter).toContain("blur");
     expect(filter).toMatch(/brightness/);
 
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     filter = await wallpaperFilter(page);
     expect(filter).toContain("blur");
     expect(filter).toMatch(/brightness/);

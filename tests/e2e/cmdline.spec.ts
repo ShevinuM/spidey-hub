@@ -84,7 +84,7 @@ test.describe("Cmdline: opening", () => {
 
   const views: { path: string; key?: string }[] = [
     { path: "/" },
-    { path: "/builds" },
+    { path: "/repositories" },
     { path: "/employment" },
     { path: "/retina-v" },
     { path: "/profile" },
@@ -117,7 +117,7 @@ test.describe("Cmdline: opening", () => {
     // tmux mode, not merely open) ...
     await typeAndEnter(page, "select-window 1");
     await expect(overlay(page)).not.toBeVisible();
-    await expect(page).toHaveURL(/\/builds$/);
+    await expect(page).toHaveURL(/\/repositories$/);
 
     // ... but a site-wide-only command name is NOT recognized here — it
     // reports the same E492 unknown-command error as any gibberish text
@@ -126,7 +126,7 @@ test.describe("Cmdline: opening", () => {
     await page.keyboard.press(":");
     await typeAndEnter(page, "dashboard");
     await expect(errorText(page)).toContainText("E492");
-    await expect(page).toHaveURL(/\/builds$/);
+    await expect(page).toHaveURL(/\/repositories$/);
   });
 
   test("no suggestions list ever renders, even mid-type", async ({ page }) => {
@@ -145,7 +145,7 @@ test.describe("Cmdline: opening", () => {
     await gotoReady(page, "/");
     await page.keyboard.press(":");
     await expect(overlay(page)).toBeVisible();
-    await page.keyboard.type("builds");
+    await page.keyboard.type("repositories");
     await page.keyboard.press("Escape");
     await expect(overlay(page)).not.toBeVisible();
     await expect(page).toHaveURL(/\/$/);
@@ -217,13 +217,13 @@ test.describe("Cmdline: window-chrome contract — closes on every switch path +
     await page.keyboard.press(":");
     await expect(overlay(page)).toBeVisible();
     await page.keyboard.type("this is not a command");
-    await page.locator('[data-testid="status-bar-window"][data-window-id="builds"]').click();
+    await page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]').click();
     await expect(overlay(page)).not.toBeVisible();
-    await expect(page).toHaveURL(/\/builds$/);
+    await expect(page).toHaveURL(/\/repositories$/);
   });
 
   test("reboot (status-bar ↻ click) closes an open box", async ({ page }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await page.keyboard.press(":");
     await expect(overlay(page)).toBeVisible();
     await page.locator('[data-testid="status-bar-reboot"]').click();
@@ -400,9 +400,9 @@ test.describe("Cmdline: editor ex-mode still works through the box", () => {
 
   const entryPoints: EntryPoint[] = [
     {
-      name: "Builds",
+      name: "Repositories",
       async open(page) {
-        await gotoReady(page, "/builds");
+        await gotoReady(page, "/repositories");
         // The default-highlighted panel [3] repo is the virtual
         // "all-projects" entry (no README.md in its flat .md-only tree), and
         // the Files pane renders the FULL nested tree at once —
@@ -411,16 +411,16 @@ test.describe("Cmdline: editor ex-mode still works through the box", () => {
         // locator below ambiguous. transcript-tts has exactly one README.md
         // and no nested duplicate, so clicking its panel [3] row directly
         // (selects AND loads its tree) sidesteps both issues — same
-        // approach as editor-vim.spec.ts's Builds entry point.
-        await page.locator('[data-testid="builds-repo-row"][data-repo-name="transcript-tts"]').click();
-        await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
-        await page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]').click();
+        // approach as editor-vim.spec.ts's Repositories entry point.
+        await page.locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]').click();
+        await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')).toBeVisible();
+        await page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]').click();
         await page.keyboard.press("2");
         await page.keyboard.press("Enter");
         await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
       },
       async assertParentVisible(page) {
-        await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
+        await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')).toBeVisible();
       },
     },
     {
@@ -556,12 +556,12 @@ test.describe("Cmdline: tmux command-prompt mode (executes through the same flow
   test("kill-window removes the current window, matching Ctrl-b &'s underlying kill (no confirm prompt)", async ({
     page,
   }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await ctrlB(page);
     await page.keyboard.press(":");
     await typeAndEnter(page, "kill-window");
     await expect(overlay(page)).not.toBeVisible();
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveCount(0);
   });
 
   // Killing the session's last window destroys the session outright and,
@@ -586,18 +586,18 @@ test.describe("Cmdline: tmux command-prompt mode (executes through the same flow
     await expect(page.locator('[data-testid="shell-line"]').last()).toHaveText("[exited]");
   });
 
-  test("kill-pane inside Builds with multiple panels removes only the focused panel, matching Ctrl-b x", async ({
+  test("kill-pane inside Repositories with multiple panels removes only the focused panel, matching Ctrl-b x", async ({
     page,
   }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await page.keyboard.press("2");
-    await expect(page.locator('[data-testid="builds-panel-2"]')).toBeVisible();
+    await expect(page.locator('[data-testid="repositories-panel-2"]')).toBeVisible();
 
     await ctrlB(page);
     await page.keyboard.press(":");
     await typeAndEnter(page, "kill-pane");
     await expect(overlay(page)).not.toBeVisible();
-    await expect(page.locator('[data-testid="builds-panel-2"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="repositories-panel-2"]')).toHaveCount(0);
   });
 
   test("select-window <n> jumps straight to that window, matching the Ctrl-b <digit> targets", async ({ page }) => {
@@ -610,7 +610,7 @@ test.describe("Cmdline: tmux command-prompt mode (executes through the same flow
   });
 
   test("select-window 0 jumps to the dashboard", async ({ page }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await ctrlB(page);
     await page.keyboard.press(":");
     await typeAndEnter(page, "select-window 0");
@@ -643,7 +643,7 @@ test.describe("Cmdline: tmux command-prompt mode (executes through the same flow
 
 const VIEW_ROUTE_BY_ACTION: Record<string, RegExp> = {
   "view:home": /\/$/,
-  "view:builds": /\/builds$/,
+  "view:repositories": /\/repositories$/,
   "view:employment": /\/employment$/,
   "view:profile": /\/profile$/,
   "view:retina-v": /\/retina-v$/,
@@ -700,7 +700,7 @@ test.describe("Cmdline: data-driven sweep of every src/data/cmdline.yaml command
 
     if (action === "reboot") {
       test(`:${def.name} replays the E.D.I.T.H boot sequence`, async ({ page }) => {
-        await gotoReady(page, "/builds");
+        await gotoReady(page, "/repositories");
         await page.keyboard.press(":");
         await typeAndEnter(page, def.name);
         await expect(overlay(page)).not.toBeVisible();
@@ -728,16 +728,16 @@ test.describe("Cmdline: data-driven sweep of every src/data/cmdline.yaml command
       // dedicated test below (no last-window guard applies, since nothing is
       // being killed).
       test(`:${def.name} exits the active pane's program to a shell in the same window`, async ({ page }) => {
-        await gotoReady(page, "/builds");
+        await gotoReady(page, "/repositories");
         await page.keyboard.press(":");
         await typeAndEnter(page, def.name);
         await expect(overlay(page)).not.toBeVisible();
         // Window survives (same stable id), auto-renamed live to "zsh" —
         // and its URL is frozen (Architecture notes: pushState only for
         // canonical program windows — "shell" isn't one).
-        await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveText(/zsh/);
+        await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveText(/zsh/);
         await expect(page.locator('[data-testid="shell-prompt"]')).toBeVisible();
-        await expect(page).toHaveURL(/\/builds$/);
+        await expect(page).toHaveURL(/\/repositories$/);
       });
       continue;
     }

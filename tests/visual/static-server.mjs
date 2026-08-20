@@ -54,7 +54,7 @@ export function serveStatic(rootDir, port) {
 
       let st = await stat(filePath).catch(() => null);
       if (st?.isDirectory()) {
-        // Astro static output: "/", "/builds", etc. each resolve to their
+        // Astro static output: "/", "/repositories", etc. each resolve to their
         // own "<dir>/index.html" (used when serving `dist/`).
         filePath = join(filePath, "index.html");
         st = await stat(filePath).catch(() => null);

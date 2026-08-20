@@ -35,7 +35,7 @@ export interface Recipe {
   actions: RecipeAction[];
   /** Optional "did this actually reach its intended view" proof — see
    * `RecipeCheck`. Only recipes converted off a removed single-key
-   * dashboard/Builds shortcut to the `C-b N`/arrow equivalent carry one;
+   * dashboard/Repositories shortcut to the `C-b N`/arrow equivalent carry one;
    * older recipes are left as-is rather than retrofitted. */
   check?: RecipeCheck;
 }
@@ -55,16 +55,16 @@ export interface Recipe {
  * reason — identical.spec.ts imports and asserts the union of every array
  * on this page, capture-goldens.mjs only ever this one.
  *
- * Dashboard single-key view shortcuts (b/p/x/i/t/h) and Builds' bare `j`
+ * Dashboard single-key view shortcuts (b/p/x/i/t/h) and Repositories' bare `j`
  * tree-navigation are removed from the app entirely — windows switch via
- * `Ctrl-b <N>` (window numbers: 1 builds, 2 employment, 3 retina-v, 4
- * profile, 5 help) or a click, and Builds panels navigate via ArrowUp/
+ * `Ctrl-b <N>` (window numbers: 1 repositories, 2 employment, 3 retina-v, 4
+ * profile, 5 help) or a click, and Repositories panels navigate via ArrowUp/
  * ArrowDown. Every recipe below that used to press one of the removed keys
  * is rewritten accordingly, and carries a `check` (see `RecipeCheck`)
  * proving its `Ctrl-b <N>` chord actually landed on the intended view
  * rather than silently no-opping on the dashboard — the failure mode that
  * let a previous "03-builds-j" recipe ship a zero-value golden undetected
- * for months (see git history). "03-builds-arrow" (was "03-builds-j")
+ * for months (see git history). "03-repositories-arrow" (was "03-builds-j")
  * explicitly focuses panel [3] (Local Repositories, bare `3`, unrelated to
  * the `Ctrl-b` prefix) before `ArrowDown`, which moves the repo-list
  * selection highlight. "05-employment-l1"/"06-editor" account for
@@ -75,14 +75,14 @@ export interface Recipe {
 export const recipes: Recipe[] = [
   { name: "01-dashboard", actions: [] },
   {
-    name: "02-builds",
+    name: "02-repositories",
     actions: [{ key: "Control+b" }, { key: "1" }],
-    check: { url: /\/builds$/, visible: '[data-testid="builds-panel-2"][data-copy-source]' },
+    check: { url: /\/repositories$/, visible: '[data-testid="repositories-panel-2"][data-copy-source]' },
   },
   {
-    name: "03-builds-arrow",
+    name: "03-repositories-arrow",
     actions: [{ key: "Control+b" }, { key: "1" }, { key: "3" }, { key: "ArrowDown" }],
-    check: { url: /\/builds$/, visible: '[data-testid="builds-panel-3"][data-copy-source]' },
+    check: { url: /\/repositories$/, visible: '[data-testid="repositories-panel-3"][data-copy-source]' },
   },
   {
     name: "04-employment-l0",
@@ -134,12 +134,12 @@ export const recipes: Recipe[] = [
  *
  * "12-all-projects": the virtual all-projects repo is the FIRST row in
  * panel [3]'s flat list and the default selection
- * (`selectedRepoIdx = $state(0)` in Builds.svelte), so plain "02-builds"
+ * (`selectedRepoIdx = $state(0)` in Repositories.svelte), so plain "02-repositories"
  * already lands on the all-projects tree with panel [3] unfocused (no row
  * highlighted). This recipe focuses panel [3] (bare `3`, unrelated to the
  * `Ctrl-b` prefix that switches windows) and re-activates the highlighted
  * all-projects row with `Enter`, which keeps this golden meaningfully
- * distinct from "02-builds" (that highlighted-row state) while still
+ * distinct from "02-repositories" (that highlighted-row state) while still
  * exercising all-projects explicitly rather than only via the page-load
  * default.
  */
@@ -152,7 +152,7 @@ export const extraRecipes: Recipe[] = [
   {
     name: "12-all-projects",
     actions: [{ key: "Control+b" }, { key: "1" }, { key: "3" }, { key: "Enter" }],
-    check: { url: /\/builds$/, visible: '[data-testid="builds-panel-2"]:has-text("all-projects")' },
+    check: { url: /\/repositories$/, visible: '[data-testid="repositories-panel-2"]:has-text("all-projects")' },
   },
 ];
 
@@ -241,12 +241,12 @@ export const bootRecipes: BootRecipe[] = [
  *
  * The key sequence opens the box (`:` from the dashboard — no editor open,
  * no other text input active, so this is context (b), "site mode") and
- * types a short, deterministic partial query ("bui", a prefix of the
- * `builds` command) so the golden captures the suggestion list mid-filter
+ * types a short, deterministic partial query ("rep", a prefix of the
+ * `repositories` command) so the golden captures the suggestion list mid-filter
  * — box open, partial query, suggestions visible. Never presses Enter (no
  * navigation side effect baked into the capture).
  */
-export const cmdlineRecipes: Recipe[] = [{ name: "15-cmdline", actions: [{ key: ":" }, { type: "bui" }] }];
+export const cmdlineRecipes: Recipe[] = [{ name: "15-cmdline", actions: [{ key: ":" }, { type: "rep" }] }];
 
 /**
  * Five recipes covering real pane splits, layouts, choose-tree, and the
@@ -340,7 +340,7 @@ export const iteration3Recipes: Recipe[] = [
   // so the overlay's
   // bottom preview strip has more than one pane program to actually
   // describe. Choose-tree itself needs no split precondition to OPEN
-  // (choose-tree.spec.ts opens it from a plain single-pane `/builds` too),
+  // (choose-tree.spec.ts opens it from a plain single-pane `/repositories` too),
   // but this recipe deliberately gives it one for a more informative
   // golden.
   {

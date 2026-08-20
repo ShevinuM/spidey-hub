@@ -1,7 +1,7 @@
 // Pure helpers for browsing a submodule's file index. The index itself
 // (public/generated/repos/<name>.json, produced by scripts/generate.mjs) is
 // a FLAT list of {path, lines} — one entry per text file, posix-separated
-// relative path, no directory nodes. Builds.svelte fetches that JSON lazily
+// relative path, no directory nodes. Repositories.svelte fetches that JSON lazily
 // (client-side, real `fetch`, not a build-time import — the file lives
 // under `public/`) and calls the functions below to derive one directory
 // "level" at a time, mirroring how the Files/EmploymentRecords panels already
@@ -100,7 +100,7 @@ export function joinPath(segments: string[]): string {
 // tree — ALL dirs expanded by default, Enter/click on a dir toggles collapse,
 // no `../` entry, j/k walks the FLATTENED list of currently-visible rows.
 // Pure and unit-testable: no
-// Svelte state here, Builds.svelte owns the collapsed-set and selection.
+// Svelte state here, Repositories.svelte owns the collapsed-set and selection.
 // ---------------------------------------------------------------------------
 
 export interface TreeNode {

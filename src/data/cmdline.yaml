@@ -3,7 +3,7 @@
 # GrepOverlay (bordered box, box-drawing inset title, `>` prompt + block
 # cursor, existing palette) — shared by THREE entry contexts:
 #
-#   (a) editor ex mode (`:` while a Builds/Personnel file editor is open):
+#   (a) editor ex mode (`:` while a Repositories/Personnel file editor is open):
 #       the existing q/q!/w/wq/:<n> ex-command state machine (PARSED by
 #       src/lib/cmdline.ts's parseExCommand, EXECUTED by Editor.svelte's own
 #       runExCommand — only its
@@ -62,9 +62,9 @@ commands:
     aliases: ["home"]
     description: "jump to the dashboard"
     action: "view:home"
-  - name: "builds"
-    description: "jump to Builds"
-    action: "view:builds"
+  - name: "repositories"
+    description: "jump to Repositories"
+    action: "view:repositories"
   - name: "employment"
     description: "jump to Employment Records"
     action: "view:employment"
@@ -113,12 +113,12 @@ tmuxCommands:
     takesArgs: true
 
 # Error/usage strings the box itself renders (as opposed to the editor's own
-# E21/E45 bell messages, which stay in src/data/builds.yaml /
+# E21/E45 bell messages, which stay in src/data/repositories.yaml /
 # src/data/personnel.yaml — those only ever fire from inside an already-open
 # editor, so they keep using that editor instance's own labels).
 errors:
   # The unknown-command message is reused verbatim
-  # (same wording as builds.yaml/personnel.yaml's own
+  # (same wording as repositories.yaml/personnel.yaml's own
   # notAnEditorCommandTemplate) so a gibberish `:` command reads exactly
   # like vim's own ex-command error, in EVERY context, not just inside an
   # open editor — this whole box is, in spirit, one big vim command-line.

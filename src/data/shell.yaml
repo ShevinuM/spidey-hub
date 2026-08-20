@@ -169,7 +169,7 @@ tmux:
 
 # Labels for the read-only vim Editor the
 # `vim`/`vi`/`nvim <file>` builtin opens over the shell pane. Byte-for-byte
-# the same block builds.yaml's/personnel.yaml's own `editor:` sections
+# the same block repositories.yaml's/personnel.yaml's own `editor:` sections
 # carry (Homepage.dc.html lines 317-336: "NORMAL", "⑂ main") — kept here
 # too, in this file, rather than imported, because it's the exact same
 # reproduced prototype markup, not shared storage (same convention those two

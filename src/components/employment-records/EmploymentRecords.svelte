@@ -496,7 +496,7 @@
   // ---------------------------------------------------------------------
 
   /** Exposed for Terminal.svelte's delegation-order flip — same contract as
-   * Builds.svelte's `isEditorOpen()`. This export's name predates filter
+   * Repositories.svelte's `isEditorOpen()`. This export's name predates filter
    * mode, but its actual CONTRACT with Terminal.svelte is broader than "is
    * the vim Editor open" — it's really "does this pane currently own its
    * own text input, ahead of the grep-overlay `/`-opener and the
@@ -512,7 +512,7 @@
     return editorOpen || filterMode;
   }
 
-  /** Same forwarding contract as Builds.svelte's own `runEditorExCommand`
+  /** Same forwarding contract as Repositories.svelte's own `runEditorExCommand`
    * — see that file's doc comment. */
   export function runEditorExCommand(cmd: string): { recognized: boolean; error?: string } {
     if (!editorOpen || !editorRef) return { recognized: false };

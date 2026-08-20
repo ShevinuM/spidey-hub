@@ -65,7 +65,7 @@ test.describe("visual: implementation vs goldens", () => {
   test.beforeEach(async ({ page }) => {
     // Same network-determinism rule as tests/visual/capture-goldens.mjs:
     // the commit-refresh island fires a
-    // fetch on Builds mount, and fixture repos must not depend on
+    // fetch on Repositories mount, and fixture repos must not depend on
     // api.github.com 404-ing by luck.
     await page.route("**/api.github.com/**", (route) => route.abort());
   });

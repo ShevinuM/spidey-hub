@@ -52,20 +52,20 @@ roleWordPlural: "roles"
 # File Browser footer position indicator, e.g. "2 / 4" (Component.renderVals()
 # line 1090: `(lvl===1?ri+1:ci+1) + " / " + (...)`) — same `{...}`
 # templating convention every other data.ts template uses (e.g. grep.yaml's
-# `filePosTemplate`, builds.yaml's `subtitleTemplate`), defined
+# `filePosTemplate`, repositories.yaml's `subtitleTemplate`), defined
 # independently here since this file has no dependency on either of those.
 posTemplate: "{n} / {total}"
 
-# Mirrors builds.yaml's `editor:` section values (Homepage.dc.html lines
+# Mirrors repositories.yaml's `editor:` section values (Homepage.dc.html lines
 # 317-336: "NORMAL", "⑂ main", "▤", "Top"/"Bot", position templates) —
-# defined independently here, not imported from builds.yaml, since this file
-# has no dependency on Builds' data. The role doc pane never scrolls in the
+# defined independently here, not imported from repositories.yaml, since this file
+# has no dependency on Repositories' data. The role doc pane never scrolls in the
 # prototype (a role doc always fits), so topLabel/bottomLabel/percentTemplate
 # only ever render "Top" here in practice, but EditorLabels requires every
 # field for Editor.svelte's shared status line.
 #
 # This block also carries the same fields as
-# builds.yaml's — see that file's comment for the full rationale (VISUAL/
+# repositories.yaml's — see that file's comment for the full rationale (VISUAL/
 # VISUAL-LINE labels, search/cmdline glyphs, the `[:q]` close pill, and the
 # vim-faithful E21/E45/E492 messages).
 editor:

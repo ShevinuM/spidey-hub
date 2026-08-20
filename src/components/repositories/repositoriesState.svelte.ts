@@ -1,11 +1,11 @@
-// BuildsState — the Builds (lazygit clone) view's reactive core, extracted
-// from Builds.svelte during the folder+state-class relocation refactor. See
-// Builds.svelte's own header comment for the view's behavior; every
+// RepositoriesState — the Repositories (lazygit clone) view's reactive core, extracted
+// from Repositories.svelte during the folder+state-class relocation refactor. See
+// Repositories.svelte's own header comment for the view's behavior; every
 // `$state`/`$derived`/`$effect` here (and its accompanying comment) is
 // moved verbatim from the original monolith — no reactivity, timing, or
 // behavior change.
 import type { CollectionEntry } from "astro:content";
-import type { BuildsData } from "../../lib/data";
+import type { RepositoriesData } from "../../lib/data";
 import type { Commit } from "../../lib/commits";
 import { untrack } from "svelte";
 import { classifyBody, classifyDoc, colorFor, docColors } from "../../lib/docline";
@@ -78,9 +78,9 @@ interface EditorFileState {
   palette?: string[];
 }
 
-export class BuildsState {
+export class RepositoriesState {
   constructor(
-    private readonly buildsFn: () => BuildsData,
+    private readonly repositoriesFn: () => RepositoriesData,
     private readonly projectsFn: () => CollectionEntry<"repositories">[],
     private readonly commitsByRepoFn: () => Record<string, Commit[]>,
   ) {
@@ -90,7 +90,7 @@ export class BuildsState {
     $effect(() => {
       if (Object.keys(this.fetchingRepos).length === 0) return;
       const id = setInterval(() => {
-        this.spinnerFrame = (this.spinnerFrame + 1) % this.builds.spinner.frames.length;
+        this.spinnerFrame = (this.spinnerFrame + 1) % this.repositories.spinner.frames.length;
       }, 220);
       return () => clearInterval(id);
     });
@@ -171,8 +171,8 @@ export class BuildsState {
     });
   }
 
-  get builds(): BuildsData {
-    return this.buildsFn();
+  get repositories(): RepositoriesData {
+    return this.repositoriesFn();
   }
   get projects(): CollectionEntry<"repositories">[] {
     return this.projectsFn();
@@ -207,7 +207,7 @@ export class BuildsState {
   // down).
   flatRepos = $derived.by((): RepoRow[] => {
     const rows: RepoRow[] = [
-      { key: this.builds.allProjects.name, branch: this.builds.allProjects.branch, mark: "•", isAllProjects: true },
+      { key: this.repositories.allProjects.name, branch: this.repositories.allProjects.branch, mark: "•", isAllProjects: true },
     ];
     for (const p of this.sortedProjects) {
       p.data.repos.forEach((r, i) => {
@@ -320,7 +320,7 @@ export class BuildsState {
         : this.repoTree.source.repoName
       : "",
   );
-  filesSubtitle = $derived(this.builds.panels.files.subtitleTemplate.replace("{value}", this.filesSubtitleValue));
+  filesSubtitle = $derived(this.repositories.panels.files.subtitleTemplate.replace("{value}", this.filesSubtitleValue));
 
   async ensureRepoIndex(repoName: string) {
     const existing = this.repoIndexCache[repoName];
@@ -359,7 +359,7 @@ export class BuildsState {
     const paths = await fetchCommitTree(repoName, commit.sha, commit.sha8);
     this.endFetch(repoName);
     if (!paths) {
-      this.commitFetchError = this.builds.commitBrowser.errorText;
+      this.commitFetchError = this.repositories.commitBrowser.errorText;
       return;
     }
     this.repoTree = {
@@ -389,7 +389,7 @@ export class BuildsState {
   changesSubtitleValue = $derived(
     this.preview ? `${this.preview.repoName}/${this.preview.path}` : this.defaultProject ? `${this.defaultProject.id}.md` : "",
   );
-  changesSubtitle = $derived(this.builds.panels.changes.subtitleTemplate.replace("{value}", this.changesSubtitleValue));
+  changesSubtitle = $derived(this.repositories.panels.changes.subtitleTemplate.replace("{value}", this.changesSubtitleValue));
 
   // ---------------------------------------------------------------------
   // Editor (full-screen, opened only by Enter on a file — clicking a file

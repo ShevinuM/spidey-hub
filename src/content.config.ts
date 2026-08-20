@@ -36,7 +36,7 @@ const repositories = defineCollection({
     base: useFixtures ? "fixtures/repositories" : "src/content/repositories",
     // Astro's default `generateId` lowercases the slug (getContentEntryIdAndSlug's
     // slugify step), which silently turns "SafePass.md" into entry id
-    // "safepass" — invisible until the Builds Files panel started
+    // "safepass" — invisible until the Repositories Files panel started
     // rendering `${project.id}.md` as that file's displayed name, where it
     // renders as the wrong filename ("safepass.md" instead of "SafePass.md"). All of
     // our project filenames are already the exact string we want to display

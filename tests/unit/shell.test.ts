@@ -109,7 +109,7 @@ const SHELL: ShellData = {
   },
 };
 
-const VIEW_NAMES = ["dashboard", "builds", "employment", "retina-v", "profile", "help"] as const;
+const VIEW_NAMES = ["dashboard", "repositories", "employment", "retina-v", "profile", "help"] as const;
 
 const DEFAULT_SESSION: SessionRosterEntry = {
   id: "session-0",
@@ -118,7 +118,7 @@ const DEFAULT_SESSION: SessionRosterEntry = {
   createdAt: 1_723_000_000_000,
   attached: true,
   lastAttachedSeq: 1,
-  windowIds: ["dashboard", "builds", "employment", "retina-v", "profile", "help"],
+  windowIds: ["dashboard", "repositories", "employment", "retina-v", "profile", "help"],
 };
 
 function ctx(overrides: Partial<RunContext> = {}): RunContext {
@@ -442,7 +442,7 @@ test("runCommand: help prints the intro then one row per builtin", () => {
 
 test("runCommand: view-names lists the six canonical programs", () => {
   const { state } = run(createShellState(), "view-names");
-  assert.equal(state.lines.at(-1)?.text, "available views: dashboard builds employment retina-v profile help");
+  assert.equal(state.lines.at(-1)?.text, "available views: dashboard repositories employment retina-v profile help");
 });
 
 test("runCommand: neofetch's uptime derives from ctx.nowMs - session.createdAt, never a hidden clock read", () => {
@@ -459,8 +459,8 @@ test("runCommand: sudo prints the exact joke as an error line", () => {
 });
 
 test("runCommand: open <view> launches that program; an invalid target errors", () => {
-  const ok = run(createShellState(), "open builds");
-  assert.deepEqual(ok.effect, { kind: "launch", program: "builds" });
+  const ok = run(createShellState(), "open repositories");
+  assert.deepEqual(ok.effect, { kind: "launch", program: "repositories" });
   const bad = run(createShellState(), "open nonsense");
   assert.deepEqual(bad.effect, { kind: "none" });
   assert.match(bad.state.lines.at(-1)!.text, /command not found/);
@@ -589,25 +589,25 @@ test("runCommand: tmux a -t <missing name> (host mode) errors — exact fidelity
 });
 
 test("runCommand: open <view> in host mode attaches the default session and selects that window when it exists", () => {
-  const { effect } = run(createShellState(), "open builds", { mode: "host" });
-  assert.deepEqual(effect, { kind: "attach-view", sessionId: DEFAULT_SESSION.id, view: "builds", windowExists: true });
+  const { effect } = run(createShellState(), "open repositories", { mode: "host" });
+  assert.deepEqual(effect, { kind: "attach-view", sessionId: DEFAULT_SESSION.id, view: "repositories", windowExists: true });
 });
 
 test("runCommand: open <view> in host mode still attaches when the window was killed, flagging windowExists false", () => {
   const gone: SessionRosterEntry = { ...DEFAULT_SESSION, windowIds: ["dashboard"] };
-  const { effect } = run(createShellState(), "open builds", { mode: "host", sessions: [gone] });
-  assert.deepEqual(effect, { kind: "attach-view", sessionId: gone.id, view: "builds", windowExists: false });
+  const { effect } = run(createShellState(), "open repositories", { mode: "host", sessions: [gone] });
+  assert.deepEqual(effect, { kind: "attach-view", sessionId: gone.id, view: "repositories", windowExists: false });
 });
 
 test("runCommand: open <view> in host mode errors when the default session no longer exists at all", () => {
-  const { state, effect } = run(createShellState(), "open builds", { mode: "host", sessions: [] });
+  const { state, effect } = run(createShellState(), "open repositories", { mode: "host", sessions: [] });
   assert.deepEqual(effect, { kind: "none" });
   assert.equal(state.lines.at(-1)?.text, "can't find session: 10.42.7.13");
 });
 
 test("runCommand: open <view> in pane mode is UNCHANGED — a plain in-pane launch, never an attach", () => {
-  const { effect } = run(createShellState(), "open builds", { mode: "pane" });
-  assert.deepEqual(effect, { kind: "launch", program: "builds" });
+  const { effect } = run(createShellState(), "open repositories", { mode: "pane" });
+  assert.deepEqual(effect, { kind: "launch", program: "repositories" });
 });
 
 test("runCommand: edith (host mode) attaches the default session at window 0 (dashboard)", () => {

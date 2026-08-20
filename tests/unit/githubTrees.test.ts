@@ -2,7 +2,7 @@
 // multibyte, cache TTL, null-on-failure. Follows the same style as
 // tests/unit/githubCommits.test.ts: pure/cache logic is exercised directly
 // here; the live fetch/DOM integration is covered end-to-end by
-// tests/e2e/builds.spec.ts's mocked-route tests.
+// tests/e2e/repositories.spec.ts's mocked-route tests.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {

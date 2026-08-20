@@ -4,16 +4,16 @@
 // GITHUB_TOKEN header and writes to disk; this is unauthenticated,
 // CORS-open, and only ever updates in-memory + sessionStorage state).
 //
-// Builds.svelte calls `getLiveCommits(repoName)` once per repo per Builds
+// Repositories.svelte calls `getLiveCommits(repoName)` once per repo per Repositories
 // mount; sessionStorage caches a successful response for TTL_MS so
-// switching projects back and forth (or remounting Builds) within the same
+// switching projects back and forth (or remounting Repositories) within the same
 // browser tab session doesn't re-fetch needlessly. A failed fetch (offline,
 // rate-limited, aborted by a test's route handler) resolves to `null` —
 // callers keep whatever snapshot/committed data they already had, silently.
 import type { Commit } from "./commits";
 
 const TTL_MS = 10 * 60 * 1000;
-const CACHE_PREFIX = "builds:commits:";
+const CACHE_PREFIX = "repositories:commits:";
 
 interface CacheEntry {
   ts: number;

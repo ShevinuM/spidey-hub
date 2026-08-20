@@ -2,7 +2,7 @@
 // resolves content lazily (lazy fetch, cache). src/lib/shell.ts stays a
 // pure, zero-fetch module (see
 // its own header comment); every actual `fetch()` call lives here instead,
-// exactly the same split GrepOverlay.svelte/Builds.svelte already use for
+// exactly the same split GrepOverlay.svelte/Repositories.svelte already use for
 // their own lazy index loads (this file just factors that same pattern out
 // so Shell.svelte doesn't duplicate it per pane instance, and so every
 // mounted shell pane shares ONE warm cache rather than re-fetching on every
@@ -59,10 +59,10 @@ export function loadGrepFiles(): Promise<SiteFile[]> {
 
 const repoIndexCache = new Map<string, Promise<RepoIndex>>();
 
-/** `public/generated/repos/<name>.json` — the same JSON Builds.svelte
+/** `public/generated/repos/<name>.json` — the same JSON Repositories.svelte
  * already fetches from this URL, palette and all — `vim repos/<name>/…`
  * reads from this same cache, so a code file `cat`/`vim` opens the exact
- * tokens Builds' own editor would show for it. */
+ * tokens Repositories' own editor would show for it. */
 export function loadRepoIndex(name: string): Promise<RepoIndex> {
   let cached = repoIndexCache.get(name);
   if (!cached) {

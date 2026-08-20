@@ -71,7 +71,7 @@ export class NotificationsState {
     // Timers only ARM once a toast is actually visible (view === "home") —
     // same "don't count down a toast the visitor never had a chance to see"
     // reasoning the old Toasts.svelte's own armed-effect documented. A toast
-    // injected while browsing Builds, say, keeps its full duration until the
+    // injected while browsing Repositories, say, keeps its full duration until the
     // visitor actually reaches the dashboard.
     $effect(() => {
       if (this.view !== "home" || this.fixtureMode) return;

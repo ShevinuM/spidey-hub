@@ -42,7 +42,7 @@ const rowByPath = (page: Page, path: string) => page.locator(`[data-testid="grep
 
 test.describe("Grep overlay", () => {
   test.beforeEach(async ({ page }) => {
-    // Same network-determinism rule as the visual suite: Builds' own
+    // Same network-determinism rule as the visual suite: Repositories' own
     // commit-refresh island fires on mount, and
     // none of these tests should depend on api.github.com's real
     // availability. Grep itself never calls it (verified explicitly below).
@@ -123,14 +123,20 @@ test.describe("Grep overlay", () => {
     await expect(page.locator('[data-testid="employment-preview"]')).toBeVisible();
   });
 
-  test("Enter on a Builds.svelte hit lands in the builds view", async ({ page }) => {
+  test("Enter on a Repositories.svelte hit lands in the repositories view", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
-    await page.keyboard.type("Builds.svelte");
-    await expect(rows(page).first()).toHaveAttribute("data-path", "src/components/builds/Builds.svelte");
+    // A path-fragment query, not a bare filename: plenty of OTHER files'
+    // header comments mention "Repositories.svelte" in prose (e.g.
+    // CopyMode.svelte's data-copy-source contract doc), which would
+    // otherwise win the path-substring-vs-content-hit race for
+    // `rows(page).first()` depending on alphabetical file order. This
+    // fragment only ever matches the real component's own PATH.
+    await page.keyboard.type("components/repositories/Repositories.svelte");
+    await expect(rows(page).first()).toHaveAttribute("data-path", "src/components/repositories/Repositories.svelte");
     await page.keyboard.press("Enter");
     await expect(overlay(page)).not.toBeVisible();
-    await expect(page.locator('[data-testid="builds-panel-2"]')).toBeVisible();
+    await expect(page.locator('[data-testid="repositories-panel-2"]')).toBeVisible();
   });
 
   test("Enter with no results just closes the overlay (no navigation)", async ({ page }) => {

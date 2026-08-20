@@ -20,7 +20,7 @@ import {
 
 const commands: CommandSource[] = [
   { name: "dashboard", aliases: ["home"], description: "jump to the dashboard", action: "view:home" },
-  { name: "builds", description: "jump to Builds", action: "view:builds" },
+  { name: "repositories", description: "jump to Repositories", action: "view:repositories" },
   { name: "employment", description: "jump to Employment Records", action: "view:employment" },
   { name: "profile", description: "jump to Profile", action: "view:profile" },
   { name: "retina-v", description: "jump to Retina-V", action: "view:retina-v" },
@@ -75,7 +75,7 @@ test("commandEntries preserves cmdline.yaml's own declared order", () => {
   const entries = commandEntries(commands);
   assert.deepEqual(
     entries.map((e) => e.label),
-    ["dashboard", "builds", "employment", "profile", "retina-v", "help", "grep", "reboot", "resume", "q"],
+    ["dashboard", "repositories", "employment", "profile", "retina-v", "help", "grep", "reboot", "resume", "q"],
   );
 });
 

@@ -38,7 +38,7 @@
   }
 
   /** `bind:this` + `handleKey(): boolean` delegation contract, same shape
-   * Builds.svelte/EmploymentRecords.svelte already use (Terminal.svelte tries this
+   * Repositories.svelte/EmploymentRecords.svelte already use (Terminal.svelte tries this
    * before falling back to its own generic q/Esc-to-dashboard handling —
    * Profile has nothing else to claim, only `r`). */
   export function handleKey(e: KeyboardEvent): boolean {

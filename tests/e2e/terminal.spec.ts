@@ -19,9 +19,20 @@ async function statusBarText(page: Page) {
 /** Same six-window table as nav.spec.ts/tmux.spec.ts — kept as a local copy
  * per this suite's own convention rather than a shared import, matching how
  * every other e2e spec hand-mirrors this list. */
-const WINDOWS = ["dashboard", "builds", "employment", "retina-v", "profile", "help"];
+const WINDOWS = ["dashboard", "repositories", "employment", "retina-v", "profile", "help"];
+/** Display NAME per window id — every id equals its own name except
+ * "repositories", whose site.yaml name is the shorter "repos" (status bar
+ * real estate). */
+const WINDOW_NAMES: Record<string, string> = {
+  dashboard: "dashboard",
+  repositories: "repos",
+  employment: "employment",
+  "retina-v": "retina-v",
+  profile: "profile",
+  help: "help",
+};
 function winText(activeId: string, lastId?: string): string {
-  return WINDOWS.map((id, i) => `${i}:${id}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
+  return WINDOWS.map((id, i) => `${i}:${WINDOW_NAMES[id]}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
 }
 
 async function gotoReady(page: Page, path: string) {
@@ -45,9 +56,9 @@ test.describe("view routing on direct navigation", () => {
     await expect(page.locator('[data-testid="dashboard-wordmark"]')).toBeVisible();
     expect(await statusBarText(page)).toBe(winText("dashboard"));
 
-    await gotoReady(page, "/builds");
-    await expect(page.locator('[data-testid="builds-repo-row"]').first()).toBeVisible();
-    expect(await statusBarText(page)).toBe(winText("builds"));
+    await gotoReady(page, "/repositories");
+    await expect(page.locator('[data-testid="repositories-repo-row"]').first()).toBeVisible();
+    expect(await statusBarText(page)).toBe(winText("repositories"));
 
     await gotoReady(page, "/employment");
     await expect(page.locator('[data-testid="employment-pos"]')).toBeVisible();
@@ -76,7 +87,7 @@ test.describe("tmux prefix: arm, digit dispatch, single-shot disarm", () => {
     await gotoReady(page, "/");
     let prev = "dashboard";
     for (const [digit, id] of [
-      ["1", "builds"],
+      ["1", "repositories"],
       ["2", "employment"],
       ["3", "retina-v"],
       ["4", "profile"],
@@ -104,21 +115,21 @@ test.describe("tmux prefix: arm, digit dispatch, single-shot disarm", () => {
     expect(await statusBarText(page)).toBe(winText("dashboard"));
   });
 
-  test("the prefix is single-shot: after Ctrl-b 1 lands on builds, a later BARE digit is Builds' own panel-focus key, not a repeat window jump", async ({
+  test("the prefix is single-shot: after Ctrl-b 1 lands on repositories, a later BARE digit is Repositories' own panel-focus key, not a repeat window jump", async ({
     page,
   }) => {
     await gotoReady(page, "/");
     await ctrlB(page);
     await page.keyboard.press("1");
-    await expect(page).toHaveURL(/\/builds$/);
+    await expect(page).toHaveURL(/\/repositories$/);
 
     // An unprefixed "2" right after does NOT re-arm/jump to employment — it's
-    // consumed (if at all) by Builds' own bare-digit panel-focus handling,
+    // consumed (if at all) by Repositories' own bare-digit panel-focus handling,
     // exactly like tmux.spec.ts's "a prefixed ArrowDown" test proves the
     // reverse precedence (prefix-consumes-first) using panel [3].
     await page.keyboard.press("2");
-    await expect(page).toHaveURL(/\/builds$/);
-    expect(await statusBarText(page)).toBe(winText("builds", "dashboard"));
+    await expect(page).toHaveURL(/\/repositories$/);
+    expect(await statusBarText(page)).toBe(winText("repositories", "dashboard"));
   });
 });
 
@@ -134,7 +145,7 @@ test.describe("global `r` reboot backstop reaches every view except Profile's ow
   // so it stops as soon as the boot overlay appears rather than waiting out
   // the ~4.6s sequence for each one.
   for (const [path, urlPattern] of [
-    ["/builds", /\/builds$/],
+    ["/repositories", /\/repositories$/],
     ["/employment", /\/employment$/],
     ["/retina-v", /\/retina-v$/],
     ["/help", /\/help$/],
@@ -213,7 +224,7 @@ test.describe("status bar active-window highlight", () => {
   }) => {
     await gotoReady(page, "/");
     expect(await bg(page, "dashboard")).toBe("rgb(224, 69, 60)");
-    for (const id of ["builds", "employment", "retina-v", "profile", "help"]) {
+    for (const id of ["repositories", "employment", "retina-v", "profile", "help"]) {
       expect(await bg(page, id)).not.toBe("rgb(224, 69, 60)");
     }
 

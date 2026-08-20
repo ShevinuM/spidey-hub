@@ -27,7 +27,7 @@ async function openChooseTree(page: Page) {
 async function detach(page: Page) {
   await prefixed(page, "d");
   // Waits for the host shell to actually mount before the caller types into
-  // it — Employment/Builds's own teardown effects can otherwise leave a
+  // it — Employment/Repositories's own teardown effects can otherwise leave a
   // narrow window where the very first keystrokes race the PaneTree ->
   // host-Shell swap.
   await page.locator('[data-shell-mode="host"]').waitFor({ state: "visible" });
@@ -52,7 +52,7 @@ test.describe("choose-tree opening / initial state (real tmux fidelity)", () => 
   });
 
   test("Ctrl-b w opens a full window-content overlay; the status bar stays visible", async ({ page }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await openChooseTree(page);
     await expect(overlay(page)).toBeVisible();
     await expect(statusBarWindows(page)).toBeVisible();
@@ -61,11 +61,11 @@ test.describe("choose-tree opening / initial state (real tmux fidelity)", () => 
   test("the current session starts expanded (6 window rows visible) and the current window is initially selected", async ({
     page,
   }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await openChooseTree(page);
     await expect(sessionRows(page)).toHaveCount(1);
     await expect(windowRows(page)).toHaveCount(6);
-    await expect(selectedRow(page)).toHaveAttribute("data-window-id", "builds");
+    await expect(selectedRow(page)).toHaveAttribute("data-window-id", "repositories");
   });
 
   test("session row text: {name}: {n} windows, (attached)", async ({ page }) => {
@@ -75,16 +75,16 @@ test.describe("choose-tree opening / initial state (real tmux fidelity)", () => 
   });
 
   test("window row text and flags: {index}: {name} with * on the active window", async ({ page }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await openChooseTree(page);
-    await expect(windowRows(page).filter({ hasText: "1: builds*" })).toHaveCount(1);
+    await expect(windowRows(page).filter({ hasText: "1: repos*" })).toHaveCount(1);
     await expect(windowRows(page).filter({ hasText: "0: dashboard" })).toHaveCount(1);
   });
 
   test("the bottom preview strip describes the selected window's pane programs + layout", async ({ page }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await openChooseTree(page);
-    await expect(page.locator('[data-testid="choose-tree-preview"]')).toContainText("builds");
+    await expect(page.locator('[data-testid="choose-tree-preview"]')).toContainText("repositories");
   });
 });
 
@@ -98,15 +98,15 @@ test.describe("choose-tree navigation (arrows/h/l)", () => {
     await openChooseTree(page);
     await expect(selectedRow(page)).toHaveAttribute("data-window-id", "dashboard");
     await page.keyboard.press("ArrowDown");
-    await expect(selectedRow(page)).toHaveAttribute("data-window-id", "builds");
+    await expect(selectedRow(page)).toHaveAttribute("data-window-id", "repositories");
     await page.keyboard.press("ArrowDown");
     await expect(selectedRow(page)).toHaveAttribute("data-window-id", "employment");
     await page.keyboard.press("ArrowUp");
-    await expect(selectedRow(page)).toHaveAttribute("data-window-id", "builds");
+    await expect(selectedRow(page)).toHaveAttribute("data-window-id", "repositories");
   });
 
   test("h on a window row jumps to its parent session row; h again collapses it", async ({ page }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await openChooseTree(page);
     await expect(windowRows(page)).toHaveCount(6);
     await page.keyboard.press("h");
@@ -136,10 +136,10 @@ test.describe("choose-tree Enter switches window/session; x kills; q/Esc close",
   test("Enter on a window row switches to it and closes the overlay", async ({ page }) => {
     await gotoReady(page, "/");
     await openChooseTree(page);
-    await page.keyboard.press("ArrowDown"); // builds
+    await page.keyboard.press("ArrowDown"); // repositories
     await page.keyboard.press("Enter");
     await expect(overlay(page)).not.toBeVisible();
-    await expect(page).toHaveURL(/\/builds$/);
+    await expect(page).toHaveURL(/\/repositories$/);
   });
 
   test("q closes with no side effect; Esc closes with no side effect", async ({ page }) => {
@@ -158,7 +158,7 @@ test.describe("choose-tree Enter switches window/session; x kills; q/Esc close",
   test("x prompts an in-overlay Kill window {i}? (y/n); case-insensitive Y confirms; overlay stays open", async ({
     page,
   }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await openChooseTree(page);
     await page.keyboard.press("ArrowDown"); // employment row (index 2)
     await page.keyboard.press("x");
@@ -171,7 +171,7 @@ test.describe("choose-tree Enter switches window/session; x kills; q/Esc close",
   });
 
   test("any OTHER key cancels just the kill sub-prompt, leaving the overlay open", async ({ page }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await openChooseTree(page);
     await page.keyboard.press("x");
     await expect(killConfirm(page)).toBeVisible();
@@ -292,7 +292,7 @@ test.describe("choose-tree across sessions (create a second session via the host
   test("a second session appears collapsed; expanding it and pressing Enter on its window switches the attached session", async ({
     page,
   }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await createAndAttachSecondSession(page);
 
     await openChooseTree(page);
@@ -311,15 +311,15 @@ test.describe("choose-tree across sessions (create a second session via the host
     await page.keyboard.press("l");
     await expect(windowRows(page)).toHaveCount(7); // test's 1 + the other session's 6
 
-    // Move onto its "builds" window row and switch to it.
-    const buildsRow = windowRows(page).filter({ hasText: "1: builds" });
-    await expect(buildsRow).toBeVisible();
-    await buildsRow.click();
+    // Move onto its "repositories" window row and switch to it.
+    const reposRow = windowRows(page).filter({ hasText: "1: repos" });
+    await expect(reposRow).toBeVisible();
+    await reposRow.click();
     await page.keyboard.press("Enter");
 
     await expect(overlay(page)).not.toBeVisible();
     await expect(sessionLabel(page)).toHaveText("Session: 10.42.7.13");
-    await expect(page).toHaveURL(/\/builds$/);
+    await expect(page).toHaveURL(/\/repositories$/);
   });
 
   test("Enter on a SESSION row (not a window row) attaches it without changing its active window", async ({ page }) => {

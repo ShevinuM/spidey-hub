@@ -3,13 +3,13 @@
   // 317-336 markup, reproduced verbatim: red file tab, gutter + line, status
   // bar with mode indicator / branch / breadcrumb / position / close pill).
   // The prototype only ever mounts this for a personnel role doc; this
-  // component is built standalone here so Builds' repo-file browsing and
+  // component is built standalone here so Repositories' repo-file browsing and
   // Personnel's role docs can share one implementation. It is deliberately
   // "dumb" about content: every string
-  // comes from the `labels` prop (caller's own data file — builds.yaml for
-  // Builds, personnel.yaml for Personnel), every line is already
+  // comes from the `labels` prop (caller's own data file — repositories.yaml for
+  // Repositories, personnel.yaml for Personnel), every line is already
   // classified+styled by the caller (docline.ts for .md, a flat body color
-  // for code — see Builds.svelte's `toEditorLines()`), and scrolling never
+  // for code — see Repositories.svelte's `toEditorLines()`), and scrolling never
   // touches anything the caller doesn't explicitly own (no fetch, no
   // routing).
   //
@@ -95,7 +95,7 @@
     breadcrumbRight: string;
     /** See PaneTree.svelte's own header comment (multi-instance
      * data-copy-source gating). Defaults to
-     * `true`: Builds/Personnel are this component's only two call sites and
+     * `true`: Repositories/Personnel are this component's only two call sites and
      * both always pass it explicitly, but a default keeps this file safe if
      * a future caller doesn't. */
     isFocused?: boolean;
@@ -122,7 +122,7 @@
 
   // ---------------------------------------------------------------------
   // Pending multi-key sequences: gg (jump top), yy (yank N lines) — same
-  // ~500-600ms double-tap window Builds.svelte's own gg/G uses. A count
+  // ~500-600ms double-tap window Repositories.svelte's own gg/G uses. A count
   // typed before the FIRST key of the pair (`3gg`, `3yy`) is captured at
   // that first keypress since the digits are consumed (reset) per
   // keystroke — see `handleNormalOrVisual` below.
@@ -478,7 +478,7 @@
 
   /**
    * Handles one keydown for this view. Returns true when consumed (caller
-   * — Builds.svelte / EmploymentRecords.svelte — must not also treat the key as
+   * — Repositories.svelte / EmploymentRecords.svelte — must not also treat the key as
    * its own panel key; Terminal.svelte's delegation chain also keeps
    * offering an unconsumed key to whatever comes next, which is exactly
    * how a bare `:` reaches the site-wide Cmdline box's fallback opener —

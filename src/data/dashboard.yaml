@@ -10,7 +10,7 @@ plate:
   title: "SPIDEY-HUB"
 
 # Menu rows, top to bottom. There is no per-row `invert` key (the
-# single-leading-character inverted-background cursor on "Builds" —
+# single-leading-character inverted-background cursor on "Repositories" —
 # design/Homepage.dc.html line 142); every row renders its plain label.
 # `icon` is either a glyph character or the literal token
 # "spider-mask" meaning: render the spiderman.svg CSS mask (never an <img>)
@@ -18,7 +18,7 @@ plate:
 menu:
   - id: projects
     icon: "▤"
-    label: "Builds"
+    label: "Repositories"
   - id: xp
     icon: "◆"
     label: "Employment Records"

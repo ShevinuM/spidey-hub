@@ -21,7 +21,7 @@ import {
 
 const commands: CommandDef[] = [
   { name: "dashboard", aliases: ["home"], description: "jump to the dashboard", action: "view:home" },
-  { name: "builds", description: "jump to Builds", action: "view:builds" },
+  { name: "repositories", description: "jump to Repositories", action: "view:repositories" },
   { name: "grep", description: "open grep", action: "grep", takesArgs: true },
   { name: "reboot", description: "replay boot", action: "reboot" },
   { name: "resume", aliases: ["cv"], description: "download resume", action: "resume" },
@@ -59,8 +59,8 @@ test("parseInput on empty input returns an empty name and no args", () => {
 // ---------------------------------------------------------------------
 
 test("resolveCommand matches by exact name, case-insensitively", () => {
-  assert.equal(resolveCommand(commands, "builds")?.name, "builds");
-  assert.equal(resolveCommand(commands, "BUILDS")?.name, "builds");
+  assert.equal(resolveCommand(commands, "repositories")?.name, "repositories");
+  assert.equal(resolveCommand(commands, "REPOSITORIES")?.name, "repositories");
 });
 
 test("resolveCommand matches by alias", () => {
@@ -82,8 +82,8 @@ test("filterSuggestions with an empty prefix returns every command unfiltered", 
 });
 
 test("filterSuggestions matches a name prefix, case-insensitively", () => {
-  const hits = filterSuggestions(commands, "BU");
-  assert.deepEqual(hits.map((c) => c.name), ["builds"]);
+  const hits = filterSuggestions(commands, "REP");
+  assert.deepEqual(hits.map((c) => c.name), ["repositories"]);
 });
 
 test("filterSuggestions matches an alias prefix too", () => {
@@ -100,7 +100,7 @@ test("filterSuggestions returns nothing for a prefix no command or alias starts 
 // ---------------------------------------------------------------------
 
 test("completeInput completes a unique prefix to the full name", () => {
-  assert.equal(completeInput(commands, "bui"), "builds");
+  assert.equal(completeInput(commands, "rep"), "repositories");
 });
 
 test("completeInput completes to the first match when several share a prefix", () => {

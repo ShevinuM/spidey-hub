@@ -1,5 +1,5 @@
 ---
-label: Builds
+label: Repositories
 hint: window 1
 order: 3
 rows:

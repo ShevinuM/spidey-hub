@@ -2,7 +2,7 @@
 // commit refresh must map to the same shape as the
 // build-time snapshot generator, scripts/generate.mjs's fetchCommits().
 // The fetch/sessionStorage side of that module is exercised end-to-end by
-// tests/e2e/builds.spec.ts (route-fulfill / route-abort against a live
+// tests/e2e/repositories.spec.ts (route-fulfill / route-abort against a live
 // page), not here — this only pins the shape-mapping logic itself.
 import { test } from "node:test";
 import assert from "node:assert/strict";

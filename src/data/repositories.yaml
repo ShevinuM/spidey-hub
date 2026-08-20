@@ -1,9 +1,9 @@
-# Builds (lazygit clone) view copy. Source: design/Homepage.dc.html
+# Repositories (lazygit clone) view copy. Source: design/Homepage.dc.html
 # lines 322-382. Panel numbers/titles match the prototype's inset labels;
 # panel [0] "Changes" and the command-log panel are unnumbered there too.
 #
-# Builds' interaction model goes beyond
-# what the prototype markup shows any precedent for (same "Builds
+# Repositories' interaction model goes beyond
+# what the prototype markup shows any precedent for (same "Repositories
 # interactivity extension" territory as the original repo-file
 # browsing): panel [3] becomes a flat list of every repo across every
 # project plus a virtual "all-projects" entry, panel [2] becomes that
@@ -11,7 +11,7 @@
 # in the tree, and panel [4] tracks only the panel [3] selection (never file/
 # project movement — a fix for a live user bug report of commits changing
 # while browsing files). Every new user-visible string this introduces still
-# lives here, not inlined in Builds.svelte.
+# lives here, not inlined in Repositories.svelte.
 
 panels:
   status:
@@ -70,12 +70,12 @@ commandLog:
 
 # Repo file-tree browsing (panel [3] -> panel [2] -> pane [0]) and the
 # full-screen nvim-style file editor it opens into. Both are a
-# "Builds interactivity extension" beyond the prototype's visuals (no
+# "Repositories interactivity extension" beyond the prototype's visuals (no
 # prototype markup exists for either), but every user-visible string they
-# render still lives here, not inlined in Builds.svelte / Editor.svelte.
+# render still lives here, not inlined in Repositories.svelte / Editor.svelte.
 repoBrowser:
   # The Files pane is a lazygit-style tree now
-  # (Builds.svelte renders inline SVG folder/file icons + a ▾/▸ caret keyed
+  # (Repositories.svelte renders inline SVG folder/file icons + a ▾/▸ caret keyed
   # off each row's own type/expand-state, not a yaml glyph) and there is no
   # more `../` row to navigate to (the whole tree renders at once) — both
   # `upEntry` and the `dirIcon`/`fileIcon` glyphs are retired.
@@ -121,7 +121,7 @@ filePreview:
 # Editor.svelte is generic (built standalone so it can be reused
 # for personnel role docs); every
 # caller passes its own labels object sourced from its own data file. This is
-# the Builds caller's copy of those literal strings — identical wording to
+# the Repositories caller's copy of those literal strings — identical wording to
 # personnel.yaml's `editor:` section (src/data/personnel.yaml) because both
 # reproduce the same prototype markup (Homepage.dc.html lines 317-336:
 # "NORMAL", "⑂ main"), not because the two data files share storage.

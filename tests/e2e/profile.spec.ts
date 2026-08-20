@@ -20,12 +20,23 @@ async function statusBarText(page: Page) {
   return (await page.locator(STATUS_BAR).innerText()).replace(/\s+/g, " ").trim();
 }
 
-const WINDOWS = ["dashboard", "builds", "employment", "retina-v", "profile", "help"];
+const WINDOWS = ["dashboard", "repositories", "employment", "retina-v", "profile", "help"];
+/** Display NAME per window id — every id equals its own name except
+ * "repositories", whose site.yaml name is the shorter "repos" (status bar
+ * real estate). */
+const WINDOW_NAMES: Record<string, string> = {
+  dashboard: "dashboard",
+  repositories: "repos",
+  employment: "employment",
+  "retina-v": "retina-v",
+  profile: "profile",
+  help: "help",
+};
 /** `lastId` (real tmux fidelity) is the real tmux `-` flag on the
  * session's PREVIOUSLY active window —
  * omit it for assertions made before any in-test window switch. */
 function winText(activeId: string, lastId?: string): string {
-  return WINDOWS.map((id, i) => `${i}:${id}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
+  return WINDOWS.map((id, i) => `${i}:${WINDOW_NAMES[id]}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
 }
 
 async function gotoReady(page: Page, path: string) {

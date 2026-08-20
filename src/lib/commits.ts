@@ -1,7 +1,7 @@
 // Fixture-commits mechanism — see the comment below for what a naive
 // implementation would break.
 //
-// Builds renders one project per markdown file in the `repositories` collection,
+// Repositories renders one project per markdown file in the `repositories` collection,
 // each with exactly one repo (see src/content/repositories/*.md /
 // fixtures/repositories/*.md). Commit snapshots are keyed by *repo name*, not by
 // project slug, so they live next to (not inside) the content collection:
@@ -15,7 +15,7 @@
 // the matching mode.
 //
 // Server-only, same as src/lib/data.ts: this module must never be imported
-// from a Svelte island (Builds.svelte etc.) — `process.env.PORTFOLIO_FIXTURES`
+// from a Svelte island (Repositories.svelte etc.) — `process.env.PORTFOLIO_FIXTURES`
 // doesn't exist in the browser. It also can't read the snapshot with a
 // runtime `node:fs` path built from `dirname(import.meta.url)`: Astro's
 // static build bundles this module into `dist/.prerender/chunks/`, which
@@ -23,7 +23,7 @@
 // would 404 (ENOENT) as soon as real pages call this getter. Instead it uses
 // a build-time `import.meta.glob` (eager, JSON parsed natively — no `?raw` +
 // JSON.parse needed, unlike the YAML files in data.ts). Callers live in
-// `.astro` frontmatter (see src/pages/builds.astro), which thread the result
+// `.astro` frontmatter (see src/pages/repositories.astro), which thread the result
 // down through Terminal.svelte as a plain prop.
 const REAL_GLOB = import.meta.glob("../generated/commits/*.json", {
   eager: true,
@@ -79,9 +79,9 @@ export function getCommits(repoName: string): Commit[] {
 /**
  * Build-time snapshot for every repo referenced by `projects`, keyed by repo
  * name — called once in `.astro` frontmatter (see src/pages/*.astro) and
- * threaded through Terminal.svelte -> Builds.svelte as a plain prop, so the
+ * threaded through Terminal.svelte -> Repositories.svelte as a plain prop, so the
  * Svelte island never imports this module itself (browser code can't read
- * `process.env` or use this module's `import.meta.glob` results). Builds.svelte
+ * `process.env` or use this module's `import.meta.glob` results). Repositories.svelte
  * renders this synchronously on first paint, then overlays the client-side
  * live refresh (src/lib/githubCommits.ts) on top of it per project/repo.
  */

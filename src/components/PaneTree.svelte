@@ -27,7 +27,7 @@
   import type { ProgramName, PaneNode } from "../lib/tmux";
   import type {
     DashboardData,
-    BuildsData,
+    RepositoriesData,
     PersonnelData,
     ProfileData,
     HelpData,
@@ -37,7 +37,7 @@
   import type { Commit } from "../lib/commits";
   import type { SessionRosterEntry, ShellMode } from "../lib/shell";
   import Dashboard from "./Dashboard.svelte";
-  import Builds from "./builds/Builds.svelte";
+  import Repositories from "./repositories/Repositories.svelte";
   import EmploymentRecords from "./employment-records/EmploymentRecords.svelte";
   import Profile from "./Profile.svelte";
   import HelpView from "./HelpView.svelte";
@@ -65,7 +65,7 @@
     /** Live total pane count across the whole session — threaded straight
      * through to Dashboard.svelte's footer sync line. */
     paneCount: number;
-    builds: BuildsData;
+    repositories: RepositoriesData;
     personnel: PersonnelData;
     profile: ProfileData;
     help: HelpData;
@@ -105,7 +105,7 @@
     dashboard,
     windowNumberById,
     paneCount,
-    builds,
+    repositories,
     personnel,
     profile,
     help,
@@ -157,7 +157,7 @@
           {dashboard}
           {windowNumberById}
           {paneCount}
-          {builds}
+          {repositories}
           {personnel}
           {profile}
           {help}
@@ -195,8 +195,8 @@
            div keeps the flex column's layout identical to every other
            window (StatusBar still pinned to the bottom). -->
       <div style="flex:1;min-height:0"></div>
-    {:else if node.pane.program === "builds"}
-      <Builds bind:this={leafRef} {builds} {projects} {commitsByRepo} {isFocused} />
+    {:else if node.pane.program === "repositories"}
+      <Repositories bind:this={leafRef} {repositories} {projects} {commitsByRepo} {isFocused} />
     {:else if node.pane.program === "employment"}
       <EmploymentRecords
         bind:this={leafRef}

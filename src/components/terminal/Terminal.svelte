@@ -30,7 +30,7 @@
     NotificationsData,
     TrackerData,
     ProfileData,
-    BuildsData,
+    RepositoriesData,
     PersonnelData,
     GrepData,
     HelpData,
@@ -67,7 +67,7 @@
    * Editor already gets).
    *
    * `Ctrl-b x` always kills the real tmux PANE (src/lib/tmux.ts), never a
-   * Builds-internal panel. */
+   * Repositories-internal panel. */
   interface ProgramRef {
     handleKey?: (e: KeyboardEvent) => boolean;
     isEditorOpen?: () => boolean;
@@ -87,7 +87,7 @@
     notificationsFixtureMode: boolean;
     tracker: TrackerData;
     profile: ProfileData;
-    builds: BuildsData;
+    repositories: RepositoriesData;
     personnel: PersonnelData;
     grep: GrepData;
     help: HelpData;
@@ -109,7 +109,7 @@
     notificationsFixtureMode,
     tracker,
     profile,
-    builds,
+    repositories,
     personnel,
     grep,
     help,
@@ -127,7 +127,7 @@
    * except "shell") — Shell.svelte's own
    * bare-command/`open <view>` validation, and the palette this file's
    * `viewIdToProgram`/`programToViewId` bridge already agrees with. */
-  const VIEW_NAMES = ["dashboard", "builds", "employment", "retina-v", "profile", "help"] as const;
+  const VIEW_NAMES = ["dashboard", "repositories", "employment", "retina-v", "profile", "help"] as const;
 
   /** Every in-pane Shell instance is "pane" mode; the one host-shell
    * instance rendered directly below (not through PaneTree) is "host" mode —
@@ -181,7 +181,7 @@
    * consulted ahead of every other ref above EXCEPT the active view's own
    * vim Editor when one is open (the delegation flip, see handleKey()
    * below): this is what makes "/" open the overlay from inside
-   * Builds/Personnel when no editor is open, and what keeps the overlay's
+   * Repositories/Personnel when no editor is open, and what keeps the overlay's
    * own keys (typing, nav, Enter/Esc) from ever reaching the view
    * underneath while it's open. */
   let grepRef = $state<{
@@ -283,14 +283,14 @@
    * file's own role as the hub owning every `bind:this`) and for
    * `focusedRef()` (`runEditorExCommand`'s own delegation target).
    *
-   * Deliberately NOT named `state` (the convention Builds/Editor/
+   * Deliberately NOT named `state` (the convention Repositories/Editor/
    * Notifications all use for their own instance): this file declares nine
    * `$state<{...}>(...)` refs ABOVE this line with an explicit generic type
    * argument, and naming this instance `state` breaks svelte2tsx's rune
    * recognition for every one of them (`pnpm check` fails with "Block-
    * scoped variable '$state' used before its declaration" +  "Untyped
    * function calls may not accept type arguments" on each) — confirmed by
-   * renaming back and reproducing the 22 phantom errors. Builds/Editor/
+   * renaming back and reproducing the 22 phantom errors. Repositories/Editor/
    * Notifications never hit this because none of them have a bare-generic
    * `$state<T>()` call textually before their own `const state = ...`. Do
    * not rename this back to `state`. */
@@ -372,7 +372,7 @@
   /** The single key following an armed Ctrl-b. Always disarms. A held
    * modifier (e.g. Ctrl-d) is deliberately NOT treated as a prefix command
    * — disarm and fall through to the rest of handleKey unchanged, so e.g.
-   * the Builds/Personnel editor's own Ctrl-d/Ctrl-u half-page scroll still
+   * the Repositories/Personnel editor's own Ctrl-d/Ctrl-u half-page scroll still
    * works immediately after an (unused) Ctrl-b, and the global "modifier
    * combos fall through untouched" rule holds even mid-prefix. (Ctrl-b
    * itself is special-cased one level up, in handleKey(), as tmux's own
@@ -710,7 +710,7 @@
 
     if (statusBarRef?.handleKey(e)) return;
 
-    // Ctrl-d/Ctrl-u/Ctrl-f/Ctrl-b are reserved for the Builds/Personnel file
+    // Ctrl-d/Ctrl-u/Ctrl-f/Ctrl-b are reserved for the Repositories/Personnel file
     // editors' half/full-page scroll (the vim engine's Ctrl-f/b included) —
     // the one deliberate exception to "modifier combos fall through
     // untouched" so far (the tmux prefix above is Ctrl-b itself, which is
@@ -729,8 +729,8 @@
      * editor scroll chord" gate every ref has always used. Whether the
      * widened (scroll-chord-permitting) gate applies is a CAPABILITY check
      * (does this ref export `isEditorOpen` at all?) rather than an
-     * identity check (`view === "builds"/"employment"`) — only
-     * Builds/EmploymentRecords ever do. Returns whether the key was consumed. */
+     * identity check (`view === "repositories"/"employment"`) — only
+     * Repositories/EmploymentRecords ever do. Returns whether the key was consumed. */
     function tryFocusedRef(): boolean {
       const ref = activeRef();
       if (!ref?.handleKey) return false;
@@ -786,7 +786,7 @@
       return;
     }
 
-    // Covers Builds/Personnel's non-editor handling (e.g. Builds' arrow-key
+    // Covers Repositories/Personnel's non-editor handling (e.g. Repositories' arrow-key
     // repo navigation) AND Profile's `r`/HelpView's arrow-key scroll — both
     // refs simply never export
     // `isEditorOpen`, so `editorIsOpen` is already false for them and this
@@ -916,7 +916,7 @@
         {dashboard}
         windowNumberById={core.windowNumberById}
         paneCount={core.totalPaneCount}
-        {builds}
+        {repositories}
         {personnel}
         {profile}
         {help}

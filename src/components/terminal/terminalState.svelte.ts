@@ -494,8 +494,8 @@ export class TerminalState {
     this.client.hostPane.shell = { ...this.client.hostPane.shell, lines: [...this.client.hostPane.shell.lines, { text, kind }] };
   }
 
-  /** Ctrl-b & (and the Builds single-pane Ctrl-b x fallback, a kill-pane
-   * that emptied the last Builds panel, and shell `exit` in the last pane)
+  /** Ctrl-b & (and the Repositories single-pane Ctrl-b x fallback, a kill-pane
+   * that emptied the last Repositories panel, and shell `exit` in the last pane)
    * — routed through tmux.ts's `killWindowCascade` instead of the bare
    * `killWindow` op: killing a window that ISN'T the session's last one
    * still just removes it; killing the LAST window destroys the session
@@ -667,7 +667,7 @@ export class TerminalState {
   };
 
   /** The actual "kill the focused PANE, or the window if it's the only
-   * one" ACTION (a REAL tmux pane kill, not a Builds-internal panel one) —
+   * one" ACTION (a REAL tmux pane kill, not a Repositories-internal panel one) —
    * factored out so the NO-CONFIRM `Ctrl-b :` "kill-pane" tmux command can
    * call the exact same underlying behavior `Ctrl-b x`'s own confirm
    * dialog below eventually calls, without a second copy of the "which
@@ -869,7 +869,7 @@ export class TerminalState {
    * tries this FIRST; only a command it doesn't recognize falls through to
    * the site-wide `commands` list below ("editor context wins"). Keyed off
    * the focused ref's own capability (same simplification as
-   * killPaneOrWindow above) rather than `view === "builds"/"employment"`
+   * killPaneOrWindow above) rather than `view === "repositories"/"employment"`
    * identity — only those two ever export `runEditorExCommand`. */
   runEditorExCommand(cmd: string): { recognized: boolean; error?: string } {
     return this.getFocusedRef()?.runEditorExCommand?.(cmd) ?? { recognized: false };
@@ -889,8 +889,8 @@ export class TerminalState {
       case "view:home":
         this.switchToProgram("dashboard");
         return undefined;
-      case "view:builds":
-        this.switchToProgram("builds");
+      case "view:repositories":
+        this.switchToProgram("repositories");
         return undefined;
       case "view:employment":
         this.switchToProgram("employment");

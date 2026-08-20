@@ -97,7 +97,7 @@ test.describe("Help: reachability", () => {
   });
 
   test("clicking the 5:help status-bar window opens help", async ({ page }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await page.locator('[data-testid="status-bar-window"][data-window-id="help"]').click();
     await expect(page).toHaveURL(/\/help$/);
   });
@@ -144,9 +144,9 @@ test.describe("Help: content is sourced from src/data/help.yaml + src/content/he
   test("clicking a scope tab narrows the list to just that scope's rows", async ({ page }) => {
     await gotoReady(page, "/help");
     const help = realHelp();
-    const target = help.scopes.find((s) => s.id === "builds")!;
+    const target = help.scopes.find((s) => s.id === "repositories")!;
 
-    await page.locator('[data-testid="help-scope-tab"][data-scope-id="builds"]').click();
+    await page.locator('[data-testid="help-scope-tab"][data-scope-id="repositories"]').click();
     await expect(rows(page)).toHaveCount(target.rows.length);
     await expect(matchCount(page)).toContainText(`${target.rows.length} shown`);
     for (const row of target.rows) {
@@ -252,6 +252,6 @@ test.describe("Help: status bar", () => {
     const text = (await page.locator('[data-testid="status-bar-windows"]').innerText())
       .replace(/\s+/g, " ")
       .trim();
-    expect(text).toBe("0:dashboard 1:builds 2:employment 3:retina-v 4:profile 5:help*");
+    expect(text).toBe("0:dashboard 1:repos 2:employment 3:retina-v 4:profile 5:help*");
   });
 });

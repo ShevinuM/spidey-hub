@@ -1,6 +1,6 @@
 <script lang="ts">
-  // Shared panel chrome (bordered box + floating title) for the six Builds
-  // panels — moved out of Builds.svelte during the folder+state-class
+  // Shared panel chrome (bordered box + floating title) for the six Repositories
+  // panels — moved out of Repositories.svelte during the folder+state-class
   // relocation refactor. Every panel's outer wrapper + floating title div
   // followed this exact shape inline; this component reproduces the same
   // interpolated style string byte-for-byte per caller-supplied pieces so

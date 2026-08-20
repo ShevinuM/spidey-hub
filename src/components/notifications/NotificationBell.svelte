@@ -55,7 +55,7 @@
      declaration always wins the cascade over a stylesheet rule for the same
      property (short of `!important`), so a hover rule can only ever take
      effect on a property the inline style never touches. This mirrors the
-     row/tab hover convention already used in Builds.svelte, Dashboard.svelte
+     row/tab hover convention already used in Repositories.svelte, Dashboard.svelte
      and EmploymentRecords.svelte. */
   .eh-bell {
     background: rgba(13, 15, 18, 0.85);

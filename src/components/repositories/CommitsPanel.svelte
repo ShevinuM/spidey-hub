@@ -1,23 +1,23 @@
 <script lang="ts">
   // Panel [4]: commit rows / all-projects local-only text — moved out of
-  // Builds.svelte during the folder+state-class relocation refactor. Pure
+  // Repositories.svelte during the folder+state-class relocation refactor. Pure
   // relocation: same DOM, testids, classes, and inline styles as the
   // original inline markup.
-  import type { BuildsData } from "../../lib/data";
-  import type { BuildsState } from "./buildsState.svelte";
-  import BuildsPanel from "./BuildsPanel.svelte";
+  import type { RepositoriesData } from "../../lib/data";
+  import type { RepositoriesState } from "./repositoriesState.svelte";
+  import RepositoriesPanel from "./RepositoriesPanel.svelte";
 
   interface Props {
-    builds: BuildsData;
-    state: BuildsState;
+    repositories: RepositoriesData;
+    state: RepositoriesState;
     isFocused: boolean;
   }
 
-  const { builds, state, isFocused }: Props = $props();
+  const { repositories, state, isFocused }: Props = $props();
 </script>
 
-<BuildsPanel
-  testid="builds-panel-4"
+<RepositoriesPanel
+  testid="repositories-panel-4"
   copySource={isFocused && state.focusedPanel === 4}
   flex="1.3"
   minHeight
@@ -27,21 +27,21 @@
   titleColor={state.panelTitleColor(4)}
 >
   {#snippet title()}
-    {builds.panels.commits.title}
-    <span style="color:rgba(196,216,232,.4)">{builds.panels.commits.subtitle}</span>
+    {repositories.panels.commits.title}
+    <span style="color:rgba(196,216,232,.4)">{repositories.panels.commits.subtitle}</span>
   {/snippet}
   {#snippet children()}
     <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px">
       {#if state.selectedRepo?.isAllProjects}
-        <div style="color:rgba(196,216,232,.5)">{builds.panels.commits.localOnlyText}</div>
-        <div style="color:rgba(196,216,232,.35)">{builds.allProjects.description}</div>
+        <div style="color:rgba(196,216,232,.5)">{repositories.panels.commits.localOnlyText}</div>
+        <div style="color:rgba(196,216,232,.35)">{repositories.allProjects.description}</div>
       {:else}
         {#each state.commits as c, i (c.sha8)}
           <div
             role="button"
             tabindex="0"
-            class="builds-row"
-            data-testid="builds-commit-row"
+            class="repositories-row"
+            data-testid="repositories-commit-row"
             data-sha8={c.sha8}
             data-sha={c.sha ?? ""}
             data-html-url={c.html_url}
@@ -55,17 +55,17 @@
               : ''}"
           >
             <span style="color:rgba(217,176,74,.85)">{c.sha8}</span> <span style="color:#9a7fd4"
-              >{builds.panels.commits.authorInitials}</span
+              >{repositories.panels.commits.authorInitials}</span
             > <span style="color:rgba(196,216,232,.7)">{c.msg}</span>
           </div>
         {/each}
       {/if}
     </div>
   {/snippet}
-</BuildsPanel>
+</RepositoriesPanel>
 
 <style>
-  .builds-row {
+  .repositories-row {
     /* Rows are flex children of an overflow-y:auto column; without this
        they flex-shrink below their own line box under a full 15-commit
        live list (only 1 commit ships in the committed snapshot, so this
@@ -80,7 +80,7 @@
     flex-shrink: 0;
     line-height: 1.6;
   }
-  .builds-row:hover {
+  .repositories-row:hover {
     background: rgba(224, 69, 60, 0.12);
   }
 </style>

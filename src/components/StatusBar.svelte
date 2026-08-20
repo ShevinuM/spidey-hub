@@ -61,7 +61,7 @@
      * no flag). */
     lastWindowId?: string;
     /** Passed the clicked window's own `id` (a site.yaml window id, e.g.
-     * "builds") — no ViewId translation happens in this component; the
+     * "repositories") — no ViewId translation happens in this component; the
      * caller (Terminal.svelte) owns turning a window id into a window
      * switch. */
     onSelect: (windowId: string) => void;

@@ -353,7 +353,7 @@ export type ShellEffect =
    * BEFORE calling `runCommand`, same "pre-warm, then call" convention
    * `cat` already uses). The (impure) caller opens a read-only Editor over
    * this pane, reusing the exact same `editorFile` local-state pattern
-   * Builds.svelte/EmploymentRecords.svelte already use — `:q` there drops back to
+   * Repositories.svelte/EmploymentRecords.svelte already use — `:q` there drops back to
    * this shell, never killing the pane. */
   | { kind: "open-editor"; path: string; content: string };
 

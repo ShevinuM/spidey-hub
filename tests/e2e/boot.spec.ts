@@ -193,7 +193,7 @@ test.describe("fresh boot", () => {
     await page.keyboard.press("b");
     await page.keyboard.up("Control");
     await page.keyboard.press("1");
-    await expect(page).toHaveURL(/\/builds$/);
+    await expect(page).toHaveURL(/\/repositories$/);
   });
 });
 
@@ -214,9 +214,9 @@ test.describe("session-once skip", () => {
   });
 
   test("a deep link also skips boot when the flag is already set", async ({ page }) => {
-    await skipToReady(page, "/builds");
+    await skipToReady(page, "/repositories");
     await expect(page.locator(BOOT_SEQUENCE)).toHaveCount(0);
-    await expect(page).toHaveURL(/\/builds$/);
+    await expect(page).toHaveURL(/\/repositories$/);
   });
 });
 
@@ -265,8 +265,8 @@ test.describe("replay", () => {
   });
 
   test("status-bar ↻ reboot control replays boot from any view", async ({ page }) => {
-    await skipToReady(page, "/builds");
-    await expect(page).toHaveURL(/\/builds$/);
+    await skipToReady(page, "/repositories");
+    await expect(page).toHaveURL(/\/repositories$/);
 
     await page.locator(REBOOT_CONTROL).click();
     await expect(page).toHaveURL(/\/$/);
@@ -278,7 +278,7 @@ test.describe("replay", () => {
   });
 
   test("reboot cancels an open status-bar prompt first", async ({ page }) => {
-    await skipToReady(page, "/builds");
+    await skipToReady(page, "/repositories");
 
     await page.keyboard.down("Control");
     await page.keyboard.press("b");
@@ -296,7 +296,7 @@ test.describe("replay", () => {
   });
 
   test("reboot closes an open copy-mode overlay first", async ({ page }) => {
-    await skipToReady(page, "/builds");
+    await skipToReady(page, "/repositories");
 
     // Ctrl-b [ — copy-mode's overlay stops above the status bar (unlike
     // grep/the status-line prompts), so its z-index would otherwise sit on

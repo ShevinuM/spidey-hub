@@ -149,14 +149,14 @@ test.describe("`exit` builtin ('closes the pane->window cascade')", () => {
   test("`exit` typed in an ALREADY-shell pane closes the window (distinct from `:q`, which only drops a RUNNING program to a shell)", async ({
     page,
   }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await page.keyboard.press(":");
     await page.keyboard.type("q");
     await page.keyboard.press("Enter");
     await expect(shellPrompt(page)).toBeVisible();
 
     await runInShell(page, "exit");
-    await expect(statusWindow(page, "builds")).toHaveCount(0);
+    await expect(statusWindow(page, "repositories")).toHaveCount(0);
   });
 });
 
@@ -280,7 +280,7 @@ test.describe("shell builtins", () => {
 
 // `vim <file>` (and `vi`/`nvim` aliases) shell builtin: resolves the path
 // against the same fs index/content sources `cat` already uses, opens the
-// read-only Editor over the shell pane (Builds/Employment's own `editorFile`
+// read-only Editor over the shell pane (Repositories/Employment's own `editorFile`
 // local-state pattern, reused inside Shell.svelte), and `:q` drops back to
 // the shell (never killing the pane).
 test.describe("vim / vi / nvim", () => {

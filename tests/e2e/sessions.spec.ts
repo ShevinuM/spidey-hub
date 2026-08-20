@@ -289,12 +289,12 @@ test.describe("tmux a / attach (host mode)", () => {
     page,
   }) => {
     await gotoReady(page, "/");
-    // Rename builds, kill profile, then detach.
+    // Rename repos, kill profile, then detach.
     await ctrlB(page);
     await page.keyboard.press("1");
     await ctrlB(page);
     await page.keyboard.press(",");
-    for (let i = 0; i < "builds".length; i++) await page.keyboard.press("Backspace");
+    for (let i = 0; i < "repos".length; i++) await page.keyboard.press("Backspace");
     await page.keyboard.type("myrename");
     await page.keyboard.press("Enter");
 
@@ -308,7 +308,7 @@ test.describe("tmux a / attach (host mode)", () => {
     await runInShell(page, `tmux a -t ${DEFAULT_SESSION_NAME}`);
 
     await expect(statusBarWindows(page)).toBeVisible();
-    await expect(statusWindow(page, "builds")).toHaveText("1:myrename");
+    await expect(statusWindow(page, "repositories")).toHaveText("1:myrename");
     await expect(statusWindow(page, "profile")).toHaveCount(0);
   });
 
@@ -403,7 +403,7 @@ test.describe("edith / open <view> (host mode)", () => {
   });
 
   test("edith attaches the default session at window 0 (dashboard)", async ({ page }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await detach(page);
     await runInShell(page, "edith");
     await expect(statusBarWindows(page)).toBeVisible();
@@ -411,37 +411,37 @@ test.describe("edith / open <view> (host mode)", () => {
     await expect(statusWindow(page, "dashboard")).toHaveText("0:dashboard*");
   });
 
-  test("open builds attaches AND selects the builds window", async ({ page }) => {
+  test("open repositories attaches AND selects the repositories window", async ({ page }) => {
     await gotoReady(page, "/");
     await detach(page);
-    await runInShell(page, "open builds");
+    await runInShell(page, "open repositories");
     await expect(statusBarWindows(page)).toBeVisible();
-    await expect(statusWindow(page, "builds")).toHaveText("1:builds*");
-    await expect(page).toHaveURL(/\/builds$/);
+    await expect(statusWindow(page, "repositories")).toHaveText("1:repos*");
+    await expect(page).toHaveURL(/\/repositories$/);
   });
 
   test("open <view> attaches with a status message when that window was killed (attach + message)", async ({
     page,
   }) => {
     await gotoReady(page, "/");
-    // Kill the builds window before ever detaching.
+    // Kill the repositories window before ever detaching.
     await ctrlB(page);
     await page.keyboard.press("1");
     await ctrlB(page);
     await page.keyboard.press("&");
     await expect(page.locator('[data-testid="status-confirm"]')).toBeVisible();
     await page.keyboard.press("y");
-    await expect(statusWindow(page, "builds")).toHaveCount(0);
+    await expect(statusWindow(page, "repositories")).toHaveCount(0);
 
     await detach(page);
-    await runInShell(page, "open builds");
+    await runInShell(page, "open repositories");
 
     // Attaches anyway (staying on whatever window is already active) — the
     // status bar shows the transient message INSTEAD OF the window list
     // while it's up (StatusBar.svelte's own mutually-exclusive states), so
     // this is checked first; the window list reappears once it auto-clears.
     await expect(page.locator('[data-testid="status-message"]')).toContainText(
-      shellYaml.host.windowGoneTemplate.replace("{view}", "builds").replace("{name}", DEFAULT_SESSION_NAME),
+      shellYaml.host.windowGoneTemplate.replace("{view}", "repositories").replace("{name}", DEFAULT_SESSION_NAME),
     );
     await expect(page.locator('[data-testid="status-message"]')).not.toBeVisible();
     await expect(statusBarWindows(page)).toBeVisible();

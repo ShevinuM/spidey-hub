@@ -4,13 +4,13 @@
 import Shell from "../layouts/Shell.astro";
 import Terminal from "../components/terminal/Terminal.svelte";
 import { getCollection } from "astro:content";
-import { getSite, getDashboard, getTracker, getBuilds, getPersonnel, getGrep, getCmdline, getHelpSearch, getShell, getChooseTree, buildProfile, buildHelp, buildNotifications, buildBoot } from "../lib/data";
+import { getSite, getDashboard, getTracker, getRepositories, getPersonnel, getGrep, getCmdline, getHelpSearch, getShell, getChooseTree, buildProfile, buildHelp, buildNotifications, buildBoot } from "../lib/data";
 import { getCommitsByRepo } from "../lib/commits";
 
 const site = getSite();
 const dashboard = getDashboard();
 const tracker = getTracker();
-const builds = getBuilds();
+const repositories = getRepositories();
 const personnel = getPersonnel();
 const grep = getGrep();
 const cmdline = getCmdline();
@@ -40,7 +40,7 @@ const notificationsFixtureMode = process.env.PORTFOLIO_FIXTURES === "1";
     {notificationsFixtureMode}
     {tracker}
     {profile}
-    {builds}
+    {repositories}
     {personnel}
     {grep}
     {help}

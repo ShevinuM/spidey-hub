@@ -22,12 +22,23 @@ async function statusBarText(page: Page) {
   return (await page.locator(STATUS_BAR).innerText()).replace(/\s+/g, " ").trim();
 }
 
-const WINDOWS = ["dashboard", "builds", "employment", "retina-v", "profile", "help"];
+const WINDOWS = ["dashboard", "repositories", "employment", "retina-v", "profile", "help"];
+/** Display NAME per window id — every id equals its own name except
+ * "repositories", whose site.yaml name is the shorter "repos" (status bar
+ * real estate). */
+const WINDOW_NAMES: Record<string, string> = {
+  dashboard: "dashboard",
+  repositories: "repos",
+  employment: "employment",
+  "retina-v": "retina-v",
+  profile: "profile",
+  help: "help",
+};
 /** `lastId` (real tmux fidelity) is the real tmux `-` flag on the
  * session's PREVIOUSLY active window —
  * omit it for assertions made before any in-test window switch. */
 function winText(activeId: string, lastId?: string): string {
-  return WINDOWS.map((id, i) => `${i}:${id}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
+  return WINDOWS.map((id, i) => `${i}:${WINDOW_NAMES[id]}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
 }
 
 async function ctrlB(page: Page) {
@@ -49,7 +60,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     expect(await statusBarText(page)).toBe(winText("employment", "dashboard"));
   });
 
-  test("Ctrl-b 1/3/4 switch to builds/retina-v/profile", async ({ page }) => {
+  test("Ctrl-b 1/3/4 switch to repositories/retina-v/profile", async ({ page }) => {
     await gotoReady(page, "/");
     await ctrlB(page);
     await page.keyboard.press("3");
@@ -61,7 +72,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
 
     await ctrlB(page);
     await page.keyboard.press("1");
-    await expect(page).toHaveURL(/\/builds$/);
+    await expect(page).toHaveURL(/\/repositories$/);
   });
 
   test("Ctrl-b 5 switches to help", async ({ page }) => {
@@ -80,11 +91,11 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     expect(await statusBarText(page)).toBe(winText("help", "dashboard"));
   });
 
-  test("Ctrl-b n cycles dashboard -> builds -> employment -> retina-v -> profile -> help -> dashboard", async ({
+  test("Ctrl-b n cycles dashboard -> repositories -> employment -> retina-v -> profile -> help -> dashboard", async ({
     page,
   }) => {
-    await gotoReady(page, "/builds");
-    await expect(page).toHaveURL(/\/builds$/);
+    await gotoReady(page, "/repositories");
+    await expect(page).toHaveURL(/\/repositories$/);
 
     await ctrlB(page);
     await page.keyboard.press("n");
@@ -108,11 +119,11 @@ test.describe("tmux prefix (Ctrl-b)", () => {
 
     await ctrlB(page);
     await page.keyboard.press("n");
-    await expect(page).toHaveURL(/\/builds$/);
+    await expect(page).toHaveURL(/\/repositories$/);
   });
 
   test("Ctrl-b p cycles the reverse direction", async ({ page }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
 
     await ctrlB(page);
     await page.keyboard.press("p");
@@ -136,13 +147,13 @@ test.describe("tmux prefix (Ctrl-b)", () => {
 
     await ctrlB(page);
     await page.keyboard.press("p");
-    await expect(page).toHaveURL(/\/builds$/);
+    await expect(page).toHaveURL(/\/repositories$/);
   });
 
   // `d` is real tmux detach — see tests/e2e/sessions.spec.ts for its own
   // coverage.
   test("Ctrl-b 0 returns to the dashboard", async ({ page }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await ctrlB(page);
     await page.keyboard.press("0");
     await expect(page).toHaveURL(/\/$/);
@@ -153,11 +164,11 @@ test.describe("tmux prefix (Ctrl-b)", () => {
   // navigate anywhere (the URL stays put — choose-tree is an overlay, not a
   // window switch) until Enter picks something.
   test("Ctrl-b w opens choose-tree instead of going home", async ({ page }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await ctrlB(page);
     await page.keyboard.press("w");
     await expect(page.locator('[data-testid="choose-tree-overlay"]')).toBeVisible();
-    await expect(page).toHaveURL(/\/builds$/);
+    await expect(page).toHaveURL(/\/repositories$/);
   });
 
   test("prefix times out after 2s: pressing 2 afterward neither switches the view nor types anywhere", async ({
@@ -205,14 +216,14 @@ test.describe("tmux prefix (Ctrl-b)", () => {
   // the cursor backward.
   test("Ctrl-b Ctrl-b pages back in the open vim editor (send-prefix reaches vim's Ctrl-b)", async ({ page }) => {
     await page.route("**/api.github.com/**", (route) => route.abort());
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     // The default-highlighted panel [3] repo is the virtual "all-projects"
     // entry (no README.md in its flat .md-only tree) — click transcript-tts's
     // own row directly (selects AND loads its tree; its README.md is 56
     // lines, still well over this test's 8-line floor).
-    await page.locator('[data-testid="builds-repo-row"][data-repo-name="transcript-tts"]').click();
-    await expect(page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]')).toBeVisible();
-    await page.locator('[data-testid="builds-tree-row"][data-entry-name="README.md"]').click();
+    await page.locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]').click();
+    await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')).toBeVisible();
+    await page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]').click();
     await page.keyboard.press("2");
     await page.keyboard.press("Enter");
     const position = page.locator('[data-testid="editor-position"]');
@@ -273,23 +284,23 @@ test.describe("tmux prefix (Ctrl-b)", () => {
   // consumes the key first" invariant against panel [3]'s repo selection
   // instead — panel [3] still has default content (the flat repo list) to
   // move a highlight across.
-  test("a prefixed ArrowDown does not move the Builds repo selection (panel [3])", async ({ page }) => {
-    await gotoReady(page, "/builds");
+  test("a prefixed ArrowDown does not move the Repositories repo selection (panel [3])", async ({ page }) => {
+    await gotoReady(page, "/repositories");
     await page.keyboard.press("3"); // focus panel [3], Local Repositories
-    const firstRow = page.locator('[data-testid="builds-repo-row"]').first();
+    const firstRow = page.locator('[data-testid="repositories-repo-row"]').first();
     await expect(firstRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.22\)/);
 
     await ctrlB(page);
     await page.keyboard.press("ArrowDown");
     // Still on the first repo — the prefixed ArrowDown was consumed by the
     // tmux prefix system (directional pane nav, a no-op with one pane),
-    // never reached Builds.svelte's own arrow-key handler.
+    // never reached Repositories.svelte's own arrow-key handler.
     await expect(firstRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.22\)/);
-    await expect(page).toHaveURL(/\/builds$/);
+    await expect(page).toHaveURL(/\/repositories$/);
 
     // An un-prefixed ArrowDown right after still works normally.
     await page.keyboard.press("ArrowDown");
-    await expect(page.locator('[data-testid="builds-repo-row"]').nth(1)).toHaveAttribute(
+    await expect(page.locator('[data-testid="repositories-repo-row"]').nth(1)).toHaveAttribute(
       "style",
       /rgba\(224, 69, 60, 0\.22\)/,
     );
@@ -329,8 +340,8 @@ test.describe("status bar `-` flag: the previously-active window (real tmux fide
 
     await ctrlB(page);
     await page.keyboard.press("1");
-    await expect(page).toHaveURL(/\/builds$/);
-    expect(await statusBarText(page)).toBe(winText("builds", "employment"));
+    await expect(page).toHaveURL(/\/repositories$/);
+    expect(await statusBarText(page)).toBe(winText("repositories", "employment"));
   });
 });
 
@@ -342,57 +353,57 @@ test.describe("Ctrl-b , rename-window", () => {
   test("prefills the active window's current name; typed characters append; Enter commits it into the status bar", async ({
     page,
   }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await ctrlB(page);
     await page.keyboard.press(",");
     const prompt = page.locator('[data-testid="status-prompt"]');
     await expect(prompt).toBeVisible();
-    await expect(prompt).toContainText("(rename-window) builds");
+    await expect(prompt).toContainText("(rename-window) repos");
 
     await page.keyboard.type("-x");
-    await expect(prompt).toContainText("(rename-window) builds-x");
+    await expect(prompt).toContainText("(rename-window) repos-x");
     await page.keyboard.press("Enter");
     await expect(prompt).not.toBeVisible();
 
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveText("1:builds-x*");
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveText("1:repos-x*");
     // Navigation is unaffected by the rename — the id, not the label, still
     // drives which window is "1" and where clicking/prefix-1 goes.
-    await expect(page).toHaveURL(/\/builds$/);
+    await expect(page).toHaveURL(/\/repositories$/);
   });
 
   test("Esc cancels — the window name is unchanged", async ({ page }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await ctrlB(page);
     await page.keyboard.press(",");
     await page.keyboard.type("nope");
     await page.keyboard.press("Escape");
     await expect(page.locator('[data-testid="status-prompt"]')).not.toBeVisible();
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveText("1:builds*");
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveText("1:repos*");
   });
 
   test("an empty commit (Enter on a fully-backspaced prompt) also leaves the name unchanged", async ({ page }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await ctrlB(page);
     await page.keyboard.press(",");
-    for (let i = 0; i < "builds".length; i++) await page.keyboard.press("Backspace");
+    for (let i = 0; i < "repos".length; i++) await page.keyboard.press("Backspace");
     await page.keyboard.press("Enter");
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveText("1:builds*");
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveText("1:repos*");
   });
 
   // "Prompt owns keys — typing j into rename doesn't scroll anything
   // behind it."
-  test("the prompt owns the keyboard — typing j does not move the Builds repo selection behind it", async ({
+  test("the prompt owns the keyboard — typing j does not move the Repositories repo selection behind it", async ({
     page,
   }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await page.keyboard.press("3");
-    const firstRow = page.locator('[data-testid="builds-repo-row"]').first();
+    const firstRow = page.locator('[data-testid="repositories-repo-row"]').first();
     await expect(firstRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.22\)/);
 
     await ctrlB(page);
     await page.keyboard.press(",");
     await page.keyboard.press("j");
-    await expect(page.locator('[data-testid="status-prompt"]')).toContainText("buildsj");
+    await expect(page.locator('[data-testid="status-prompt"]')).toContainText("reposj");
     await expect(firstRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.22\)/);
 
     await page.keyboard.press("Escape");
@@ -402,11 +413,11 @@ test.describe("Ctrl-b , rename-window", () => {
   // open" must not turn every OTHER key into a prefix command — a literal
   // "]" typed with no preceding Ctrl-b is still just a character.
   test("a literal ] keypress with no preceding Ctrl-b still types normally into the prompt", async ({ page }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await ctrlB(page);
     await page.keyboard.press(",");
     await page.keyboard.press("]");
-    await expect(page.locator('[data-testid="status-prompt"]')).toContainText("builds]");
+    await expect(page.locator('[data-testid="status-prompt"]')).toContainText("repos]");
     await page.keyboard.press("Escape");
   });
 });
@@ -419,37 +430,37 @@ test.describe("Ctrl-b & kill-window", () => {
   test("confirm prompt shows the active window's name; y removes it and switches to the next remaining window", async ({
     page,
   }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await ctrlB(page);
     await page.keyboard.press("&");
-    await expect(page.locator('[data-testid="status-confirm"]')).toHaveText("kill-window builds? (y/n)");
+    await expect(page.locator('[data-testid="status-confirm"]')).toHaveText("kill-window repos? (y/n)");
 
     await page.keyboard.press("y");
     await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(0);
-    // builds (index 1) was active; the window that sits right after
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveCount(0);
+    // repositories (index 1) was active; the window that sits right after
     // it — employment (index 2) — becomes the new active view.
     await expect(page).toHaveURL(/\/employment$/);
   });
 
   test("n cancels — nothing removed, view unchanged", async ({ page }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await ctrlB(page);
     await page.keyboard.press("&");
     await page.keyboard.press("n");
     await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
-    await expect(page).toHaveURL(/\/builds$/);
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(1);
+    await expect(page).toHaveURL(/\/repositories$/);
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveCount(1);
   });
 
   test("Esc cancels — nothing removed, view unchanged", async ({ page }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await ctrlB(page);
     await page.keyboard.press("&");
     await page.keyboard.press("Escape");
     await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
-    await expect(page).toHaveURL(/\/builds$/);
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(1);
+    await expect(page).toHaveURL(/\/repositories$/);
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveCount(1);
   });
 
   // Sessions exist to fall back to (or, as here, not to): killing the
@@ -498,7 +509,7 @@ test.describe("Ctrl-b c new-window", () => {
 
     await expect(page.locator('[data-testid="shell-prompt"]')).toBeVisible();
     expect(await statusBarText(page)).toBe(
-      "0:dashboard- 1:builds 2:employment 3:retina-v 4:profile 5:help 6:zsh*",
+      "0:dashboard- 1:repos 2:employment 3:retina-v 4:profile 5:help 6:zsh*",
     );
     // A pane program switch never navigates — the URL freezes wherever it
     // was, exactly like `:q`'s own exitActiveProgram (same `programToViewId
@@ -513,7 +524,7 @@ test.describe("Ctrl-b c new-window", () => {
 
     await ctrlB(page);
     await page.keyboard.press("1");
-    await expect(page).toHaveURL(/\/builds$/);
+    await expect(page).toHaveURL(/\/repositories$/);
 
     await ctrlB(page);
     await page.keyboard.press("6");
@@ -551,7 +562,7 @@ test.describe("Ctrl-b c new-window", () => {
   });
 });
 
-// `Ctrl-b x` is real tmux kill-pane (there is no Builds-internal panel-kill
+// `Ctrl-b x` is real tmux kill-pane (there is no Repositories-internal panel-kill
 // — see tests/e2e/panes.spec.ts for full split/kill/layout coverage); this
 // describe block keeps only the single-pane-window smoke test, exercising
 // the numeric-index prompt and real cascade.
@@ -647,36 +658,36 @@ test.describe("prompt keyboard ownership vs. the prefix system", () => {
   test("Ctrl-b <digit>/,/n are all inert while a kill-window confirm is open; y kills the ORIGINAL window", async ({
     page,
   }) => {
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await ctrlB(page);
     await page.keyboard.press("&");
     const confirm = page.locator('[data-testid="status-confirm"]');
-    await expect(confirm).toHaveText("kill-window builds? (y/n)");
+    await expect(confirm).toHaveText("kill-window repos? (y/n)");
 
     // A digit target — would normally jump straight to employment.
     await ctrlB(page);
     await page.keyboard.press("2");
-    await expect(page).toHaveURL(/\/builds$/);
-    await expect(confirm).toHaveText("kill-window builds? (y/n)");
+    await expect(page).toHaveURL(/\/repositories$/);
+    await expect(confirm).toHaveText("kill-window repos? (y/n)");
 
     // , — would normally replace this confirm with a rename prompt.
     await ctrlB(page);
     await page.keyboard.press(",");
     await expect(page.locator('[data-testid="status-prompt"]')).not.toBeVisible();
-    await expect(confirm).toHaveText("kill-window builds? (y/n)");
+    await expect(confirm).toHaveText("kill-window repos? (y/n)");
 
     // n — prefixed, so it's the "cycle windows" command, not the confirm's
     // own bare-key "no" — either way it must be a no-op here.
     await ctrlB(page);
     await page.keyboard.press("n");
-    await expect(page).toHaveURL(/\/builds$/);
-    await expect(confirm).toHaveText("kill-window builds? (y/n)");
+    await expect(page).toHaveURL(/\/repositories$/);
+    await expect(confirm).toHaveText("kill-window repos? (y/n)");
 
     // Commit — kills the window the confirm was ACTUALLY opened for
-    // (builds), never wherever `view` might otherwise have drifted to.
+    // (repositories), never wherever `view` might otherwise have drifted to.
     await page.keyboard.press("y");
     await expect(confirm).not.toBeVisible();
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(0);
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveCount(0);
     await expect(page).toHaveURL(/\/employment$/);
   });
 
@@ -685,7 +696,7 @@ test.describe("prompt keyboard ownership vs. the prefix system", () => {
     context,
   }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await gotoReady(page, "/builds");
+    await gotoReady(page, "/repositories");
     await ctrlB(page);
     await page.keyboard.press("[");
     await page.keyboard.press("v");
@@ -698,7 +709,7 @@ test.describe("prompt keyboard ownership vs. the prefix system", () => {
     await ctrlB(page);
     await page.keyboard.press(",");
     const prompt = page.locator('[data-testid="status-prompt"]');
-    await expect(prompt).toContainText("(rename-window) builds");
+    await expect(prompt).toContainText("(rename-window) repos");
 
     await ctrlB(page);
     await page.keyboard.press("]");

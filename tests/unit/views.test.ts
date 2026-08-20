@@ -26,11 +26,11 @@ const realIndex = JSON.parse(readFileSync(join(ROOT, "public/generated/grep-inde
  * paths (data/*.yaml, lib/*.ts, pages/*.astro, tests/**, root configs) is
  * asserted null below, not merely spot-checked.
  */
-function expectedView(path: string): "employment" | "builds" | "retina-v" | "profile" | null {
+function expectedView(path: string): "employment" | "repositories" | "retina-v" | "profile" | null {
   if (/^src\/content\/personnel\//.test(path)) return "employment";
-  if (/^src\/content\/repositories\//.test(path)) return "builds";
+  if (/^src\/content\/repositories\//.test(path)) return "repositories";
   if (path === "src/components/employment-records/EmploymentRecords.svelte") return "employment";
-  if (path === "src/components/builds/Builds.svelte") return "builds";
+  if (path === "src/components/repositories/Repositories.svelte") return "repositories";
   if (path === "src/components/Wallpaper.svelte") return "retina-v";
   if (path === "src/components/Profile.svelte") return "profile";
   return null;
@@ -102,8 +102,8 @@ test("fixture-only legacy paths (all under src/) never route via the bare-word f
 });
 
 test("viewToTmuxBinding looks up the live window number, never a fixed table", () => {
-  const windowNumbers = { dashboard: 0, builds: 1, employment: 2, "retina-v": 3, profile: 4, help: 5 };
-  assert.equal(viewToTmuxBinding("builds", windowNumbers), "C-b 1");
+  const windowNumbers = { dashboard: 0, repositories: 1, employment: 2, "retina-v": 3, profile: 4, help: 5 };
+  assert.equal(viewToTmuxBinding("repositories", windowNumbers), "C-b 1");
   assert.equal(viewToTmuxBinding("help", windowNumbers), "C-b 5");
 
   // A window's number moving (e.g. after a kill/re-create elsewhere)
