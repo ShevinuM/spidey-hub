@@ -84,26 +84,22 @@ const entryPoints: EntryPoint[] = [
   {
     name: "Employment",
     async open(page) {
+      // v2 (flat list + timeline, docs/changes/employment-records-v2.md):
+      // no more drill-down — row 0 (newest: Enaimco's Software Developer) is
+      // selected by default, so a single Enter opens its role.md directly.
       await gotoReady(page, "/employment");
-      await page.keyboard.press("Enter"); // -> enaimco/
-      await page.keyboard.press("Enter"); // -> enaimco/software-developer/ (role.md selected first)
+      await expect(page.locator('[data-testid="employment-row"]').first()).toBeVisible();
       await page.keyboard.press("Enter"); // -> editor
       await expect(scroller(page)).toBeVisible();
     },
     async assertParentVisible(page) {
       // There is no `employment-path` breadcrumb element. Anchor instead
-      // (same convention employment.spec.ts's own `rowLocator` uses): confirm
-      // we're back at
-      // the exact enaimco/software-developer/ listing, not merely "some"
-      // employment view — role.md is the row this entry point opened, and
-      // full-time/ is a sibling directory unique to this exact listing (no
-      // other company/role directory is named "full-time").
-      await expect(
-        page.locator('[data-testid="employment-row"][data-row-name="role.md"]'),
-      ).toBeVisible();
-      await expect(
-        page.locator('[data-testid="employment-row"][data-row-name="full-time/"]'),
-      ).toBeVisible();
+      // (same convention employment.spec.ts's own `rowLocator` uses): the
+      // flat list's row 0 is back, still selected (its own preview path is
+      // the exact file this entry point opened) — proving we're back on the
+      // Employment Records list, not the dashboard or some other view.
+      await expect(page.locator('[data-testid="employment-row"]').first()).toBeVisible();
+      await expect(page.locator('[data-testid="employment-preview-path"]')).toHaveText("enaimco/software-developer.md");
     },
   },
 ];

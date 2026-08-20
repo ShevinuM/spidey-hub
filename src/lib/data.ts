@@ -446,6 +446,7 @@ export interface PersonnelData {
     previewRight: string;
   };
   previewLineCountTemplate: string;
+  editor: EditorLabels;
 }
 
 export const getPersonnel = (): PersonnelData => loadYaml<PersonnelData>("personnel.yaml");

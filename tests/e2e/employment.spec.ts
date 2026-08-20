@@ -299,18 +299,29 @@ test.describe("Employment: selection — j/k/arrows sync preview and timeline li
     await expect(rows(page).nth(3)).toContainText("›");
   });
 
-  test("Enter is a harmless no-op: selection, preview, and row count are all unchanged", async ({ page }) => {
+  test("Enter opens the selected record in the shared vim editor; :q closes back to the exact same selection", async ({
+    page,
+  }) => {
+    // Decision 7 ("j/k/enter selection stays") drops the `f` filter/
+    // drill-down/`../`, not Enter's existing open-in-editor behavior — see
+    // docs/changes/employment-records-v2.md and tests/e2e/editor-vim.spec.ts's
+    // "Employment entry point". "Harmless-open" (E1) describes why this is
+    // safe, not that Enter does nothing: the buffer is always readonly.
     await openEmployment(page);
     await page.keyboard.press("j");
     const pathBefore = await page.locator('[data-testid="employment-preview-path"]').textContent();
-    const countBefore = await rows(page).count();
+
     await page.keyboard.press("Enter");
+    await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
+
+    await page.keyboard.press(":");
+    await page.keyboard.type("q");
+    await page.keyboard.press("Enter");
+    await expect(page.locator('[data-testid="editor-scroller"]')).toHaveCount(0);
     await expect(rows(page).nth(1)).toContainText("›");
     await expect(page.locator('[data-testid="employment-preview-path"]')).toHaveText(pathBefore ?? "");
-    await expect(rows(page)).toHaveCount(countBefore);
-    // Still on the employment window — Enter never navigated to the dashboard
-    // or anywhere else (the old drill-down's `../`-at-root-activates-
-    // dashboard path no longer exists).
+    // Still on the employment window — closing the editor never navigated to
+    // the dashboard or anywhere else.
     await expect(page.locator('[data-testid="status-bar-window"][data-window-id="employment"]')).toHaveText(
       "2:employment*",
     );

@@ -80,13 +80,22 @@ part of this rebuild.
 6. **Timeline added**: a vertical service-history spine hanging off a
    spiderweb glyph, one numbered node per record (oldest = 1), synced to the
    row-list selection.
-7. **Embedded editor removed**: the old component opened the shared vim
-   `Editor.svelte` on Enter (`enaimco/software-developer/role.md` etc. were
-   fully editable buffers). The new page has no drill-down and the preview
-   panel already tracks the selection live, so Enter is now a harmless,
-   consumed no-op (Decision 7) — `isEditorOpen()`/`runEditorExCommand()` stay
-   exported for `Terminal.svelte`'s `bind:this` API parity but are trivial
-   (`false` / `{recognized:false}`).
+7. **Embedded editor kept, reached in one Enter instead of a drill-down
+   chain**: the old component opened the shared vim `Editor.svelte` on Enter
+   after drilling down to a role file (2-3 Enters). Decision 7 ("j/k/enter
+   selection stays") drops the `f` filter/drill-down/`../`, not Enter's
+   existing open-in-editor behavior — "harmless-open" (E1) describes why
+   this is safe to keep (the buffer is always readonly, so opening it can
+   never desync from the live preview/timeline), not that Enter does
+   nothing. `isEditorOpen()`/`runEditorExCommand()` are real delegations
+   again, same shape as `Repositories.svelte`'s. (An earlier draft of this
+   rebuild read "harmless-open" as "Enter is a no-op" and dropped the editor
+   entirely — that broke 64 e2e tests across `editor-vim.spec.ts`,
+   `cmdline.spec.ts`, `grep.spec.ts`, `copy-mode.spec.ts`, and
+   `terminal.spec.ts`, all of which use Employment Records as a second
+   shared-editor entry point. Corrected before this doc/the rebuild was
+   reported done; those five spec files' Employment-entry-point helpers
+   were updated to a single Enter instead of the old drill-down chain.)
 8. **Row/file naming**: every real leaf on disk is literally named `role.md`
    (`content.config.ts`), so the flat list's display name is synthesized
    from the role's own directory slug instead (`software-developer.md`,
@@ -110,10 +119,12 @@ part of this rebuild.
     so the line is omitted rather than left as a lie.
 12. **`personnel.yaml` pruned**: `pathPrefix`, `insetTitles`, `promptIcon`,
     `hints`, `upEntry`, `companyRowIcon`, `roleRowIcon`, `roleCountTemplate`,
-    `roleWordSingular`/`roleWordPlural`, `posTemplate`, and the entire
-    `editor:` block (dead now that no editor is embedded on this page) are
-    all gone, replaced by `breadcrumb`, `orgTags`, `index`, `fileOwner`,
-    `filePerms`, `badge`, and `previewLineCountTemplate`.
+    and `roleWordSingular`/`roleWordPlural`/`posTemplate` (all drill-down/
+    filter-only copy) are gone, replaced by `breadcrumb`, `orgTags`, `index`,
+    `fileOwner`, `filePerms`, `badge`, and `previewLineCountTemplate`. The
+    `editor:` block stays — the embedded editor is kept (item 7 above), and
+    `Editor.svelte` still requires every `EditorLabels` field for its shared
+    status line.
 
 ## Index block derivation (real values, `src/content/personnel/*/*/role.md`)
 

@@ -57,6 +57,7 @@
           tabindex="0"
           data-testid="employment-row"
           data-row-name={row.name}
+          data-selected={on ? "" : undefined}
           onclick={() => state.select(i)}
           onkeydown={(ev) => {
             if (ev.key === "Enter" || ev.key === " ") state.select(i);

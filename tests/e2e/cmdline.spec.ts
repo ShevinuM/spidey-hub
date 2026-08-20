@@ -247,13 +247,11 @@ test.describe("Cmdline: `:` stays literal inside other text inputs", () => {
     await expect(overlay(page)).not.toBeVisible();
   });
 
-  test(": types literally into the Employment filter, never opening the box", async ({ page }) => {
-    await gotoReady(page, "/employment");
-    await page.keyboard.press("f");
-    await page.keyboard.press(":");
-    await expect(page.locator('[data-testid="employment-prompt"]')).toContainText(":");
-    await expect(overlay(page)).not.toBeVisible();
-  });
+  // The Employment `f`-filter prompt this test covered no longer exists
+  // (Decision 7, PLAN.md — dropped along with drill-down/`../` in the v2
+  // rebuild, docs/changes/employment-records-v2.md). Employment's own
+  // ":"-while-editor-open coverage lives in the "editor ex-mode still works
+  // through the box" describe block below (the Employment entry point).
 
   test(": types literally into the rename-window prompt, never opening the box", async ({ page }) => {
     await gotoReady(page, "/");
@@ -426,26 +424,21 @@ test.describe("Cmdline: editor ex-mode still works through the box", () => {
     {
       name: "Employment",
       async open(page) {
+        // v2 (flat list + timeline, docs/changes/employment-records-v2.md):
+        // no more drill-down — row 0 (newest) is selected by default, so a
+        // single Enter opens its role.md directly (same as editor-vim.spec.ts's
+        // Employment entry point).
         await gotoReady(page, "/employment");
-        await page.keyboard.press("Enter");
-        await page.keyboard.press("Enter");
+        await expect(page.locator('[data-testid="employment-row"]').first()).toBeVisible();
         await page.keyboard.press("Enter");
         await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
       },
       async assertParentVisible(page) {
-        // There is no `employment-path` breadcrumb element. Anchor instead
-        // (same convention used in editor-vim.spec.ts's Employment entry
-        // point): role.md is the
-        // row this entry point opened, and full-time/ is a sibling
-        // directory unique to the enaimco/software-developer/ listing —
-        // together they confirm we're back at the exact same listing, not
-        // merely "some" employment view.
-        await expect(
-          page.locator('[data-testid="employment-row"][data-row-name="role.md"]'),
-        ).toBeVisible();
-        await expect(
-          page.locator('[data-testid="employment-row"][data-row-name="full-time/"]'),
-        ).toBeVisible();
+        // There is no `employment-path` breadcrumb element. Anchor instead:
+        // the flat list's row 0 is back, still selected (its own preview
+        // path is the exact file this entry point opened).
+        await expect(page.locator('[data-testid="employment-row"]').first()).toBeVisible();
+        await expect(page.locator('[data-testid="employment-preview-path"]')).toHaveText("enaimco/software-developer.md");
       },
     },
   ];

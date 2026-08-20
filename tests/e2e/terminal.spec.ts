@@ -61,7 +61,7 @@ test.describe("view routing on direct navigation", () => {
     expect(await statusBarText(page)).toBe(winText("repositories"));
 
     await gotoReady(page, "/employment");
-    await expect(page.locator('[data-testid="employment-pos"]')).toBeVisible();
+    await expect(page.locator('[data-testid="employment-breadcrumb"]')).toBeVisible();
     expect(await statusBarText(page)).toBe(winText("employment"));
 
     await gotoReady(page, "/retina-v");

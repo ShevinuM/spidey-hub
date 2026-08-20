@@ -76,11 +76,10 @@
     personnelEntries: CollectionEntry<"personnel">[];
     commitsByRepo: Record<string, Commit[]>;
     commandLog: CommandLogLine[];
-    /** Dashboard menu clicks / EmploymentRecords's "onDashboard" are all just
-     * "switch to a different WINDOW" (exactly like a status-bar click or a
-     * prefix digit target) — never a program LAUNCH into the current pane —
-     * so they all funnel through this one callback, keyed by the target
-     * window's canonical program id. */
+    /** Dashboard menu clicks are all just "switch to a different WINDOW"
+     * (exactly like a status-bar click or a prefix digit target) — never a
+     * program LAUNCH into the current pane — so they all funnel through this
+     * one callback, keyed by the target window's canonical program id. */
     onWindowSwitch: (program: ProgramName) => void;
     /** Shell.svelte's own three effects — launching a program IN THIS PANE
      * (bare view-name commands/

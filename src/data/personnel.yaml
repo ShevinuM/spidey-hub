@@ -38,3 +38,30 @@ badge:
   previewRight: "Preview"
 
 previewLineCountTemplate: "{n} lines"
+
+# Enter opens the selected record's role.md in the shared vim-lite editor
+# (Decision 7: "j/k/enter selection stays" — the filter/drill-down/`../` are
+# what's dropped, not Enter's existing open-in-editor behavior). Mirrors
+# repositories.yaml's `editor:` block field-for-field (EditorLabels requires
+# every field for Editor.svelte's shared status line); defined independently
+# here since this file has no dependency on repositories.yaml. The role doc
+# pane never scrolls past one screen in practice, so topLabel/bottomLabel/
+# percentTemplate only ever render "Top" here, same as before this page's v2
+# rebuild.
+editor:
+  modeLabel: "NORMAL"
+  modeVisualLabel: "VISUAL"
+  modeVisualLineLabel: "VISUAL LINE"
+  branch: "⑂ main"
+  breadcrumbSeparator: "›"
+  closePillLabel: "[:q]"
+  tabIcon: "▤"
+  topLabel: "Top"
+  bottomLabel: "Bot"
+  percentTemplate: "{n}%"
+  positionTemplate: "{line}:{col}"
+  searchPromptGlyph: "/"
+  cmdlinePromptGlyph: ":"
+  readonlyBellMessage: "E21: Cannot make changes, 'modifiable' is off"
+  writeReadonlyMessage: "E45: 'readonly' option is set"
+  notAnEditorCommandTemplate: "E492: Not an editor command: {cmd}"

@@ -8,10 +8,9 @@
 
   interface Props {
     state: EmploymentRecordsState;
-    isFocused: boolean;
   }
 
-  const { state, isFocused }: Props = $props();
+  const { state }: Props = $props();
 
   const filePath = $derived(state.selected ? `${state.selected.org}/${state.selected.name}` : "");
   const fileSizeLabel = $derived(state.selected ? `${state.selected.sizeBytes} B` : "");
@@ -37,7 +36,6 @@
     </div>
     <div
       data-testid="employment-preview"
-      data-copy-source={isFocused ? "" : undefined}
       style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;line-height:1.5;font-size:11.5px"
     >
       {#each state.docLines as l, i (i)}

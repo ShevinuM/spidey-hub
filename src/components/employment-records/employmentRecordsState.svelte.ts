@@ -179,14 +179,58 @@ export class EmploymentRecordsState {
 
   readonly selected: EmploymentRow | null = $derived(this.records[this.sel] ?? null);
 
-  readonly docLines: DocLineView[] = $derived.by(() => {
+  /** Raw classified body lines for the selected record — the shared source
+   * both the always-visible preview panel AND the on-demand full-screen
+   * editor render from (same `entry.body` `classifyBody("personnel")` call
+   * the old drill-down browser made). */
+  private readonly classifiedBody = $derived.by(() => {
     const rec = this.selected;
-    if (!rec) return [];
-    return classifyBody(rec.entry.body ?? "", "personnel").map((l) => ({
+    return rec ? classifyBody(rec.entry.body ?? "", "personnel") : [];
+  });
+
+  readonly docLines: DocLineView[] = $derived(
+    this.classifiedBody.map((l) => ({
       t: l.t,
       style: `${colorFor(l.kind, "personnel")};${ONE_LINE_STYLE}`,
-    }));
-  });
+    })),
+  );
+
+  // ---------------------------------------------------------------------
+  // Embedded editor — Enter opens the selected record's role.md in the
+  // shared vim-lite Editor.svelte, same as the old drill-down browser did
+  // (Decision 7 in PLAN.md drops the `f` filter/drill-down/`../`, not the
+  // editor: "j/k/enter selection stays" — Enter's existing "open in the
+  // editor" behavior is what stays, reached in one press now instead of a
+  // chain of drill-down Enters). "Harmless-open" (E1) describes WHY this is
+  // safe to leave in — the buffer is always readonly, so opening it can
+  // never lose the live preview/timeline sync — not that Enter does
+  // nothing. Editor.svelte is entry-point-agnostic (tests/e2e/editor-vim.spec.ts
+  // parametrizes its own suite over this page and Repositories'), so this
+  // mirrors RepositoriesState's editorFile/editorRef/closeEditor shape
+  // exactly, minus the async fetch (a role doc is already fully loaded).
+  // ---------------------------------------------------------------------
+
+  editorOpen = $state(false);
+  editorRef = $state<{
+    handleKey: (e: KeyboardEvent) => boolean;
+    runExCommand: (cmd: string) => { recognized: boolean; error?: string };
+  } | null>(null);
+
+  readonly editorLines = $derived(
+    this.classifiedBody.map((l, i) => ({ n: i + 1, t: l.t, style: colorFor(l.kind, "personnel") })),
+  );
+
+  readonly editorFileName = $derived(this.selected?.name ?? "");
+  readonly editorBreadcrumbLeft = $derived(this.selected?.org ?? "");
+
+  openEditor(): void {
+    if (this.selected) this.editorOpen = true;
+  }
+
+  closeEditor(): void {
+    this.editorOpen = false;
+    this.editorRef = null;
+  }
 
   iconFor(row: EmploymentRow): string {
     return iconSvgForPath(row.name);
@@ -202,14 +246,14 @@ export class EmploymentRecordsState {
     if (i >= 0 && i < this.records.length) this.sel = i;
   }
 
-  /** `handleKey`'s contract mirrors Repositories/HelpView's own
-   * exported `handleKey` — see EmploymentRecords.svelte's own doc comment
-   * for why Enter is a harmless no-op here (still consumed, so it never
-   * falls through to Terminal.svelte's own bindings) rather than opening
-   * anything: this page has no drill-down and no embedded editor left to
-   * open (Decision 7 in PLAN.md), and the preview panel already tracks the
-   * selected row live. */
+  /** `handleKey`'s contract mirrors Repositories.svelte's own exported
+   * `handleKey`: while the editor is open, every key forwards to it
+   * (`editorRef`) first. Closed: j/k/arrows move the flat-list selection
+   * (preview + timeline follow live); Enter opens the editor. */
   handleKey(e: KeyboardEvent): boolean {
+    if (this.editorOpen) {
+      return this.editorRef ? this.editorRef.handleKey(e) : false;
+    }
     if (e.metaKey || e.ctrlKey || e.altKey) return false;
     if (e.key === "j" || e.key === "ArrowDown") {
       this.moveSelection(1);
@@ -219,7 +263,10 @@ export class EmploymentRecordsState {
       this.moveSelection(-1);
       return true;
     }
-    if (e.key === "Enter") return true;
+    if (e.key === "Enter") {
+      this.openEditor();
+      return true;
+    }
     return false;
   }
 }

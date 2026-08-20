@@ -211,9 +211,11 @@ test.describe("Grep overlay", () => {
   test("/ inside the employment editor searches the buffer instead of opening grep (editor gets first refusal)", async ({
     page,
   }) => {
+    // v2 (flat list + timeline, docs/changes/employment-records-v2.md): row
+    // 0 (newest) is selected by default, so a single Enter opens its
+    // role.md directly — no more drill-down.
     await gotoReady(page, "/employment");
-    await page.keyboard.press("Enter"); // -> enaimco/ (single child: software-developer/)
-    await page.keyboard.press("Enter"); // -> that type's role files level
+    await expect(page.locator('[data-testid="employment-row"]').first()).toBeVisible();
     await page.keyboard.press("Enter"); // -> editor
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
 
@@ -242,26 +244,10 @@ test.describe("Grep overlay", () => {
     await expect(page.locator('[data-testid="editor-mode"]')).toHaveText("NORMAL");
   });
 
-  test("/ while employment filter mode is active appends to the query; grep must NOT open", async ({ page }) => {
-    // EmploymentRecords's `isEditorOpen()` reports `true` while `filterMode` is
-    // active, which makes Terminal's greedy-pane gate give the filter prompt
-    // first refusal over grep's own "/" opener — "/" typed into an active
-    // filter prompt must be typed into the query, not preventDefault'd into
-    // opening grep (see tests/e2e/employment.spec.ts's "REPRO + FIX" test for
-    // the root-cause trace). Note: "/" pressed BEFORE entering filter mode
-    // still opens grep unconditionally — an intentional, documented
-    // limitation (employment.spec.ts's own "KNOWN LIMITATION" test), not
-    // something this test exercises.
-    await gotoReady(page, "/employment");
-    await page.keyboard.press("Enter"); // -> enaimco/ (single child: software-developer/)
-    await page.keyboard.press("f"); // -> filter mode
-    await expect(page.locator('[data-testid="employment-prompt"]')).toBeVisible();
-
-    await page.keyboard.press("/");
-    await expect(overlay(page)).not.toBeVisible();
-    // "/" was typed into the active employment filter query, not swallowed.
-    await expect(page.locator('[data-testid="employment-prompt"]')).toContainText("/");
-  });
+  // The Employment `f`-filter this test covered no longer exists (Decision
+  // 7, PLAN.md — dropped along with drill-down/`../` in the v2 rebuild,
+  // docs/changes/employment-records-v2.md). Employment's own "editor gets
+  // first refusal over grep" coverage is the test immediately above.
 
   test("overlay list row count matches this viewport's own computed fit", async ({ page }) => {
     await gotoReady(page, "/");
