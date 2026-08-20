@@ -84,10 +84,10 @@ Rebuild per mockup + Personnel-Panel-Changes.md in `src/components/employment-re
 - Verify: full suite; spine/web color match checked via the SVG's intrinsic fill attribute + applied CSS opacity (or pixel sampling with small per-channel tolerance — NOT exact pixel equality against an anti-aliased SVG edge), badge at top (not bottom), equal panel widths (bounding boxes within 1px), index values match collection-derived truth (verifier recomputes from `src/content/personnel/*.md`), no `f`-filter remnants (`git grep filterQuery src/components/employment-records` → 0). Phase E also builds in the target component pattern per Decision 12 (verifier checks folder structure: orchestrator + state class + panel children).
 
 ### Phase F — Help page v2 ⟲
-- [ ] F1. Teal pill section headers per D2 variant + `<img src="/assets/spiderman-teal.svg">` 10×14 replacing the CSS-mask glyph; dotted rule + hint unchanged.
-- [ ] F2. Remove ALL caps: delete `text-transform:uppercase` at HelpView.svelte 126/190/222/242 (post-refactor paths will differ — grep), literal `SCOPES`→`Scopes`.
-- [ ] F3. Copy updates in `src/content/help/`: repositories.md (rows describe `[0] Status, [1] Repositories, [2] Files, [3] Content, [4] Commits, [5] Command Log`), tmux.md window-jump row (`1:repos 2:employment ...`), scope label check across all 14 files for stray caps/stale names.
-- [ ] F4. Suite + ⟲ rebaseline (help recipes). Commit(s).
+- [x] F1. Teal pill section headers per D2 variant + `<img src="/assets/spiderman-teal.svg">` 10×14 replacing the CSS-mask glyph; dotted rule + hint unchanged.
+- [x] F2. Remove ALL caps: delete `text-transform:uppercase` at HelpView.svelte 126/190/222/242 (post-refactor paths will differ — grep), literal `SCOPES`→`Scopes`.
+- [x] F3. Copy updates in `src/content/help/`: repositories.md (rows describe `[0] Status, [1] Repositories, [2] Files, [3] Content, [4] Commits, [5] Command Log`), tmux.md window-jump row (`1:repos 2:employment ...`), scope label check across all 14 files for stray caps/stale names.
+- [x] F4. Suite + ⟲ rebaseline (help recipes). Commit(s).
 - Verify: `git grep -n "text-transform:\s*uppercase" src/components` → 0 for help files; built help page DOM contains no ALL-CAPS scope/row labels (verifier greps rendered text); pill computed styles match teal spec; help copy matches final panel numbers exactly.
 
 ### Phase G — Notifications finishing
