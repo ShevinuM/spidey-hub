@@ -67,10 +67,13 @@ export interface Recipe {
  * for months (see git history). "03-repositories-arrow" (was "03-builds-j")
  * explicitly focuses panel [1] (Repositories, bare `1`, unrelated to
  * the `Ctrl-b` prefix) before `ArrowDown`, which moves the repo-list
- * selection highlight. "05-employment-l1"/"06-editor" account for
- * Employment Records' 3-level path (companies -> employment type -> role files):
- * "05" reaches the level-2 role-files listing after 2 Enters, "06"
- * continues one more Enter into the actual editor.
+ * selection highlight. Employment Records v2 (docs/changes/
+ * employment-records-v2.md) replaced its old 3-level drill-down with a flat
+ * list + timeline: "05-employment-l1" (name kept from the old drill-down
+ * recipe naming for golden-history continuity, despite there being no more
+ * "level 1" to reach) now captures a non-default row selected (2 x `j`);
+ * "06-editor" opens the shared vim editor directly from the flat list's
+ * default selection (a single Enter, no drill-down chain to walk first).
  */
 export const recipes: Recipe[] = [
   { name: "01-dashboard", actions: [] },
@@ -90,13 +93,20 @@ export const recipes: Recipe[] = [
     check: { url: /\/employment$/, visible: '[data-testid="employment-row"]' },
   },
   {
+    // v2 (flat list + timeline, docs/changes/employment-records-v2.md): no
+    // more drill-down levels to reach — repurposed to a non-default row
+    // selected (2 x j from row 0), showing the preview panel and timeline
+    // node following a moved selection live. `data-selected` (added for
+    // this check) marks exactly one row at a time.
     name: "05-employment-l1",
-    actions: [{ key: "Control+b" }, { key: "2" }, { key: "Enter" }, { key: "Enter" }],
-    check: { url: /\/employment$/, visible: '[data-testid="employment-up-row"]' },
+    actions: [{ key: "Control+b" }, { key: "2" }, { key: "j" }, { key: "j" }],
+    check: { url: /\/employment$/, visible: '[data-testid="employment-row"][data-selected]:nth-child(3)' },
   },
   {
+    // Enter now opens the shared vim editor directly from the flat list's
+    // default (row 0) selection — no drill-down chain left to walk first.
     name: "06-editor",
-    actions: [{ key: "Control+b" }, { key: "2" }, { key: "Enter" }, { key: "Enter" }, { key: "Enter" }],
+    actions: [{ key: "Control+b" }, { key: "2" }, { key: "Enter" }],
     check: { url: /\/employment$/, visible: '[data-testid="editor-scroller"]' },
   },
   {
