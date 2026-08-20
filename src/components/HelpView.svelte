@@ -124,7 +124,7 @@
       ></span>
       <div
         data-testid="help-title"
-        style="font:600 15px 'JetBrains Mono',monospace;color:#fff;letter-spacing:.2em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+        style="font:600 15px 'JetBrains Mono',monospace;color:#fff;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
       >
         {help.title}
       </div>
@@ -168,7 +168,7 @@
         style="min-height:0;overflow-y:auto;border-right:1px solid rgba(255,255,255,.07);padding:18px 0;background:rgba(255,255,255,.014)"
       >
         <div
-          style="font:400 10px 'JetBrains Mono',monospace;color:rgba(223,232,230,.3);letter-spacing:.3em;padding:0 20px 12px"
+          style="font:400 10px 'JetBrains Mono',monospace;color:rgba(223,232,230,.3);letter-spacing:.12em;padding:0 20px 12px"
         >
           Scopes
         </div>
@@ -188,7 +188,7 @@
           >
             <div
               class="help-scope-label"
-              style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.16em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+              style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
             >
               {t.label}
             </div>
@@ -232,7 +232,7 @@
                 <div style="min-width:0">
                   <div
                     data-testid="help-row-name"
-                    style="font:600 13px 'JetBrains Mono',monospace;letter-spacing:.12em;color:#e6efed;white-space:nowrap;overflow:hidden"
+                    style="font:600 13px 'JetBrains Mono',monospace;letter-spacing:.02em;color:#e6efed;white-space:nowrap;overflow:hidden"
                   >
                     {row.name}
                   </div>
