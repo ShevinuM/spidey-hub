@@ -114,6 +114,7 @@
             : 'rgba(140,200,240,.12)'};animation:{rspinAnim()};transition:width .4s,height .4s"
         ></span>
         <span
+          data-testid="employment-timeline-dot"
           style="position:relative;width:{on ? '30px' : '19px'};height:{on
             ? '30px'
             : '19px'};border-radius:50%;background:{on
