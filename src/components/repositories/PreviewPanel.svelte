@@ -50,9 +50,7 @@
         {:else}
           {#each state.previewLines as l, i (i)}
             <div data-testid="repositories-preview-line" style="display:flex;gap:12px">
-              {#if l.n !== null}<span style="flex:none;width:26px;text-align:right;color:rgba(224,69,60,.4)"
-                  >{l.n}</span
-                >{/if}<span style={l.style}>{l.t}</span>
+              {#if l.n !== null}<span style="flex:none;width:26px;text-align:right;color:rgba(224,69,60,.4)">{l.n}</span>{/if}{#if typeof l.t === "string"}<span data-testid="repositories-preview-text" style={l.style}>{l.t}</span>{:else}<span data-testid="repositories-preview-text">{#each l.t as [idx, text]}<span style={`color:${state.previewPalette[idx] ?? ""}`}>{text}</span>{/each}</span>{/if}
             </div>
           {/each}
         {/if}

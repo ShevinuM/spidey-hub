@@ -66,6 +66,12 @@ interface PreviewState {
   path: string;
   status: "loading" | "error" | "binary" | "ready";
   lines: string[];
+  /** Present only for a working-tree file generate.mjs tokenized — mirrors
+   * EditorFileState below; commit-tree/GitHub-fetched content is never
+   * tokenized (no build step runs over it), so it always falls back to flat
+   * `lines` rendering. */
+  tokens?: TokenSpan[][];
+  palette?: string[];
 }
 
 interface EditorFileState {
@@ -177,7 +183,16 @@ export class RepositoriesState {
           return;
         }
         const file = findFile(st.index.files, path);
-        this.preview = file ? { repoName, path, status: "ready", lines: repoFileText(file) } : null;
+        this.preview = file
+          ? {
+              repoName,
+              path,
+              status: "ready",
+              lines: repoFileText(file),
+              tokens: file.tok ? (file.lines as TokenSpan[][]) : undefined,
+              palette: file.tok ? st.index.palette : undefined,
+            }
+          : null;
         return;
       }
 
@@ -469,15 +484,25 @@ export class RepositoriesState {
 
   preview = $state<PreviewState | null>(null);
 
-  previewLines = $derived.by((): { n: number | null; t: string; style: string }[] => {
+  previewLines = $derived.by((): { n: number | null; t: string | TokenSpan[]; style: string }[] => {
     if (!this.preview || this.preview.status !== "ready") return [];
     const isMd = this.preview.path.toLowerCase().endsWith(".md");
     if (isMd) {
       const kinds = classifyDoc(this.preview.lines, "project");
       return this.preview.lines.map((raw, i) => ({ n: null, t: raw === "" ? " " : raw, style: colorFor(kinds[i], "project") }));
     }
+    if (this.preview.tokens) {
+      const tokens = this.preview.tokens;
+      return this.preview.lines.map((raw, i) => ({ n: i + 1, t: raw === "" ? " " : tokens[i], style: docColors.p }));
+    }
     return this.preview.lines.map((raw, i) => ({ n: i + 1, t: raw === "" ? " " : raw, style: docColors.p }));
   });
+
+  /** Hex colors indexed by a tokenized `previewLines[].t`'s paletteIndex —
+   * same shape as `editorPalette` further down, so the SAME per-repo
+   * palette resolves the same token colours in both the preview and the
+   * full-screen editor. */
+  previewPalette = $derived(this.preview?.palette ?? []);
 
   changesSubtitleValue = $derived(
     this.preview ? `${this.preview.repoName}/${this.preview.path}` : this.defaultProject ? `${this.defaultProject.id}.md` : "",
