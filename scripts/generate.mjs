@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Build-time data generation.
 //
-// Produces four kinds of artifacts:
+// Produces five kinds of artifacts:
 //  1. public/generated/repos/<name>.json   — file tree + text contents for
 //     each of the three submodules under repos/ (lazy-fetched by the Repositories
 //     island when a repo is opened).
@@ -25,6 +25,15 @@
 //     entry also carries the full 40-char `sha` alongside the pre-existing
 //     `sha8`, needed to fetch a commit's tree via
 //     GitHub's Git Trees API (src/lib/githubTrees.ts).
+//  4. public/generated/contributions.json — a year of GitHub contribution
+//     levels (0-4 per day) powering the Repositories Status pane's
+//     contribution grid. GraphQL when GITHUB_TOKEN is set, else scrape the
+//     public github.com/users/<OWNER>/contributions HTML fragment, else
+//     leave the existing snapshot untouched (same three-tier fallback as
+//     commit snapshots). Lives in public/generated/ (not src/generated/)
+//     because — like grep-index.json/fs-index.json/repos/*.json — it is
+//     fetched client-side at runtime rather than statically imported at
+//     build time; see src/components/repositories/repositoriesState.svelte.ts.
 //
 // Run via `pnpm generate` (also wired to predev/prebuild).
 
@@ -150,6 +159,10 @@ function walk(dir, skipDirs, collected, root) {
     collected.push({ path: toPosix(relative(root, full)), lines: content.split("\n") });
   }
 }
+
+// GitHub account these repos/commits/contributions all belong to — the one
+// constant every GitHub-facing step in this script shares.
+const OWNER = "ShevinuM";
 
 // ---------------------------------------------------------------------------
 // 1. Repo indexes (public/generated/repos/<name>.json)
@@ -420,7 +433,7 @@ function initialsFrom(name) {
 }
 
 async function fetchCommits(repo) {
-  const url = `https://api.github.com/repos/ShevinuM/${repo}/commits?per_page=15`;
+  const url = `https://api.github.com/repos/${OWNER}/${repo}/commits?per_page=15`;
   const headers = {
     Accept: "application/vnd.github+json",
     "User-Agent": "shevinum-dev-v3-generate-script",
@@ -470,6 +483,137 @@ async function generateCommitSnapshots() {
       }
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// 3b. GitHub contributions (public/generated/contributions.json)
+// ---------------------------------------------------------------------------
+//
+// contributionsCollection has no unauthenticated REST equivalent, so the
+// preference order differs slightly from fetchCommits(): GraphQL requires a
+// token outright (not just "sends one if present"), so the scrape path is
+// the fallback for the common no-token case, not just for errors.
+
+const CONTRIB_LEVEL_MAP = {
+  NONE: 0,
+  FIRST_QUARTILE: 1,
+  SECOND_QUARTILE: 2,
+  THIRD_QUARTILE: 3,
+  FOURTH_QUARTILE: 4,
+};
+
+async function fetchContributionsGraphQL() {
+  const query =
+    "query($login:String!){ user(login:$login){ contributionsCollection { contributionCalendar { weeks { contributionDays { date contributionLevel } } } } } }";
+  const res = await fetch("https://api.github.com/graphql", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+      "Content-Type": "application/json",
+      "User-Agent": "shevinum-dev-v3-generate-script",
+    },
+    body: JSON.stringify({ query, variables: { login: OWNER } }),
+  });
+  if (!res.ok) {
+    throw new Error(`POST graphql -> ${res.status} ${res.statusText}`);
+  }
+  const json = await res.json();
+  if (json.errors) {
+    throw new Error(`graphql -> ${JSON.stringify(json.errors)}`);
+  }
+  const weeks = json.data?.user?.contributionsCollection?.contributionCalendar?.weeks;
+  if (!Array.isArray(weeks)) {
+    throw new Error("graphql -> unexpected response shape");
+  }
+  const days = [];
+  for (const week of weeks) {
+    for (const day of week.contributionDays ?? []) {
+      const level = CONTRIB_LEVEL_MAP[day.contributionLevel];
+      if (level === undefined) {
+        throw new Error(`graphql -> unknown contributionLevel "${day.contributionLevel}"`);
+      }
+      days.push({ date: day.date, level });
+    }
+  }
+  if (days.length === 0) {
+    throw new Error("graphql -> zero contribution days returned");
+  }
+  return days;
+}
+
+/**
+ * Scrapes the public (unauthenticated, no API) HTML fragment GitHub serves
+ * profile-page contribution graphs from. Matches each
+ * `ContributionCalendar-day` `<td>` first, then pulls `data-date`/`data-level`
+ * out of that one tag's attributes — never assumes their order relative to
+ * each other or to `class` inside the tag.
+ */
+async function fetchContributionsScrape() {
+  const url = `https://github.com/users/${OWNER}/contributions`;
+  const res = await fetch(url, { headers: { "User-Agent": "shevinum-dev-v3-generate-script" } });
+  if (!res.ok) {
+    throw new Error(`GET ${url} -> ${res.status} ${res.statusText}`);
+  }
+  const html = await res.text();
+  const days = [];
+  const tdRe = /<td\b[^>]*class="[^"]*\bContributionCalendar-day\b[^"]*"[^>]*>/g;
+  let m;
+  while ((m = tdRe.exec(html))) {
+    const tag = m[0];
+    const date = /\sdata-date="([^"]+)"/.exec(tag)?.[1];
+    const levelRaw = /\sdata-level="([^"]+)"/.exec(tag)?.[1];
+    if (!date || levelRaw === undefined) continue;
+    const level = Number(levelRaw);
+    if (!Number.isInteger(level) || level < 0 || level > 4) continue;
+    days.push({ date, level });
+  }
+  if (days.length === 0) {
+    throw new Error(`GET ${url} -> no ContributionCalendar-day cells found (markup may have changed)`);
+  }
+  return days;
+}
+
+async function generateContributions() {
+  const outFile = join(ROOT, "public/generated/contributions.json");
+  let days;
+  let source;
+  try {
+    if (process.env.GITHUB_TOKEN) {
+      days = await fetchContributionsGraphQL();
+      source = "graphql";
+    } else {
+      days = await fetchContributionsScrape();
+      source = "scrape";
+    }
+  } catch (err) {
+    if (existsSync(outFile)) {
+      console.warn(`[generate] WARNING: contributions fetch failed (${err.message}); keeping existing snapshot.`);
+    } else {
+      console.warn(
+        `[generate] WARNING: contributions fetch failed (${err.message}); no existing snapshot — Repositories' Status pane grid will be empty until this succeeds.`,
+      );
+    }
+    return;
+  }
+  days.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+
+  // Only rewrite (and bump fetchedAt) when the actual payload changed —
+  // predev/prebuild run this on every build/test invocation, and a
+  // fetchedAt that ticks every run would leave the working tree
+  // perpetually dirty after this step's first real commit.
+  if (existsSync(outFile)) {
+    const prev = JSON.parse(readFileSync(outFile, "utf8"));
+    if (prev.source === source && JSON.stringify(prev.days) === JSON.stringify(days)) {
+      console.log(`[generate] public/generated/contributions.json — unchanged (${days.length} days, ${source})`);
+      return;
+    }
+  }
+  mkdirSync(join(ROOT, "public/generated"), { recursive: true });
+  writeFileSync(
+    outFile,
+    JSON.stringify({ days, fetchedAt: new Date().toISOString(), source }) + "\n",
+  );
+  console.log(`[generate] public/generated/contributions.json — ${days.length} days (${source})`);
 }
 
 // ---------------------------------------------------------------------------
@@ -561,6 +705,11 @@ async function main() {
   // own source, so generating it first would embed the pre-fetch snapshot
   // state and leave the index permanently one generation stale.
   await generateCommitSnapshots();
+  // No ordering dependency with anything else here (neither grep-index nor
+  // fs-index walk public/generated/ — see their own header comments) —
+  // grouped next to the other GitHub-fetching step purely for narrative
+  // order.
+  await generateContributions();
   generateGrepIndex();
   // Must run after generateRepoIndexes(): reads the per-repo JSONs it just
   // wrote for the repos/* path-only subtrees (see generateFsIndex's own

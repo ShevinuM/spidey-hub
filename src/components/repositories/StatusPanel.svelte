@@ -2,8 +2,10 @@
   // Panel [0]: Status — a full-width bar above the two-column row (UI v2;
   // Builds-Panel-Changes.md). Left cluster: "{prefix} {arrow} {N} repos"
   // (N = the real repo count, Decision 4). Middle: the GitHub-contribution
-  // grid (D4's own scope — scripts/generate.mjs's new contributions step;
-  // this file only reserves the flex space for it). Right cluster: real
+  // grid — 52 columns x 7 rows of cells colored from `state.contributionLevels`
+  // (oldest-first, populated by repositoriesState.svelte.ts's mount fetch of
+  // public/generated/contributions.json; empty array renders zero cells,
+  // e.g. before that fetch resolves or on failure). Right cluster: real
   // branch label, a real "last push" relative-time segment (rendered only
   // when repositoriesState.svelte.ts's mount effect found at least one real
   // commit date — every frozen fixture snapshot carries none, so fixture
@@ -22,6 +24,16 @@
   }
 
   const { repositories, state, isFocused }: Props = $props();
+
+  // Mockup's verbatim 5-level palette (Builds.dc.html `LEVELS`) — index 0-4
+  // maps 1:1 to contributions.json's `level` field.
+  const CONTRIB_LEVEL_COLORS = [
+    "rgba(196,216,232,.07)",
+    "rgba(224,69,60,.24)",
+    "rgba(224,69,60,.45)",
+    "rgba(224,69,60,.68)",
+    "#e0453c",
+  ];
 </script>
 
 <RepositoriesPanel
@@ -40,8 +52,14 @@
         <span style="color:rgba(196,216,232,.45)">{repositories.statusLine.arrow}</span>
         <span style="color:#e0453c">{state.repoCount} {repositories.statusLine.reposSuffix}</span>
       </div>
-      <!-- D4 fills this with the contribution grid (7-row grid, 52 weeks). -->
-      <div data-testid="repositories-contrib-grid-slot" style="flex:1;min-width:0"></div>
+      <div
+        data-testid="repositories-contrib-grid-slot"
+        style="flex:1;min-width:0;overflow:hidden;display:grid;grid-template-rows:repeat(7,6px);grid-auto-flow:column;grid-auto-columns:6px;gap:2px;justify-content:center"
+      >
+        {#each state.contributionLevels as level, i (i)}
+          <div data-testid="repositories-contrib-cell" style="border-radius:1px;background:{CONTRIB_LEVEL_COLORS[level]}"></div>
+        {/each}
+      </div>
       <div style="display:flex;align-items:center;gap:16px;white-space:nowrap">
         <span style="color:rgba(217,176,74,.85)">{repositories.statusLine.mainLabel}</span>
         {#if state.lastPushLabel}

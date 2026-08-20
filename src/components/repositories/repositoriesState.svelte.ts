@@ -111,6 +111,40 @@ export class RepositoriesState {
       });
     });
 
+    // Status panel [0]: contribution grid (D4, scripts/generate.mjs's
+    // contributions step). public/generated/contributions.json, not a
+    // build-time import — same runtime-fetch reasoning as the repo indexes
+    // below (an Astro island can't read it during SSR, and build:fixtures
+    // overlays fixtures/contributions.json onto the dist copy AFTER the
+    // build, so only a runtime fetch ever sees the fixture version). No
+    // reactive dependency is read inside, so this effect runs exactly once
+    // on mount without needing `untrack()`. A 404/parse failure (e.g. a
+    // fresh checkout before `pnpm generate` has ever run) leaves the grid
+    // empty rather than throwing.
+    $effect(() => {
+      let cancelled = false;
+      fetch("/generated/contributions.json")
+        .then((res) => {
+          if (!res.ok) throw new Error(String(res.status));
+          return res.json() as Promise<{ days: { date: string; level: number }[] }>;
+        })
+        .then((data) => {
+          if (cancelled) return;
+          const sorted = [...data.days].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+          // Trim to the trailing 364 days (52 full weeks) — GraphQL can
+          // return a handful of extra leading days depending on the exact
+          // fetch instant; sequential 7-day chunking (no weekday alignment,
+          // matching the mockup's own flatMap) needs an exact multiple of 7.
+          this.contributionLevels = sorted.slice(-364).map((d) => d.level);
+        })
+        .catch(() => {
+          if (!cancelled) this.contributionLevels = [];
+        });
+      return () => {
+        cancelled = true;
+      };
+    });
+
     // ---------------------------------------------------------------------
     // In-flight fetch tracking -> panel [1] spinner.
     // ---------------------------------------------------------------------
@@ -216,6 +250,11 @@ export class RepositoriesState {
    * frozen fixture snapshot) — the caller renders no last-push segment at
    * all in that case. */
   lastPushLabel = $state<string | null>(null);
+
+  /** Oldest-first contribution levels (0-4), set once client-side by the
+   * mount effect above. Empty until the fetch resolves (first paint renders
+   * no cells) or forever on fetch failure. */
+  contributionLevels = $state<number[]>([]);
 
   /** Idle (non-open) panel [1] row dot color — real-data two-tone: a repo
    * pushed to within the last ~30 days reads as "recently active" (brighter
