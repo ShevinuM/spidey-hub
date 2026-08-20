@@ -27,6 +27,7 @@
       style="position:relative;pointer-events:auto;background:rgba(10,11,14,.95);border:1px solid {meta.color};box-shadow:0 0 0 1px rgba(0,0,0,.65),0 12px 34px rgba(0,0,0,.6),0 0 26px {meta.glow};animation:toastIn .34s cubic-bezier(.2,1.35,.4,1) both"
     >
       <span
+        data-testid="toast-strand"
         style="position:absolute;left:26px;top:-13px;width:1px;height:13px;transform-origin:top;background:linear-gradient(180deg,rgba(255,255,255,0),{meta.color});animation:strand .3s ease both"
       ></span>
       <div style="display:flex;align-items:stretch">
@@ -53,7 +54,12 @@
 </div>
 
 <style>
-  @keyframes toastIn {
+  /* -global- keeps this keyframe resolvable from the inline `animation:`
+     reference above: Svelte scopes a plain `@keyframes` declared in a
+     component <style> block by renaming it, but never rewrites an
+     `animation:` value written in markup, so the inline reference would
+     otherwise point at a name that no longer exists. */
+  @keyframes -global-toastIn {
     from {
       opacity: 0;
       transform: translateY(-18px) scaleY(0.9);
@@ -67,7 +73,7 @@
       transform: translateY(0) scaleY(1);
     }
   }
-  @keyframes strand {
+  @keyframes -global-strand {
     from {
       transform: scaleY(0);
     }
@@ -75,6 +81,16 @@
       transform: scaleY(1);
     }
   }
+  @media (prefers-reduced-motion: reduce) {
+    [data-testid="toast"],
+    [data-testid="toast-strand"] {
+      animation: none !important;
+    }
+  }
+  /* `drain` is referenced from within THIS <style> block's own
+     `.eh-toast-drain` rule below, not from an inline `style=` attribute, so
+     Svelte's normal scoping rewrites both the declaration and the
+     reference — it already resolves and stays plain (not `-global-`). */
   @keyframes drain {
     from {
       width: 100%;

@@ -78,14 +78,3 @@
   {/snippet}
 </RepositoriesPanel>
 
-<style>
-  @keyframes pls {
-    0%,
-    100% {
-      opacity: 0.45;
-    }
-    50% {
-      opacity: 1;
-    }
-  }
-</style>

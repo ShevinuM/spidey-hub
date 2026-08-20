@@ -34,6 +34,7 @@
       >
     </div>
     <span
+      data-testid="notifications-sweep"
       style="position:absolute;left:0;bottom:0;width:34%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,92,102,.85),transparent);pointer-events:none;animation:{state.fixtureMode
         ? 'none'
         : 'sweep 3.6s linear infinite'}"
@@ -153,7 +154,12 @@
 </div>
 
 <style>
-  @keyframes panelIn {
+  /* -global- keeps this keyframe resolvable from the inline `animation:`
+     reference above: Svelte scopes a plain `@keyframes` declared in a
+     component <style> block by renaming it, but never rewrites an
+     `animation:` value written in markup, so the inline reference would
+     otherwise point at a name that no longer exists. */
+  @keyframes -global-panelIn {
     from {
       opacity: 0;
       transform: translateY(-10px) scale(0.985);
@@ -163,12 +169,18 @@
       transform: translateY(0) scale(1);
     }
   }
-  @keyframes sweep {
+  @keyframes -global-sweep {
     from {
       transform: translateX(-100%);
     }
     to {
       transform: translateX(220%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-testid="notifications-panel"],
+    [data-testid="notifications-sweep"] {
+      animation: none !important;
     }
   }
   /* Base declarations for properties a :hover rule below also sets are kept

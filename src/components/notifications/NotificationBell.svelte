@@ -24,6 +24,7 @@
   >
     {#if state.hasUnread}
       <span
+        data-testid="notifications-sense-ring"
         style="position:absolute;inset:-1px;border:1px solid rgba(255,92,102,.7);pointer-events:none;animation:{state.fixtureMode
           ? 'none'
           : 'senseRing 1.9s ease-out infinite'}"
@@ -40,7 +41,12 @@
 </div>
 
 <style>
-  @keyframes senseRing {
+  /* -global- keeps this keyframe resolvable from the inline `animation:`
+     reference above: Svelte scopes a plain `@keyframes` declared in a
+     component <style> block by renaming it, but never rewrites an
+     `animation:` value written in markup, so the inline reference would
+     otherwise point at a name that no longer exists. */
+  @keyframes -global-senseRing {
     0% {
       transform: scale(0.7);
       opacity: 0.85;
@@ -48,6 +54,11 @@
     100% {
       transform: scale(2.1);
       opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-testid="notifications-sense-ring"] {
+      animation: none !important;
     }
   }
   /* Base declarations for properties a :hover rule below also sets are kept

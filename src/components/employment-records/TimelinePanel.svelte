@@ -49,6 +49,7 @@
   <div style="position:absolute;left:50%;top:56px;bottom:16px;width:1px;transform:translateX(-50%);background:rgba(224,69,60,.55)"></div>
   <div style="position:absolute;left:50%;top:56px;bottom:16px;width:3px;transform:translateX(-50%);overflow:hidden">
     <div
+      data-testid="employment-timeline-spark"
       style="position:absolute;left:0;right:0;height:34px;background:linear-gradient(180deg,rgba(140,220,255,0),rgba(140,220,255,.9),rgba(140,220,255,0));animation:{sparkAnim()}"
     ></div>
   </div>
@@ -58,11 +59,13 @@
       style="position:absolute;left:50%;top:{markerTop};transform:translate(-50%,-50%);width:78px;height:78px;border-radius:50%;background:radial-gradient(circle,rgba(224,69,60,.2),rgba(224,69,60,0) 70%);transition:top .45s cubic-bezier(.2,.75,.2,1)"
     ></div>
     <div
+      data-testid="employment-timeline-dash"
       style="position:absolute;left:0;width:calc(50% - 32px);top:{markerTop};height:1px;background:repeating-linear-gradient(90deg,rgba(224,69,60,.75) 0 8px,rgba(224,69,60,0) 8px 16px);background-size:24px 1px;animation:{dashAnim(
         false,
       )};transition:top .45s cubic-bezier(.2,.75,.2,1)"
     ></div>
     <div
+      data-testid="employment-timeline-dash"
       style="position:absolute;right:0;width:calc(50% - 32px);top:{markerTop};height:1px;background:repeating-linear-gradient(90deg,rgba(224,69,60,.75) 0 8px,rgba(224,69,60,0) 8px 16px);background-size:24px 1px;animation:{dashAnim(
         true,
       )};transition:top .45s cubic-bezier(.2,.75,.2,1)"
@@ -100,6 +103,7 @@
           >
         </span>
         <span
+          data-testid="employment-timeline-ring-spin"
           style="position:absolute;width:{on ? '54px' : '30px'};height:{on
             ? '54px'
             : '30px'};border-radius:50%;border:1px dashed {on
@@ -107,6 +111,7 @@
             : 'rgba(140,200,240,.2)'};animation:{spinAnim(on)};transition:width .4s,height .4s"
         ></span>
         <span
+          data-testid="employment-timeline-ring-rspin"
           style="position:absolute;width:{on ? '40px' : '24px'};height:{on
             ? '40px'
             : '24px'};border-radius:50%;border:1px solid {on
@@ -135,17 +140,22 @@
 </div>
 
 <style>
-  @keyframes spin {
+  /* -global- keeps each keyframe resolvable from the inline `animation:`
+     reference above: Svelte scopes a plain `@keyframes` declared in a
+     component <style> block by renaming it, but never rewrites an
+     `animation:` value written in markup, so the inline reference would
+     otherwise point at a name that no longer exists. */
+  @keyframes -global-spin {
     to {
       transform: rotate(360deg);
     }
   }
-  @keyframes rspin {
+  @keyframes -global-rspin {
     to {
       transform: rotate(-360deg);
     }
   }
-  @keyframes spark {
+  @keyframes -global-spark {
     0% {
       top: -6%;
       opacity: 0;
@@ -161,9 +171,17 @@
       opacity: 0;
     }
   }
-  @keyframes dash {
+  @keyframes -global-dash {
     to {
       background-position: 24px 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-testid="employment-timeline-spark"],
+    [data-testid="employment-timeline-dash"],
+    [data-testid="employment-timeline-ring-spin"],
+    [data-testid="employment-timeline-ring-rspin"] {
+      animation: none !important;
     }
   }
 </style>

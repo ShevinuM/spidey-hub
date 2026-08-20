@@ -84,15 +84,6 @@
 </RepositoriesPanel>
 
 <style>
-  @keyframes pls {
-    0%,
-    100% {
-      opacity: 0.45;
-    }
-    50% {
-      opacity: 1;
-    }
-  }
   .repositories-row {
     /* Rows are flex children of an overflow-y:auto column; without this
        they flex-shrink below their own line box under a full 15-commit
