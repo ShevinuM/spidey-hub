@@ -1,10 +1,8 @@
 <script lang="ts">
-  // Left panel: index block + breadcrumb + flat, newest-first record rows.
-  // Layout/values verbatim from UI-Mockups/builds-page-design-review/
-  // Personnel.dc.html's LEFT column (lines 60-100) — including the
-  // `justify-content:space-between` on the bordered box, which bottom-
-  // anchors the row list exactly like the old drill-down browser did
-  // (`justify-content:flex-end` there) rather than top-anchoring it.
+  // Left panel: index block + breadcrumb + flat, newest-first record rows,
+  // top-stacked inside the bordered box with explicit `gap` between the
+  // three blocks. The row list is the one block that grows/scrolls when its
+  // content exceeds the box's remaining height.
   import PanelBadge from "../PanelBadge.svelte";
   import type { EmploymentRecordsState } from "./employmentRecordsState.svelte";
 
@@ -18,7 +16,7 @@
 
 <div style="position:relative;flex:1;min-width:0;display:flex;flex-direction:column;gap:12px">
   <div
-    style="position:relative;flex:1;min-height:0;overflow:hidden;border:1px solid #e0453c;border-radius:3px;box-shadow:0 0 30px rgba(224,69,60,.10);padding:16px 12px 18px;display:flex;flex-direction:column;justify-content:space-between;gap:18px"
+    style="position:relative;flex:1;min-height:0;overflow:hidden;border:1px solid #e0453c;border-radius:3px;box-shadow:0 0 30px rgba(224,69,60,.10);padding:16px 12px 18px;display:flex;flex-direction:column;gap:18px"
   >
     <div style="display:flex;flex-direction:column;gap:6px;padding:0 4px;font-size:11px">
       <div style="display:flex;align-items:center;gap:8px;color:rgba(224,69,60,.5);white-space:nowrap">
