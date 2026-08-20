@@ -38,7 +38,7 @@ const FS: FsEntry[] = [
   { path: "src/lib/tmux.ts", size: 300 },
   { path: "src/lib/clock.ts", size: 150 },
   { path: "src/lib/deep/a/b/c.ts", size: 10 },
-  { path: "src/components/Terminal.svelte", size: 400 },
+  { path: "src/components/terminal/Terminal.svelte", size: 400 },
   { path: "repos/Sheldon/README.md" },
   { path: "repos/Sheldon/src/main.py" },
 ];

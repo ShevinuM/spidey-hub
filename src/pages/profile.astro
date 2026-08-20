@@ -1,7 +1,7 @@
 ---
 // Route: "/profile" — see src/pages/index.astro for the shared shape notes.
 import Shell from "../layouts/Shell.astro";
-import Terminal from "../components/Terminal.svelte";
+import Terminal from "../components/terminal/Terminal.svelte";
 import { getCollection } from "astro:content";
 import { getSite, getDashboard, getTracker, getBuilds, getPersonnel, getGrep, getCmdline, getHelpSearch, getShell, getChooseTree, buildProfile, buildHelp, buildNotifications, buildBoot } from "../lib/data";
 import { getCommitsByRepo } from "../lib/commits";

@@ -55,7 +55,7 @@ Follow `refactor-components-prompt.md` EXACTLY (it is the contract: target patte
 - [x] B2. Editor → `src/components/editor/`. Commit.
 - [ ] B3. SKIPPED per Decision 12 — Personnel is rebuilt from scratch in Phase E directly in the target pattern.
 - [x] B4. Notifications → `src/components/notifications/`. Commit.
-- [ ] B5. Terminal → partial split allowed per the prompt's Terminal note. Commit.
+- [x] B5. Terminal → partial split allowed per the prompt's Terminal note. Commit.
 - [ ] B6. Audit remaining 14 components per criteria (a)-(d); apply (c)-only moves cheaply; full pattern only if 2+ of a/b/d; write one-line dispositions into the executor report. Commit(s).
 - Verify after EACH component (executor runs, verifier re-runs at phase end): `pnpm check && pnpm test:unit && pnpm test:visual && pnpm test:e2e` all green, goldens byte-unchanged (`git status tests/visual/goldens` clean), every `bind:this` export still resolved (grep callers), no testid/DOM/comment changes (`git diff` sampled by verifier for moved-not-changed).
 

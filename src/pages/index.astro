@@ -5,7 +5,7 @@
 // view is in the static HTML with no client-side flash. Later view switches
 // are client-side only (pushState).
 import Shell from "../layouts/Shell.astro";
-import Terminal from "../components/Terminal.svelte";
+import Terminal from "../components/terminal/Terminal.svelte";
 import { getCollection } from "astro:content";
 import { getSite, getDashboard, getTracker, getBuilds, getPersonnel, getGrep, getCmdline, getHelpSearch, getShell, getChooseTree, buildProfile, buildHelp, buildNotifications, buildBoot } from "../lib/data";
 import { getCommitsByRepo } from "../lib/commits";
