@@ -70,7 +70,7 @@
   import { classifyBody, colorFor } from "../lib/docline";
   import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
   import { iconSvgForPath } from "../lib/fileIcons";
-  import Editor, { type EditorLine } from "./Editor.svelte";
+  import Editor, { type EditorLine } from "./editor/Editor.svelte";
 
   type RoleEntry = CollectionEntry<"personnel">;
 

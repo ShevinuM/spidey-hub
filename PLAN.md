@@ -52,7 +52,7 @@ Phases run in order; each phase = fresh executor, then verifier, then commit(s) 
 ### Phase B — Component refactor (pure relocation; goldens are the gate, NEVER rebaseline here)
 Follow `refactor-components-prompt.md` EXACTLY (it is the contract: target pattern, hard rules 1-6, per-component order Builds→Editor→Personnel→Notifications→Terminal, then the audit of the remaining 14 components).
 - [x] B1. Builds → `src/components/builds/` per the file plan in that prompt + `src/lib/commandLog.ts`. Commit.
-- [ ] B2. Editor → `src/components/editor/`. Commit.
+- [x] B2. Editor → `src/components/editor/`. Commit.
 - [ ] B3. SKIPPED per Decision 12 — Personnel is rebuilt from scratch in Phase E directly in the target pattern.
 - [ ] B4. Notifications → `src/components/notifications/`. Commit.
 - [ ] B5. Terminal → partial split allowed per the prompt's Terminal note. Commit.

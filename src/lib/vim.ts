@@ -205,6 +205,14 @@ export function moveVertical(lines: string[], pos: CursorPos, deltaLines: number
   return clampCursor(lines, { line: pos.line + deltaLines, col: pos.col });
 }
 
+/** Generic numeric clamp — Editor.svelte's own scroll-offset math
+ * (`halfPage`/`fullPage`) and its ex-command `:<number>` jump both need a
+ * plain `[lo, hi]` clamp that isn't buffer-position-shaped like
+ * `clampCursor` above. */
+export function clamp(n: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, n));
+}
+
 export function moveHorizontal(lines: string[], pos: CursorPos, deltaCols: number): CursorPos {
   return clampCursor(lines, { line: pos.line, col: pos.col + deltaCols });
 }

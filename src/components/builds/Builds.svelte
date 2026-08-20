@@ -37,7 +37,7 @@
   import type { CollectionEntry } from "astro:content";
   import type { BuildsData } from "../../lib/data";
   import type { Commit } from "../../lib/commits";
-  import Editor from "../Editor.svelte";
+  import Editor from "../editor/Editor.svelte";
   import { BuildsState } from "./buildsState.svelte";
   import FilesPanel from "./FilesPanel.svelte";
   import ReposPanel from "./ReposPanel.svelte";
