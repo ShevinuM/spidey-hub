@@ -364,6 +364,42 @@ export const iteration3Recipes: Recipe[] = [
   { name: "20-help-search", actions: [{ key: "?" }, { type: "kil" }] },
 ];
 
+/**
+ * "21-notifications-panel-open": the signal-inbox panel open on the
+ * dashboard (PLAN.md Phase G2) — kept in its OWN array for the same
+ * "didn't exist when the goldens were self-baselined, must never reach the
+ * vendored-prototype path" reason as `extraRecipes`/`bootRecipes`/
+ * `cmdlineRecipes`/`iteration3Recipes` above. `identical.spec.ts` is the
+ * only consumer.
+ *
+ * A bare `n` toggles the panel while the dashboard is the active view
+ * (Notifications.svelte's exported `handleKey`, wired through
+ * Terminal.svelte's `core.view === "home"` gate) — same click-or-key
+ * duality the bell's own `title`/onclick offers, so no new `RecipeAction`
+ * shape is needed.
+ *
+ * Fixture mode's `buildFixtureState()` (notificationStore.ts) seeds a fixed,
+ * non-empty state (2 unread inbox, 1 read inbox, 1 archived, 1 spam) and
+ * fixtureMode already disables every CSS `infinite` animation site-wide
+ * (sense-ring included, `NotificationBell.svelte`), so the open panel is
+ * fully deterministic with no extra clock/seed handling beyond what
+ * `captureState()` already does for every other recipe.
+ *
+ * `check.visible` (not just a `url` check — the panel is an overlay on `/`,
+ * same route the dashboard itself renders at) is required here: without it
+ * an `n` press that silently failed to open the panel would still produce a
+ * "some page loaded" golden, exactly the zero-value-golden failure mode
+ * the old "03-builds-j" recipe shipped undetected for months (see
+ * `RecipeCheck`'s own header comment above).
+ */
+export const notificationsRecipes: Recipe[] = [
+  {
+    name: "21-notifications-panel-open",
+    actions: [{ key: "n" }],
+    check: { visible: '[data-testid="notifications-panel"]' },
+  },
+];
+
 export const viewports = [
   { name: "1512x945", width: 1512, height: 945 },
   { name: "1920x1080", width: 1920, height: 1080 },

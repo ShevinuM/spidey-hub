@@ -5,9 +5,9 @@
 // (tests/visual/pipeline.mjs) used to produce tests/visual/goldens/, so the
 // two sides can never structurally drift apart.
 //
-// This suite wires in five recipe arrays from
-// recipes.ts — 20 recipes total,
-// 40 goldens across both viewports:
+// This suite wires in six recipe arrays from
+// recipes.ts — 21 recipes total,
+// 42 goldens across both viewports:
 //   - `recipes` (10): the original set, re-baselined against our OWN
 //     implementation (see recipes.ts's header comment for the
 //     three action-list fixes this required — "03-builds-j"/"05-personnel-
@@ -27,21 +27,25 @@
 //     sessions/panes/layouts/choose-tree/HelpSearch; see
 //     recipes.ts's own header comment on this array for the verified
 //     keystroke sequences.
+//   - `notificationsRecipes` (1): "21-notifications-panel-open" — the
+//     signal-inbox panel open on the dashboard (PLAN.md Phase G2), opened
+//     with a bare `n` (Notifications.svelte's exported `handleKey`); see
+//     recipes.ts's own header comment on this array.
 //
 // This suite is now the goldens' SOLE authority: tests/visual/capture-goldens.mjs's
 // vendored-prototype path is retired to historical/guarded status (see its
 // own header comment) and is never run as part of normal development.
 import { expect, test } from "@playwright/test";
-import { bootRecipes, cmdlineRecipes, extraRecipes, iteration3Recipes, recipes } from "./recipes.ts";
+import { bootRecipes, cmdlineRecipes, extraRecipes, iteration3Recipes, notificationsRecipes, recipes } from "./recipes.ts";
 import { captureBootState, captureState } from "./pipeline.mjs";
 
-// The 18 standard (key/type replay) recipes, captured via captureState().
+// The 19 standard (key/type replay) recipes, captured via captureState().
 // bootRecipes are handled by their own describe block below via
 // captureBootState() instead — a different capture function, not just a
 // different recipe shape. `iteration3Recipes` (16-shell/17-host-shell/18-split/19-choose-tree/
-// 20-help-search) to the union — 20 recipes total, 40 goldens across both
-// viewports.
-const keyRecipes = [...recipes, ...extraRecipes, ...cmdlineRecipes, ...iteration3Recipes];
+// 20-help-search) and `notificationsRecipes` (21-notifications-panel-open)
+// join the union — 21 recipes total, 42 goldens across both viewports.
+const keyRecipes = [...recipes, ...extraRecipes, ...cmdlineRecipes, ...iteration3Recipes, ...notificationsRecipes];
 
 // Visual-regression harness policy: start maxDiffPixels: 0; if
 // antialiasing noise appears, relax to at most

@@ -91,9 +91,9 @@ Rebuild per mockup + Personnel-Panel-Changes.md in `src/components/employment-re
 - Verify: `git grep -n "text-transform:\s*uppercase" src/components` → 0 for help files; built help page DOM contains no ALL-CAPS scope/row labels (verifier greps rendered text); pill computed styles match teal spec; help copy matches final panel numbers exactly.
 
 ### Phase G — Notifications finishing
-- [ ] G1. Re-circulation per Decision 6 in `notificationStore.ts` + unit tests (exhausted pool re-injects oldest archived non-spam; spam never resurrects; injected item unread + toast-spawned; stable across reload).
-- [ ] G2. New visual recipe: notifications panel OPEN on dashboard (fixture mode, animations off) → new golden pair. Optionally a toast recipe if deterministic under fixture seed — only if `E2E_NOTIFICATIONS_INJECT_SEED` hook makes it stable; otherwise skip (e2e already covers toasts).
-- [ ] G3. Suite green (new goldens are additions, not rebaselines). Commit(s).
+- [x] G1. Re-circulation per Decision 6 in `notificationStore.ts` + unit tests (exhausted pool re-injects oldest archived non-spam; spam never resurrects; injected item unread + toast-spawned; stable across reload).
+- [x] G2. New visual recipe: notifications panel OPEN on dashboard (fixture mode, animations off) → new golden pair. Optionally a toast recipe if deterministic under fixture seed — only if `E2E_NOTIFICATIONS_INJECT_SEED` hook makes it stable; otherwise skip (e2e already covers toasts).
+- [x] G3. Suite green (new goldens are additions, not rebaselines). Commit(s).
 - Verify: unit tests for recirculation pass and actually assert the rule (verifier reads them); e2e notifications suite green; new golden exists in both viewports.
 
 ### Phase H — Dashboard check
