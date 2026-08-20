@@ -117,7 +117,7 @@ every prior re-baseline's determinism-check record.
 build`) switches the `repositories` content collection to `fixtures/repositories/*.md` —
 a small, fixed set of sample projects — with matching `fixtures/commits/*.json`,
 `fixtures/repos/all-projects.json`, `fixtures/grep-index.json`,
-`fixtures/fs-index.json`, and `fixtures/contributions.json`. Two of those
+`fixtures/fs-index.json`, and `fixtures/contributions.json`. All four of those
 (`grep-index.json`, `repos/all-projects.json`, `fs-index.json`, `contributions.json`) are
 copied over their built `dist/generated/` counterparts as `build:fixtures`'s last steps
 rather than generated, so the exact same JS bundle runs in both goldens and production —

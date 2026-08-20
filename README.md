@@ -58,7 +58,7 @@ Stack, coding standards, and testing gates: [`docs/architecture.md`](docs/archit
 
 ## Accomplishments
 
-- I built a pixel-identical visual regression pipeline — 42 self-baselined goldens across 2 viewports at `maxDiffPixels: 0` — and used it as the safety net for relocating five monolithic view components into a folder + state-class architecture with zero visual drift.
+- I built a pixel-identical visual regression pipeline — 42 self-baselined goldens across 2 viewports at `maxDiffPixels: 0` — and used it as the safety net for relocating four monolithic view components (Repositories, Editor, Notifications, Terminal) into a folder + state-class architecture with zero visual drift, then separately rebuilt a fifth (Employment Records) against a deliberate, reviewed re-baseline.
 - I implemented a real tmux client model from scratch: prefix-key arming, panes, 7 layout presets, session/window management, and a choose-tree overlay, faithful enough to real tmux that its own quirks (case-sensitive vs. case-insensitive kill confirms, nested-session protection) are reproduced on purpose, not accidentally.
 - I wrote a shared vim-lite modal text-editing engine (NORMAL/VISUAL/VISUAL-LINE, counts, motions, yank, in-buffer search) as pure, DOM-free logic, unit-tested independently of any component that uses it.
 - I designed a build-time data pipeline that resolves live GitHub contribution and commit data through a 3-way fallback chain (authenticated GraphQL → public HTML scrape → last-known-good snapshot), so the site never fails to render live-looking data even against an unauthenticated rate limit.
@@ -227,13 +227,16 @@ content vs. data vs. generated convention.
 
 ### Add an Employment Records role
 
-Add `src/content/personnel/<org-slug>/[<employment-type-slug>/]role.md`
-anywhere under that tree (it's depth-generic — a role can sit directly under
-its org, or under an extra employment-type layer) with frontmatter matching
-the `personnel` schema: `role`, `dates`, `loc`, `order` (ascending order = 0
-is newest; the flat list sorts on it directly, no company/employment-type
-grouping fields needed). `pnpm generate` afterward keeps the grep index in
-sync.
+Add `src/content/personnel/<org-slug>/<role-slug>/role.md` — exactly that
+depth (2 path segments under `personnel/`) — with frontmatter matching the
+`personnel` schema: `role`, `dates`, `loc`, `order` (ascending order = 0 is
+newest; the flat list sorts on start date, `order` breaking ties — no
+company/employment-type grouping fields needed). Only org-level files at
+that exact depth render as a row; a deeper `.../<role-slug>/<sub-role>/
+role.md` file (used today for enaimco's full-time/part-time/co-op split) is
+valid content but is not currently reachable from this page — see
+`employmentRecordsState.svelte.ts`'s own comment for the full rationale.
+`pnpm generate` afterward keeps the grep index in sync.
 
 ## Mobile policy
 

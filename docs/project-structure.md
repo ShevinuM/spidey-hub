@@ -15,7 +15,7 @@ src/
   components/     Svelte islands — 6 view folders (state-class pattern) + 14 flat components
   lib/            29 pure TypeScript modules — no Svelte runes, most are unit-tested directly
   content/        7 Zod-validated Markdown collections (astro:content)
-  data/           14 hand-authored YAML files — UI copy, read via src/lib/data.ts
+  data/           13 hand-authored YAML files — UI copy, read via src/lib/data.ts
   generated/      build-time TS/JSON artifacts imported statically (src/generated/)
   content.config.ts   collection definitions (schema + loader) for every src/content/* dir
 public/

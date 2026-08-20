@@ -111,6 +111,15 @@ in the same change as any `docs/` edit that affects a convention below.
       `@media (prefers-reduced-motion: no-preference)`, and disable it entirely
       under `fixtureMode` (site convention — every `infinite` animation must be).
 
+## Performance
+
+- [ ] Render a static image through `astro:assets`'s `<Image>`/`getImage`, never a
+      bare `<img src>` for a local file.
+- [ ] Set explicit `width`/`height` (or `aspect-ratio`) on every image to avoid
+      layout shift.
+- [ ] Preload only the font weights/styles actually used above the fold — never
+      preload a whole font family speculatively.
+
 ## Testing
 
 - [ ] Every time a bug surfaces (self-found or user-reported), write a test that
