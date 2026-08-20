@@ -1,8 +1,9 @@
 <script lang="ts">
   // Right panel: selected record's role.md body, syntax-colored the same
   // way src/lib/docline.ts colors every other doc pane on the site
-  // ("personnel" mode). Layout verbatim from UI-Mockups/builds-page-design-
-  // review/Personnel.dc.html's RIGHT column (lines 132-160).
+  // ("personnel" mode). The line container scrolls vertically when the
+  // body is taller than the panel, and each line wraps instead of clipping
+  // so no character is ever hidden.
   import PanelBadge from "../PanelBadge.svelte";
   import type { EmploymentRecordsState } from "./employmentRecordsState.svelte";
 
@@ -36,7 +37,7 @@
     </div>
     <div
       data-testid="employment-preview"
-      style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;line-height:1.5;font-size:11.5px"
+      style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;line-height:1.5;font-size:11.5px"
     >
       {#each state.docLines as l, i (i)}
         <div data-testid="employment-doc-line" style="display:flex;gap:11px">

@@ -91,7 +91,12 @@ interface DocLineView {
   style: string;
 }
 
-const ONE_LINE_STYLE = "white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0";
+/** Wraps instead of clipping: a plain `<span>` blockified inside a flex row
+ * (docline.ts's colours don't otherwise set `white-space`/`overflow`), so a
+ * line longer than the panel's width wraps onto additional visual lines
+ * rather than being cut off — every character stays visible regardless of
+ * how long the source line is. */
+const DOC_LINE_WRAP_STYLE = "white-space:normal;overflow-wrap:break-word;min-width:0";
 
 /** Every role file's own directory path relative to
  * `src/content/personnel/`, case-preserved (same `entry.id`-is-the-real-path
@@ -191,7 +196,7 @@ export class EmploymentRecordsState {
   readonly docLines: DocLineView[] = $derived(
     this.classifiedBody.map((l) => ({
       t: l.t,
-      style: `${colorFor(l.kind, "personnel")};${ONE_LINE_STYLE}`,
+      style: `${colorFor(l.kind, "personnel")};${DOC_LINE_WRAP_STYLE}`,
     })),
   );
 

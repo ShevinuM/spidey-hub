@@ -47,7 +47,11 @@
       </div>
     </div>
 
-    <div data-copy-source={isFocused ? "" : undefined} style="display:flex;flex-direction:column;gap:4px">
+    <div
+      data-testid="employment-records-list"
+      data-copy-source={isFocused ? "" : undefined}
+      style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:4px"
+    >
       {#each state.records as row, i (row.entry.id)}
         {@const on = i === state.sel}
         <div
