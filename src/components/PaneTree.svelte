@@ -32,6 +32,7 @@
     ProfileData,
     HelpData,
     ShellData,
+    CommandLogLine,
   } from "../lib/data";
   import type { CollectionEntry } from "astro:content";
   import type { Commit } from "../lib/commits";
@@ -74,6 +75,7 @@
     projects: CollectionEntry<"repositories">[];
     personnelEntries: CollectionEntry<"personnel">[];
     commitsByRepo: Record<string, Commit[]>;
+    commandLog: CommandLogLine[];
     /** Dashboard menu clicks / EmploymentRecords's "onDashboard" are all just
      * "switch to a different WINDOW" (exactly like a status-bar click or a
      * prefix digit target) — never a program LAUNCH into the current pane —
@@ -115,6 +117,7 @@
     projects,
     personnelEntries,
     commitsByRepo,
+    commandLog,
     onWindowSwitch,
     onLaunchInPane,
     onExitPane,
@@ -168,6 +171,7 @@
           {projects}
           {personnelEntries}
           {commitsByRepo}
+          {commandLog}
           {onWindowSwitch}
           {onLaunchInPane}
           {onExitPane}
@@ -204,6 +208,7 @@
         {repositories}
         {projects}
         {commitsByRepo}
+        {commandLog}
         {isFocused}
         fixtureMode={repositoriesFixtureMode}
       />

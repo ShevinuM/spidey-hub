@@ -1,7 +1,7 @@
 // Command log rendering (emphasized words / real links inline) — moved
 // verbatim out of Repositories.svelte during the folder+state-class relocation
 // refactor (pure, rune-free helpers belong in src/lib).
-import type { RepositoriesData } from "./data";
+import type { CommandLogLine } from "./data";
 
 export interface LogToken {
   text: string;
@@ -13,7 +13,7 @@ export function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-export function tokenizeLogLine(line: RepositoriesData["commandLog"][number]): LogToken[] {
+export function tokenizeLogLine(line: CommandLogLine): LogToken[] {
   const specials: { match: string; kind: "emphasis" | "link"; href?: string }[] = [
     ...(line.emphasize ?? []).map((m) => ({ match: m, kind: "emphasis" as const })),
     ...(line.links ?? []).map((l) => ({ match: l.text, kind: "link" as const, href: l.href })),

@@ -181,4 +181,26 @@ const boot = defineCollection({
   }),
 });
 
-export const collections = { repositories, personnel, profile, help, notifications, boot };
+// Repositories panel [5] ("Command Log") copy — one markdown file, one line
+// of body per log entry. No frontmatter fields: `**bold**` -> `emphasize`
+// and `[text](href)` -> `links` are parsed straight out of each body line by
+// src/lib/data.ts's `buildCommandLog` (see its own comment for the exact
+// mapping back to the pre-existing `CommandLogLine[]` shape).
+const commandLog = defineCollection({
+  loader: glob({
+    pattern: "*.md",
+    base: "src/content/command-log",
+    generateId: ({ entry }) => entry.replace(/\.md$/, ""),
+  }),
+  schema: z.object({}),
+});
+
+export const collections = {
+  repositories,
+  personnel,
+  profile,
+  help,
+  notifications,
+  boot,
+  "command-log": commandLog,
+};

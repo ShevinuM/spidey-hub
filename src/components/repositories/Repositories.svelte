@@ -35,7 +35,7 @@
   // fallback (removed sitewide) — this is what lets the file editor get
   // first refusal over GrepOverlay while it's open.
   import type { CollectionEntry } from "astro:content";
-  import type { RepositoriesData } from "../../lib/data";
+  import type { RepositoriesData, CommandLogLine } from "../../lib/data";
   import type { Commit } from "../../lib/commits";
   import Editor from "../editor/Editor.svelte";
   import { RepositoriesState } from "./repositoriesState.svelte";
@@ -50,6 +50,12 @@
     repositories: RepositoriesData;
     projects: CollectionEntry<"repositories">[];
     commitsByRepo: Record<string, Commit[]>;
+    /** Panel [5] ("Command Log") copy — src/content/command-log/command-log.md,
+     * mapped at build time by src/lib/data.ts's `buildCommandLog` (Decision 5:
+     * moved out of repositories.yaml so this one panel's prose lives as
+     * markdown, `**bold**`/`[text](href)` and all, instead of hand-nested
+     * YAML). Threaded straight through to CommandLog.svelte. */
+    commandLog: CommandLogLine[];
     /** See PaneTree.svelte's own header comment (multi-instance
      * data-copy-source gating); ANDed with each panel's own
      * `focusedPanel === N` check below (both must hold: this pane is the
@@ -63,7 +69,7 @@
     fixtureMode: boolean;
   }
 
-  const { repositories, projects, commitsByRepo, isFocused, fixtureMode }: Props = $props();
+  const { repositories, projects, commitsByRepo, commandLog, isFocused, fixtureMode }: Props = $props();
 
   const state = new RepositoriesState(
     () => repositories,
@@ -208,7 +214,7 @@
           <CommitsPanel {repositories} {state} {isFocused} />
 
           <!-- [5] Command Log -->
-          <CommandLog {repositories} {state} {isFocused} />
+          <CommandLog {repositories} {commandLog} {state} {isFocused} />
         </div>
       </div>
     </div>

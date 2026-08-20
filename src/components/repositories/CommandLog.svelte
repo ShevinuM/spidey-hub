@@ -7,18 +7,21 @@
   // Repositories.svelte's keymap has no dedicated `focusedPanel === 5`
   // block (bare digit `5` still moves focus/the border here, same as every
   // panel).
-  import type { RepositoriesData } from "../../lib/data";
+  import type { RepositoriesData, CommandLogLine } from "../../lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
   import { tokenizeLogLine } from "../../lib/commandLog";
   import RepositoriesPanel from "./RepositoriesPanel.svelte";
 
   interface Props {
     repositories: RepositoriesData;
+    /** src/content/command-log/command-log.md, mapped at build time — see
+     * Repositories.svelte's own prop doc comment. */
+    commandLog: CommandLogLine[];
     state: RepositoriesState;
     isFocused: boolean;
   }
 
-  const { repositories, state, isFocused }: Props = $props();
+  const { repositories, commandLog, state, isFocused }: Props = $props();
 
   const commandLogColors = ["#5fc6b4", "rgba(196,216,232,.6)", "rgba(196,216,232,.45)"];
 </script>
@@ -35,7 +38,7 @@
 >
   {#snippet children()}
     <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:6px">
-      {#each repositories.commandLog as line, li (li)}
+      {#each commandLog as line, li (li)}
         <div style="color:{commandLogColors[li] ?? commandLogColors[commandLogColors.length - 1]}">
           {#each tokenizeLogLine(line) as token, ti (ti)}
             {#if token.kind === "emphasis"}<span style="color:rgba(217,176,74,.9)">{token.text}</span

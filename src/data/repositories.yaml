@@ -75,18 +75,6 @@ statusLine:
   lastPushTemplate: "last push {value}"
   connectedLabel: "connected"
 
-commandLog:
-  - text: "Select a repo with the arrow keys in panel [1] — Enter (or a click) loads its tree into panel [2]."
-    emphasize: ["arrow keys"]
-  - text: "Open the source on github.com/shevinum · live build at shevinum.dev"
-    links:
-      - text: "github.com/shevinum"
-        href: "https://github.com/shevinum"
-      - text: "shevinum.dev"
-        href: "https://shevinum.dev"
-  - text: "Ctrl-b 3 for Retina-V · Ctrl-b ? for help."
-    emphasize: ["Ctrl-b 3"]
-
 # Repo file-tree browsing (panel [1] -> panel [2] -> panel [3]) and the
 # full-screen nvim-style file editor it opens into. Both are a
 # "Repositories interactivity extension" beyond the prototype's visuals (no
