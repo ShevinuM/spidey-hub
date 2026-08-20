@@ -3,6 +3,7 @@
   import type { DashboardData } from "../lib/data";
   import type { ViewId } from "../lib/views";
   import { menuIdToView, viewToTmuxBinding } from "../lib/views";
+  import { wordmarkChars } from "../lib/wordmark";
 
   interface Props {
     dashboard: DashboardData;
@@ -52,18 +53,7 @@
   // accessible/testable as one string despite the per-character markup
   // (getByText on the split text would otherwise see "S P I D E Y..." with
   // stray whitespace from the each-block).
-  const WORDMARK_MAX_ANGLE = 16; // degrees the outermost letters tilt
-  const WORDMARK_ARCH_PX = 10; // dome rise at the center letter
-
-  const wordmarkChars = $derived(
-    dashboard.plate.title.split("").map((ch, i, arr) => {
-      const n = arr.length;
-      const t = n > 1 ? (i - (n - 1) / 2) / ((n - 1) / 2) : 0; // -1..1 across the word
-      const angle = t * WORDMARK_MAX_ANGLE;
-      const rise = (1 - t * t) * WORDMARK_ARCH_PX;
-      return { ch, style: `transform:translateY(${(-rise).toFixed(2)}px) rotate(${angle.toFixed(2)}deg)` };
-    }),
-  );
+  const wordmarkCharsList = $derived(wordmarkChars(dashboard.plate.title));
 </script>
 
 <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">
@@ -75,7 +65,7 @@
       aria-label={dashboard.plate.title}
       style="font-family:'Webslinger','JetBrains Mono',ui-monospace,monospace;font-size:clamp(26px,5.2vh,38px);font-weight:700;letter-spacing:.03em;color:#fff;-webkit-text-stroke:1.75px #e0453c;display:flex;justify-content:center;padding-top:6px;text-shadow:2px 3px 0 rgba(0,0,0,.55)"
     >
-      {#each wordmarkChars as { ch, style }, i (i)}
+      {#each wordmarkCharsList as { ch, style }, i (i)}
         <span aria-hidden="true" style="display:inline-block;{style}">{ch}</span>
       {/each}
     </div>
