@@ -35,23 +35,28 @@
      * Repositories/Employment Records panel. "teal": Help's section-header
      * pill (spiderman-teal glyph, teal border/glow). */
     accent?: "blue" | "teal";
+    /** Renders the pill inline, in normal flow, instead of the default
+     * absolutely-positioned wrapper that straddles a panel's top border.
+     * Help's section headers sit the pill inline at the start of a flex row
+     * (pill + dotted rule + hint), not straddling anything — see
+     * Help.dc.html line ~150. */
+    inline?: boolean;
   }
 
-  const { n, label, left, right, accent = "blue" }: Props = $props();
+  const { n, label, left, right, accent = "blue", inline = false }: Props = $props();
   const isSplit = left !== undefined && right !== undefined;
+  const wrapperStyle = inline
+    ? "display:flex;flex:none"
+    : "position:absolute;left:0;right:0;top:0;transform:translateY(-50%);display:flex;justify-content:center;pointer-events:none;z-index:4";
 </script>
 
-<div
-  data-testid="panel-badge"
-  data-accent={accent}
-  style="position:absolute;left:0;right:0;top:0;transform:translateY(-50%);display:flex;justify-content:center;pointer-events:none;z-index:4"
->
+<div data-testid="panel-badge" data-accent={accent} style={wrapperStyle}>
   {#if accent === "teal"}
     <span
       style="display:flex;align-items:center;gap:8px;border:1px solid rgba(87,226,201,.5);border-radius:3px;background:rgba(5,7,10,.92);box-shadow:0 0 14px rgba(87,226,201,.16);padding:3px 12px;font:600 11.5px 'JetBrains Mono',monospace;letter-spacing:.16em;color:#57e2c9;white-space:nowrap"
     >
       <img src="/assets/spiderman-teal.svg" alt="" aria-hidden="true" style="width:10px;height:14px;display:block" />
-      {n} · {label}
+      {#if n !== undefined}{n} · {/if}{label}
     </span>
   {:else}
     <span

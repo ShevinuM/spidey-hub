@@ -16,6 +16,7 @@
   // at any viewport (the one deviation from the mockup's fixed `300px`
   // column — see tests/e2e/help-layout.spec.ts).
   import type { HelpData, HelpRow } from "../lib/data";
+  import PanelBadge from "./PanelBadge.svelte";
 
   interface Props {
     help: HelpData;
@@ -123,7 +124,7 @@
       ></span>
       <div
         data-testid="help-title"
-        style="font:600 15px 'JetBrains Mono',monospace;color:#fff;letter-spacing:.2em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+        style="font:600 15px 'JetBrains Mono',monospace;color:#fff;letter-spacing:.2em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
       >
         {help.title}
       </div>
@@ -169,7 +170,7 @@
         <div
           style="font:400 10px 'JetBrains Mono',monospace;color:rgba(223,232,230,.3);letter-spacing:.3em;padding:0 20px 12px"
         >
-          SCOPES
+          Scopes
         </div>
         {#each tabs as t (t.id)}
           <div
@@ -187,7 +188,7 @@
           >
             <div
               class="help-scope-label"
-              style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+              style="font:600 12px 'JetBrains Mono',monospace;letter-spacing:.16em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
             >
               {t.label}
             </div>
@@ -214,15 +215,7 @@
         {#each visibleScopes as scope (scope.id)}
           <div style="margin-bottom:6px">
             <div style="display:flex;align-items:center;gap:12px;padding:12px 30px 10px">
-              <span
-                aria-hidden="true"
-                style="width:11px;height:14px;flex:none;background:#57e2c9;-webkit-mask:url(/assets/spiderman.svg) center/contain no-repeat;mask:url(/assets/spiderman.svg) center/contain no-repeat;display:block"
-              ></span>
-              <div
-                style="font:600 12px 'JetBrains Mono',monospace;color:#57e2c9;letter-spacing:.22em;text-transform:uppercase;white-space:nowrap"
-              >
-                {scope.label}
-              </div>
+              <PanelBadge accent="teal" label={scope.label} inline />
               <div
                 style="flex:1;height:1px;background:repeating-linear-gradient(90deg,rgba(87,226,201,.3) 0 3px,transparent 3px 7px)"
               ></div>
@@ -239,7 +232,7 @@
                 <div style="min-width:0">
                   <div
                     data-testid="help-row-name"
-                    style="font:600 13px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#e6efed;white-space:nowrap;overflow:hidden"
+                    style="font:600 13px 'JetBrains Mono',monospace;letter-spacing:.12em;color:#e6efed;white-space:nowrap;overflow:hidden"
                   >
                     {row.name}
                   </div>
