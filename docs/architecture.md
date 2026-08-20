@@ -86,6 +86,37 @@ Four independent suites, each catching a different class of regression:
 All four gate every change; none is optional for a change that touches the code they
 cover.
 
+### Lessons from the iteration-6 post-mortem
+
+See `docs/post-mortems/2026-08-21-iteration-6.md` for the full account of how 8
+user-visible defects shipped while every one of the four suites above passed. The
+short version: each suite's determinism requirements structurally exclude the exact
+conditions a real first-time visitor experiences — fixture mode disables every
+`infinite` CSS animation and the visual pipeline separately freezes animation at
+capture time, so a dead keyframe renders identically to a live one; the shared e2e
+fixture pre-seeds "boot already seen" for every spec but `boot.spec.ts`, so a
+boot↔notification interaction goes untested from both directions; fixture content is
+fixed-length and never overflows a panel. None of that reflects a lapse in following
+the golden rebaseline procedure below — the sampled rebaselines were all tied to a
+named, deliberate visual-change commit. The fixes it justifies:
+
+- Never verify a CSS animation with `getComputedStyle(el).animationName` — it
+  returns the declared name whether or not that name resolves to a real keyframes
+  rule. Use `el.getAnimations().length > 0` (animation already in effect) or look
+  the name up against `document.styleSheets` for a matching `CSSKeyframesRule`.
+- A component-local `@keyframes` referenced from an inline `style="..."` attribute
+  must use Svelte's global form (`@keyframes -global-<name>`) — Svelte rewrites a
+  plain component-scoped declaration's name but never rewrites the markup that
+  references it, so the two silently stop matching otherwise. See `b885c18` for the
+  convention applied across `NotificationBell.svelte`, `ToastStack.svelte`,
+  `NotificationsPanel.svelte`, and `TimelinePanel.svelte`.
+- A new scrollable/overflowable panel ships with an overflow/scrollability
+  assertion; a new feature touching boot or first-visit state ships with at least
+  one non-fixture, cold-boot e2e check (opt out of the shared fixture's boot-skip,
+  as `tests/e2e/boot.spec.ts` and `tests/e2e/notifications-boot.spec.ts` do).
+- A bug fix lands with both its reproducing test and any fixture data needed to
+  reproduce it, in the same commit.
+
 ### Golden rebaseline policy — never during a refactor
 
 The visual suite's goldens (`tests/visual/goldens/<viewport>/<recipe>.png`) are

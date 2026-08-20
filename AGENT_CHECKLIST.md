@@ -110,6 +110,11 @@ in the same change as any `docs/` edit that affects a convention below.
 - [ ] Gate a non-essential CSS animation behind
       `@media (prefers-reduced-motion: no-preference)`, and disable it entirely
       under `fixtureMode` (site convention — every `infinite` animation must be).
+- [ ] Declare a component-local `@keyframes` referenced from an inline
+      `style="..."` attribute using Svelte's global form
+      (`@keyframes -global-<name>`) — a plain component-scoped declaration
+      never resolves an inline `animation:` reference, since Svelte rewrites
+      the declaration but not the markup that points at it.
 
 ## Performance
 
@@ -125,9 +130,23 @@ in the same change as any `docs/` edit that affects a convention below.
 - [ ] Every time a bug surfaces (self-found or user-reported), write a test that
       covers it — a unit test if the bug is reachable that way, else an
       integration/e2e test, in that order of preference.
+- [ ] Land a bug fix together with BOTH its reproducing test AND any fixture
+      data needed to reproduce it, in the same commit.
 - [ ] Write a unit test for pure logic with no DOM/browser dependency.
 - [ ] Write an e2e test only for user-observable behavior, exercised against a
       real build.
+- [ ] Never verify a CSS animation with
+      `getComputedStyle(el).animationName` — it returns the declared name
+      whether or not that name resolves to a real keyframes rule. Assert
+      `el.getAnimations().length > 0` for an animation already in effect, or
+      look the name up against `document.styleSheets` for a matching
+      `CSSKeyframesRule`.
+- [ ] Ship a new scrollable/overflowable panel with an overflow/scrollability
+      assertion (`overflowY`/`overflowX`, `scrollHeight > clientHeight`,
+      wheel/keyboard scroll actually moves `scrollTop`).
+- [ ] Ship a new feature that interacts with boot or first-visit state with at
+      least one non-fixture, cold-boot e2e check (opt out of the shared e2e
+      fixture's boot-skip, the way `tests/e2e/boot.spec.ts` does).
 - [ ] Keep a visual golden deterministic: seed fixtures, disable/freeze
       animations, mask genuinely non-deterministic content (live measurements,
       timestamps, random picks).
