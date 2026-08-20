@@ -1,6 +1,6 @@
 ---
 sev: warn
-title: Personnel file locked
+title: Employment record locked
 src: personnel
 order: 9
 ---

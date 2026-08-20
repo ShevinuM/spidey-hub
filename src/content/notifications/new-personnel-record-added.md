@@ -1,6 +1,6 @@
 ---
 sev: info
-title: New personnel record added
+title: New employment record added
 src: personnel
 order: 24
 ---

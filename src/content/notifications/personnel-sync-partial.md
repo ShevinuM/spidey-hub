@@ -1,6 +1,6 @@
 ---
 sev: warn
-title: Personnel sync partial
+title: Employment sync partial
 src: personnel
 order: 13
 ---
