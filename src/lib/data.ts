@@ -426,26 +426,26 @@ export const getGrep = (): GrepData => loadYaml<GrepData>("grep.yaml");
 // ---------------------------------------------------------------------------
 
 export interface PersonnelData {
-  pathPrefix: string;
-  insetTitles: { fileBrowser: string; filePreview: string };
-  promptIcon: string;
-  // EmploymentRecords.svelte is a depth-generic directory browser (variable-depth
-  // tree derived from content file paths), so the hint line has exactly two
-  // shapes: `atDir` for any directory row (root or nested — {dir} is
-  // interpolated with the directory's own name, "h goes back" is simply
-  // omitted by the template text at the root since there's nowhere to go
-  // back to) and `atFile` for a role file row. `atRoot` covers the top level
-  // specifically, where h/Backspace never do anything (no "goes back"
-  // clause).
-  hints: { atRoot: string; atDir: string; atFile: string };
-  upEntry: { icon: string; name: string };
-  companyRowIcon: string;
-  roleRowIcon: string;
-  roleCountTemplate: string;
-  roleWordSingular: string;
-  roleWordPlural: string;
-  posTemplate: string;
-  editor: EditorLabels;
+  breadcrumb: string;
+  /** Personnel collection top-level dir segment (org) -> 2-3 char row tag,
+   * e.g. "memorial-university" -> "mun". See EmploymentRecords.svelte v2. */
+  orgTags: Record<string, string>;
+  index: {
+    orgsLabel: string;
+    longestLabel: string;
+    yearsActiveLabel: string;
+    longestSuffix: string;
+    yearsActiveSeparator: string;
+  };
+  fileOwner: string;
+  filePerms: string;
+  badge: {
+    recordsLeft: string;
+    recordsRight: string;
+    previewLeft: string;
+    previewRight: string;
+  };
+  previewLineCountTemplate: string;
 }
 
 export const getPersonnel = (): PersonnelData => loadYaml<PersonnelData>("personnel.yaml");

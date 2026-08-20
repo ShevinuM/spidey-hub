@@ -1,87 +1,40 @@
-# Employment Records (yazi clone) view copy.
-# Source: design/Homepage.dc.html lines 258-320 and Component.renderVals()
-# (xpPath/xpHint templates, lines 1073, 1083).
+# Employment Records (flat list + service timeline) view copy.
+# Source: UI-Mockups/builds-page-design-review/Personnel.dc.html +
+# Personnel-Panel-Changes.md (iteration 6 rebuild — see
+# docs/changes/employment-records-v2.md for the full diff against the old
+# drill-down browser this replaced).
 
-# "/Users/Shev/Experience/" (+ the current directory path when browsing
-# deeper) — Component.renderVals() line 1073.
-pathPrefix: "/Users/Shev/Experience/"
+breadcrumb: "~/employment-records"
 
-insetTitles:
-  fileBrowser: "─ Employment Records ─"
-  filePreview: "File Preview"
+# 2-3 char org tag shown in each row's dim column. Not mechanically
+# derivable from the personnel collection's org directory slug
+# ("memorial-university" is not "mem" in the mockup, it's "mun") — hand
+# authored here, keyed by the collection's top-level directory segment
+# (src/content/personnel/<key>/...).
+orgTags:
+  enaimco: ena
+  memorial-university: mun
 
-promptIcon: ">"
+index:
+  orgsLabel: "orgs"
+  longestLabel: "longest"
+  yearsActiveLabel: "years active"
+  longestSuffix: " mo"
+  yearsActiveSeparator: " – "
 
-# Hint line under the role table / doc pane (Component.renderVals() line
-# 1083). Navigation is now Ctrl-b / status-bar clicks / the dashboard menu,
-# never a bare key, so the hint points at the help window instead.
-#
-# EmploymentRecords.svelte is a
-# depth-generic directory browser, so there are exactly two row-selected
-# hint shapes rather than one per fixed level — `atDir`/`atFile`, plus
-# `atRoot` for the top-level directory listing specifically (where h/
-# Backspace never do anything).
-# {dir}/{file} are interpolated with the selected row's own name.
-hints:
-  atRoot: "enter opens {dir}/ · Ctrl-b ? for help"
-  atDir: "enter opens {dir}/ · h goes back · Ctrl-b ? for help"
-  atFile: "enter opens {file} in nvim · h goes back · Ctrl-b ? for help"
+# ls -l-style file metadata shown in the row list and the preview header —
+# both literal in the mockup, never computed.
+fileOwner: "shev"
+filePerms: ".rw-r--r--"
 
-upEntry:
-  icon: "▸"
-  name: "../"
+# Top-straddling PanelBadge split text (glyph renders between the two
+# words — see PanelBadge.svelte's `left`/`right` split-text mode, added for
+# this page since its badges aren't the `{n} · {label}` shape Repositories'
+# panels use).
+badge:
+  recordsLeft: "Employment"
+  recordsRight: "Records"
+  previewLeft: "File"
+  previewRight: "Preview"
 
-# Row icons are inline SVGs keyed off row
-# kind directly in EmploymentRecords.svelte's template (nvim-tree/lazygit-style
-# folder/file glyphs, since Nerd Fonts aren't bundled) — these two glyph
-# strings (and `upEntry.icon` above) are no longer read by the row markup.
-# Left in place rather than pruned from `PersonnelData` (src/lib/data.ts),
-# which this executor does not own.
-companyRowIcon: "▸"
-roleRowIcon: "▤"
-
-# Directory row meta at ANY depth: the bare count of role files nested
-# anywhere beneath that directory (ls-l-style listings show a bare number,
-# not the "role(s)" word). `roleWord*`
-# below are now unused by EmploymentRecords.svelte's row template but kept in the
-# schema (src/lib/data.ts's PersonnelData) rather than pruned out of scope.
-roleCountTemplate: "{n}"
-roleWordSingular: "role"
-roleWordPlural: "roles"
-
-# File Browser footer position indicator, e.g. "2 / 4" (Component.renderVals()
-# line 1090: `(lvl===1?ri+1:ci+1) + " / " + (...)`) — same `{...}`
-# templating convention every other data.ts template uses (e.g. grep.yaml's
-# `filePosTemplate`, repositories.yaml's `subtitleTemplate`), defined
-# independently here since this file has no dependency on either of those.
-posTemplate: "{n} / {total}"
-
-# Mirrors repositories.yaml's `editor:` section values (Homepage.dc.html lines
-# 317-336: "NORMAL", "⑂ main", "▤", "Top"/"Bot", position templates) —
-# defined independently here, not imported from repositories.yaml, since this file
-# has no dependency on Repositories' data. The role doc pane never scrolls in the
-# prototype (a role doc always fits), so topLabel/bottomLabel/percentTemplate
-# only ever render "Top" here in practice, but EditorLabels requires every
-# field for Editor.svelte's shared status line.
-#
-# This block also carries the same fields as
-# repositories.yaml's — see that file's comment for the full rationale (VISUAL/
-# VISUAL-LINE labels, search/cmdline glyphs, the `[:q]` close pill, and the
-# vim-faithful E21/E45/E492 messages).
-editor:
-  modeLabel: "NORMAL"
-  modeVisualLabel: "VISUAL"
-  modeVisualLineLabel: "VISUAL LINE"
-  branch: "⑂ main"
-  breadcrumbSeparator: "›"
-  closePillLabel: "[:q]"
-  tabIcon: "▤"
-  topLabel: "Top"
-  bottomLabel: "Bot"
-  percentTemplate: "{n}%"
-  positionTemplate: "{line}:{col}"
-  searchPromptGlyph: "/"
-  cmdlinePromptGlyph: ":"
-  readonlyBellMessage: "E21: Cannot make changes, 'modifiable' is off"
-  writeReadonlyMessage: "E45: 'readonly' option is set"
-  notAnEditorCommandTemplate: "E492: Not an editor command: {cmd}"
+previewLineCountTemplate: "{n} lines"

@@ -18,17 +18,27 @@
   // the wrapper keeps the badge from stealing clicks meant for the panel
   // underneath (the mockup's own convention, unchanged here).
   interface Props {
-    /** Panel number shown before the separator, e.g. `0` in "0 · Status". */
-    n: number;
+    /** Panel number shown before the separator, e.g. `0` in "0 · Status".
+     * Omit together with `label` when using `left`/`right` split-text mode
+     * instead (Employment Records' badges — see below). */
+    n?: number;
     /** Panel label shown after the separator, e.g. "Status". */
-    label: string;
+    label?: string;
+    /** Split-text mode: renders `{left} <glyph> {right}` instead of
+     * `{n} · {label}` — the glyph sits BETWEEN two words rather than before
+     * a numbered label (Employment Records' "Employment <glyph> Records" /
+     * "File <glyph> Preview" badges, UI-Mockups Personnel.dc.html). Blue
+     * accent only; pass both or neither. */
+    left?: string;
+    right?: string;
     /** "blue" (default): red-glow/blue-border pill used on every
      * Repositories/Employment Records panel. "teal": Help's section-header
      * pill (spiderman-teal glyph, teal border/glow). */
     accent?: "blue" | "teal";
   }
 
-  const { n, label, accent = "blue" }: Props = $props();
+  const { n, label, left, right, accent = "blue" }: Props = $props();
+  const isSplit = left !== undefined && right !== undefined;
 </script>
 
 <div
@@ -47,13 +57,24 @@
     <span
       style="display:flex;align-items:center;gap:9px;border:1px solid rgba(74,159,224,.5);border-radius:3px;background:rgba(10,14,19,.96);box-shadow:0 0 20px rgba(224,69,60,.18),inset 0 0 14px rgba(74,159,224,.12);padding:2px 13px;font-size:11.5px;letter-spacing:.2em;color:#8fd0f5;white-space:nowrap"
     >
-      <img
-        src="/assets/spider-glyph-red.svg"
-        alt=""
-        aria-hidden="true"
-        style="width:13px;height:13px;display:block;filter:drop-shadow(0 0 6px rgba(224,69,60,.6))"
-      />
-      {n} · {label}
+      {#if isSplit}
+        {left}
+        <img
+          src="/assets/spider-glyph-red.svg"
+          alt=""
+          aria-hidden="true"
+          style="width:13px;height:13px;display:block;filter:drop-shadow(0 0 6px rgba(224,69,60,.6))"
+        />
+        {right}
+      {:else}
+        <img
+          src="/assets/spider-glyph-red.svg"
+          alt=""
+          aria-hidden="true"
+          style="width:13px;height:13px;display:block;filter:drop-shadow(0 0 6px rgba(224,69,60,.6))"
+        />
+        {n} · {label}
+      {/if}
     </span>
   {/if}
 </div>

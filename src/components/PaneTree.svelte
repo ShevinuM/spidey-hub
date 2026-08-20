@@ -218,7 +218,7 @@
         {personnel}
         {personnelEntries}
         {isFocused}
-        onDashboard={() => onWindowSwitch("dashboard")}
+        fixtureMode={repositoriesFixtureMode}
       />
     {:else if node.pane.program === "help"}
       <HelpView bind:this={leafRef} {help} {isFocused} />
