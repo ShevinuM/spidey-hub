@@ -29,14 +29,20 @@
      * per-visit injection, no toasts, and every infinite CSS animation
      * disabled, for deterministic golden capture. */
     fixtureMode: boolean;
+    /** Terminal.svelte's `bootRef?.isActive?.()` closure — passed through
+     * unchanged to NotificationsState so a toast's dismiss timer never arms
+     * while the boot overlay is still hiding it. Optional so a caller with
+     * no boot concept (none exists today) gets today's un-gated behavior. */
+    bootActive?: () => boolean;
   }
 
-  const { notifications, view, fixtureMode }: Props = $props();
+  const { notifications, view, fixtureMode, bootActive }: Props = $props();
 
   const state = new NotificationsState(
     () => notifications,
     () => view,
     () => fixtureMode,
+    bootActive,
   );
 
   export function close(): void {

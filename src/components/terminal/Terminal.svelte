@@ -916,6 +916,7 @@
         {notifications}
         view={core.view!}
         fixtureMode={notificationsFixtureMode}
+        bootActive={() => bootRef?.isActive?.() ?? false}
       />
 
       <PaneTree

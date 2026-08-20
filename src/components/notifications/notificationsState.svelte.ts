@@ -67,14 +67,26 @@ export class NotificationsState {
     private readonly notificationsFn: () => NotificationsData,
     private readonly viewFn: () => ViewId,
     private readonly fixtureModeFn: () => boolean,
+    // Terminal.svelte's own boot-active signal (BootSequence's
+    // `isActive()`, same one its handleKey() gates all input on) — read
+    // here, NOT reinvented, so this effect and Terminal's key gate can never
+    // disagree about whether boot is still running. Defaults to "never
+    // active" so a caller that doesn't pass one (e.g. a future harness) gets
+    // today's un-gated behavior rather than a permanently-stuck timer.
+    private readonly bootActiveFn: () => boolean = () => false,
   ) {
-    // Timers only ARM once a toast is actually visible (view === "home") —
-    // same "don't count down a toast the visitor never had a chance to see"
-    // reasoning the old Toasts.svelte's own armed-effect documented. A toast
-    // injected while browsing Repositories, say, keeps its full duration until the
-    // visitor actually reaches the dashboard.
+    // Timers only ARM once a toast is actually visible (view === "home") AND
+    // boot has finished — same "don't count down a toast the visitor never
+    // had a chance to see" reasoning the old Toasts.svelte's own
+    // armed-effect documented, extended to the boot overlay: a toast that
+    // spawns while boot is still covering the screen keeps its full
+    // duration until boot hands off, instead of racing an invisible
+    // countdown to zero. Reading `bootActiveFn()` here (not `untrack`ed)
+    // is deliberate: it's the effect's whole point to re-run the moment
+    // boot flips from active to inactive, so any toast that arrived during
+    // boot gets armed the instant it becomes visible.
     $effect(() => {
-      if (this.view !== "home" || this.fixtureMode) return;
+      if (this.view !== "home" || this.fixtureMode || this.bootActiveFn()) return;
       for (const t of this.toasts) {
         if (!this.timers.has(t.id)) this.armTimer(t.id, t.durationMs);
       }
