@@ -51,7 +51,7 @@
   import PaneTree from "../PaneTree.svelte";
   import Shell from "../Shell.svelte";
   import Notifications from "../notifications/Notifications.svelte";
-  import GrepOverlay from "../GrepOverlay.svelte";
+  import GrepOverlay from "../grep-overlay/GrepOverlay.svelte";
   import CopyMode from "../CopyMode.svelte";
   import ChooseTree from "../ChooseTree.svelte";
   import BootSequence from "../BootSequence.svelte";
