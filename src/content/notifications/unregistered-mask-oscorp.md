@@ -5,4 +5,4 @@ src: edith/retina-v
 order: 3
 ---
 
-Retina-V confidence 0.91. No match in personnel files.
+Retina-V confidence 0.91. No match in employment records.

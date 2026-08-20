@@ -85,7 +85,7 @@ test.describe("Cmdline: opening", () => {
   const views: { path: string; key?: string }[] = [
     { path: "/" },
     { path: "/builds" },
-    { path: "/personnel" },
+    { path: "/employment" },
     { path: "/retina-v" },
     { path: "/profile" },
     { path: "/help" },
@@ -247,11 +247,11 @@ test.describe("Cmdline: `:` stays literal inside other text inputs", () => {
     await expect(overlay(page)).not.toBeVisible();
   });
 
-  test(": types literally into the Personnel filter, never opening the box", async ({ page }) => {
-    await gotoReady(page, "/personnel");
+  test(": types literally into the Employment filter, never opening the box", async ({ page }) => {
+    await gotoReady(page, "/employment");
     await page.keyboard.press("f");
     await page.keyboard.press(":");
-    await expect(page.locator('[data-testid="personnel-prompt"]')).toContainText(":");
+    await expect(page.locator('[data-testid="employment-prompt"]')).toContainText(":");
     await expect(overlay(page)).not.toBeVisible();
   });
 
@@ -424,27 +424,27 @@ test.describe("Cmdline: editor ex-mode still works through the box", () => {
       },
     },
     {
-      name: "Personnel",
+      name: "Employment",
       async open(page) {
-        await gotoReady(page, "/personnel");
+        await gotoReady(page, "/employment");
         await page.keyboard.press("Enter");
         await page.keyboard.press("Enter");
         await page.keyboard.press("Enter");
         await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
       },
       async assertParentVisible(page) {
-        // There is no `personnel-path` breadcrumb element. Anchor instead
-        // (same convention used in editor-vim.spec.ts's Personnel entry
+        // There is no `employment-path` breadcrumb element. Anchor instead
+        // (same convention used in editor-vim.spec.ts's Employment entry
         // point): role.md is the
         // row this entry point opened, and full-time/ is a sibling
         // directory unique to the enaimco/software-developer/ listing —
         // together they confirm we're back at the exact same listing, not
-        // merely "some" personnel view.
+        // merely "some" employment view.
         await expect(
-          page.locator('[data-testid="personnel-row"][data-row-name="role.md"]'),
+          page.locator('[data-testid="employment-row"][data-row-name="role.md"]'),
         ).toBeVisible();
         await expect(
-          page.locator('[data-testid="personnel-row"][data-row-name="full-time/"]'),
+          page.locator('[data-testid="employment-row"][data-row-name="full-time/"]'),
         ).toBeVisible();
       },
     },
@@ -606,7 +606,7 @@ test.describe("Cmdline: tmux command-prompt mode (executes through the same flow
     await page.keyboard.press(":");
     await typeAndEnter(page, "select-window 2");
     await expect(overlay(page)).not.toBeVisible();
-    await expect(page).toHaveURL(/\/personnel$/);
+    await expect(page).toHaveURL(/\/employment$/);
   });
 
   test("select-window 0 jumps to the dashboard", async ({ page }) => {
@@ -644,7 +644,7 @@ test.describe("Cmdline: tmux command-prompt mode (executes through the same flow
 const VIEW_ROUTE_BY_ACTION: Record<string, RegExp> = {
   "view:home": /\/$/,
   "view:builds": /\/builds$/,
-  "view:personnel": /\/personnel$/,
+  "view:employment": /\/employment$/,
   "view:profile": /\/profile$/,
   "view:retina-v": /\/retina-v$/,
   "view:help": /\/help$/,

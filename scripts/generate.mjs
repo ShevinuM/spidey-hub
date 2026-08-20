@@ -6,10 +6,10 @@
 //     each of the three submodules under repos/ (lazy-fetched by the Builds
 //     island when a repo is opened).
 //  1b. public/generated/repos/all-projects.json — same {name, files} shape,
-//     but built from src/content/projects/*.md (one entry per project doc,
+//     but built from src/content/repositories/*.md (one entry per project doc,
 //     path "<id>.md", lines = the raw file text) instead of a submodule
 //     checkout — backs Builds' virtual "all-projects" repo. Deliberately
-//     reads straight from src/content/projects regardless of
+//     reads straight from src/content/repositories regardless of
 //     PORTFOLIO_FIXTURES (this script has no fixture awareness at all — see
 //     generateRepoIndexes() above it, which has always read the real
 //     repos/ submodules unconditionally);
@@ -213,7 +213,7 @@ async function generateRepoIndexes() {
 
 /**
  * public/generated/repos/all-projects.json — one entry per project doc under
- * src/content/projects/, path "<id>.md" (id = the filename verbatim, same
+ * src/content/repositories/, path "<id>.md" (id = the filename verbatim, same
  * case-preserving rule content.config.ts's generateId uses), lines = the raw
  * file text (frontmatter included — this is a literal file snapshot, not a
  * parsed content-collection entry) split on "\n". Same {name, files} shape
@@ -221,7 +221,7 @@ async function generateRepoIndexes() {
  * Builds component's existing fetch-and-browse flow work on it unmodified.
  */
 function generateAllProjectsIndex() {
-  const srcDir = join(ROOT, "src/content/projects");
+  const srcDir = join(ROOT, "src/content/repositories");
   const outDir = join(ROOT, "public/generated/repos");
   mkdirSync(outDir, { recursive: true });
   const files = [];
@@ -234,7 +234,7 @@ function generateAllProjectsIndex() {
       files.push({ path: entry, lines: content.split("\n") });
     }
   } else {
-    console.warn("[generate] src/content/projects not found — skipping all-projects.json.");
+    console.warn("[generate] src/content/repositories not found — skipping all-projects.json.");
   }
   files.sort((a, b) => a.path.localeCompare(b.path));
   const index = { name: "all-projects", files };

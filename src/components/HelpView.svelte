@@ -62,7 +62,7 @@
     filterFocused = true;
   }
 
-  /** Reused delegation contract — see Personnel.svelte's own `isEditorOpen`
+  /** Reused delegation contract — see EmploymentRecords.svelte's own `isEditorOpen`
    * comment for the shared reasoning. While the filter box is "focused"
    * every keystroke must land in the query, never reboot/open grep/open the
    * command search out from under it (Terminal.svelte's `paneIsGreedy`). */

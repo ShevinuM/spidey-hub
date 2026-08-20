@@ -429,7 +429,7 @@ export interface PersonnelData {
   pathPrefix: string;
   insetTitles: { fileBrowser: string; filePreview: string };
   promptIcon: string;
-  // Personnel.svelte is a depth-generic directory browser (variable-depth
+  // EmploymentRecords.svelte is a depth-generic directory browser (variable-depth
   // tree derived from content file paths), so the hint line has exactly two
   // shapes: `atDir` for any directory row (root or nested — {dir} is
   // interpolated with the directory's own name, "h goes back" is simply

@@ -5,4 +5,4 @@ src: tmux/daemon
 order: 21
 ---
 
-Personnel files restored from snapshot 0x4f.
+Employment records restored from snapshot 0x4f.

@@ -9,7 +9,7 @@
 //
 // The window list has six real windows (0:dashboard through 5:help), and
 // bare q/Esc never switch views anywhere — Esc is reserved for modal-exit
-// roles only (grep close, personnel filter exit, prefix cancel), never a
+// roles only (grep close, employment filter exit, prefix cancel), never a
 // view switch. Every test below drives navigation via a status-bar click
 // instead (see `goDashboard()`), and the dedicated q/Esc describe block
 // asserts NO navigation happens, in every view.
@@ -31,7 +31,7 @@ async function statusBarText(page: Page) {
  * the expected string instead of hand-writing it at each call site (a
  * future renumbering/extension of the window list would otherwise touch
  * ~20 literals). */
-const WINDOWS = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"];
+const WINDOWS = ["dashboard", "builds", "employment", "retina-v", "profile", "help"];
 /** `lastId` (real tmux fidelity) is the real tmux `-` flag on the
  * session's PREVIOUSLY active window —
  * omit it for assertions made before any in-test window switch (a fresh
@@ -85,11 +85,11 @@ test.describe("view switching + status bar (bug fix 1: numeric order)", () => {
     expect(await statusBarText(page)).toBe(winText("builds", "dashboard"));
   });
 
-  test("Ctrl-b 2 switches to personnel", async ({ page }) => {
+  test("Ctrl-b 2 switches to employment", async ({ page }) => {
     await gotoReady(page, "/");
     await prefixDigit(page, "2");
-    await expect(page).toHaveURL(/\/personnel$/);
-    expect(await statusBarText(page)).toBe(winText("personnel", "dashboard"));
+    await expect(page).toHaveURL(/\/employment$/);
+    expect(await statusBarText(page)).toBe(winText("employment", "dashboard"));
   });
 
   test("Ctrl-b 4 switches to profile", async ({ page }) => {
@@ -99,7 +99,7 @@ test.describe("view switching + status bar (bug fix 1: numeric order)", () => {
     expect(await statusBarText(page)).toBe(winText("profile", "dashboard"));
   });
 
-  test("Ctrl-b 3 switches to retina-v — renders BETWEEN personnel and profile (bug fix 1)", async ({ page }) => {
+  test("Ctrl-b 3 switches to retina-v — renders BETWEEN employment and profile (bug fix 1)", async ({ page }) => {
     await gotoReady(page, "/");
     await prefixDigit(page, "3");
     await expect(page).toHaveURL(/\/retina-v$/);
@@ -163,7 +163,7 @@ test.describe("status bar navigation (mouse)", () => {
     let prev = "dashboard";
     for (const [id, route] of [
       ["builds", "/builds"],
-      ["personnel", "/personnel"],
+      ["employment", "/employment"],
       ["retina-v", "/retina-v"],
       ["profile", "/profile"],
       ["help", "/help"],
@@ -194,11 +194,11 @@ test.describe("status bar navigation (mouse)", () => {
 
 test.describe("URL sync + back/forward", () => {
   test("pushState on switch, popstate on back/forward", async ({ page }) => {
-    // Drives home -> personnel -> home -> profile to get three distinct
+    // Drives home -> employment -> home -> profile to get three distinct
     // history entries to navigate between.
     await gotoReady(page, "/");
     await prefixDigit(page, "2");
-    await expect(page).toHaveURL(/\/personnel$/);
+    await expect(page).toHaveURL(/\/employment$/);
     await goDashboard(page);
     await prefixDigit(page, "4");
     await expect(page).toHaveURL(/\/profile$/);
@@ -208,12 +208,12 @@ test.describe("URL sync + back/forward", () => {
     expect(await statusBarText(page)).toBe(winText("dashboard", "profile"));
 
     await page.goBack();
-    await expect(page).toHaveURL(/\/personnel$/);
-    expect(await statusBarText(page)).toBe(winText("personnel", "dashboard"));
+    await expect(page).toHaveURL(/\/employment$/);
+    expect(await statusBarText(page)).toBe(winText("employment", "dashboard"));
 
     await page.goForward();
     await expect(page).toHaveURL(/\/$/);
-    expect(await statusBarText(page)).toBe(winText("dashboard", "personnel"));
+    expect(await statusBarText(page)).toBe(winText("dashboard", "employment"));
 
     await page.goForward();
     await expect(page).toHaveURL(/\/profile$/);
@@ -366,7 +366,7 @@ test.describe("wallpaper blur/darken behind windowed views", () => {
     return page.locator('[data-testid="wallpaper-layer"]').evaluate((el) => getComputedStyle(el).filter);
   }
 
-  test("dashboard/builds/personnel views blur+darken the wallpaper", async ({ page }) => {
+  test("dashboard/builds/employment views blur+darken the wallpaper", async ({ page }) => {
     await gotoReady(page, "/");
     let filter = await wallpaperFilter(page);
     expect(filter).toContain("blur");
@@ -377,7 +377,7 @@ test.describe("wallpaper blur/darken behind windowed views", () => {
     expect(filter).toContain("blur");
     expect(filter).toMatch(/brightness/);
 
-    await gotoReady(page, "/personnel");
+    await gotoReady(page, "/employment");
     filter = await wallpaperFilter(page);
     expect(filter).toContain("blur");
     expect(filter).toMatch(/brightness/);

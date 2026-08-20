@@ -96,7 +96,7 @@
     helpSearch: HelpSearchData;
     shell: ShellData;
     chooseTree: ChooseTreeData;
-    projects: CollectionEntry<"projects">[];
+    projects: CollectionEntry<"repositories">[];
     personnelEntries: CollectionEntry<"personnel">[];
     commitsByRepo: Record<string, Commit[]>;
   }
@@ -127,7 +127,7 @@
    * except "shell") — Shell.svelte's own
    * bare-command/`open <view>` validation, and the palette this file's
    * `viewIdToProgram`/`programToViewId` bridge already agrees with. */
-  const VIEW_NAMES = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"] as const;
+  const VIEW_NAMES = ["dashboard", "builds", "employment", "retina-v", "profile", "help"] as const;
 
   /** Every in-pane Shell instance is "pane" mode; the one host-shell
    * instance rendered directly below (not through PaneTree) is "host" mode —
@@ -729,8 +729,8 @@
      * editor scroll chord" gate every ref has always used. Whether the
      * widened (scroll-chord-permitting) gate applies is a CAPABILITY check
      * (does this ref export `isEditorOpen` at all?) rather than an
-     * identity check (`view === "builds"/"personnel"`) — only
-     * Builds/Personnel ever do. Returns whether the key was consumed. */
+     * identity check (`view === "builds"/"employment"`) — only
+     * Builds/EmploymentRecords ever do. Returns whether the key was consumed. */
     function tryFocusedRef(): boolean {
       const ref = activeRef();
       if (!ref?.handleKey) return false;

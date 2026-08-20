@@ -4,7 +4,7 @@
 // relative path, no directory nodes. Builds.svelte fetches that JSON lazily
 // (client-side, real `fetch`, not a build-time import — the file lives
 // under `public/`) and calls the functions below to derive one directory
-// "level" at a time, mirroring how the Files/Personnel panels already
+// "level" at a time, mirroring how the Files/EmploymentRecords panels already
 // present one flat list per screen.
 //
 // A file's `lines` is plain text UNLESS `tok` is set, in which case it's a

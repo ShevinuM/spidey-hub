@@ -26,10 +26,10 @@ const realIndex = JSON.parse(readFileSync(join(ROOT, "public/generated/grep-inde
  * paths (data/*.yaml, lib/*.ts, pages/*.astro, tests/**, root configs) is
  * asserted null below, not merely spot-checked.
  */
-function expectedView(path: string): "personnel" | "builds" | "retina-v" | "profile" | null {
-  if (/^src\/content\/personnel\//.test(path)) return "personnel";
-  if (/^src\/content\/projects\//.test(path)) return "builds";
-  if (path === "src/components/Personnel.svelte") return "personnel";
+function expectedView(path: string): "employment" | "builds" | "retina-v" | "profile" | null {
+  if (/^src\/content\/personnel\//.test(path)) return "employment";
+  if (/^src\/content\/repositories\//.test(path)) return "builds";
+  if (path === "src/components/employment-records/EmploymentRecords.svelte") return "employment";
   if (path === "src/components/builds/Builds.svelte") return "builds";
   if (path === "src/components/Wallpaper.svelte") return "retina-v";
   if (path === "src/components/Profile.svelte") return "profile";
@@ -50,7 +50,7 @@ test("every path in the real grep index routes exactly as hand-audited (no false
   assert.deepEqual(mismatches, []);
 });
 
-test("routed paths are exactly the personnel content dir, the projects content dir, and the 4 named components", () => {
+test("routed paths are exactly the personnel content dir, the repositories content dir, and the 4 named components", () => {
   const routed = realIndex.filter(({ path }) => grepPathToView(path) !== null).map((f) => f.path);
   const expectedRouted = realIndex.filter(({ path }) => expectedView(path) !== null).map((f) => f.path);
   assert.deepEqual([...routed].sort(), [...expectedRouted].sort());
@@ -71,7 +71,7 @@ test("a hypothetical future real path containing the legacy bare words does NOT 
   assert.equal(grepPathToView("src/components/RadarBlip.svelte"), null);
 });
 
-test("variable-depth personnel content paths (path-derived tree) route to personnel", () => {
+test("variable-depth personnel content paths (path-derived tree) route to employment", () => {
   // grepPathToView's real-index rule is a depth-agnostic prefix match
   // (`(^|\/)content\/personnel\/`), so the
   // variable-depth tree (2-5 path segments — enaimco/software-developer/
@@ -79,9 +79,9 @@ test("variable-depth personnel content paths (path-derived tree) route to person
   // memorial-university/<slug>/role.md) needs no code change here — this
   // test locks that in explicitly rather than relying solely on the
   // generated-index comparison above.
-  assert.equal(grepPathToView("src/content/personnel/enaimco/software-developer/role.md"), "personnel");
-  assert.equal(grepPathToView("src/content/personnel/enaimco/software-developer/full-time/role.md"), "personnel");
-  assert.equal(grepPathToView("src/content/personnel/memorial-university/computer-science-tutor/role.md"), "personnel");
+  assert.equal(grepPathToView("src/content/personnel/enaimco/software-developer/role.md"), "employment");
+  assert.equal(grepPathToView("src/content/personnel/enaimco/software-developer/full-time/role.md"), "employment");
+  assert.equal(grepPathToView("src/content/personnel/memorial-university/computer-science-tutor/role.md"), "employment");
 });
 
 test("fixture-only legacy paths (all under src/) never route via the bare-word fallback", () => {
@@ -102,7 +102,7 @@ test("fixture-only legacy paths (all under src/) never route via the bare-word f
 });
 
 test("viewToTmuxBinding looks up the live window number, never a fixed table", () => {
-  const windowNumbers = { dashboard: 0, builds: 1, personnel: 2, "retina-v": 3, profile: 4, help: 5 };
+  const windowNumbers = { dashboard: 0, builds: 1, employment: 2, "retina-v": 3, profile: 4, help: 5 };
   assert.equal(viewToTmuxBinding("builds", windowNumbers), "C-b 1");
   assert.equal(viewToTmuxBinding("help", windowNumbers), "C-b 5");
 

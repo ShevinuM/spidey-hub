@@ -5,7 +5,7 @@
   // GrepOverlay), reused across every view: each view marks its own
   // "primary pane" with a bare `data-copy-source` attribute (Editor.svelte's
   // scroller — shared by both Builds and Personnel's file editor —,
-  // Builds.svelte's currently-FOCUSED panel, Personnel.svelte's row list,
+  // Builds.svelte's currently-FOCUSED panel, EmploymentRecords.svelte's row list,
   // Profile.svelte's summary block, Wallpaper.svelte's left HUD `<pre>`
   // (only while `view === "retina-v"`), HelpView.svelte's scroller, and
   // Dashboard.svelte's menu). Exactly one such element exists in the DOM at

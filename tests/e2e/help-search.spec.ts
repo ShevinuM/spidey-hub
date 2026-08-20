@@ -48,7 +48,7 @@ test.describe("HelpSearch: opening", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  for (const path of ["/", "/builds", "/personnel", "/retina-v", "/profile", "/help"]) {
+  for (const path of ["/", "/builds", "/employment", "/retina-v", "/profile", "/help"]) {
     test(`? opens the palette from ${path}`, async ({ page }) => {
       await gotoReady(page, path);
       await page.keyboard.press("?");

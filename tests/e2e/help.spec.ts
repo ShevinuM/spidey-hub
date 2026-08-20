@@ -252,6 +252,6 @@ test.describe("Help: status bar", () => {
     const text = (await page.locator('[data-testid="status-bar-windows"]').innerText())
       .replace(/\s+/g, " ")
       .trim();
-    expect(text).toBe("0:dashboard 1:builds 2:personnel 3:retina-v 4:profile 5:help*");
+    expect(text).toBe("0:dashboard 1:builds 2:employment 3:retina-v 4:profile 5:help*");
   });
 });

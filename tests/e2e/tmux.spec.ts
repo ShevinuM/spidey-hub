@@ -22,7 +22,7 @@ async function statusBarText(page: Page) {
   return (await page.locator(STATUS_BAR).innerText()).replace(/\s+/g, " ").trim();
 }
 
-const WINDOWS = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"];
+const WINDOWS = ["dashboard", "builds", "employment", "retina-v", "profile", "help"];
 /** `lastId` (real tmux fidelity) is the real tmux `-` flag on the
  * session's PREVIOUSLY active window —
  * omit it for assertions made before any in-test window switch. */
@@ -41,12 +41,12 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("Ctrl-b 2 switches to personnel", async ({ page }) => {
+  test("Ctrl-b 2 switches to employment", async ({ page }) => {
     await gotoReady(page, "/");
     await ctrlB(page);
     await page.keyboard.press("2");
-    await expect(page).toHaveURL(/\/personnel$/);
-    expect(await statusBarText(page)).toBe(winText("personnel", "dashboard"));
+    await expect(page).toHaveURL(/\/employment$/);
+    expect(await statusBarText(page)).toBe(winText("employment", "dashboard"));
   });
 
   test("Ctrl-b 1/3/4 switch to builds/retina-v/profile", async ({ page }) => {
@@ -80,7 +80,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     expect(await statusBarText(page)).toBe(winText("help", "dashboard"));
   });
 
-  test("Ctrl-b n cycles dashboard -> builds -> personnel -> retina-v -> profile -> help -> dashboard", async ({
+  test("Ctrl-b n cycles dashboard -> builds -> employment -> retina-v -> profile -> help -> dashboard", async ({
     page,
   }) => {
     await gotoReady(page, "/builds");
@@ -88,7 +88,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
 
     await ctrlB(page);
     await page.keyboard.press("n");
-    await expect(page).toHaveURL(/\/personnel$/);
+    await expect(page).toHaveURL(/\/employment$/);
 
     await ctrlB(page);
     await page.keyboard.press("n");
@@ -132,7 +132,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
 
     await ctrlB(page);
     await page.keyboard.press("p");
-    await expect(page).toHaveURL(/\/personnel$/);
+    await expect(page).toHaveURL(/\/employment$/);
 
     await ctrlB(page);
     await page.keyboard.press("p");
@@ -241,7 +241,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await ctrlB(page);
     await page.keyboard.press("2");
     // The view switched...
-    await expect(page).toHaveURL(/\/personnel$/);
+    await expect(page).toHaveURL(/\/employment$/);
     // ...and the "2" was consumed by the prefix, not typed into the grep
     // query (proven indirectly: the overlay is gone entirely below, but if
     // the prefix hadn't consumed it first the query would still show a
@@ -324,13 +324,13 @@ test.describe("status bar `-` flag: the previously-active window (real tmux fide
     await gotoReady(page, "/");
     await ctrlB(page);
     await page.keyboard.press("2");
-    await expect(page).toHaveURL(/\/personnel$/);
-    expect(await statusBarText(page)).toBe(winText("personnel", "dashboard"));
+    await expect(page).toHaveURL(/\/employment$/);
+    expect(await statusBarText(page)).toBe(winText("employment", "dashboard"));
 
     await ctrlB(page);
     await page.keyboard.press("1");
     await expect(page).toHaveURL(/\/builds$/);
-    expect(await statusBarText(page)).toBe(winText("builds", "personnel"));
+    expect(await statusBarText(page)).toBe(winText("builds", "employment"));
   });
 });
 
@@ -428,8 +428,8 @@ test.describe("Ctrl-b & kill-window", () => {
     await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
     await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(0);
     // builds (index 1) was active; the window that sits right after
-    // it — personnel (index 2) — becomes the new active view.
-    await expect(page).toHaveURL(/\/personnel$/);
+    // it — employment (index 2) — becomes the new active view.
+    await expect(page).toHaveURL(/\/employment$/);
   });
 
   test("n cancels — nothing removed, view unchanged", async ({ page }) => {
@@ -498,7 +498,7 @@ test.describe("Ctrl-b c new-window", () => {
 
     await expect(page.locator('[data-testid="shell-prompt"]')).toBeVisible();
     expect(await statusBarText(page)).toBe(
-      "0:dashboard- 1:builds 2:personnel 3:retina-v 4:profile 5:help 6:zsh*",
+      "0:dashboard- 1:builds 2:employment 3:retina-v 4:profile 5:help 6:zsh*",
     );
     // A pane program switch never navigates — the URL freezes wherever it
     // was, exactly like `:q`'s own exitActiveProgram (same `programToViewId
@@ -602,7 +602,7 @@ test.describe("prompt keyboard ownership vs. the prefix system", () => {
     const prompt = page.locator('[data-testid="status-prompt"]');
     await expect(prompt).toContainText("(rename-window) dashboard");
 
-    // A digit target — would normally jump straight to personnel.
+    // A digit target — would normally jump straight to employment.
     await ctrlB(page);
     await page.keyboard.press("2");
     await expect(page).toHaveURL(/\/$/);
@@ -639,8 +639,8 @@ test.describe("prompt keyboard ownership vs. the prefix system", () => {
     await expect(page.locator('[data-testid="status-bar-window"][data-window-id="dashboard"]')).toHaveText(
       "0:dashboardZZZ*",
     );
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="personnel"]')).toHaveText(
-      "2:personnel",
+    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="employment"]')).toHaveText(
+      "2:employment",
     );
   });
 
@@ -653,7 +653,7 @@ test.describe("prompt keyboard ownership vs. the prefix system", () => {
     const confirm = page.locator('[data-testid="status-confirm"]');
     await expect(confirm).toHaveText("kill-window builds? (y/n)");
 
-    // A digit target — would normally jump straight to personnel.
+    // A digit target — would normally jump straight to employment.
     await ctrlB(page);
     await page.keyboard.press("2");
     await expect(page).toHaveURL(/\/builds$/);
@@ -677,7 +677,7 @@ test.describe("prompt keyboard ownership vs. the prefix system", () => {
     await page.keyboard.press("y");
     await expect(confirm).not.toBeVisible();
     await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(0);
-    await expect(page).toHaveURL(/\/personnel$/);
+    await expect(page).toHaveURL(/\/employment$/);
   });
 
   test("Ctrl-b ] still pastes into the rename prompt (regression guard: the prompt-active gate must not swallow ])", async ({
@@ -739,8 +739,8 @@ test.describe("grep is window chrome, the status bar is session chrome", () => {
     await page.keyboard.press("/");
     await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
 
-    await page.locator('[data-testid="status-bar-window"][data-window-id="personnel"]').click();
-    await expect(page).toHaveURL(/\/personnel$/);
+    await page.locator('[data-testid="status-bar-window"][data-window-id="employment"]').click();
+    await expect(page).toHaveURL(/\/employment$/);
     await expect(page.locator('[data-testid="grep-overlay"]')).not.toBeVisible();
 
     await page.keyboard.press("/");

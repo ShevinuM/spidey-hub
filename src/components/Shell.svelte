@@ -183,7 +183,7 @@
   // -----------------------------------------------------------------------
   // `vim`/`vi`/`nvim <file>` — reuses the
   // exact same "editorFile local state + embedded <Editor>" pattern
-  // Builds.svelte/Personnel.svelte already use for the read-only file
+  // Builds.svelte/EmploymentRecords.svelte already use for the read-only file
   // viewer, so it gets the SAME site-wide Cmdline ex-mode / Ctrl-d/u/f/b
   // scroll-chord integration those two already have for free (Terminal.
   // svelte's generic per-pane ref registry only needs `isEditorOpen`/
@@ -231,7 +231,7 @@
   }
 
   /** Exposed for Terminal.svelte's generic per-pane ref registry — same
-   * capability-check contract Builds.svelte/Personnel.svelte's own
+   * capability-check contract Builds.svelte/EmploymentRecords.svelte's own
    * `isEditorOpen` already provides (gates the Ctrl-d/u/f/b scroll chords
    * and picks ex-mode vs. site-mode for the bare `:` fallback opener). */
   export function isEditorOpen(): boolean {

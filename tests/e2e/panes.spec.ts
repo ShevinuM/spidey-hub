@@ -205,7 +205,7 @@ test.describe("Ctrl-b x real kill-pane", () => {
     await expect(statusConfirm(page)).toHaveText("kill-pane 0? (y/n)");
     await page.keyboard.press("y");
     await expect(page.locator('[data-testid="status-bar-window"][data-window-id="builds"]')).toHaveCount(0);
-    await expect(page).toHaveURL(/\/personnel$/);
+    await expect(page).toHaveURL(/\/employment$/);
   });
 
   test("killing the last pane of the last window cascades all the way to [exited]", async ({ page }) => {

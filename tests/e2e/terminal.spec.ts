@@ -19,7 +19,7 @@ async function statusBarText(page: Page) {
 /** Same six-window table as nav.spec.ts/tmux.spec.ts — kept as a local copy
  * per this suite's own convention rather than a shared import, matching how
  * every other e2e spec hand-mirrors this list. */
-const WINDOWS = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"];
+const WINDOWS = ["dashboard", "builds", "employment", "retina-v", "profile", "help"];
 function winText(activeId: string, lastId?: string): string {
   return WINDOWS.map((id, i) => `${i}:${id}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
 }
@@ -49,9 +49,9 @@ test.describe("view routing on direct navigation", () => {
     await expect(page.locator('[data-testid="builds-repo-row"]').first()).toBeVisible();
     expect(await statusBarText(page)).toBe(winText("builds"));
 
-    await gotoReady(page, "/personnel");
-    await expect(page.locator('[data-testid="personnel-pos"]')).toBeVisible();
-    expect(await statusBarText(page)).toBe(winText("personnel"));
+    await gotoReady(page, "/employment");
+    await expect(page.locator('[data-testid="employment-pos"]')).toBeVisible();
+    expect(await statusBarText(page)).toBe(winText("employment"));
 
     await gotoReady(page, "/retina-v");
     await expect(page.locator('[data-testid="wallpaper-layer"]')).toHaveCSS("filter", "none");
@@ -77,7 +77,7 @@ test.describe("tmux prefix: arm, digit dispatch, single-shot disarm", () => {
     let prev = "dashboard";
     for (const [digit, id] of [
       ["1", "builds"],
-      ["2", "personnel"],
+      ["2", "employment"],
       ["3", "retina-v"],
       ["4", "profile"],
       ["5", "help"],
@@ -112,7 +112,7 @@ test.describe("tmux prefix: arm, digit dispatch, single-shot disarm", () => {
     await page.keyboard.press("1");
     await expect(page).toHaveURL(/\/builds$/);
 
-    // An unprefixed "2" right after does NOT re-arm/jump to personnel — it's
+    // An unprefixed "2" right after does NOT re-arm/jump to employment — it's
     // consumed (if at all) by Builds' own bare-digit panel-focus handling,
     // exactly like tmux.spec.ts's "a prefixed ArrowDown" test proves the
     // reverse precedence (prefix-consumes-first) using panel [3].
@@ -135,7 +135,7 @@ test.describe("global `r` reboot backstop reaches every view except Profile's ow
   // the ~4.6s sequence for each one.
   for (const [path, urlPattern] of [
     ["/builds", /\/builds$/],
-    ["/personnel", /\/personnel$/],
+    ["/employment", /\/employment$/],
     ["/retina-v", /\/retina-v$/],
     ["/help", /\/help$/],
   ] as const) {
@@ -213,14 +213,14 @@ test.describe("status bar active-window highlight", () => {
   }) => {
     await gotoReady(page, "/");
     expect(await bg(page, "dashboard")).toBe("rgb(224, 69, 60)");
-    for (const id of ["builds", "personnel", "retina-v", "profile", "help"]) {
+    for (const id of ["builds", "employment", "retina-v", "profile", "help"]) {
       expect(await bg(page, id)).not.toBe("rgb(224, 69, 60)");
     }
 
     await ctrlB(page);
     await page.keyboard.press("2");
-    await expect(page).toHaveURL(/\/personnel$/);
-    expect(await bg(page, "personnel")).toBe("rgb(224, 69, 60)");
+    await expect(page).toHaveURL(/\/employment$/);
+    expect(await bg(page, "employment")).toBe("rgb(224, 69, 60)");
     expect(await bg(page, "dashboard")).not.toBe("rgb(224, 69, 60)");
   });
 });

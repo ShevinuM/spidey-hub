@@ -54,9 +54,9 @@ test.describe("Copy mode (Ctrl-b [)", () => {
       },
     },
     {
-      name: "personnel row list",
+      name: "employment row list",
       async open(page) {
-        await gotoReady(page, "/personnel");
+        await gotoReady(page, "/employment");
       },
     },
     {

@@ -210,7 +210,7 @@ test.describe("session-once skip", () => {
     await page.keyboard.press("b");
     await page.keyboard.up("Control");
     await page.keyboard.press("2");
-    await expect(page).toHaveURL(/\/personnel$/);
+    await expect(page).toHaveURL(/\/employment$/);
   });
 
   test("a deep link also skips boot when the flag is already set", async ({ page }) => {

@@ -89,7 +89,7 @@
      property (short of `!important`), so a hover rule can only ever take
      effect on a property the inline style never touches. This mirrors the
      row/tab hover convention already used in Builds.svelte, Dashboard.svelte
-     and Personnel.svelte. */
+     and EmploymentRecords.svelte. */
   .eh-toast-drain {
     animation: drain var(--drain-ms) linear forwards;
   }

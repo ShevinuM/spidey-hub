@@ -27,7 +27,7 @@ async function openChooseTree(page: Page) {
 async function detach(page: Page) {
   await prefixed(page, "d");
   // Waits for the host shell to actually mount before the caller types into
-  // it — Personnel/Builds's own teardown effects can otherwise leave a
+  // it — Employment/Builds's own teardown effects can otherwise leave a
   // narrow window where the very first keystrokes race the PaneTree ->
   // host-Shell swap.
   await page.locator('[data-shell-mode="host"]').waitFor({ state: "visible" });
@@ -100,7 +100,7 @@ test.describe("choose-tree navigation (arrows/h/l)", () => {
     await page.keyboard.press("ArrowDown");
     await expect(selectedRow(page)).toHaveAttribute("data-window-id", "builds");
     await page.keyboard.press("ArrowDown");
-    await expect(selectedRow(page)).toHaveAttribute("data-window-id", "personnel");
+    await expect(selectedRow(page)).toHaveAttribute("data-window-id", "employment");
     await page.keyboard.press("ArrowUp");
     await expect(selectedRow(page)).toHaveAttribute("data-window-id", "builds");
   });
@@ -160,14 +160,14 @@ test.describe("choose-tree Enter switches window/session; x kills; q/Esc close",
   }) => {
     await gotoReady(page, "/builds");
     await openChooseTree(page);
-    await page.keyboard.press("ArrowDown"); // personnel row (index 2)
+    await page.keyboard.press("ArrowDown"); // employment row (index 2)
     await page.keyboard.press("x");
     await expect(killConfirm(page)).toHaveText("Kill window 2? (y/n)");
     await page.keyboard.press("Y"); // case-insensitive — the real tmux quirk
     await expect(killConfirm(page)).not.toBeVisible();
     await expect(overlay(page)).toBeVisible(); // stays open after a kill
     await expect(windowRows(page)).toHaveCount(5);
-    await expect(windowRows(page).filter({ hasText: "personnel" })).toHaveCount(0);
+    await expect(windowRows(page).filter({ hasText: "employment" })).toHaveCount(0);
   });
 
   test("any OTHER key cancels just the kill sub-prompt, leaving the overlay open", async ({ page }) => {
@@ -260,7 +260,7 @@ test.describe("choose-tree does NOT open competing modals while open (window-chr
     await openChooseTree(page);
     await prefixed(page, "2");
     await expect(overlay(page)).not.toBeVisible();
-    await expect(page).toHaveURL(/\/personnel$/);
+    await expect(page).toHaveURL(/\/employment$/);
   });
 
   test("Ctrl-b d still detaches from within an open choose-tree, closing it", async ({ page }) => {
@@ -323,7 +323,7 @@ test.describe("choose-tree across sessions (create a second session via the host
   });
 
   test("Enter on a SESSION row (not a window row) attaches it without changing its active window", async ({ page }) => {
-    await gotoReady(page, "/personnel");
+    await gotoReady(page, "/employment");
     await createAndAttachSecondSession(page);
     await openChooseTree(page);
 
@@ -333,8 +333,8 @@ test.describe("choose-tree across sessions (create a second session via the host
 
     await expect(overlay(page)).not.toBeVisible();
     await expect(sessionLabel(page)).toHaveText("Session: 10.42.7.13");
-    // Stayed on whichever window that session already had active (personnel).
-    await expect(page).toHaveURL(/\/personnel$/);
+    // Stayed on whichever window that session already had active (employment).
+    await expect(page).toHaveURL(/\/employment$/);
   });
 
   test("x on a session row prompts Kill session {name}? (y/n); y kills every window in it", async ({ page }) => {

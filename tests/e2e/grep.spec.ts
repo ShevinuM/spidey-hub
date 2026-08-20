@@ -96,10 +96,10 @@ test.describe("Grep overlay", () => {
     await expect(modeText(page)).toHaveText("live_grep · shevinum.dev@main");
   });
 
-  test("Enter on a personnel content hit lands in the personnel view", async ({ page }) => {
+  test("Enter on an employment content hit lands in the employment view", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
-    // The co-op role's own frontmatter `role:` line: personnel content is a
+    // The co-op role's own frontmatter `role:` line: personnel-collection content is a
     // path-derived tree where every leaf is literally named "role.md" — that
     // bare filename alone is not a unique search term across the whole
     // index, since it's also a substring of test files/fixtures that
@@ -113,14 +113,14 @@ test.describe("Grep overlay", () => {
     );
     await page.keyboard.press("Enter");
     await expect(overlay(page)).not.toBeVisible();
-    // There is no `personnel-path` breadcrumb element. GrepOverlay's own
+    // There is no `employment-path` breadcrumb element. GrepOverlay's own
     // routing (`grepPathToView`, src/lib/views.ts) is coarse — it only
-    // switches the active VIEW to "personnel", it never deep-links to the
+    // switches the active VIEW to "employment", it never deep-links to the
     // specific directory the hit lives in — so the real claim here is just
-    // "we landed on the personnel view", never anything path-specific;
-    // `personnel-preview` (unconditionally rendered by the Personnel view)
+    // "we landed on the employment view", never anything path-specific;
+    // `employment-preview` (unconditionally rendered by the EmploymentRecords view)
     // is the equivalent-strength anchor for that claim.
-    await expect(page.locator('[data-testid="personnel-preview"]')).toBeVisible();
+    await expect(page.locator('[data-testid="employment-preview"]')).toBeVisible();
   });
 
   test("Enter on a Builds.svelte hit lands in the builds view", async ({ page }) => {
@@ -202,10 +202,10 @@ test.describe("Grep overlay", () => {
     await expect(rows(page).first()).toHaveAttribute("data-selected", "true");
   });
 
-  test("/ inside the personnel editor searches the buffer instead of opening grep (editor gets first refusal)", async ({
+  test("/ inside the employment editor searches the buffer instead of opening grep (editor gets first refusal)", async ({
     page,
   }) => {
-    await gotoReady(page, "/personnel");
+    await gotoReady(page, "/employment");
     await page.keyboard.press("Enter"); // -> enaimco/ (single child: software-developer/)
     await page.keyboard.press("Enter"); // -> that type's role files level
     await page.keyboard.press("Enter"); // -> editor
@@ -236,25 +236,25 @@ test.describe("Grep overlay", () => {
     await expect(page.locator('[data-testid="editor-mode"]')).toHaveText("NORMAL");
   });
 
-  test("/ while personnel filter mode is active appends to the query; grep must NOT open", async ({ page }) => {
-    // Personnel's `isEditorOpen()` reports `true` while `filterMode` is
+  test("/ while employment filter mode is active appends to the query; grep must NOT open", async ({ page }) => {
+    // EmploymentRecords's `isEditorOpen()` reports `true` while `filterMode` is
     // active, which makes Terminal's greedy-pane gate give the filter prompt
     // first refusal over grep's own "/" opener — "/" typed into an active
     // filter prompt must be typed into the query, not preventDefault'd into
-    // opening grep (see tests/e2e/personnel.spec.ts's "REPRO + FIX" test for
+    // opening grep (see tests/e2e/employment.spec.ts's "REPRO + FIX" test for
     // the root-cause trace). Note: "/" pressed BEFORE entering filter mode
     // still opens grep unconditionally — an intentional, documented
-    // limitation (personnel.spec.ts's own "KNOWN LIMITATION" test), not
+    // limitation (employment.spec.ts's own "KNOWN LIMITATION" test), not
     // something this test exercises.
-    await gotoReady(page, "/personnel");
+    await gotoReady(page, "/employment");
     await page.keyboard.press("Enter"); // -> enaimco/ (single child: software-developer/)
     await page.keyboard.press("f"); // -> filter mode
-    await expect(page.locator('[data-testid="personnel-prompt"]')).toBeVisible();
+    await expect(page.locator('[data-testid="employment-prompt"]')).toBeVisible();
 
     await page.keyboard.press("/");
     await expect(overlay(page)).not.toBeVisible();
-    // "/" was typed into the active personnel filter query, not swallowed.
-    await expect(page.locator('[data-testid="personnel-prompt"]')).toContainText("/");
+    // "/" was typed into the active employment filter query, not swallowed.
+    await expect(page.locator('[data-testid="employment-prompt"]')).toContainText("/");
   });
 
   test("overlay list row count matches this viewport's own computed fit", async ({ page }) => {

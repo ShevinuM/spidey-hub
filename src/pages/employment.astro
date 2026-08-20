@@ -1,5 +1,5 @@
 ---
-// Route: "/personnel" — see src/pages/index.astro for the shared shape notes.
+// Route: "/employment" — see src/pages/index.astro for the shared shape notes.
 import Shell from "../layouts/Shell.astro";
 import Terminal from "../components/terminal/Terminal.svelte";
 import { getCollection } from "astro:content";
@@ -16,7 +16,7 @@ const cmdline = getCmdline();
 const helpSearch = getHelpSearch();
 const shell = getShell();
 const chooseTree = getChooseTree();
-const projects = await getCollection("projects");
+const projects = await getCollection("repositories");
 const personnelEntries = await getCollection("personnel");
 const profile = buildProfile((await getCollection("profile"))[0]);
 const help = buildHelp(await getCollection("help"));
@@ -29,10 +29,10 @@ const commitsByRepo = getCommitsByRepo(projects);
 const notificationsFixtureMode = process.env.PORTFOLIO_FIXTURES === "1";
 ---
 
-<Shell title="Personnel — shevinum.dev">
+<Shell title="Employment Records — shevinum.dev">
   <Terminal
     client:load
-    initialView="personnel"
+    initialView="employment"
     {site}
     {dashboard}
     {notifications}

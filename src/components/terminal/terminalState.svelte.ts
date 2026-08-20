@@ -378,7 +378,7 @@ export class TerminalState {
   /** Every one of the six windows' own id equals its canonical program name
    * in the default session (see tmux.ts's `FactorySeed` comment) — so
    * "switch to the window that runs program X" is just
-   * `switchToWindowById(program)`. Used by the dashboard menu, Personnel's
+   * `switchToWindowById(program)`. Used by the dashboard menu, EmploymentRecords's
    * "onDashboard", GrepOverlay's Enter-routing, and Cmdline/HelpSearch's
    * `view:*` actions — every one of them a WINDOW switch, never a program
    * launch into the current pane. */
@@ -869,7 +869,7 @@ export class TerminalState {
    * tries this FIRST; only a command it doesn't recognize falls through to
    * the site-wide `commands` list below ("editor context wins"). Keyed off
    * the focused ref's own capability (same simplification as
-   * killPaneOrWindow above) rather than `view === "builds"/"personnel"`
+   * killPaneOrWindow above) rather than `view === "builds"/"employment"`
    * identity — only those two ever export `runEditorExCommand`. */
   runEditorExCommand(cmd: string): { recognized: boolean; error?: string } {
     return this.getFocusedRef()?.runEditorExCommand?.(cmd) ?? { recognized: false };
@@ -892,8 +892,8 @@ export class TerminalState {
       case "view:builds":
         this.switchToProgram("builds");
         return undefined;
-      case "view:personnel":
-        this.switchToProgram("personnel");
+      case "view:employment":
+        this.switchToProgram("employment");
         return undefined;
       case "view:profile":
         this.switchToProgram("profile");

@@ -2,7 +2,7 @@
 // without touching Terminal.svelte's paste handler. `Ctrl-b ]`
 // (Terminal.svelte) inserts the shared paste buffer (src/lib/pasteBuffer.ts)
 // into whichever text input is currently "active" — the grep query, the
-// personnel filter, the status-bar rename prompt, or the cmdline box, each
+// employment filter, the status-bar rename prompt, or the cmdline box, each
 // registering itself the same way.
 //
 // A STACK, not a single slot: more than one candidate target can be "open"

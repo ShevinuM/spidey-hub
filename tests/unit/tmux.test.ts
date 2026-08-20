@@ -53,7 +53,7 @@ import {
 const SIX_WINDOWS: WindowSeed[] = [
   { number: 0, id: "dashboard", name: "dashboard" },
   { number: 1, id: "builds", name: "builds" },
-  { number: 2, id: "personnel", name: "personnel" },
+  { number: 2, id: "employment", name: "employment" },
   { number: 3, id: "retina-v", name: "retina-v" },
   { number: 4, id: "profile", name: "profile" },
   { number: 5, id: "help", name: "help" },
@@ -91,7 +91,7 @@ test("createFactoryClient builds one session with six windows in seed order, das
   assert.equal(session.windows.length, 6);
   assert.deepEqual(
     session.windows.map((w) => w.id),
-    ["dashboard", "builds", "personnel", "retina-v", "profile", "help"],
+    ["dashboard", "builds", "employment", "retina-v", "profile", "help"],
   );
   assert.equal(session.activeWindowIdx, 0);
   assert.equal(session.lastWindowIdx, 0);
@@ -197,7 +197,7 @@ test("renameWindowManual sets the name and permanently disables autoName", () =>
   assert.equal(win.name, "builds-x");
   assert.equal(win.autoName, false);
   // A later program change no longer touches the name.
-  setPaneProgram(session, focusedPane(win).id, "personnel");
+  setPaneProgram(session, focusedPane(win).id, "employment");
   assert.equal(win.name, "builds-x");
 });
 
@@ -230,7 +230,7 @@ test("killWindow on the active window falls back to the window that sat right af
   assert.deepEqual(result, { ok: true });
   assert.deepEqual(
     session.windows.map((w) => w.id),
-    ["builds", "personnel", "retina-v", "profile", "help"],
+    ["builds", "employment", "retina-v", "profile", "help"],
   );
   assert.equal(session.windows[session.activeWindowIdx].id, "builds");
 });
@@ -254,7 +254,7 @@ test("killWindow reproduces the exact 'kill down to one' sequence byte-for-byte"
     survivors.push(session.windows[session.activeWindowIdx].id);
   }
   assert.equal(session.windows.length, 1);
-  assert.deepEqual(survivors, ["builds", "personnel", "retina-v", "profile", "help"]);
+  assert.deepEqual(survivors, ["builds", "employment", "retina-v", "profile", "help"]);
 });
 
 test("killWindow on a NON-active window shifts activeWindowIdx/lastWindowIdx down without switching", () => {
@@ -263,7 +263,7 @@ test("killWindow on a NON-active window shifts activeWindowIdx/lastWindowIdx dow
   killWindow(session, "builds"); // idx 1, before both 4 and 0... only before 4
   assert.deepEqual(
     session.windows.map((w) => w.id),
-    ["dashboard", "personnel", "retina-v", "profile", "help"],
+    ["dashboard", "employment", "retina-v", "profile", "help"],
   );
   // profile shifted from idx 4 to idx 3; dashboard (lastWindowIdx target) stayed at 0.
   assert.equal(session.windows[session.activeWindowIdx].id, "profile");
@@ -296,9 +296,9 @@ test("launchProgram relaunches a program in-pane and restores the auto-rename te
   const pane = focusedPane(win);
   exitProgram(session, pane.id);
   assert.equal(win.name, "zsh");
-  launchProgram(session, pane.id, "personnel");
-  assert.equal(pane.program, "personnel");
-  assert.equal(win.name, "personnel"); // auto-rename follows the NEW program, not the window's own id
+  launchProgram(session, pane.id, "employment");
+  assert.equal(pane.program, "employment");
+  assert.equal(win.name, "employment"); // auto-rename follows the NEW program, not the window's own id
 });
 
 test("launchProgram into a manually-renamed window changes the program but never the name", () => {

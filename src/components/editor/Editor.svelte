@@ -478,7 +478,7 @@
 
   /**
    * Handles one keydown for this view. Returns true when consumed (caller
-   * — Builds.svelte / Personnel.svelte — must not also treat the key as
+   * — Builds.svelte / EmploymentRecords.svelte — must not also treat the key as
    * its own panel key; Terminal.svelte's delegation chain also keeps
    * offering an unconsumed key to whatever comes next, which is exactly
    * how a bare `:` reaches the site-wide Cmdline box's fallback opener —

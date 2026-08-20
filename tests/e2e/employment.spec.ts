@@ -1,4 +1,4 @@
-// Behavioral e2e suite for the Personnel Files (yazi clone) view, against
+// Behavioral e2e suite for the Employment Records (yazi clone) view, against
 // the real-content build.
 //
 // Real content is a variable-depth, path-derived tree (no frontmatter
@@ -20,7 +20,7 @@
 // mixes a role FILE (role.md, listed first) with 3 role DIRECTORIES
 // (full-time/, part-time/, co-op/) at the very same level.
 //
-// There is no `personnel-path` breadcrumb, so this suite asserts "which
+// There is no `employment-path` breadcrumb, so this suite asserts "which
 // directory are we in" via which rows are visible instead (a directory's
 // own children are a distinctive fingerprint: e.g. only `enaimco/software-
 // developer/` ever renders a `full-time/` row).
@@ -42,11 +42,11 @@ async function gotoReady(page: Page, path: string) {
   await page.locator('[data-terminal-ready="true"]').waitFor({ state: "attached" });
 }
 
-/** Opens the Personnel view from the dashboard (via the tmux prefix, the
+/** Opens the Employment Records view from the dashboard (via the tmux prefix, the
  * only keyboard way to switch windows) and waits for its browser pane to be
- * visible. There's no more `personnel-path` testid to wait on — the root's
+ * visible. There's no more `employment-path` testid to wait on — the root's
  * own `enaimco/` row is an equally reliable "the view is up" signal. */
-async function openPersonnel(page: Page) {
+async function openEmployment(page: Page) {
   await gotoReady(page, "/");
   await page.keyboard.down("Control");
   await page.keyboard.press("b");
@@ -57,8 +57,8 @@ async function openPersonnel(page: Page) {
 
 /** Reads a role .md file's body first line straight off disk (stripping
  * the frontmatter block), so the editor assertion below is checked against
- * ground truth, not a second copy of the same string. Personnel files start
- * with a `---`-delimited frontmatter block (unlike the repo files
+ * ground truth, not a second copy of the same string. Employment role content
+ * files start with a `---`-delimited frontmatter block (unlike the repo files
  * builds.spec.ts reads), so a naive `split("\n")[0]` would return "---"
  * instead of the doc's own first line. */
 function firstBodyLineOf(relPath: string): string {
@@ -70,16 +70,16 @@ function firstBodyLineOf(relPath: string): string {
 }
 
 function rowLocator(page: Page, name: string) {
-  return page.locator(`[data-testid="personnel-row"][data-row-name="${name}"]`);
+  return page.locator(`[data-testid="employment-row"][data-row-name="${name}"]`);
 }
 
-const posText = (page: Page) => page.locator('[data-testid="personnel-pos"]');
-const hintText = (page: Page) => page.locator('[data-testid="personnel-hint"]');
-const upRow = (page: Page) => page.locator('[data-testid="personnel-up-row"]');
-const promptRow = (page: Page) => page.locator('[data-testid="personnel-prompt"]');
-const filterRow = (page: Page) => page.locator('[data-testid="personnel-filter-row"]');
-const filterCursor = (page: Page) => page.locator('[data-testid="personnel-filter-cursor"]');
-const lsRows = (page: Page) => page.locator('[data-testid="personnel-ls-row"]');
+const posText = (page: Page) => page.locator('[data-testid="employment-pos"]');
+const hintText = (page: Page) => page.locator('[data-testid="employment-hint"]');
+const upRow = (page: Page) => page.locator('[data-testid="employment-up-row"]');
+const promptRow = (page: Page) => page.locator('[data-testid="employment-prompt"]');
+const filterRow = (page: Page) => page.locator('[data-testid="employment-filter-row"]');
+const filterCursor = (page: Page) => page.locator('[data-testid="employment-filter-cursor"]');
+const lsRows = (page: Page) => page.locator('[data-testid="employment-ls-row"]');
 
 const SELECTED_STYLE = /rgba\(224, 69, 60, 0\.2\)/;
 
@@ -88,7 +88,7 @@ const SELECTED_STYLE = /rgba\(224, 69, 60, 0\.2\)/;
  * in subdirectories) without caring which of the two testids each is. */
 function allRowNames(page: Page): Promise<(string | null)[]> {
   return page
-    .locator('[data-testid="personnel-row"], [data-testid="personnel-up-row"]')
+    .locator('[data-testid="employment-row"], [data-testid="employment-up-row"]')
     .evaluateAll((els) => els.map((el) => el.getAttribute("data-row-name")));
 }
 
@@ -103,16 +103,16 @@ async function isSingleLine(locator: Locator): Promise<boolean> {
   });
 }
 
-test.describe("Personnel: no path breadcrumb (item 7)", () => {
-  test("the personnel-path breadcrumb testid is gone entirely", async ({ page }) => {
-    await openPersonnel(page);
-    await expect(page.locator('[data-testid="personnel-path"]')).toHaveCount(0);
+test.describe("Employment: no path breadcrumb (item 7)", () => {
+  test("the employment-path breadcrumb testid is gone entirely", async ({ page }) => {
+    await openEmployment(page);
+    await expect(page.locator('[data-testid="employment-path"]')).toHaveCount(0);
   });
 });
 
-test.describe("Personnel: icons (item 1)", () => {
+test.describe("Employment: icons (item 1)", () => {
   test("root rows render folder-icon SVGs, not the old triangle glyph", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await expect(rowLocator(page, "enaimco/").locator('svg[data-icon="folder"]')).toBeVisible();
     await expect(rowLocator(page, "memorial-university/").locator('svg[data-icon="folder"]')).toBeVisible();
     await expect(rowLocator(page, "enaimco/").locator('svg[data-icon="folder"]')).toHaveCount(1);
@@ -123,7 +123,7 @@ test.describe("Personnel: icons (item 1)", () => {
   test("a mixed listing renders per-extension file icons for role.md and folder icons for directories; ../ gets its own icon", async ({
     page,
   }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("Enter"); // -> enaimco/
     await page.keyboard.press("Enter"); // -> enaimco/software-developer/
     // role.md's icon is resolved from material-file-icons (no data-icon
@@ -140,9 +140,9 @@ test.describe("Personnel: icons (item 1)", () => {
   });
 });
 
-test.describe("Personnel: one-line rows (item 3)", () => {
+test.describe("Employment: one-line rows (item 3)", () => {
   test("a list row's name cell never wraps, even conceptually long ones", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     const nameCell = rowLocator(page, "memorial-university/").locator("span").nth(1);
     await expect(nameCell).toHaveCSS("white-space", "nowrap");
     await expect(nameCell).toHaveCSS("text-overflow", "ellipsis");
@@ -150,7 +150,7 @@ test.describe("Personnel: one-line rows (item 3)", () => {
   });
 
   test("an ls -l preview row renders as a single pre-formatted line", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     const row = lsRows(page).first();
     await expect(row).toHaveCSS("white-space", "pre");
     await expect(row).toHaveCSS("text-overflow", "ellipsis");
@@ -158,24 +158,24 @@ test.describe("Personnel: one-line rows (item 3)", () => {
   });
 
   test("a doc preview line stays one line even when the source markdown line is very long", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("Enter"); // -> enaimco/
     await page.keyboard.press("Enter"); // -> enaimco/software-developer/ (role.md selected by default)
     // role.md's own doc has a long bulleted line ("Cut deploy time from
     // 15+ minutes...") that would visibly wrap in the preview pane's
     // ~2fr-wide column without the nowrap/ellipsis styling item 3 adds.
-    const longLine = page.locator('[data-testid="personnel-doc-line"]', { hasText: "Cut deploy time" });
+    const longLine = page.locator('[data-testid="employment-doc-line"]', { hasText: "Cut deploy time" });
     await expect(longLine).toHaveCSS("white-space", "nowrap");
     await expect(longLine).toHaveCSS("text-overflow", "ellipsis");
     expect(await isSingleLine(longLine)).toBe(true);
   });
 });
 
-test.describe("Personnel: root directory listing", () => {
+test.describe("Employment: root directory listing", () => {
   test("lists enaimco/ and memorial-university/; no ../ row at root (item 6); position/hint reflect selection", async ({
     page,
   }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await expect(rowLocator(page, "enaimco/")).toBeVisible();
     await expect(rowLocator(page, "memorial-university/")).toBeVisible();
     await expect(upRow(page)).toHaveCount(0);
@@ -187,7 +187,7 @@ test.describe("Personnel: root directory listing", () => {
   });
 
   test("enaimco/ and memorial-university/ show bare-digit meta counts (item 25)", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await expect(rowLocator(page, "enaimco/")).toHaveText(/4$/);
     await expect(rowLocator(page, "enaimco/")).not.toContainText("role");
     await page.keyboard.press("ArrowDown");
@@ -196,14 +196,14 @@ test.describe("Personnel: root directory listing", () => {
   });
 
   test("selecting enaimco/ previews only its IMMEDIATE child, ls -l style (item 2)", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await expect(lsRows(page)).toHaveCount(1);
     await expect(lsRows(page).first()).toHaveText("drwxr-xr-x  shev  May 2024  software-developer/");
     await expect(lsRows(page).first()).toHaveText(/^[.d][rwx-]{9}\s+shev\s+.+\s+\S+\/?$/);
   });
 
   test("selecting memorial-university/ previews all 5 of its immediate children, ls -l style", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("ArrowDown");
     await expect(lsRows(page)).toHaveCount(5);
     const texts = await lsRows(page).allTextContents();
@@ -217,20 +217,20 @@ test.describe("Personnel: root directory listing", () => {
   });
 
   test("q does nothing from the root (bare q/Esc never navigate)", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("q");
     await expect(rowLocator(page, "enaimco/")).toBeVisible();
   });
 
   test("Esc also does nothing from the root", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("Escape");
     await expect(rowLocator(page, "enaimco/")).toBeVisible();
   });
 
   test("Enter, l, and ArrowRight all descend into enaimco/", async ({ page }) => {
     for (const key of ["Enter", "l", "ArrowRight"]) {
-      await openPersonnel(page);
+      await openEmployment(page);
       await page.keyboard.press(key);
       await expect(rowLocator(page, "software-developer/")).toBeVisible();
       // A visible ../ row is itself proof we've descended one level.
@@ -239,16 +239,16 @@ test.describe("Personnel: root directory listing", () => {
   });
 
   test("single click on the enaimco/ row descends immediately (no select-then-activate)", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await rowLocator(page, "enaimco/").click();
     await expect(rowLocator(page, "software-developer/")).toBeVisible();
     await expect(upRow(page)).toBeVisible();
   });
 });
 
-test.describe("Personnel: enaimco/software-developer/ — mixed file + directory listing, ../ as a real row (item 23a)", () => {
+test.describe("Employment: enaimco/software-developer/ — mixed file + directory listing, ../ as a real row (item 23a)", () => {
   async function openEnaimcoSoftwareDeveloper(page: Page) {
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("Enter"); // -> enaimco/
     await page.keyboard.press("Enter"); // -> enaimco/software-developer/
     await expect(rowLocator(page, "role.md")).toBeVisible();
@@ -264,7 +264,7 @@ test.describe("Personnel: enaimco/software-developer/ — mixed file + directory
   test("role.md is selected first — hint and preview reflect a FILE selection", async ({ page }) => {
     await openEnaimcoSoftwareDeveloper(page);
     await expect(hintText(page)).toHaveText("enter opens role.md in nvim · h goes back · Ctrl-b ? for help");
-    await expect(page.locator('[data-testid="personnel-preview"]')).toContainText("Software Developer");
+    await expect(page.locator('[data-testid="employment-preview"]')).toContainText("Software Developer");
     await expect(lsRows(page)).toHaveCount(0);
   });
 
@@ -349,7 +349,7 @@ test.describe("Personnel: enaimco/software-developer/ — mixed file + directory
   test("going up restores the ANCESTOR's own previous selection (memorial-university stays selected at root)", async ({
     page,
   }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("ArrowDown"); // root: select memorial-university/ (idx 1)
     await page.keyboard.press("Enter"); // descend into it
     await expect(rowLocator(page, "software-developer/")).toBeVisible();
@@ -369,9 +369,9 @@ test.describe("Personnel: enaimco/software-developer/ — mixed file + directory
 
 });
 
-test.describe("Personnel: role file leaves + editor", () => {
+test.describe("Employment: role file leaves + editor", () => {
   async function openFullTimeRole(page: Page) {
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("Enter"); // -> enaimco/
     await page.keyboard.press("Enter"); // -> enaimco/software-developer/
     await page.keyboard.press("ArrowDown"); // -> full-time/
@@ -384,7 +384,7 @@ test.describe("Personnel: role file leaves + editor", () => {
     await expect(rowLocator(page, "role.md")).toBeVisible();
     await expect(upRow(page)).toBeVisible();
     await expect(hintText(page)).toHaveText("enter opens role.md in nvim · h goes back · Ctrl-b ? for help");
-    await expect(page.locator('[data-testid="personnel-preview"]')).toContainText("Software Developer — Full-Time");
+    await expect(page.locator('[data-testid="employment-preview"]')).toContainText("Software Developer — Full-Time");
   });
 
   test("Enter opens the editor; first line matches the role .md body first line on disk", async ({ page }) => {
@@ -431,9 +431,9 @@ test.describe("Personnel: role file leaves + editor", () => {
   });
 });
 
-test.describe("Personnel: memorial-university/ — 5 sibling directories, each one file deep", () => {
+test.describe("Employment: memorial-university/ — 5 sibling directories, each one file deep", () => {
   async function openMemorial(page: Page) {
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("ArrowDown"); // -> memorial-university/
     await page.keyboard.press("Enter");
     await expect(posText(page)).toHaveText("1 / 5");
@@ -466,13 +466,13 @@ test.describe("Personnel: memorial-university/ — 5 sibling directories, each o
     await page.keyboard.press("ArrowDown");
     await page.keyboard.press("ArrowDown"); // -> research-assistant/
     await page.keyboard.press("Enter");
-    await expect(page.locator('[data-testid="personnel-preview"]')).toContainText("Research Assistant");
+    await expect(page.locator('[data-testid="employment-preview"]')).toContainText("Research Assistant");
   });
 });
 
-test.describe("Personnel: item 6 — no ../ anywhere at the root", () => {
+test.describe("Employment: item 6 — no ../ anywhere at the root", () => {
   test("../ clicks walk all the way back up to the root, where there's nothing left to click", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await rowLocator(page, "enaimco/").click();
     await rowLocator(page, "software-developer/").click();
     await rowLocator(page, "full-time/").click();
@@ -495,7 +495,7 @@ test.describe("Personnel: item 6 — no ../ anywhere at the root", () => {
   test("click enaimco -> software-developer -> full-time -> role.md opens the editor, entirely by mouse", async ({
     page,
   }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await rowLocator(page, "enaimco/").click();
     await rowLocator(page, "software-developer/").click();
     await rowLocator(page, "full-time/").click();
@@ -504,9 +504,9 @@ test.describe("Personnel: item 6 — no ../ anywhere at the root", () => {
   });
 });
 
-test.describe("Personnel: editor close paths", () => {
+test.describe("Employment: editor close paths", () => {
   async function openEditor(page: Page) {
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("Enter"); // -> enaimco/
     await page.keyboard.press("Enter"); // -> enaimco/software-developer/ (role.md selected)
     await page.keyboard.press("Enter"); // -> editor
@@ -593,11 +593,11 @@ test.describe("Personnel: editor close paths", () => {
   });
 });
 
-test.describe("Personnel: filter mode (item 23b)", () => {
+test.describe("Employment: filter mode (item 23b)", () => {
   test("the filter cursor only blinks while filterMode is actually active (fixes the 'looks like it's already typing' visual bug)", async ({
     page,
   }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     // Not filtering yet: the cursor must NOT render, or a user could type
     // thinking the box is live and have every keystroke silently do
     // something else (this was the root cause behind the "search box
@@ -613,16 +613,16 @@ test.describe("Personnel: filter mode (item 23b)", () => {
     page,
   }) => {
     // Root cause (traced via Terminal.svelte's dispatch order): while
-    // filterMode was true but Personnel.isEditorOpen() still reported
+    // filterMode was true but EmploymentRecords.isEditorOpen() still reported
     // `false`, Terminal's `paneIsGreedy` gate never turned on for
-    // Personnel, so GrepOverlay's own "/" opener (consulted BEFORE
-    // Personnel's own handleKey when not greedy) claimed the "/" keydown
+    // EmploymentRecords, so GrepOverlay's own "/" opener (consulted BEFORE
+    // EmploymentRecords's own handleKey when not greedy) claimed the "/" keydown
     // first — every "/" typed into an active filter query silently opened
     // the sitewide grep overlay instead. Fixed by having `isEditorOpen()`
     // also report `true` while `filterMode` is active, which is exactly
     // what Terminal.svelte's own "does this pane own text input right
     // now" contract calls for.
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("Enter"); // -> enaimco/
     await page.keyboard.press("Enter"); // -> enaimco/software-developer/
     await page.keyboard.press("f");
@@ -640,13 +640,13 @@ test.describe("Personnel: filter mode (item 23b)", () => {
     // for a nicety nobody asked for. `f` (and clicking the `>` prompt) is
     // the fixed, tested way to enter filter mode; outside of it, "/" keeps
     // its ordinary sitewide meaning like on every other view.
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("/");
     await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
   });
 
   test("f + 'co' filters enaimco/software-developer/'s listing to matching entries only", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("Enter"); // -> enaimco/
     await page.keyboard.press("Enter"); // -> enaimco/software-developer/ (4 entries)
     await expect(posText(page)).toHaveText("1 / 4");
@@ -664,7 +664,7 @@ test.describe("Personnel: filter mode (item 23b)", () => {
   });
 
   test("clicking the > prompt row enters filter mode (mouse path)", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("Enter"); // -> enaimco/
     await page.keyboard.press("Enter"); // -> enaimco/software-developer/
     await promptRow(page).click();
@@ -684,7 +684,7 @@ test.describe("Personnel: filter mode (item 23b)", () => {
     // row's FAR edge (well away from the prompt text, close to the N / N
     // counter) now must still enter filter mode, proving the entire
     // bordered row — not just the glyph — is the hit target.
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("Enter"); // -> enaimco/
     await page.keyboard.press("Enter"); // -> enaimco/software-developer/
     const box = await filterRow(page).boundingBox();
@@ -699,14 +699,14 @@ test.describe("Personnel: filter mode (item 23b)", () => {
   test("the filter row renders a visible border box in both idle and active states", async ({
     page,
   }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await expect(filterRow(page)).toHaveCSS("border-style", "solid");
     await page.keyboard.press("f");
     await expect(filterRow(page)).toHaveCSS("border-style", "solid");
   });
 
   test("Esc restores the full list and exits filter mode", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("Enter");
     await page.keyboard.press("Enter");
     await page.keyboard.press("f");
@@ -724,7 +724,7 @@ test.describe("Personnel: filter mode (item 23b)", () => {
   });
 
   test("typed 'j' while filtering types into the query (not a nav key here)", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("Enter");
     await page.keyboard.press("Enter");
     await page.keyboard.press("f");
@@ -738,7 +738,7 @@ test.describe("Personnel: filter mode (item 23b)", () => {
   });
 
   test("Enter confirms the filter (exits typing) and ArrowDown then navigates the filtered list", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("Enter"); // -> enaimco/
     await page.keyboard.press("Enter"); // -> enaimco/software-developer/
     await page.keyboard.press("f");
@@ -753,7 +753,7 @@ test.describe("Personnel: filter mode (item 23b)", () => {
   });
 
   test("typed letters do nothing when NOT filtering — only arrows navigate", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await expect(posText(page)).toHaveText("1 / 2");
     await page.keyboard.press("j");
     await expect(promptRow(page)).not.toContainText("j");
@@ -763,7 +763,7 @@ test.describe("Personnel: filter mode (item 23b)", () => {
   });
 
   test("descending from a filtered listing enters the filtered (not positionally-indexed) entry", async ({ page }) => {
-    await openPersonnel(page);
+    await openEmployment(page);
     await page.keyboard.press("Enter"); // -> enaimco/
     await page.keyboard.press("Enter"); // -> enaimco/software-developer/
     await page.keyboard.press("f");

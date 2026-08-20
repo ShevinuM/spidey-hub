@@ -1,16 +1,16 @@
 // Fixture-commits mechanism — see the comment below for what a naive
 // implementation would break.
 //
-// Builds renders one project per markdown file in the `projects` collection,
-// each with exactly one repo (see src/content/projects/*.md /
-// fixtures/projects/*.md). Commit snapshots are keyed by *repo name*, not by
+// Builds renders one project per markdown file in the `repositories` collection,
+// each with exactly one repo (see src/content/repositories/*.md /
+// fixtures/repositories/*.md). Commit snapshots are keyed by *repo name*, not by
 // project slug, so they live next to (not inside) the content collection:
 //   - real content:    src/generated/commits/<repoName>.json   (scripts/generate.mjs)
 //   - fixture content:  fixtures/commits/<repoName>.json        (extracted verbatim
 //                        from Homepage.dc.html's sample `commits` arrays)
 //
 // Both directories are switched by the same PORTFOLIO_FIXTURES env var that
-// switches the `projects` collection's glob() base in src/content.config.ts,
+// switches the `repositories` collection's glob() base in src/content.config.ts,
 // so a project entry's `repos[n].name` always resolves to a commits file in
 // the matching mode.
 //

@@ -1,11 +1,11 @@
 // Behavioral e2e suite for the vim-lite engine in Editor.svelte.
 // Parametrized over both places the shared editor
-// is mounted from — Builds (a real repo file) and Personnel (a real role
+// is mounted from — Builds (a real repo file) and Employment (a real role
 // doc) — since the engine itself is entry-point-agnostic and both callers
 // must get identical behavior "for free" from the one shared component.
 //
 // Assertions read real, on-disk content at test time (the same convention
-// builds.spec.ts / personnel.spec.ts already use for their own editor
+// builds.spec.ts / employment.spec.ts already use for their own editor
 // assertions) rather than hardcoding line text, so this suite can't drift
 // from whatever the fixture repos/role docs actually contain.
 import { expect, test, type Page } from "./fixtures.ts";
@@ -82,27 +82,27 @@ const entryPoints: EntryPoint[] = [
     },
   },
   {
-    name: "Personnel",
+    name: "Employment",
     async open(page) {
-      await gotoReady(page, "/personnel");
+      await gotoReady(page, "/employment");
       await page.keyboard.press("Enter"); // -> enaimco/
       await page.keyboard.press("Enter"); // -> enaimco/software-developer/ (role.md selected first)
       await page.keyboard.press("Enter"); // -> editor
       await expect(scroller(page)).toBeVisible();
     },
     async assertParentVisible(page) {
-      // There is no `personnel-path` breadcrumb element. Anchor instead
-      // (same convention personnel.spec.ts's own `rowLocator` uses): confirm
+      // There is no `employment-path` breadcrumb element. Anchor instead
+      // (same convention employment.spec.ts's own `rowLocator` uses): confirm
       // we're back at
       // the exact enaimco/software-developer/ listing, not merely "some"
-      // personnel view — role.md is the row this entry point opened, and
+      // employment view — role.md is the row this entry point opened, and
       // full-time/ is a sibling directory unique to this exact listing (no
       // other company/role directory is named "full-time").
       await expect(
-        page.locator('[data-testid="personnel-row"][data-row-name="role.md"]'),
+        page.locator('[data-testid="employment-row"][data-row-name="role.md"]'),
       ).toBeVisible();
       await expect(
-        page.locator('[data-testid="personnel-row"][data-row-name="full-time/"]'),
+        page.locator('[data-testid="employment-row"][data-row-name="full-time/"]'),
       ).toBeVisible();
     },
   },

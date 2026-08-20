@@ -109,7 +109,7 @@ const SHELL: ShellData = {
   },
 };
 
-const VIEW_NAMES = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"] as const;
+const VIEW_NAMES = ["dashboard", "builds", "employment", "retina-v", "profile", "help"] as const;
 
 const DEFAULT_SESSION: SessionRosterEntry = {
   id: "session-0",
@@ -118,7 +118,7 @@ const DEFAULT_SESSION: SessionRosterEntry = {
   createdAt: 1_723_000_000_000,
   attached: true,
   lastAttachedSeq: 1,
-  windowIds: ["dashboard", "builds", "personnel", "retina-v", "profile", "help"],
+  windowIds: ["dashboard", "builds", "employment", "retina-v", "profile", "help"],
 };
 
 function ctx(overrides: Partial<RunContext> = {}): RunContext {
@@ -442,7 +442,7 @@ test("runCommand: help prints the intro then one row per builtin", () => {
 
 test("runCommand: view-names lists the six canonical programs", () => {
   const { state } = run(createShellState(), "view-names");
-  assert.equal(state.lines.at(-1)?.text, "available views: dashboard builds personnel retina-v profile help");
+  assert.equal(state.lines.at(-1)?.text, "available views: dashboard builds employment retina-v profile help");
 });
 
 test("runCommand: neofetch's uptime derives from ctx.nowMs - session.createdAt, never a hidden clock read", () => {

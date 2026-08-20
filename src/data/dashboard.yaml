@@ -21,7 +21,7 @@ menu:
     label: "Builds"
   - id: xp
     icon: "◆"
-    label: "Personnel Files"
+    label: "Employment Records"
   - id: info
     icon: "◉"
     label: "Profile"

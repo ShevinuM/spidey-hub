@@ -61,7 +61,7 @@ export interface DocLine {
 export function classifyBody(body: string, mode: DocMode): DocLine[] {
   // Content collections hand us the body with a single trailing newline;
   // split-then-drop-one-trailing-empty-line keeps the line count identical
-  // to the source doc arrays (see fixtures/projects/*.md, generated with
+  // to the source doc arrays (see fixtures/repositories/*.md, generated with
   // `doc.map(l => l[0]).join("\n") + "\n"`).
   const raw = body.replace(/\n$/, "").split("\n");
   const kinds = classifyDoc(raw, mode);

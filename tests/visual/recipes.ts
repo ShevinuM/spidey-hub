@@ -18,7 +18,7 @@ export type RecipeAction = { key: string } | { type: string };
  * that stays on the dashboard's route (an overlay) can supply `visible`
  * alone, one whose route changes but has no single distinguishing element
  * can supply `url` alone, and one where the route alone can't tell two
- * recipes apart (e.g. two Personnel depths, both "/personnel") should
+ * recipes apart (e.g. two Employment Records depths, both "/employment") should
  * supply both.
  */
 export interface RecipeCheck {
@@ -57,7 +57,7 @@ export interface Recipe {
  *
  * Dashboard single-key view shortcuts (b/p/x/i/t/h) and Builds' bare `j`
  * tree-navigation are removed from the app entirely — windows switch via
- * `Ctrl-b <N>` (window numbers: 1 builds, 2 personnel, 3 retina-v, 4
+ * `Ctrl-b <N>` (window numbers: 1 builds, 2 employment, 3 retina-v, 4
  * profile, 5 help) or a click, and Builds panels navigate via ArrowUp/
  * ArrowDown. Every recipe below that used to press one of the removed keys
  * is rewritten accordingly, and carries a `check` (see `RecipeCheck`)
@@ -67,8 +67,8 @@ export interface Recipe {
  * for months (see git history). "03-builds-arrow" (was "03-builds-j")
  * explicitly focuses panel [3] (Local Repositories, bare `3`, unrelated to
  * the `Ctrl-b` prefix) before `ArrowDown`, which moves the repo-list
- * selection highlight. "05-personnel-l1"/"06-editor" account for
- * Personnel's 3-level path (companies -> employment type -> role files):
+ * selection highlight. "05-employment-l1"/"06-editor" account for
+ * Employment Records' 3-level path (companies -> employment type -> role files):
  * "05" reaches the level-2 role-files listing after 2 Enters, "06"
  * continues one more Enter into the actual editor.
  */
@@ -85,19 +85,19 @@ export const recipes: Recipe[] = [
     check: { url: /\/builds$/, visible: '[data-testid="builds-panel-3"][data-copy-source]' },
   },
   {
-    name: "04-personnel-l0",
+    name: "04-employment-l0",
     actions: [{ key: "Control+b" }, { key: "2" }],
-    check: { url: /\/personnel$/, visible: '[data-testid="personnel-row"]' },
+    check: { url: /\/employment$/, visible: '[data-testid="employment-row"]' },
   },
   {
-    name: "05-personnel-l1",
+    name: "05-employment-l1",
     actions: [{ key: "Control+b" }, { key: "2" }, { key: "Enter" }, { key: "Enter" }],
-    check: { url: /\/personnel$/, visible: '[data-testid="personnel-up-row"]' },
+    check: { url: /\/employment$/, visible: '[data-testid="employment-up-row"]' },
   },
   {
     name: "06-editor",
     actions: [{ key: "Control+b" }, { key: "2" }, { key: "Enter" }, { key: "Enter" }, { key: "Enter" }],
-    check: { url: /\/personnel$/, visible: '[data-testid="editor-scroller"]' },
+    check: { url: /\/employment$/, visible: '[data-testid="editor-scroller"]' },
   },
   {
     name: "07-profile",

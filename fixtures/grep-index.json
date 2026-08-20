@@ -338,7 +338,7 @@
     ]
   },
   {
-    "path": "src/content/projects/spidey-tracker.md",
+    "path": "src/content/repositories/spidey-tracker.md",
     "lines": [
       "---",
       "name: Spidey Tracker",
@@ -352,7 +352,7 @@
     ]
   },
   {
-    "path": "src/content/projects/reading-hub.md",
+    "path": "src/content/repositories/reading-hub.md",
     "lines": [
       "---",
       "name: Reading Hub",

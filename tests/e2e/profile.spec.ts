@@ -20,7 +20,7 @@ async function statusBarText(page: Page) {
   return (await page.locator(STATUS_BAR).innerText()).replace(/\s+/g, " ").trim();
 }
 
-const WINDOWS = ["dashboard", "builds", "personnel", "retina-v", "profile", "help"];
+const WINDOWS = ["dashboard", "builds", "employment", "retina-v", "profile", "help"];
 /** `lastId` (real tmux fidelity) is the real tmux `-` flag on the
  * session's PREVIOUSLY active window —
  * omit it for assertions made before any in-test window switch. */

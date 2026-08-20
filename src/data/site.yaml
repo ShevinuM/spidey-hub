@@ -23,8 +23,8 @@ statusBar:
       id: builds
       name: builds
     - number: 2
-      id: personnel
-      name: personnel
+      id: employment
+      name: employment
     - number: 3
       id: retina-v
       name: retina-v

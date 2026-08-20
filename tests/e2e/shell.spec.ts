@@ -280,7 +280,7 @@ test.describe("shell builtins", () => {
 
 // `vim <file>` (and `vi`/`nvim` aliases) shell builtin: resolves the path
 // against the same fs index/content sources `cat` already uses, opens the
-// read-only Editor over the shell pane (Builds/Personnel's own `editorFile`
+// read-only Editor over the shell pane (Builds/Employment's own `editorFile`
 // local-state pattern, reused inside Shell.svelte), and `:q` drops back to
 // the shell (never killing the pane).
 test.describe("vim / vi / nvim", () => {

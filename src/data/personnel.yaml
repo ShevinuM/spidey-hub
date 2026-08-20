@@ -1,4 +1,4 @@
-# Personnel Files (yazi clone) view copy.
+# Employment Records (yazi clone) view copy.
 # Source: design/Homepage.dc.html lines 258-320 and Component.renderVals()
 # (xpPath/xpHint templates, lines 1073, 1083).
 
@@ -7,7 +7,7 @@
 pathPrefix: "/Users/Shev/Experience/"
 
 insetTitles:
-  fileBrowser: "─ Personnel Files ─"
+  fileBrowser: "─ Employment Records ─"
   filePreview: "File Preview"
 
 promptIcon: ">"
@@ -16,7 +16,7 @@ promptIcon: ">"
 # 1083). Navigation is now Ctrl-b / status-bar clicks / the dashboard menu,
 # never a bare key, so the hint points at the help window instead.
 #
-# Personnel.svelte is a
+# EmploymentRecords.svelte is a
 # depth-generic directory browser, so there are exactly two row-selected
 # hint shapes rather than one per fixed level — `atDir`/`atFile`, plus
 # `atRoot` for the top-level directory listing specifically (where h/
@@ -32,7 +32,7 @@ upEntry:
   name: "../"
 
 # Row icons are inline SVGs keyed off row
-# kind directly in Personnel.svelte's template (nvim-tree/lazygit-style
+# kind directly in EmploymentRecords.svelte's template (nvim-tree/lazygit-style
 # folder/file glyphs, since Nerd Fonts aren't bundled) — these two glyph
 # strings (and `upEntry.icon` above) are no longer read by the row markup.
 # Left in place rather than pruned from `PersonnelData` (src/lib/data.ts),
@@ -43,7 +43,7 @@ roleRowIcon: "▤"
 # Directory row meta at ANY depth: the bare count of role files nested
 # anywhere beneath that directory (ls-l-style listings show a bare number,
 # not the "role(s)" word). `roleWord*`
-# below are now unused by Personnel.svelte's row template but kept in the
+# below are now unused by EmploymentRecords.svelte's row template but kept in the
 # schema (src/lib/data.ts's PersonnelData) rather than pruned out of scope.
 roleCountTemplate: "{n}"
 roleWordSingular: "role"

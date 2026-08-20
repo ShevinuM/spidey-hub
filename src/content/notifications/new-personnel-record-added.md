@@ -5,4 +5,4 @@ src: personnel
 order: 24
 ---
 
-A profile was appended to the roster — check Personnel Files.
+A profile was appended to the roster — check Employment Records.

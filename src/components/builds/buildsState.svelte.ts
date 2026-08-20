@@ -81,7 +81,7 @@ interface EditorFileState {
 export class BuildsState {
   constructor(
     private readonly buildsFn: () => BuildsData,
-    private readonly projectsFn: () => CollectionEntry<"projects">[],
+    private readonly projectsFn: () => CollectionEntry<"repositories">[],
     private readonly commitsByRepoFn: () => Record<string, Commit[]>,
   ) {
     // ---------------------------------------------------------------------
@@ -174,7 +174,7 @@ export class BuildsState {
   get builds(): BuildsData {
     return this.buildsFn();
   }
-  get projects(): CollectionEntry<"projects">[] {
+  get projects(): CollectionEntry<"repositories">[] {
     return this.projectsFn();
   }
   get commitsByRepo(): Record<string, Commit[]> {

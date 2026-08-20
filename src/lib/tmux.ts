@@ -19,7 +19,7 @@ import { createShellState, type ShellLine, type ShellState } from "./shell.ts";
  * program's `:q` drops back to — every OTHER value is one of the site's six
  * view components, reused verbatim as the window's own auto-rename text
  * (see `programDisplayName` below). */
-export type ProgramName = "dashboard" | "builds" | "personnel" | "profile" | "retina-v" | "help" | "shell";
+export type ProgramName = "dashboard" | "builds" | "employment" | "profile" | "retina-v" | "help" | "shell";
 
 export interface Pane {
   id: string;
@@ -967,7 +967,7 @@ export interface FactoryOptions {
   /** Seed window list — site.yaml's `statusBar.windows`, content-driven (no
    * window names hardcoded in this file). Every seed's `id` MUST be a valid
    * `ProgramName` (site.yaml's six window ids already are: dashboard/builds/
-   * personnel/retina-v/profile/help) — that id doubles as the window's
+   * employment/retina-v/profile/help) — that id doubles as the window's
    * initial program AND its permanent identity: a window's identity never
    * changes even once its pane runs some other program or a shell. */
   windows: WindowSeed[];

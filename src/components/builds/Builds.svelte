@@ -48,7 +48,7 @@
 
   interface Props {
     builds: BuildsData;
-    projects: CollectionEntry<"projects">[];
+    projects: CollectionEntry<"repositories">[];
     commitsByRepo: Record<string, Commit[]>;
     /** See PaneTree.svelte's own header comment (multi-instance
      * data-copy-source gating); ANDed with each panel's own

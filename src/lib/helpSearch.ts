@@ -9,7 +9,7 @@
 // types, same reasoning as src/lib/cmdline.ts's own CommandDef — this file
 // stays a zero-dependency pure module):
 //   - "command" entries: cmdline.yaml's own site-wide `commands` list
-//     (dashboard/builds/personnel/profile/retina-v/help/grep/reboot/resume/q)
+//     (dashboard/builds/employment/profile/retina-v/help/grep/reboot/resume/q)
 //     — EXECUTABLE (Enter runs the same action id Cmdline.svelte's own
 //     onSubmit already dispatches through Terminal.svelte's
 //     executeSiteAction). `q` is included with its exitProgram meaning

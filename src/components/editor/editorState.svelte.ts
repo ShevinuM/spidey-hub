@@ -39,11 +39,11 @@ export type LineDecoration =
   | { kind: "segments"; segments: { text: string; cls: string; color?: string }[] };
 
 // ---------------------------------------------------------------------
-// Ctrl-b ] paste-target registration (one of the "grep query, personnel
+// Ctrl-b ] paste-target registration (one of the "grep query, employment
 // filter, rename prompt, editor search" paste targets) — active only
 // while the in-buffer `/` search prompt is
 // actually accepting keystrokes, exactly like GrepOverlay's own query and
-// Personnel's own filter registrations.
+// EmploymentRecords's own filter registrations.
 // ---------------------------------------------------------------------
 
 const SEARCH_PASTE_TARGET_ID = "editor-search";

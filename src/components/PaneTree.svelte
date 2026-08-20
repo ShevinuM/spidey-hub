@@ -38,7 +38,7 @@
   import type { SessionRosterEntry, ShellMode } from "../lib/shell";
   import Dashboard from "./Dashboard.svelte";
   import Builds from "./builds/Builds.svelte";
-  import Personnel from "./Personnel.svelte";
+  import EmploymentRecords from "./employment-records/EmploymentRecords.svelte";
   import Profile from "./Profile.svelte";
   import HelpView from "./HelpView.svelte";
   import Shell from "./Shell.svelte";
@@ -70,10 +70,10 @@
     profile: ProfileData;
     help: HelpData;
     shell: ShellData;
-    projects: CollectionEntry<"projects">[];
+    projects: CollectionEntry<"repositories">[];
     personnelEntries: CollectionEntry<"personnel">[];
     commitsByRepo: Record<string, Commit[]>;
-    /** Dashboard menu clicks / Personnel's "onDashboard" are all just
+    /** Dashboard menu clicks / EmploymentRecords's "onDashboard" are all just
      * "switch to a different WINDOW" (exactly like a status-bar click or a
      * prefix digit target) — never a program LAUNCH into the current pane —
      * so they all funnel through this one callback, keyed by the target
@@ -197,8 +197,8 @@
       <div style="flex:1;min-height:0"></div>
     {:else if node.pane.program === "builds"}
       <Builds bind:this={leafRef} {builds} {projects} {commitsByRepo} {isFocused} />
-    {:else if node.pane.program === "personnel"}
-      <Personnel
+    {:else if node.pane.program === "employment"}
+      <EmploymentRecords
         bind:this={leafRef}
         {personnel}
         {personnelEntries}

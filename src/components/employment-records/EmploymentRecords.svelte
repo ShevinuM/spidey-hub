@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Personnel Files (yazi clone) view — design/Homepage.dc.html lines
+  // Employment Records (yazi clone) view — design/Homepage.dc.html lines
   // 274-336 (two-pane file browser: File Browser bottom-aligned entry list +
   // File Preview roles-table/doc pane) and the `xp*` state machine (lines
   // 899-907, 985-996, 1015-1102). This browser is DEPTH-GENERIC: it walks a
@@ -66,11 +66,11 @@
   // `activateRow()` function — mouse and keyboard are identical by
   // construction, not two parallel implementations that could drift.
   import type { CollectionEntry } from "astro:content";
-  import type { PersonnelData } from "../lib/data";
-  import { classifyBody, colorFor } from "../lib/docline";
-  import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
-  import { iconSvgForPath } from "../lib/fileIcons";
-  import Editor, { type EditorLine } from "./editor/Editor.svelte";
+  import type { PersonnelData } from "../../lib/data";
+  import { classifyBody, colorFor } from "../../lib/docline";
+  import { pushPasteTarget, removePasteTarget } from "../../lib/pasteTargets";
+  import { iconSvgForPath } from "../../lib/fileIcons";
+  import Editor, { type EditorLine } from "../editor/Editor.svelte";
 
   type RoleEntry = CollectionEntry<"personnel">;
 
@@ -397,7 +397,7 @@
     filterMode = true;
   }
 
-  const FILTER_PASTE_TARGET_ID = "personnel-filter";
+  const FILTER_PASTE_TARGET_ID = "employment-filter";
 
   /** Ctrl-b ] paste-target registration — active only while the filter
    * prompt is actually accepting keystrokes. */
@@ -504,8 +504,8 @@
    * `paneIsGreedy`/`tryFocusedRef`). Filter mode is exactly that: while
    * `filterMode` is true every keystroke (including "/") must reach
    * `handleKey` below and land in the query, never open GrepOverlay out
-   * from under it (see tests/e2e/personnel.spec.ts's "filter mode" describe
-   * block). Returning `true` here during filter mode makes Personnel
+   * from under it (see tests/e2e/employment.spec.ts's "filter mode" describe
+   * block). Returning `true` here during filter mode makes EmploymentRecords
    * "greedy" the same way an open vim Editor already is, without
    * Terminal.svelte needing any changes of its own. */
   export function isEditorOpen(): boolean {
@@ -656,8 +656,8 @@
             <div
               role="button"
               tabindex="0"
-              class="personnel-row"
-              data-testid={row.kind === "up" ? "personnel-up-row" : "personnel-row"}
+              class="employment-row"
+              data-testid={row.kind === "up" ? "employment-up-row" : "employment-row"}
               data-row-name={row.name}
               onclick={() => clickRow(i)}
               onkeydown={(ev) => {
@@ -681,20 +681,20 @@
         <div
           role="button"
           tabindex="0"
-          data-testid="personnel-filter-row"
+          data-testid="employment-filter-row"
           onclick={enterFilterMode}
           onkeydown={(ev) => {
             if (ev.key === "Enter" || ev.key === " ") enterFilterMode();
           }}
           style="margin-top:10px;border:1px solid rgba(224,69,60,.35);border-radius:4px;padding:5px 10px;display:flex;justify-content:space-between;align-items:center;color:rgba(196,216,232,.5);cursor:pointer"
         >
-          <span data-testid="personnel-prompt" style="color:#5fc6b4"
+          <span data-testid="employment-prompt" style="color:#5fc6b4"
             >{personnel.promptIcon} {filterQuery}{#if filterMode}<span
-                data-testid="personnel-filter-cursor"
+                data-testid="employment-filter-cursor"
                 style="display:inline-block;width:7px;height:13px;vertical-align:-2px;background:#5fc6b4;animation:blk 1.1s steps(1) infinite"
               ></span>{/if}</span
           >
-          <span data-testid="personnel-pos">{posText}</span>
+          <span data-testid="employment-pos">{posText}</span>
         </div>
       </div>
 
@@ -707,28 +707,28 @@
         >
           {personnel.insetTitles.filePreview}
         </div>
-        <div data-testid="personnel-preview" style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:4px">
+        <div data-testid="employment-preview" style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:4px">
           {#if !selectedIsFile}
             {#each previewLsRows as r, i (i)}
               <div
-                data-testid="personnel-ls-row"
+                data-testid="employment-ls-row"
                 style="white-space:pre;overflow:hidden;text-overflow:ellipsis;min-width:0;font-family:inherit;color:rgba(196,216,232,.85)"
               >{lsLine(r)}</div>
             {/each}
           {:else}
             {#each previewDoc as l, i (i)}
-              <div data-testid="personnel-doc-line" style={l.style}>{l.t}</div>
+              <div data-testid="employment-doc-line" style={l.style}>{l.t}</div>
             {/each}
           {/if}
         </div>
-        <div data-testid="personnel-hint" style="padding-top:8px;font-size:12px;color:rgba(196,216,232,.4)">{hintText}</div>
+        <div data-testid="employment-hint" style="padding-top:8px;font-size:12px;color:rgba(196,216,232,.4)">{hintText}</div>
       </div>
     </div>
   </div>
 {/if}
 
 <style>
-  .personnel-row:hover {
+  .employment-row:hover {
     background: rgba(224, 69, 60, 0.12);
   }
 </style>

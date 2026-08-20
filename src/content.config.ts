@@ -1,6 +1,6 @@
 // Content collections (Astro 7 / astro:content).
 //
-// `projects` is fixture-switched: when PORTFOLIO_FIXTURES=1 (set by
+// `repositories` is fixture-switched: when PORTFOLIO_FIXTURES=1 (set by
 // `pnpm build:fixtures` / the visual-regression harness) it loads the 4
 // sample projects extracted verbatim from Homepage.dc.html instead of the 3
 // real ones, so 100% pixel comparisons against the prototype's goldens are
@@ -14,7 +14,7 @@
 // Personnel content is a
 // variable-depth, path-driven tree (`enaimco/software-developer/{role.md,
 // full-time/role.md, part-time/role.md, co-op/role.md}` and
-// `memorial-university/<role-slug>/role.md` × 5) — Personnel.svelte derives
+// `memorial-university/<role-slug>/role.md` × 5) — EmploymentRecords.svelte derives
 // the whole tree from each entry's `filePath`, so grouping is no longer a
 // frontmatter concern. The old `company`/`employmentType` fields (used by
 // the fixed 3-level company->type->role model) are gone; a role's position
@@ -30,17 +30,17 @@ const repoSchema = z.object({
   branch: z.string(),
 });
 
-const projects = defineCollection({
+const repositories = defineCollection({
   loader: glob({
     pattern: "**/*.md",
-    base: useFixtures ? "fixtures/projects" : "src/content/projects",
+    base: useFixtures ? "fixtures/repositories" : "src/content/repositories",
     // Astro's default `generateId` lowercases the slug (getContentEntryIdAndSlug's
     // slugify step), which silently turns "SafePass.md" into entry id
     // "safepass" — invisible until the Builds Files panel started
     // rendering `${project.id}.md` as that file's displayed name, where it
     // renders as the wrong filename ("safepass.md" instead of "SafePass.md"). All of
     // our project filenames are already the exact string we want to display
-    // (see fixtures/projects/*.md and src/content/projects/*.md), so this
+    // (see fixtures/repositories/*.md and src/content/repositories/*.md), so this
     // just uses the entry's own basename verbatim, case and all.
     generateId: ({ entry }) => entry.replace(/\.md$/, ""),
   }),
@@ -181,4 +181,4 @@ const boot = defineCollection({
   }),
 });
 
-export const collections = { projects, personnel, profile, help, notifications, boot };
+export const collections = { repositories, personnel, profile, help, notifications, boot };
