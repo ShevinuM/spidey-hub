@@ -74,7 +74,7 @@
   import StatusBar from "./StatusBar.svelte";
   import PaneTree from "./PaneTree.svelte";
   import Shell from "./Shell.svelte";
-  import Notifications from "./Notifications.svelte";
+  import Notifications from "./notifications/Notifications.svelte";
   import GrepOverlay from "./GrepOverlay.svelte";
   import CopyMode from "./CopyMode.svelte";
   import ChooseTree from "./ChooseTree.svelte";
