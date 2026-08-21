@@ -7,18 +7,25 @@
 // possible. See src/lib/commits.ts for how the
 // matching per-repo commit snapshots are resolved the same way.
 //
-// `personnel` does NOT fixture-switch: the prototype's `xp` sample data
-// *is* the real content, so both modes read the same directory.
-// `fixtures/personnel` deliberately does not exist.
+// `personnel` IS fixture-switched (Phase 7b.2), the same way `repositories`
+// is just above: `fixtures/personnel/*` under `PORTFOLIO_FIXTURES=1`,
+// `src/content/personnel/` (the user's real employment history) otherwise.
+// This was NOT the case before 7b.2 — real employment copy used to leak
+// into every fixture/visual-golden build, which also meant an adversarial
+// (long/overflowing) record could never be added without corrupting the
+// user's actual resume. `fixtures/personnel/` mirrors the real tree's
+// variable-depth SHAPE (see below), not just its record count.
 //
 // Personnel content is a
 // variable-depth, path-driven tree (`enaimco/software-developer/{role.md,
 // full-time/role.md, part-time/role.md, co-op/role.md}` and
-// `memorial-university/<role-slug>/role.md` × 5) — EmploymentRecords.svelte derives
-// the whole tree from each entry's `filePath`, so grouping is no longer a
-// frontmatter concern. The old `company`/`employmentType` fields (used by
-// the fixed 3-level company->type->role model) are gone; a role's position
-// in the tree comes entirely from its directory path now.
+// `memorial-university/<role-slug>/role.md` × 5 — mirrored in fixture mode
+// by `oscorp/research-technician/{role.md,co-op,full-time,part-time}` and
+// `damage-control/<role-slug>/role.md` × 5) — EmploymentRecords.svelte
+// derives the whole tree from each entry's `filePath`, so grouping is no
+// longer a frontmatter concern. The old `company`/`employmentType` fields
+// (used by the fixed 3-level company->type->role model) are gone; a role's
+// position in the tree comes entirely from its directory path now.
 import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
 
@@ -54,7 +61,7 @@ const repositories = defineCollection({
 const personnel = defineCollection({
   loader: glob({
     pattern: "**/*.md",
-    base: "src/content/personnel",
+    base: useFixtures ? "fixtures/personnel" : "src/content/personnel",
     // Same rationale as `projects` above: directory/file names in this tree
     // are already the literal, lowercase strings we want to display, so this
     // just preserves the on-disk relative path (minus extension) as-is rather than trusting

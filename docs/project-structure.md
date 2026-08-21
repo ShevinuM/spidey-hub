@@ -151,7 +151,7 @@ complexity anywhere.
 | collection | shape | fixture-switched? |
 |---|---|---|
 | `repositories` | one project doc per file, `{title, order, repos[]}` | yes — `fixtures/repositories/*.md` under `PORTFOLIO_FIXTURES=1` |
-| `personnel` | one role per file, depth-generic path (backs Employment Records) | no |
+| `personnel` | one role per file, depth-generic path (backs Employment Records) | yes — `fixtures/personnel/*` under `PORTFOLIO_FIXTURES=1` (Phase 7b.2; mirrors the real tree's variable-depth shape, not just its record count) |
 | `profile` | single file, full profile page schema | no |
 | `help` | one scope per file (14 files — one per keymap scope) | no |
 | `notifications` | one notification per file (30 files — the seeded pool) | no |

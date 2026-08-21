@@ -9,12 +9,14 @@ in the same change as any `docs/` edit that affects a convention below.
 
 - [ ] `pnpm check` clean (0 errors).
 - [ ] `pnpm test:unit` green (339 tests as of this writing — pure `src/lib/*.ts` logic).
-- [ ] `pnpm test:e2e` green (real build, 29 spec files, 490 tests × 2 viewports = 980 runs).
-- [ ] `pnpm test:visual` green (fixture build, 21 recipes × 2 viewports = 42 goldens) —
-      unless the change is docs-only/test-only with zero rendering impact. Recipe count
-      may grow (a recipe covering the repositories syntax-highlighting fix is planned
-      but not yet added); a pending rebaseline changes goldens' pixel content, not
-      this count.
+- [ ] `pnpm test:e2e` green (real build, 30 spec files, 502 tests × 2 viewports = 1004 runs).
+- [ ] `pnpm test:visual` green (fixture build, 21 recipes × 2 viewports = 42 goldens,
+      PLUS `tests/visual/adversarial-fixtures.spec.ts`'s 4 functional assertions × 2
+      viewports = 8 runs, Phase 7b.2 — proves the adversarial fixture data actually
+      scrolls/wraps/renders-empty, not just that it parses) — unless the change is
+      docs-only/test-only with zero rendering impact. Recipe count may grow (a recipe
+      covering the repositories syntax-highlighting fix is planned but not yet added);
+      a pending rebaseline changes goldens' pixel content, not this count.
 - [ ] `git status tests/visual/goldens` clean, UNLESS this change deliberately
       changes the UI and the rebaseline procedure (below) was followed.
 

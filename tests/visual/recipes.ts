@@ -88,6 +88,13 @@ export const recipes: Recipe[] = [
     check: { url: /\/repositories$/, visible: '[data-testid="repositories-panel-1"][data-copy-source]' },
   },
   {
+    // Fixture personnel tree (Phase 7b.2 — fixture-switched, see
+    // src/content.config.ts): row 0 (newest-dated, default selection) is
+    // `damage-control/evidence-cataloguer`, the deliberately adversarial
+    // ~300-line record with an embedded 400-char unbroken line — this
+    // golden bakes in the resulting overflowing/scrolled preview panel on
+    // purpose (see tests/visual/adversarial-fixtures.spec.ts for the
+    // functional scroll/wrap assertions this state exists to enable).
     name: "04-employment-l0",
     actions: [{ key: "Control+b" }, { key: "2" }],
     check: { url: /\/employment$/, visible: '[data-testid="employment-row"]' },
@@ -97,7 +104,9 @@ export const recipes: Recipe[] = [
     // more drill-down levels to reach — repurposed to a non-default row
     // selected (2 x j from row 0), showing the preview panel and timeline
     // node following a moved selection live. `data-selected` (added for
-    // this check) marks exactly one row at a time.
+    // this check) marks exactly one row at a time. Row 2 (0-indexed; the
+    // 3rd row, per the fixture tree's newest-first sort) is
+    // `damage-control/salvage-logistics-clerk`.
     name: "05-employment-l1",
     actions: [{ key: "Control+b" }, { key: "2" }, { key: "j" }, { key: "j" }],
     check: { url: /\/employment$/, visible: '[data-testid="employment-row"][data-selected]:nth-child(3)' },

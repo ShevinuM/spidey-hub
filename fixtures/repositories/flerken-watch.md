@@ -18,5 +18,10 @@ Emits DANGER when threat level crosses high.
 - mass anomaly vs housecat baseline
 - pocket-dimension echo
 
+## Trace
+Raw sensor signature for the current alert (deliberately one unbroken,
+unwrappable-by-whitespace line — adversarial fixture data, Phase 7b.2):
+0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+
 ## Status
 alerting · doomstadt

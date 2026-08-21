@@ -8,13 +8,13 @@
     "dev": "astro dev",
     "prebuild": "node scripts/generate.mjs",
     "build": "astro build",
-    "build:fixtures": "PORTFOLIO_FIXTURES=1 astro build && cp fixtures/grep-index.json dist/generated/grep-index.json && cp fixtures/repos/all-projects.json dist/generated/repos/all-projects.json && cp fixtures/fs-index.json dist/generated/fs-index.json && cp fixtures/contributions.json dist/generated/contributions.json",
+    "build:fixtures": "PORTFOLIO_FIXTURES=1 astro build && cp fixtures/grep-index.json dist/generated/grep-index.json && cp fixtures/repos/*.json dist/generated/repos/ && cp fixtures/fs-index.json dist/generated/fs-index.json && cp fixtures/contributions.json dist/generated/contributions.json",
     "preview": "astro preview",
     "generate": "node scripts/generate.mjs",
     "check": "astro check && tsc --noEmit && svelte-check --threshold error",
     "goldens": "node tests/visual/capture-goldens.mjs",
     "test:unit": "node --test tests/unit/*.test.ts",
-    "test:visual": "pnpm build:fixtures && E2E_EXPECT_FIXTURES=1 playwright test tests/visual/identical.spec.ts",
+    "test:visual": "pnpm build:fixtures && E2E_EXPECT_FIXTURES=1 playwright test tests/visual/identical.spec.ts tests/visual/adversarial-fixtures.spec.ts",
     "test:e2e": "pnpm build && E2E_EXPECT_FIXTURES=0 playwright test tests/e2e"
   },
   "dependencies": {

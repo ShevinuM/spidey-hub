@@ -25,9 +25,9 @@ wanting a fresh contribution-grid/commit snapshot.
 | `pnpm build:fixtures` | fixture-mode build (`PORTFOLIO_FIXTURES=1`) — used by the visual suite only |
 | `pnpm preview` | serve the last `pnpm build` output via Astro's own (daemonizing) preview server — stop with `npx astro preview stop` |
 | `pnpm check` | `astro check` + `tsc --noEmit` + `svelte-check --threshold error` |
-| `pnpm test:unit` | `node --test tests/unit/*.test.ts` — 335 tests of pure `src/lib/*.ts` logic, no browser |
-| `pnpm test:e2e` | real-content build + the full Playwright behavioral suite — 21 spec files, 454 tests × 2 viewports = 908 runs |
-| `pnpm test:visual` | fixture build + 42 golden screenshot comparisons (21 recipes × 2 viewports) |
+| `pnpm test:unit` | `node --test tests/unit/*.test.ts` — 339 tests of pure `src/lib/*.ts` logic, no browser |
+| `pnpm test:e2e` | real-content build + the full Playwright behavioral suite — 30 spec files, 502 tests × 2 viewports = 1004 runs |
+| `pnpm test:visual` | fixture build + 42 golden screenshot comparisons (21 recipes × 2 viewports) + `tests/visual/adversarial-fixtures.spec.ts`'s 4 functional assertions × 2 viewports (Phase 7b.2 — proves the adversarial fixtures below actually scroll/wrap/render-empty, not just parse) |
 | `pnpm goldens` | historical/guarded — regenerates goldens against the vendored ORIGINAL design prototype, refuses to run without `--restore-prototype-parity`; not the normal re-baseline path |
 
 Run the full gate before any change is considered done:
@@ -97,11 +97,24 @@ failure — the checked-in snapshot is what a fresh visitor's first paint always
 ## Fixtures
 
 `fixtures/` holds every deterministic stand-in the visual suite needs so its goldens never
-couple to real, ever-changing project/commit data: `fixtures/repositories/*.md` (sample
-projects), `fixtures/commits/*.json`, `fixtures/repos/all-projects.json`,
-`fixtures/grep-index.json`, `fixtures/fs-index.json`, `fixtures/contributions.json`
-(seeded, deterministic). They're read only when `PORTFOLIO_FIXTURES=1` — see
-`docs/architecture.md`'s "Fixture mode" section for exactly which pieces switch and how.
+couple to real, ever-changing project/commit/employment data: `fixtures/repositories/*.md`
+(sample projects), `fixtures/personnel/*` (sample employment records, Phase 7b.2 — mirrors
+`src/content/personnel/`'s variable-depth tree shape), `fixtures/commits/*.json`,
+`fixtures/repos/*.json` (`all-projects.json` plus any per-repo working-tree index, e.g.
+the empty `webbing-lab.json`), `fixtures/grep-index.json`, `fixtures/fs-index.json`,
+`fixtures/contributions.json` (seeded, deterministic). They're read only when
+`PORTFOLIO_FIXTURES=1` — see `docs/architecture.md`'s "Fixture mode" section for exactly
+which pieces switch and how.
 `pnpm test:unit`'s `all-projects-fixture.test.ts` guards `fixtures/repos/all-projects.json`
 against drifting from `fixtures/repositories/*.md` — see that test file's own header for
 the regeneration snippet if you ever hand-edit a fixture project doc.
+
+Some of this fixture data is deliberately adversarial (Phase 7b.2 — see
+`docs/architecture.md`'s "Blind spots" section for why): a ~300-line personnel record with
+an embedded 400-char unbroken line, a second 400-char unbroken line in a fixture project
+doc's body, and an empty repository entry (`webbing-lab`, zero files and zero commits).
+`tests/visual/adversarial-fixtures.spec.ts` asserts these actually exercise
+scroll/wrap/empty-state rendering, not just that they parse — see that file's own header
+comment. Editing a fixture project doc's body also re-pins its expected classification in
+`tests/unit/docline.fixtures.json` (regenerate via `classifyDoc()`, same convention that
+file's own header describes for its personnel-doc entries).

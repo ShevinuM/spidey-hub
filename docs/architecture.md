@@ -82,8 +82,8 @@ Four independent suites, each catching a different class of regression:
 |---|---|---|---|
 | type/lint | `pnpm check` | `astro check` + `tsc --noEmit` + `svelte-check --threshold error` | — |
 | unit | `pnpm test:unit` | pure `src/lib/*.ts` logic, `node --test` | 339 tests |
-| e2e | `pnpm test:e2e` | real build, full Playwright behavioral suite, 29 spec files | 490 tests × 2 viewports = 980 runs |
-| visual | `pnpm test:visual` | fixture build, pixel-identical golden comparison | 21 recipes × 2 viewports = 42 goldens |
+| e2e | `pnpm test:e2e` | real build, full Playwright behavioral suite, 30 spec files | 502 tests × 2 viewports = 1004 runs |
+| visual | `pnpm test:visual` | fixture build, pixel-identical golden comparison + functional adversarial-fixture assertions (`tests/visual/adversarial-fixtures.spec.ts`, Phase 7b.2) | 21 recipes × 2 viewports = 42 goldens, + 4 assertions × 2 viewports = 8 runs |
 
 All four gate every change; none is optional for a change that touches the code they
 cover.
@@ -103,8 +103,17 @@ three before trusting a green run:
 - The shared e2e fixture pre-seeds "boot already seen" for every spec but
   `boot.spec.ts`, so a boot↔notification interaction goes untested from both
   directions.
-- Fixture content is fixed-length and never overflows a panel, so clipping,
-  non-scrollable bodies, and bottom-anchored voids stay invisible.
+- Historically, fixture content was fixed-length and never overflowed a panel, so
+  clipping, non-scrollable bodies, and bottom-anchored voids stayed invisible behind
+  42 green goldens — that's what hid an entire iteration's worth of layout defects
+  (Phase 7b.2). Fixture content now includes deliberately adversarial cases (a
+  ~300-line employment record, 400-char unbroken lines in both personnel and
+  repository content, an empty repository) exercised by
+  `tests/visual/adversarial-fixtures.spec.ts`, so those specific defect classes can't
+  hide again. This is targeted coverage, not a blanket guarantee — a genuinely new
+  scrollable/overflowable panel still needs its own overflow assertion (see the
+  standing rule below), not a hope that one of these existing adversarial records
+  happens to reach it.
 
 The standing rules those blind spots justify:
 
@@ -153,15 +162,20 @@ every prior re-baseline's determinism-check record.
 ## Fixture mode
 
 `PORTFOLIO_FIXTURES=1` (set only by `pnpm build:fixtures`, never by `pnpm dev`/`pnpm
-build`) switches the `repositories` content collection to `fixtures/repositories/*.md` —
-a small, fixed set of sample projects — with matching `fixtures/commits/*.json`,
-`fixtures/repos/all-projects.json`, `fixtures/grep-index.json`,
-`fixtures/fs-index.json`, and `fixtures/contributions.json`. All four of those
-(`grep-index.json`, `repos/all-projects.json`, `fs-index.json`, `contributions.json`) are
+build`) switches the `repositories` AND `personnel` content collections to
+`fixtures/repositories/*.md` / `fixtures/personnel/*` — small, fixed (but deliberately
+adversarial, Phase 7b.2 — see "Blind spots" above) sample data — with matching
+`fixtures/commits/*.json`, `fixtures/repos/*.json` (`all-projects.json` plus any
+per-repo working-tree index, e.g. the empty `webbing-lab.json`), `fixtures/grep-index.json`,
+`fixtures/fs-index.json`, and `fixtures/contributions.json`. All of those
+(`grep-index.json`, `repos/*.json`, `fs-index.json`, `contributions.json`) are
 copied over their built `dist/generated/` counterparts as `build:fixtures`'s last steps
 rather than generated, so the exact same JS bundle runs in both goldens and production —
-only the JSON payloads differ. `personnel`, `profile`, and `help` content is never
-fixture-switched (there's no cross-recipe determinism need for them). It never leaks into
+only the JSON payloads differ. Before Phase 7b.2, `personnel` was NOT fixture-switched —
+both modes read `src/content/personnel/` (the user's real employment history) directly,
+which meant an adversarial (long/overflowing) record could never be added without
+corrupting the real resume. `profile` and `help` content is still never fixture-switched
+(there's no cross-recipe determinism need for them). It never leaks into
 `pnpm dev`/`pnpm build`/`pnpm test:e2e` — those set no such env var, so a real visitor and
 the e2e suite both always see real content. Fixture mode does NOT touch animations (Phase
 7b.1) — a fixture build renders every `infinite` CSS keyframe live, same as a real build.

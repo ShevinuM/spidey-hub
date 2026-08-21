@@ -95,8 +95,21 @@ interface DocLineView {
  * (docline.ts's colours don't otherwise set `white-space`/`overflow`), so a
  * line longer than the panel's width wraps onto additional visual lines
  * rather than being cut off — every character stays visible regardless of
- * how long the source line is. */
-const DOC_LINE_WRAP_STYLE = "white-space:normal;overflow-wrap:break-word;min-width:0";
+ * how long the source line is.
+ *
+ * `overflow-wrap:anywhere`, NOT `break-word` (Phase 7b.2 fix, found via the
+ * adversarial 400-char-unbroken-line fixture): `break-word` only affects
+ * where a browser is willing to break a line during layout — it does NOT
+ * reduce the element's min-content contribution to an ancestor flex
+ * container's intrinsic size. A single unbroken (no-space) run long enough
+ * therefore still forced this row's own flex ancestors, all the way up to
+ * the 3-panel Records/Timeline/Preview flex row, to grow to fit it,
+ * pushing the Timeline and Preview panels off-screen entirely.
+ * `overflow-wrap:anywhere` is the form that also shrinks the min-content
+ * size, so the flex layout no longer has to grow to accommodate it — this
+ * is the same fix `PreviewPanel.svelte` (Repositories view) already uses
+ * for its own preview text. */
+const DOC_LINE_WRAP_STYLE = "white-space:normal;overflow-wrap:anywhere;min-width:0";
 
 /** Every role file's own directory path relative to
  * `src/content/personnel/`, case-preserved (same `entry.id`-is-the-real-path

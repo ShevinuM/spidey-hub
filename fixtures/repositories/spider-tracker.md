@@ -11,6 +11,9 @@ repos:
   - name: webbing-sigd
     github: shevinum/webbing-sigd
     branch: main ↑3
+  - name: webbing-lab
+    github: shevinum/webbing-lab
+    branch: main
 ---
 # spider-tracker
 
@@ -20,6 +23,8 @@ Signature tracker for arachnid-class movers. Two locks at a time,
 ## Feeds
 - webbing signature daemon
 - doom perimeter sentries (read-only)
+- webbing-lab: scaffolded repo, no commits pushed yet (adversarial empty-repo
+  fixture, Phase 7b.2)
 
 ## Status
 live · 2 targets in latveria
