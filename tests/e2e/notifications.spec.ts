@@ -251,6 +251,29 @@ test.describe("signal inbox: dismiss semantics per folder", () => {
     await expect(row(page, firstA.id)).toHaveCount(0);
     await expect(tab(page, "spam")).toContainText("0");
   });
+
+  // Phase 7b.2 (PLAN.md): the zero-notification state can't live in the
+  // fixture dataset (it would collide with the toast-bearing visual
+  // recipes seeded by TOAST_SEED — see recipes.ts's own comment on
+  // notificationStore's `buildFixtureState()`), so it's reached here
+  // instead, as a dismiss-all interaction against the two items a fresh
+  // visit always injects. Dismissing FROM the inbox only archives (see
+  // "dismissing an inbox item archives it" above), which is enough to
+  // empty the inbox tab itself and surface `notifications-empty` — no
+  // need to delete outright.
+  test("dismissing every inbox item surfaces the zero-notification empty state", async ({ page }) => {
+    await gotoReady(page, "/");
+    await bell(page).click();
+    await expect(rows(page)).toHaveCount(2);
+
+    await row(page, firstA.id).locator('[data-testid="notification-dismiss"]').click();
+    await row(page, firstB.id).locator('[data-testid="notification-dismiss"]').click();
+
+    await expect(bell(page)).toHaveAttribute("data-unread-count", "0");
+    await expect(tab(page, "inbox")).toContainText("0");
+    await expect(rows(page)).toHaveCount(0);
+    await expect(page.locator('[data-testid="notifications-empty"]')).toBeVisible();
+  });
 });
 
 test.describe("signal inbox: persistence across reload (localStorage)", () => {
