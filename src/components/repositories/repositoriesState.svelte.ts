@@ -324,11 +324,11 @@ export class RepositoriesState {
 
   selectedRepoIdx = $state(0);
   selectedCommitIdx = $state(0);
-  /** 0-5, matching the six UI v2 panel numbers in reading order: 0 = Status,
-   * 1 = Repositories, 2 = Files, 3 = Content, 4 = Commits, 5 = Command Log.
+  /** 0-4, matching the five UI v2 panel numbers in reading order: 0 = Status,
+   * 1 = Repositories, 2 = Files, 3 = Content, 4 = Commits.
    * Default stays 2 (Files) — the mount effect below loads the all-projects
    * tree into it immediately, same as before the renumbering. */
-  focusedPanel = $state<0 | 1 | 2 | 3 | 4 | 5>(2);
+  focusedPanel = $state<0 | 1 | 2 | 3 | 4>(2);
 
   selectedRepo = $derived(this.flatRepos[this.selectedRepoIdx]);
 
@@ -699,7 +699,7 @@ export class RepositoriesState {
   // Focus styling helpers
   // ---------------------------------------------------------------------
 
-  panelBorder(n: 0 | 1 | 2 | 3 | 4 | 5): string {
+  panelBorder(n: 0 | 1 | 2 | 3 | 4): string {
     return this.focusedPanel === n ? "#e0453c" : "rgba(224,69,60,.35)";
   }
 }

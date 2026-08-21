@@ -10,8 +10,7 @@ rows:
       - "2"
       - "3"
       - "4"
-      - "5"
-    desc: Switches focus between panels [0] Status, [1] Repositories, [2] Files, [3] Content, [4] Commits, [5] Command Log.
+    desc: Switches focus between panels [0] Status, [1] Repositories, [2] Files, [3] Content, [4] Commits.
   - name: Move selection
     keys:
       - ↑

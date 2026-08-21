@@ -1,7 +1,7 @@
 <script lang="ts">
   // Repositories (lazygit clone) view — design/Homepage.dc.html lines 338-397
   // (five-panel layout: [1] Status, [2] Files, [3] Local Repositories,
-  // [4] Commits, [0] Changes, plus the unnumbered Command log panel).
+  // [4] Commits, [0] Changes).
   //
   // This view uses a lazygit-style flat-repo-list flow, fixing two live
   // user bug reports along the way:
@@ -35,7 +35,7 @@
   // fallback (removed sitewide) — this is what lets the file editor get
   // first refusal over GrepOverlay while it's open.
   import type { CollectionEntry } from "astro:content";
-  import type { RepositoriesData, CommandLogLine } from "../../lib/data";
+  import type { RepositoriesData } from "../../lib/data";
   import type { Commit } from "../../lib/commits";
   import Editor from "../editor/Editor.svelte";
   import { RepositoriesState } from "./repositoriesState.svelte";
@@ -44,18 +44,11 @@
   import ReposPanel from "./ReposPanel.svelte";
   import CommitsPanel from "./CommitsPanel.svelte";
   import PreviewPanel from "./PreviewPanel.svelte";
-  import CommandLog from "./CommandLog.svelte";
 
   interface Props {
     repositories: RepositoriesData;
     projects: CollectionEntry<"repositories">[];
     commitsByRepo: Record<string, Commit[]>;
-    /** Panel [5] ("Command Log") copy — src/content/command-log/command-log.md,
-     * mapped at build time by src/lib/data.ts's `buildCommandLog` (Decision 5:
-     * moved out of repositories.yaml so this one panel's prose lives as
-     * markdown, `**bold**`/`[text](href)` and all, instead of hand-nested
-     * YAML). Threaded straight through to CommandLog.svelte. */
-    commandLog: CommandLogLine[];
     /** See PaneTree.svelte's own header comment (multi-instance
      * data-copy-source gating); ANDed with each panel's own
      * `focusedPanel === N` check below (both must hold: this pane is the
@@ -69,7 +62,7 @@
     fixtureMode: boolean;
   }
 
-  const { repositories, projects, commitsByRepo, commandLog, isFocused, fixtureMode }: Props = $props();
+  const { repositories, projects, commitsByRepo, isFocused, fixtureMode }: Props = $props();
 
   const state = new RepositoriesState(
     () => repositories,
@@ -109,8 +102,8 @@
 
     if (e.metaKey || e.ctrlKey || e.altKey) return false;
 
-    if (e.key === "0" || e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4" || e.key === "5") {
-      const n = Number(e.key) as 0 | 1 | 2 | 3 | 4 | 5;
+    if (e.key === "0" || e.key === "1" || e.key === "2" || e.key === "3" || e.key === "4") {
+      const n = Number(e.key) as 0 | 1 | 2 | 3 | 4;
       state.focusedPanel = n;
       return true;
     }
@@ -212,9 +205,6 @@
 
           <!-- [4] Commits (tracks ONLY the panel [1] selection) -->
           <CommitsPanel {repositories} {state} {isFocused} />
-
-          <!-- [5] Command Log -->
-          <CommandLog {repositories} {commandLog} {state} {isFocused} />
         </div>
       </div>
     </div>

@@ -306,12 +306,6 @@ export const buildProfile = (entry: CollectionEntry<"profile">): ProfileData => 
 // repositories.yaml
 // ---------------------------------------------------------------------------
 
-export interface CommandLogLine {
-  text: string;
-  emphasize?: string[];
-  links?: { text: string; href: string }[];
-}
-
 export interface RepoBrowserEntry {
   icon: string;
   name: string;
@@ -382,7 +376,6 @@ export interface RepositoriesData {
     repos: { label: string };
     commits: { label: string; subtitleTemplate: string; authorInitials: string; localOnlyText: string };
     changes: { label: string; subtitleTemplate: string };
-    commandLog: { label: string };
   };
   statusLine: {
     prefix: string;
@@ -589,51 +582,6 @@ export const buildBoot = (entries: CollectionEntry<"boot">[]): BootData => {
   }
   return { ...config, log };
 };
-
-// ---------------------------------------------------------------------------
-// command-log content collection (src/content/command-log/command-log.md)
-// ---------------------------------------------------------------------------
-
-/**
- * Extracts `[text](href)` links and `**bold**` emphasis out of one plain
- * body line, in that order (links first: a bold phrase and a link never
- * overlap in practice, but stripping link brackets before scanning for `**`
- * keeps the two passes independent regardless), producing the pre-existing
- * `CommandLogLine` shape `tokenizeLogLine` (src/lib/commandLog.ts) already
- * knows how to render — this is the exact inverse of that function's
- * tokenizing.
- */
-function parseCommandLogLine(raw: string): CommandLogLine {
-  const links: { text: string; href: string }[] = [];
-  const withoutLinks = raw.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, text: string, href: string) => {
-    links.push({ text, href });
-    return text;
-  });
-  const emphasize: string[] = [];
-  const text = withoutLinks.replace(/\*\*([^*]+)\*\*/g, (_match, word: string) => {
-    emphasize.push(word);
-    return word;
-  });
-  const line: CommandLogLine = { text };
-  if (emphasize.length > 0) line.emphasize = emphasize;
-  if (links.length > 0) line.links = links;
-  return line;
-}
-
-/**
- * One markdown file (src/content/command-log/command-log.md), one
- * `CommandLogLine` per non-blank body line — Repositories' panel [5] used to
- * read this straight out of repositories.yaml as a literal array; moving it
- * to a content collection (Decision 5) means the copy is now markdown prose
- * (`**bold**`/`[text](href)`) instead of hand-nested YAML, parsed back into
- * the same shape here so CommandLog.svelte/tokenizeLogLine need no changes.
- */
-export const buildCommandLog = (entries: CollectionEntry<"command-log">[]): CommandLogLine[] =>
-  (entries[0]?.body ?? "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
-    .map(parseCommandLogLine);
 
 // ---------------------------------------------------------------------------
 // cmdline.yaml

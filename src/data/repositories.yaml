@@ -1,7 +1,7 @@
 # Repositories (lazygit clone) view copy. Source: design/Homepage.dc.html
 # lines 322-382 (content/behavior only — panel NUMBERING here is UI v2's own
 # reading-order scheme: 0=Status, 1=Repositories, 2=Files, 3=Content,
-# 4=Commits, 5=Command Log; PanelBadge.svelte composes the "{n} · {label}"
+# 4=Commits; PanelBadge.svelte composes the "[{n}] {label}"
 # text from each panel's own bare `label` below).
 #
 # Repositories' interaction model goes beyond
@@ -16,9 +16,9 @@
 # lives here, not inlined in Repositories.svelte.
 
 # Panel labels are bare (no "─[N]─" bracket, no leading dash) — the
-# UI v2 badge (PanelBadge.svelte) composes the "{n} · {label}" text itself,
+# UI v2 badge (PanelBadge.svelte) composes the "[{n}] {label}" text itself,
 # floating on the panel's own top border, so the label here is just the
-# word after the separator.
+# word after the bracketed number.
 panels:
   status:
     label: "Status"
@@ -54,8 +54,6 @@ panels:
     # has been browsed. Standalone caption line (UI v2; used to be appended
     # after the corner title).
     subtitleTemplate: "{value}"
-  commandLog:
-    label: "Command Log"
 
 # Status panel (panel [0]) copy. Left cluster: "{prefix} {arrow} {N}
 # {reposSuffix}" with N computed from the real repo count (repoCount already

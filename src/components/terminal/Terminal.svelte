@@ -39,7 +39,6 @@
     HelpSearchData,
     ShellData,
     ChooseTreeData,
-    CommandLogLine,
   } from "../../lib/data";
   import type { Commit } from "../../lib/commits";
   import type { ViewId } from "../../lib/views";
@@ -106,7 +105,6 @@
     projects: CollectionEntry<"repositories">[];
     personnelEntries: CollectionEntry<"personnel">[];
     commitsByRepo: Record<string, Commit[]>;
-    commandLog: CommandLogLine[];
   }
 
   const {
@@ -130,7 +128,6 @@
     projects,
     personnelEntries,
     commitsByRepo,
-    commandLog,
   }: Props = $props();
 
   /** The six canonical, launchable program names (every `ProgramName`
@@ -936,7 +933,6 @@
         {projects}
         {personnelEntries}
         {commitsByRepo}
-        {commandLog}
         onWindowSwitch={core.switchToProgram}
         onLaunchInPane={core.onLaunchInPane}
         onExitPane={core.onExitPane}

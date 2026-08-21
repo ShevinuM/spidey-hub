@@ -3,7 +3,7 @@
 import Shell from "../layouts/Shell.astro";
 import Terminal from "../components/terminal/Terminal.svelte";
 import { getCollection } from "astro:content";
-import { getSite, getDashboard, getTracker, getRepositories, getPersonnel, getGrep, getCmdline, getHelpSearch, getShell, getChooseTree, buildProfile, buildHelp, buildNotifications, buildBoot, buildCommandLog } from "../lib/data";
+import { getSite, getDashboard, getTracker, getRepositories, getPersonnel, getGrep, getCmdline, getHelpSearch, getShell, getChooseTree, buildProfile, buildHelp, buildNotifications, buildBoot } from "../lib/data";
 import { getCommitsByRepo } from "../lib/commits";
 
 const site = getSite();
@@ -22,7 +22,6 @@ const profile = buildProfile((await getCollection("profile"))[0]);
 const help = buildHelp(await getCollection("help"));
 const notifications = buildNotifications(await getCollection("notifications"));
 const boot = buildBoot(await getCollection("boot"));
-const commandLog = buildCommandLog(await getCollection("command-log"));
 const commitsByRepo = getCommitsByRepo(projects);
 // PORTFOLIO_FIXTURES gates the notification system into a fixed,
 // hand-authored state for deterministic golden capture (Notifications.svelte's
@@ -53,6 +52,5 @@ const notificationsFixtureMode = process.env.PORTFOLIO_FIXTURES === "1";
     {projects}
     {personnelEntries}
     {commitsByRepo}
-    {commandLog}
   />
 </Shell>

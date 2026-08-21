@@ -687,12 +687,12 @@ test.describe("Repositories: t is not bound", () => {
   });
 });
 
-test.describe("Repositories: panel focus border (panels 0, 3, and 5)", () => {
+test.describe("Repositories: panel focus border (panels 0, 3, and 4)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("0 focuses the Status panel (border); 3 focuses the Content panel (border); 5 focuses the Command Log panel (border)", async ({ page }) => {
+  test("0 focuses the Status panel (border); 3 focuses the Content panel (border); 4 focuses the Commits panel (border)", async ({ page }) => {
     await gotoReady(page, "/repositories");
     const FOCUSED = /border: 1px solid rgb\(224, 69, 60\)/;
     const UNFOCUSED = /border: 1px solid rgba\(224, 69, 60, 0\.35\)/;
@@ -714,8 +714,8 @@ test.describe("Repositories: panel focus border (panels 0, 3, and 5)", () => {
     await expect(page.locator('[data-testid="repositories-panel-3"]')).toHaveAttribute("style", FOCUSED);
     await expect(page.locator('[data-testid="repositories-panel-0"]')).toHaveAttribute("style", UNFOCUSED);
 
-    await page.keyboard.press("5");
-    await expect(page.locator('[data-testid="repositories-panel-5"]')).toHaveAttribute("style", FOCUSED);
+    await page.keyboard.press("4");
+    await expect(page.locator('[data-testid="repositories-panel-4"]')).toHaveAttribute("style", FOCUSED);
     await expect(page.locator('[data-testid="repositories-panel-3"]')).toHaveAttribute("style", UNFOCUSED);
   });
 });
