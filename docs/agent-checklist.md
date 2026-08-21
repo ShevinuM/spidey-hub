@@ -113,8 +113,9 @@ in the same change as any `docs/` edit that affects a convention below.
 - [ ] Gate a non-essential CSS animation behind
       `@media (prefers-reduced-motion: no-preference)`. Do NOT also gate it
       under a fixture-mode flag — fixture builds render every `infinite`
-      animation live on purpose (Phase 7b.1); golden determinism comes only
-      from the visual pipeline's capture-time `animations:"disabled"`.
+      animation live on purpose, so a dead keyframe cannot hide; golden
+      determinism comes only from the visual pipeline's capture-time
+      `animations:"disabled"`.
 - [ ] Declare a component-local `@keyframes` referenced from an inline
       `style="..."` attribute using Svelte's global form
       (`@keyframes -global-<name>`) — a plain component-scoped declaration

@@ -1,7 +1,7 @@
 // Pure Node port-picking helper — no Astro/Svelte/DOM import, so
 // tests/unit/freePort.test.ts can exercise it directly under `node --test`,
 // same "DOM-free module a unit test imports" convention `src/lib/*.ts`
-// follows (AGENT_CHECKLIST.md's project-structure section), just rooted
+// follows (docs/agent-checklist.md's project-structure section), just rooted
 // under scripts/ instead since this is build-tooling logic, not app logic.
 //
 // PLAN.md Phase 7.4 / iteration-6 post-mortem "standing hazards":
