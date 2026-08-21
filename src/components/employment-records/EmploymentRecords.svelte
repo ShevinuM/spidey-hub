@@ -79,8 +79,18 @@
   />
 {:else}
   <div style="flex:1;min-height:0;display:flex">
-    <div style="flex:1;min-height:0;padding:26px">
-      <div style="position:relative;width:100%;height:100%;display:flex;font-size:12.5px">
+    <!-- RecordsPanel/TimelinePanel/PreviewPanel are fixed-width (626/188/626),
+         summing wider than the viewport below ~1512px. This container
+         scrolls horizontally instead of letting them shrink or reflow;
+         `min-width:0` lets it actually shrink to the available space so
+         `overflow-x:auto` has something to clip/scroll against, and the
+         child below is `width:max-content` so it sizes to its own content
+         rather than to this container's width. -->
+    <div
+      data-testid="employment-view-scroll"
+      style="flex:1;min-height:0;min-width:0;padding:26px;overflow-x:auto;overflow-y:hidden"
+    >
+      <div style="position:relative;min-width:100%;width:max-content;height:100%;display:flex;font-size:12.5px">
         <div style="position:absolute;left:-10px;top:-10px;z-index:8;width:22px;height:22px;border:1px solid rgba(224,69,60,.6);border-radius:3px;background:rgba(10,14,19,.97);box-shadow:0 0 14px rgba(224,69,60,.25);display:flex;align-items:center;justify-content:center">
           <img src="/assets/spider-glyph-red.svg" alt="" aria-hidden="true" style="width:13px;height:13px;display:block" />
         </div>

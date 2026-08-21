@@ -4,6 +4,10 @@
   // ("personnel" mode). The line container scrolls vertically when the
   // body is taller than the panel, and each line wraps instead of clipping
   // so no character is ever hidden.
+  //
+  // Fixed 626px width (the design canvas's own rendered value at 1512x945,
+  // UI-Mockups/builds-page-design-review/Personnel.dc.html) — does not scale
+  // with the viewport, and is identical across every record.
   import PanelBadge from "../PanelBadge.svelte";
   import type { EmploymentRecordsState } from "./employmentRecordsState.svelte";
 
@@ -18,7 +22,10 @@
   const lineCountLabel = $derived(state.personnel.previewLineCountTemplate.replace("{n}", String(state.docLines.length)));
 </script>
 
-<div style="position:relative;flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">
+<div
+  data-testid="employment-preview-panel"
+  style="position:relative;flex:none;width:626px;display:flex;flex-direction:column;gap:8px"
+>
   <PanelBadge left={state.personnel.badge.previewLeft} right={state.personnel.badge.previewRight} />
 
   <div

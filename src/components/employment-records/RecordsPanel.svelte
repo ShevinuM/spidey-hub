@@ -3,6 +3,11 @@
   // top-stacked inside the bordered box with explicit `gap` between the
   // three blocks. The row list is the one block that grows/scrolls when its
   // content exceeds the box's remaining height.
+  //
+  // Fixed 626px width (the design canvas's own rendered value at 1512x945,
+  // UI-Mockups/builds-page-design-review/Personnel.dc.html) — does not scale
+  // with the viewport. EmploymentRecords.svelte's own scroll container
+  // handles anything narrower than the fixed layout.
   import PanelBadge from "../PanelBadge.svelte";
   import type { EmploymentRecordsState } from "./employmentRecordsState.svelte";
 
@@ -14,7 +19,10 @@
   const { state, isFocused }: Props = $props();
 </script>
 
-<div style="position:relative;flex:1;min-width:0;display:flex;flex-direction:column;gap:12px">
+<div
+  data-testid="employment-records-panel"
+  style="position:relative;flex:none;width:626px;display:flex;flex-direction:column;gap:12px"
+>
   <div
     style="position:relative;flex:1;min-height:0;overflow:hidden;border:1px solid #e0453c;border-radius:3px;box-shadow:0 0 30px rgba(224,69,60,.10);padding:16px 12px 18px;display:flex;flex-direction:column;gap:18px"
   >
