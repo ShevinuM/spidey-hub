@@ -44,39 +44,49 @@
           onkeydown={(e) => {
             if (e.key === "Enter" || e.key === " ") state.activateRepo(i);
           }}
-          style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:rgba(196,216,232,.75);{state.focusedPanel ===
+          style="cursor:pointer;display:flex;align-items:center;gap:6px;color:rgba(196,216,232,.75);{state.focusedPanel ===
             1 && i === state.selectedRepoIdx
             ? 'background:rgba(224,69,60,.22)'
             : ''}"
         >
-          <span style="color:#5fc6b4">{repo.mark}</span> {repo.key}
-          <span style="color:rgba(217,176,74,.75)">{repo.branch}</span>
-          {#if state.isFetching(repo.key)}
-            <span
-              data-testid="repositories-repo-spinner"
-              role="status"
-              aria-label={repositories.spinner.ariaLabel}
-              style="color:#5fc6b4"
-            >
-              {repositories.spinner.label} {repositories.spinner.frames[state.spinnerFrame]}
-            </span>
-          {:else if !repo.isAllProjects}
-            {#if state.repoTree?.source.repoName === repo.key}
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+            <span style="color:#5fc6b4">{repo.mark}</span> {repo.key}
+            <span style="color:rgba(217,176,74,.75)">{repo.branch}</span>
+          </span>
+          <!-- Fixed right-hand slot: the status dot (or fetch spinner) sits
+               here so its right edge lands at the row's own right edge —
+               the row's left span already consumes all remaining space via
+               flex:1, so this slot's content never drifts with name/branch
+               length. Renders empty (no dot) for the virtual all-projects
+               row. -->
+          <span style="flex:none;display:flex;align-items:center;justify-content:flex-end">
+            {#if state.isFetching(repo.key)}
               <span
-                data-testid="repositories-repo-open-dot"
-                style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ffca28;margin-left:6px;animation:{state.fixtureMode
-                  ? 'none'
-                  : 'pls 1.6s ease-in-out infinite'}"
-              ></span>
-            {:else}
-              <span
-                data-testid="repositories-repo-idle-dot"
-                style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:6px;background:{state.idleDotColor(
-                  repo.key,
-                )}"
-              ></span>
+                data-testid="repositories-repo-spinner"
+                role="status"
+                aria-label={repositories.spinner.ariaLabel}
+                style="color:#5fc6b4"
+              >
+                {repositories.spinner.label} {repositories.spinner.frames[state.spinnerFrame]}
+              </span>
+            {:else if !repo.isAllProjects}
+              {#if state.repoTree?.source.repoName === repo.key}
+                <span
+                  data-testid="repositories-repo-open-dot"
+                  style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ffca28;animation:{state.fixtureMode
+                    ? 'none'
+                    : 'pls 1.6s ease-in-out infinite'}"
+                ></span>
+              {:else}
+                <span
+                  data-testid="repositories-repo-idle-dot"
+                  style="display:inline-block;width:6px;height:6px;border-radius:50%;background:{state.idleDotColor(
+                    repo.key,
+                  )}"
+                ></span>
+              {/if}
             {/if}
-          {/if}
+          </span>
         </div>
       {/each}
     </div>
