@@ -138,6 +138,25 @@ test.describe("Phase 1: infinite animations actually move (secondary, motion-bas
     expect(sweepB).not.toBe(sweepA);
   });
 
+  // `pls` is checked for a resolvable keyframe name above, but a resolvable
+  // name is not motion: an `animation:none` on this dot would leave every
+  // dead-name assertion green. This is the only assertion that the repo
+  // status dot actually pulses.
+  test("pls pulses on an open repository's status dot", async ({ page }) => {
+    await gotoReady(page, "/repositories");
+    // Row 0 is the pinned `all-projects` virtual repo; row 1 is the first
+    // real repo, whose open-dot carries the pulse.
+    await page.locator('[data-testid="repositories-repo-row"]').nth(1).click();
+    const dot = page.locator('[data-testid="repositories-repo-open-dot"]').first();
+    await expect(dot).toBeVisible();
+    expect(await dot.evaluate((el) => el.getAnimations().length)).toBeGreaterThan(0);
+    // `pls` animates opacity, not transform, so sample that instead.
+    const first = await dot.evaluate((el) => getComputedStyle(el).opacity);
+    await new Promise((r) => setTimeout(r, 400));
+    const second = await dot.evaluate((el) => getComputedStyle(el).opacity);
+    expect(second).not.toBe(first);
+  });
+
   test("spin/rspin/spark/dash move on the employment timeline", async ({ page }) => {
     await gotoReady(page, "/employment");
 
