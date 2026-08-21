@@ -87,6 +87,38 @@
       animation: none !important;
     }
   }
+  /* PLAN.md Phase 5b: a toast can mount well before it is actually VISIBLE
+     — BootSequence.svelte's opaque ~5.36s overlay covers the whole screen
+     on a cold visit, but `state.toasts` (hence this `{#each}`) is populated
+     at mount regardless. Without this, `toastIn`/`strand` (one-shot
+     entrance animations) finish hidden behind the overlay and `drain`
+     (this toast's own countdown) runs down — sometimes to empty — before
+     the visitor ever sees it.
+     `[data-testid="boot-sequence"]` is BootSequence.svelte's own overlay
+     element, only ever mounted (`{#if booting}`) while its exported
+     `isActive()` — `phase !== "ready"` — is true; its presence in the DOM
+     is that exact boolean, just observed structurally instead of through
+     the `bootActiveFn` closure Terminal.svelte threads into
+     NotificationsState for the JS dismiss timer (notificationsState.svelte
+     .ts's `armTimer`) — same signal, not a second one. `:has()` reaching
+     up to `body` (a guaranteed common ancestor of the overlay and this
+     component, which live under different subtrees of Terminal.svelte)
+     needs `:global()` since it targets outside this component's own scope.
+     Forcing `animation: none` while boot is active, rather than merely
+     pausing, is deliberate: when this rule stops matching (the overlay
+     unmounts), the resolved `animation-name` on each element flips from
+     `none` to its real value in the same style recalc — a value CHANGE,
+     which the spec defines as starting a brand-new animation instance.
+     That is what makes all three animations begin together, fresh, at the
+     exact instant the toast becomes visible, with no extra JS
+     coordination. A returning visitor (boot-seen already set) never
+     mounts the overlay at all, so this selector never matches and nothing
+     about today's immediate-play behavior changes for that path. */
+  :global(body:has([data-testid="boot-sequence"])) [data-testid="toast"],
+  :global(body:has([data-testid="boot-sequence"])) [data-testid="toast-strand"],
+  :global(body:has([data-testid="boot-sequence"])) .eh-toast-drain {
+    animation: none !important;
+  }
   /* `drain` is referenced from within THIS <style> block's own
      `.eh-toast-drain` rule below, not from an inline `style=` attribute, so
      Svelte's normal scoping rewrites both the declaration and the
