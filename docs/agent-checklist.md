@@ -41,6 +41,8 @@ in the same change as any `docs/` edit that affects a convention below.
       collection.
 - [ ] Keep generated/derived files (anything `scripts/generate.mjs` writes) under
       `src/generated/` or `public/generated/` — never hand-edit a generated file.
+- [ ] Never commit `ds-bundle/` (the `.dc.html` Claude Design mirror
+      `scripts/generate-design-mirror.mjs` writes) — it's gitignored on purpose.
 - [ ] Keep one `src/lib/*.ts` module's exports pure and DOM-free when a unit test
       type-imports it — no `astro:content`/browser-only import in a module
       `tests/unit/*.test.ts` imports, no Svelte runes.

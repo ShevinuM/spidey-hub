@@ -5,3 +5,7 @@ test-results/
 playwright-report/
 .DS_Store
 UI-Mockups/
+ds-bundle/
+.env
+context.sh
+.memsearch/

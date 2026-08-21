@@ -13,6 +13,7 @@
     "generate": "node scripts/generate.mjs",
     "check": "astro check && tsc --noEmit && svelte-check --threshold error",
     "goldens": "node tests/visual/capture-goldens.mjs",
+    "design-mirror": "node scripts/generate-design-mirror.mjs",
     "test:unit": "node --test tests/unit/*.test.ts",
     "test:visual": "pnpm build:fixtures && E2E_EXPECT_FIXTURES=1 playwright test tests/visual/identical.spec.ts tests/visual/adversarial-fixtures.spec.ts",
     "test:e2e": "pnpm build && E2E_EXPECT_FIXTURES=0 playwright test tests/e2e"

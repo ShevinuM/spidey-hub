@@ -29,6 +29,7 @@ wanting a fresh contribution-grid/commit snapshot.
 | `pnpm test:e2e` | real-content build + the full Playwright behavioral suite — 30 spec files, 502 tests × 2 viewports = 1004 runs |
 | `pnpm test:visual` | fixture build + 42 golden screenshot comparisons (21 recipes × 2 viewports) + `tests/visual/adversarial-fixtures.spec.ts`'s 4 functional assertions × 2 viewports (Phase 7b.2 — proves the adversarial fixtures below actually scroll/wrap/render-empty, not just parse) |
 | `pnpm goldens` | historical/guarded — regenerates goldens against the vendored ORIGINAL design prototype, refuses to run without `--restore-prototype-parity`; not the normal re-baseline path |
+| `pnpm design-mirror` | regenerates `ds-bundle/pages-{real,fixtures}/*.dc.html` — the Claude Design mirror, see below |
 
 Run the full gate before any change is considered done:
 
@@ -63,6 +64,32 @@ contribution grid — not fixture data), serves `dist/` on a scratch port, and r
 same keystroke sequences `tests/visual/recipes.ts` already proved reach each named state,
 capturing 12 PNGs at 1512×945 into `docs/screenshots/`. Re-run it whenever a UI change
 should be reflected in the README/docs images.
+
+## Claude Design mirror (`ds-bundle/`, gitignored)
+
+```sh
+pnpm design-mirror                  # both builds, all six routes
+node scripts/generate-design-mirror.mjs --build=real --route=Dashboard   # one route, one build
+```
+
+Runs `pnpm build` and `pnpm build:fixtures`, serves each `dist/` on a scratch port, and
+for each of the six routes (`index` as `Dashboard`, `repositories`, `employment`,
+`profile`, `help`, `retina-v` — each already its own Astro page with its own
+`initialView`, so a direct `page.goto` to the route reaches its default state with no
+keystroke replay needed) waits for `[data-terminal-ready="true"]` plus fonts/network
+idle, then serializes the hydrated DOM into a self-contained `<name>.dc.html` matching
+the `<x-dc>`/`<helmet>` format of the Claude Design exports vendored under
+`UI-Mockups/builds-page-design-review/` (gitignored, read `Dashboard.dc.html` there for
+the format reference). Every `<script>` tag is stripped, and every same-origin asset the
+page actually references — `public/assets/*.svg`/`*.jpg`, `public/fonts/*.woff2`, and
+the build-hashed `_astro/*.woff2`/`.woff` font-subset files — is inlined as a base64
+`data:` URI so the file renders standalone from `file://` with zero network requests.
+The one exception is `public/assets/retina-v.png` (2MB): emitted as a sibling
+`assets/retina-v.png` next to each build's `.dc.html` files and referenced by a relative
+path instead of inlined.
+
+Output goes to `ds-bundle/pages-real/` and `ds-bundle/pages-fixtures/` — gitignored,
+never committed. Re-run after any UI change that should be reflected in the mirror.
 
 ## `GITHUB_TOKEN` (optional)
 
