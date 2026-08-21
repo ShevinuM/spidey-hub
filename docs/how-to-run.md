@@ -27,7 +27,7 @@ wanting a fresh contribution-grid/commit snapshot.
 | `pnpm check` | `astro check` + `tsc --noEmit` + `svelte-check --threshold error` |
 | `pnpm test:unit` | `node --test tests/unit/*.test.ts` — 339 tests of pure `src/lib/*.ts` logic, no browser |
 | `pnpm test:e2e` | real-content build + the full Playwright behavioral suite — 30 spec files, 502 tests × 2 viewports = 1004 runs |
-| `pnpm test:visual` | fixture build + 42 golden screenshot comparisons (21 recipes × 2 viewports) + `tests/visual/adversarial-fixtures.spec.ts`'s 4 functional assertions × 2 viewports (Phase 7b.2 — proves the adversarial fixtures below actually scroll/wrap/render-empty, not just parse) |
+| `pnpm test:visual` | fixture build + 42 golden screenshot comparisons (21 recipes × 2 viewports) + `tests/visual/adversarial-fixtures.spec.ts`'s 4 functional assertions × 2 viewports (proves the adversarial fixtures below actually scroll/wrap/render-empty, not just parse) |
 | `pnpm goldens` | historical/guarded — regenerates goldens against the vendored ORIGINAL design prototype, refuses to run without `--restore-prototype-parity`; not the normal re-baseline path |
 | `pnpm design-mirror` | regenerates `ds-bundle/pages-{real,fixtures}/*.dc.html` — the Claude Design mirror, see below |
 
@@ -136,7 +136,7 @@ failure — the checked-in snapshot is what a fresh visitor's first paint always
 
 `fixtures/` holds every deterministic stand-in the visual suite needs so its goldens never
 couple to real, ever-changing project/commit/employment data: `fixtures/repositories/*.md`
-(sample projects), `fixtures/personnel/*` (sample employment records, Phase 7b.2 — mirrors
+(sample projects), `fixtures/personnel/*` (sample employment records — mirrors
 `src/content/personnel/`'s variable-depth tree shape), `fixtures/commits/*.json`,
 `fixtures/repos/*.json` (`all-projects.json` plus any per-repo working-tree index, e.g.
 the empty `webbing-lab.json`), `fixtures/grep-index.json`, `fixtures/fs-index.json`,
@@ -147,7 +147,7 @@ which pieces switch and how.
 against drifting from `fixtures/repositories/*.md` — see that test file's own header for
 the regeneration snippet if you ever hand-edit a fixture project doc.
 
-Some of this fixture data is deliberately adversarial (Phase 7b.2 — see
+Some of this fixture data is deliberately adversarial (see
 `docs/architecture.md`'s "Blind spots" section for why): a ~300-line personnel record with
 an embedded 400-char unbroken line, a second 400-char unbroken line in a fixture project
 doc's body, and an empty repository entry (`webbing-lab`, zero files and zero commits).

@@ -83,7 +83,7 @@ Four independent suites, each catching a different class of regression:
 | type/lint | `pnpm check` | `astro check` + `tsc --noEmit` + `svelte-check --threshold error` | — |
 | unit | `pnpm test:unit` | pure `src/lib/*.ts` logic, `node --test` | 339 tests |
 | e2e | `pnpm test:e2e` | real build, full Playwright behavioral suite, 30 spec files | 502 tests × 2 viewports = 1004 runs |
-| visual | `pnpm test:visual` | fixture build, pixel-identical golden comparison + functional adversarial-fixture assertions (`tests/visual/adversarial-fixtures.spec.ts`, Phase 7b.2) | 21 recipes × 2 viewports = 42 goldens, + 4 assertions × 2 viewports = 8 runs |
+| visual | `pnpm test:visual` | fixture build, pixel-identical golden comparison + functional adversarial-fixture assertions (`tests/visual/adversarial-fixtures.spec.ts`) | 21 recipes × 2 viewports = 42 goldens, + 4 assertions × 2 viewports = 8 runs |
 
 All four gate every change; none is optional for a change that touches the code they
 cover.
@@ -97,7 +97,7 @@ three before trusting a green run:
 - The visual pipeline freezes animation at capture time (Playwright's
   `animations:"disabled"`) — that is the ONLY source of golden determinism
   for `infinite` CSS animations. Fixture mode itself no longer touches
-  animations (Phase 7b.1): a fixture build renders every `infinite` keyframe
+  animations: a fixture build renders every `infinite` keyframe
   live, specifically so a dead keyframe can't hide behind fixture mode the
   way 9 of them once did.
 - The shared e2e fixture pre-seeds "boot already seen" for every spec but
@@ -106,7 +106,7 @@ three before trusting a green run:
 - Historically, fixture content was fixed-length and never overflowed a panel, so
   clipping, non-scrollable bodies, and bottom-anchored voids stayed invisible behind
   42 green goldens — that's what hid an entire iteration's worth of layout defects
-  (Phase 7b.2). Fixture content now includes deliberately adversarial cases (a
+  Fixture content now includes deliberately adversarial cases (a
   ~300-line employment record, 400-char unbroken lines in both personnel and
   repository content, an empty repository) exercised by
   `tests/visual/adversarial-fixtures.spec.ts`, so those specific defect classes can't
@@ -164,14 +164,14 @@ every prior re-baseline's determinism-check record.
 `PORTFOLIO_FIXTURES=1` (set only by `pnpm build:fixtures`, never by `pnpm dev`/`pnpm
 build`) switches the `repositories` AND `personnel` content collections to
 `fixtures/repositories/*.md` / `fixtures/personnel/*` — small, fixed (but deliberately
-adversarial, Phase 7b.2 — see "Blind spots" above) sample data — with matching
+adversarial — see "Blind spots" above) sample data — with matching
 `fixtures/commits/*.json`, `fixtures/repos/*.json` (`all-projects.json` plus any
 per-repo working-tree index, e.g. the empty `webbing-lab.json`), `fixtures/grep-index.json`,
 `fixtures/fs-index.json`, and `fixtures/contributions.json`. All of those
 (`grep-index.json`, `repos/*.json`, `fs-index.json`, `contributions.json`) are
 copied over their built `dist/generated/` counterparts as `build:fixtures`'s last steps
 rather than generated, so the exact same JS bundle runs in both goldens and production —
-only the JSON payloads differ. Before Phase 7b.2, `personnel` was NOT fixture-switched —
+only the JSON payloads differ. `personnel` was formerly NOT fixture-switched —
 both modes read `src/content/personnel/` (the user's real employment history) directly,
 which meant an adversarial (long/overflowing) record could never be added without
 corrupting the real resume. `profile` and `help` content is still never fixture-switched

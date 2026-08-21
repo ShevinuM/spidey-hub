@@ -393,6 +393,6 @@ point. Since the last of those, the sitewide `builds`→`repositories` /
 that touches either
 view's status-bar/copy text without changing the recipe count, and one more
 recipe was added: `21-notifications-panel-open` (the signal-inbox panel open
-on the dashboard, PLAN.md Phase G2 — see its own header comment in
+on the dashboard — see its own header comment in
 `recipes.ts`). The current total is **21 recipes / 42 goldens**, and that is
 the number any future re-baseline's "N/N passed" report should match.
