@@ -23,10 +23,15 @@ import { fileURLToPath } from "node:url";
 import { serveStatic } from "../tests/visual/static-server.mjs";
 import { BOOT_SEEN_STORAGE_KEY } from "../src/lib/bootState.ts";
 import { recipes, extraRecipes, iteration3Recipes } from "../tests/visual/recipes.ts";
+import { pickPort } from "./lib/freePort.ts";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const OUT_DIR = join(ROOT, "docs/screenshots");
-const PORT = 4323;
+// PLAN.md Phase 7.4: was a hardcoded `4323`, which silently collided with
+// a running `astro dev` (Astro falls back to 4322/4323/... when 4321 is
+// taken). Resolved dynamically in main() via pickPort() instead.
+const PREFERRED_PORT = 4323;
+let PORT;
 const VIEWPORT = { width: 1512, height: 945 };
 
 /** Look up a recipe's `actions` by name across every recipe array. */
@@ -78,6 +83,15 @@ async function main() {
 
   console.log("[capture-screenshots] pnpm build (real content)...");
   execSync("pnpm build", { cwd: ROOT, stdio: "inherit" });
+
+  const picked = await pickPort(PREFERRED_PORT);
+  PORT = picked.port;
+  if (!picked.usedPreferred) {
+    console.log(
+      `[capture-screenshots] port ${PREFERRED_PORT} is already in use (e.g. a running ` +
+        `\`astro dev\`) — using ${PORT} instead`,
+    );
+  }
 
   const server = await serveStatic(join(ROOT, "dist"), PORT);
   const browser = await chromium.launch();
