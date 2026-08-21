@@ -69,8 +69,10 @@ The rule that keeps this enforceable rather than aspirational: **a module a unit
 `import`s directly must stay DOM-free and rune-free** — no `astro:content`, no
 browser-only global, no `$state`. If a piece of logic needs reactive state, it belongs in
 a `<name>State.svelte.ts` class instead, not in `src/lib/`. This split is why `pnpm
-test:unit` can exercise 335 tests of real application logic with zero browser and zero
-Astro build step — every one of them imports straight from `src/lib/`.
+test:unit` can exercise 339 tests of real application logic with zero browser and zero
+Astro build step — nearly every one imports straight from `src/lib/`; the sole
+exception is `tests/unit/freePort.test.ts`, which tests `scripts/lib/freePort.ts`
+(build-tooling logic for `scripts/capture-screenshots.mjs`, not application code).
 
 ## Testing gates
 
@@ -79,8 +81,8 @@ Four independent suites, each catching a different class of regression:
 | suite | command | what it covers | count |
 |---|---|---|---|
 | type/lint | `pnpm check` | `astro check` + `tsc --noEmit` + `svelte-check --threshold error` | — |
-| unit | `pnpm test:unit` | pure `src/lib/*.ts` logic, `node --test` | 335 tests |
-| e2e | `pnpm test:e2e` | real build, full Playwright behavioral suite, 21 spec files | 454 tests × 2 viewports = 908 runs |
+| unit | `pnpm test:unit` | pure `src/lib/*.ts` logic, `node --test` | 339 tests |
+| e2e | `pnpm test:e2e` | real build, full Playwright behavioral suite, 29 spec files | 490 tests × 2 viewports = 980 runs |
 | visual | `pnpm test:visual` | fixture build, pixel-identical golden comparison | 21 recipes × 2 viewports = 42 goldens |
 
 All four gate every change; none is optional for a change that touches the code they

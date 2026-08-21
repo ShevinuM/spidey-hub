@@ -8,10 +8,13 @@ in the same change as any `docs/` edit that affects a convention below.
 ## Before calling a change done
 
 - [ ] `pnpm check` clean (0 errors).
-- [ ] `pnpm test:unit` green (335 tests as of this writing — pure `src/lib/*.ts` logic).
-- [ ] `pnpm test:e2e` green (real build, 21 spec files, 454 tests × 2 viewports).
+- [ ] `pnpm test:unit` green (339 tests as of this writing — pure `src/lib/*.ts` logic).
+- [ ] `pnpm test:e2e` green (real build, 29 spec files, 490 tests × 2 viewports = 980 runs).
 - [ ] `pnpm test:visual` green (fixture build, 21 recipes × 2 viewports = 42 goldens) —
-      unless the change is docs-only/test-only with zero rendering impact.
+      unless the change is docs-only/test-only with zero rendering impact. Recipe count
+      may grow (a recipe covering the repositories syntax-highlighting fix is planned
+      but not yet added); a pending rebaseline changes goldens' pixel content, not
+      this count.
 - [ ] `git status tests/visual/goldens` clean, UNLESS this change deliberately
       changes the UI and the rebaseline procedure (below) was followed.
 
