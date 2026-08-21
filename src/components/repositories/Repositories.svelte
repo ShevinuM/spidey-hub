@@ -186,12 +186,15 @@
   />
 {:else}
   <div style="flex:1;min-height:0;display:flex">
-    <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:12px;font-size:13px">
+    <div
+      data-testid="repositories-panels-root"
+      style="flex:1;min-height:0;display:flex;flex-direction:column;gap:20px;padding:20px;font-size:13px"
+    >
       <!-- [0] Status — full-width bar above the two-column row (UI v2) -->
       <StatusPanel {repositories} {state} {isFocused} />
 
-      <div style="flex:1;min-height:0;display:flex;gap:12px">
-        <div style="width:31%;min-width:0;display:flex;flex-direction:column;gap:12px">
+      <div style="flex:1;min-height:0;display:flex;gap:20px">
+        <div style="width:31%;min-width:0;display:flex;flex-direction:column;gap:20px">
           <!-- [1] Repositories (flat list + all-projects) -->
           <ReposPanel {repositories} {state} {isFocused} />
 
@@ -199,7 +202,7 @@
           <FilesPanel {repositories} {state} {isFocused} />
         </div>
 
-        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:12px">
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:20px">
           <!-- [3] Content (preview) -->
           <PreviewPanel {repositories} {state} {isFocused} />
 

@@ -21,7 +21,7 @@
   copySource={isFocused && state.focusedPanel === 1}
   flex="1.1"
   minHeight
-  padding="12px 10px 8px"
+  padding="18px 10px 8px"
   columnBody
   border={state.panelBorder(1)}
   n={1}
@@ -44,8 +44,8 @@
           onkeydown={(e) => {
             if (e.key === "Enter" || e.key === " ") state.activateRepo(i);
           }}
-          style="cursor:pointer;display:flex;align-items:center;gap:6px;color:rgba(196,216,232,.75);{state.focusedPanel ===
-            1 && i === state.selectedRepoIdx
+          style="cursor:pointer;display:flex;align-items:center;gap:6px;color:rgba(196,216,232,.75);{i ===
+          state.selectedRepoIdx
             ? 'background:rgba(224,69,60,.22)'
             : ''}"
         >
@@ -57,8 +57,9 @@
                here so its right edge lands at the row's own right edge —
                the row's left span already consumes all remaining space via
                flex:1, so this slot's content never drifts with name/branch
-               length. Renders empty (no dot) for the virtual all-projects
-               row. -->
+               length. Every row gets a dot, the virtual all-projects row
+               included — gold/pulsing while it's the open repo (same as any
+               other row), otherwise the idle two-tone dot. -->
           <span style="flex:none;display:flex;align-items:center;justify-content:flex-end">
             {#if state.isFetching(repo.key)}
               <span
@@ -69,22 +70,20 @@
               >
                 {repositories.spinner.label} {repositories.spinner.frames[state.spinnerFrame]}
               </span>
-            {:else if !repo.isAllProjects}
-              {#if state.repoTree?.source.repoName === repo.key}
-                <span
-                  data-testid="repositories-repo-open-dot"
-                  style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ffca28;animation:{state.fixtureMode
-                    ? 'none'
-                    : 'pls 1.6s ease-in-out infinite'}"
-                ></span>
-              {:else}
-                <span
-                  data-testid="repositories-repo-idle-dot"
-                  style="display:inline-block;width:6px;height:6px;border-radius:50%;background:{state.idleDotColor(
-                    repo.key,
-                  )}"
-                ></span>
-              {/if}
+            {:else if state.repoTree?.source.repoName === repo.key}
+              <span
+                data-testid="repositories-repo-open-dot"
+                style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ffca28;animation:{state.fixtureMode
+                  ? 'none'
+                  : 'pls 1.6s ease-in-out infinite'}"
+              ></span>
+            {:else}
+              <span
+                data-testid="repositories-repo-idle-dot"
+                style="display:inline-block;width:6px;height:6px;border-radius:50%;background:{state.idleDotColor(
+                  repo.key,
+                )}"
+              ></span>
             {/if}
           </span>
         </div>

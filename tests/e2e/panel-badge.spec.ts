@@ -4,6 +4,13 @@
 // later commit alongside its own fix.
 import { expect, test, type Page } from "./fixtures.ts";
 
+/** Asserts `actual` is within `tol` px of `target` — real-build layout
+ * measurements are exact CSS px values (no zoom/scale involved), so a small
+ * tolerance only absorbs sub-pixel layout rounding, never a real defect. */
+function expectNear(actual: number, target: number, tol = 1.5) {
+  expect(Math.abs(actual - target)).toBeLessThanOrEqual(tol);
+}
+
 async function box(page: Page, testid: string, nth = 0) {
   const b = await page.locator(`[data-testid="${testid}"]`).nth(nth).boundingBox();
   if (!b) throw new Error(`no bounding box for [data-testid="${testid}"] (nth=${nth})`);
@@ -128,5 +135,64 @@ test.describe("PanelBadge: left-aligned, not centered", () => {
     if (badgeBox && pillBox) {
       expect(Math.abs(badgeBox.width - pillBox.width)).toBeLessThan(2);
     }
+  });
+});
+
+// Regression coverage for the uniform-spacing pass: every inter-panel gap
+// on /repositories (the column gap under the [0] Status bar, the gap
+// between [1]/[2] in the left column, the gap between [3]/[4] in the right
+// column, and the horizontal gap between the two columns) and the outer
+// padding around the whole panel grid were all raised from 12px to 20px in
+// one uniform sweep (Repositories.svelte's `repositories-panels-root` and
+// its two column divs). This test measures real `getBoundingClientRect()`
+// deltas between adjacent panels — never CSS text — so it catches a
+// regression even if a future refactor moves the values into a different
+// stylesheet layer.
+test.describe("Repositories: panel spacing is a uniform 20px (gaps + outer padding)", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  test("every inter-panel gap and the outer padding measure the same 20px", async ({ page }) => {
+    await gotoReady(page, "/repositories");
+
+    const root = await box(page, "repositories-panels-root");
+    const panel0 = await box(page, "repositories-panel-0"); // Status
+    const panel1 = await box(page, "repositories-panel-1"); // Repositories
+    const panel2 = await box(page, "repositories-panel-2"); // Files
+    const panel3 = await box(page, "repositories-panel-3"); // Content (preview)
+    const panel4 = await box(page, "repositories-panel-4"); // Commits
+
+    const gaps = {
+      statusToReposRow: panel1.y - (panel0.y + panel0.height),
+      statusToContentRow: panel3.y - (panel0.y + panel0.height),
+      reposToFiles: panel2.y - (panel1.y + panel1.height),
+      contentToCommits: panel4.y - (panel3.y + panel3.height),
+      leftColumnToRightColumn: panel3.x - (panel1.x + panel1.width),
+    };
+    const paddings = {
+      top: panel0.y - root.y,
+      left: panel0.x - root.x,
+      leftViaReposColumn: panel1.x - root.x,
+      right: root.x + root.width - (panel3.x + panel3.width),
+      rightViaCommits: root.x + root.width - (panel4.x + panel4.width),
+      bottom: root.y + root.height - (panel2.y + panel2.height),
+      bottomViaCommits: root.y + root.height - (panel4.y + panel4.height),
+    };
+
+    for (const [name, value] of Object.entries(gaps)) {
+      expectNear(value, 20, 1.5);
+      void name; // kept for a legible per-assertion label in a failed diff
+    }
+    for (const [name, value] of Object.entries(paddings)) {
+      expectNear(value, 20, 1.5);
+      void name;
+    }
+
+    // Every measured value — not just each one's closeness to 20 — must be
+    // mutually consistent: gaps and the outer padding are ALL the same 20px,
+    // not merely each individually close to it from different directions.
+    const all = [...Object.values(gaps), ...Object.values(paddings)];
+    expect(Math.max(...all) - Math.min(...all)).toBeLessThanOrEqual(2);
   });
 });
