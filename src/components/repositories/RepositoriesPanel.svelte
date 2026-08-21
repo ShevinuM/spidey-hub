@@ -1,11 +1,12 @@
 <script lang="ts">
   // Shared panel chrome (bordered box + top-straddling PanelBadge) for the
-  // six Repositories panels. UI v2 (Builds-Panel-Changes.md): every panel's
+  // five Repositories panels. UI v2 (Builds-Panel-Changes.md): every panel's
   // OLD corner-bracket floating title ("─[N]─Label") is replaced by the
-  // shared PanelBadge pill straddling the panel's own top border, centered,
-  // reading "{n} · {label}" — same badge, same position, on every one of
-  // the six panels (only the panel BORDER color reflects focus; the badge
-  // itself never varies with it, matching the mockup exactly).
+  // shared PanelBadge pill straddling the panel's own top border,
+  // left-aligned, reading "[{n}] {label}" — same badge, same position, on
+  // every one of the five panels (only the panel BORDER color reflects
+  // focus; the badge itself never varies with it, matching the mockup
+  // exactly).
   import type { Snippet } from "svelte";
   import PanelBadge from "../PanelBadge.svelte";
 
@@ -17,7 +18,7 @@
     padding: string;
     columnBody?: boolean;
     border: string;
-    /** Badge panel number, e.g. `0` for "0 · Status". */
+    /** Badge panel number, e.g. `0` for "[0] Status". */
     n: number;
     /** Badge label, e.g. "Status". */
     label: string;
