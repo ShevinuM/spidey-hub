@@ -10,8 +10,6 @@ non-trivial change:
   coding standards, testing gates, the golden rebaseline policy, fixture mode.
 - [`docs/how-to-run.md`](docs/how-to-run.md) — every `pnpm` command, the
   `GITHUB_TOKEN` role, screenshot capture, fixtures.
+- [`docs/agent-checklist.md`](docs/agent-checklist.md) - ruleset for the project.
 
-Every code change follows [`AGENT_CHECKLIST.md`](AGENT_CHECKLIST.md) — run
-it before considering any change done. See `CLAUDE.md` for the commit-style
-and golden-rebaseline rules that apply regardless of which agent/tool is
-making the change.
+- Before making a change read docs/agent-checklist.md and after making changes, all changes must pass 100% against docs/agent-checklist.md.
