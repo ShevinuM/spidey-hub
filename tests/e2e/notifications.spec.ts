@@ -355,3 +355,70 @@ test.describe("signal inbox: reboot", () => {
     await expect(panel(page)).toHaveCount(0);
   });
 });
+
+// PLAN.md Phase 7.3: the row-list body already declares `overflow-y:auto`
+// (NotificationsPanel.svelte's `[flex:1;min-height:120px;overflow-y:auto]`
+// div), but — like every other iteration-6 panel before Phase 3 fixed
+// them — that declaration had never been asserted, so a future regression
+// back to bare `overflow:hidden` would ship silently.
+//
+// `overflowY === "auto"` alone is not the falsifiable signal here (a CSS
+// property can be correctly declared and still fail to scroll for other
+// reasons); pairing it with an actual wheel-driven `scrollTop` move is
+// what the PLAN's own "verifier notes" warn is required — a container
+// assertion alone can pass vacuously. `scrollHeight > clientHeight` is
+// deliberately NOT asserted on its own either: it's true regardless of
+// whether `overflow-y` is `auto` or `hidden` (it measures content, not
+// scrollability), so a broken `overflow:hidden` panel would still pass it.
+//
+// Forces overflow the same way tests/e2e/employment.spec.ts's scroll
+// coverage does (PLAN.md Phase 3's "verifier notes" #5): shrinks the
+// viewport rather than adding fixture data, since Phase 7b.2 (not yet
+// landed) owns adding adversarial fixture content. Measured empirically
+// against the real pool (a fresh visit always injects exactly 2 unseen
+// entries): at 1470x340 the row body's `min-height:120px` floor holds
+// `clientHeight` at 120px while the 2 real rows need ~150-165px, a stable,
+// non-viewport-dependent overflow — not a coincidence of any one pool
+// entry's copy length.
+test.describe("signal inbox: notifications panel body scrolls", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  const panelBody = (page: Page) => panel(page).locator("> div").nth(2);
+
+  test("overflow-y is auto and the body actually overflows with the real 2-item fresh-visit injection", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1470, height: 340 });
+    await gotoReady(page, "/");
+    await bell(page).click();
+    await expect(panel(page)).toBeVisible();
+    await expect(rows(page)).toHaveCount(2);
+
+    const body = panelBody(page);
+    expect(await body.evaluate((el) => getComputedStyle(el).overflowY)).toBe("auto");
+    const { scrollHeight, clientHeight } = await body.evaluate((el) => ({
+      scrollHeight: el.scrollHeight,
+      clientHeight: el.clientHeight,
+    }));
+    expect(scrollHeight).toBeGreaterThan(clientHeight);
+  });
+
+  test("the mouse wheel actually scrolls the body (overflow-y:auto is not merely declared)", async ({ page }) => {
+    await page.setViewportSize({ width: 1470, height: 340 });
+    await gotoReady(page, "/");
+    await bell(page).click();
+    await expect(panel(page)).toBeVisible();
+
+    const body = panelBody(page);
+    const box = await body.boundingBox();
+    if (!box) throw new Error("notifications panel body has no bounding box");
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+
+    const before = await body.evaluate((el) => el.scrollTop);
+    expect(before).toBe(0);
+    await page.mouse.wheel(0, 400);
+    await expect.poll(() => body.evaluate((el) => el.scrollTop)).toBeGreaterThan(before);
+  });
+});
