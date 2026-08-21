@@ -68,28 +68,76 @@ test.describe("PanelBadge: [N] Label composition", () => {
   });
 });
 
-test.describe("PanelBadge: no spider/spiderman glyph", () => {
+// f1cb7ee dropped the spider glyph from PanelBadge everywhere; that was a
+// misread of the user (they meant "only remove it from Repositories' OLD
+// corner-bracket header", not "remove it globally"). The glyph never left —
+// it MOVES: Repositories now sits it BETWEEN the bracketed number and the
+// label (`[N] <glyph> Label`, `variant="repositories"`); Employment Records
+// and Help restore their pre-f1cb7ee look exactly (glyph between the two
+// split words / before the section-header label, respectively).
+test.describe("PanelBadge: spider glyph position (scoped, not removed)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("Repositories, Employment Records, and Help badges carry no spider img", async ({ page }) => {
+  test("Repositories badges carry the red spider glyph BETWEEN the bracketed number and the label", async ({ page }) => {
     await gotoReady(page, "/repositories");
-    await expect(page.locator('[data-testid="panel-badge"] img[src*="spider" i]')).toHaveCount(0);
+    const badges = page.locator('[data-testid="panel-badge"][data-accent="blue"]');
+    await expect(badges).toHaveCount(5);
+    const expected = ["Status", "Repositories", "Files", "Content", "Commits"];
+    for (let i = 0; i < expected.length; i++) {
+      const pill = badges.nth(i).locator("span").first();
+      await expect(pill.locator('img[src="/assets/spider-glyph-red.svg"]')).toHaveCount(1);
+      const html = await pill.innerHTML();
+      const bracketIdx = html.indexOf(`[${i}]`);
+      const imgIdx = html.indexOf("<img");
+      const labelIdx = html.indexOf(expected[i]);
+      expect(bracketIdx).toBeGreaterThanOrEqual(0);
+      expect(imgIdx).toBeGreaterThan(bracketIdx);
+      expect(labelIdx).toBeGreaterThan(imgIdx);
+    }
+  });
 
+  test("Employment Records badges keep the red spider glyph BETWEEN the two split words (pre-f1cb7ee look)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/employment");
-    await expect(page.locator('[data-testid="panel-badge"] img[src*="spider" i]')).toHaveCount(0);
-    // Split-text badges compose as one spaced string now, glyph-free.
-    const employmentBadges = page.locator('[data-testid="panel-badge"]');
-    await expect(employmentBadges.nth(0)).toHaveText(/Employment\s+Records/);
-    await expect(employmentBadges.nth(1)).toHaveText(/File\s+Preview/);
+    const badges = page.locator('[data-testid="panel-badge"][data-accent="blue"]');
+    await expect(badges).toHaveCount(2);
 
+    const recordsPill = badges.nth(0).locator("span").first();
+    await expect(recordsPill.locator('img[src="/assets/spider-glyph-red.svg"]')).toHaveCount(1);
+    const recordsHtml = await recordsPill.innerHTML();
+    expect(recordsHtml.indexOf("Employment")).toBeGreaterThanOrEqual(0);
+    expect(recordsHtml.indexOf("Employment")).toBeLessThan(recordsHtml.indexOf("<img"));
+    expect(recordsHtml.indexOf("<img")).toBeLessThan(recordsHtml.indexOf("Records"));
+
+    const previewPill = badges.nth(1).locator("span").first();
+    await expect(previewPill.locator('img[src="/assets/spider-glyph-red.svg"]')).toHaveCount(1);
+    const previewHtml = await previewPill.innerHTML();
+    expect(previewHtml.indexOf("File")).toBeGreaterThanOrEqual(0);
+    expect(previewHtml.indexOf("File")).toBeLessThan(previewHtml.indexOf("<img"));
+    expect(previewHtml.indexOf("<img")).toBeLessThan(previewHtml.indexOf("Preview"));
+  });
+
+  test("Help badges keep the teal spiderman glyph, across every section header (pre-f1cb7ee look)", async ({ page }) => {
     await gotoReady(page, "/help");
-    await expect(page.locator('[data-testid="panel-badge"] img[src*="spider" i]')).toHaveCount(0);
+    const badges = page.locator('[data-testid="panel-badge"][data-accent="teal"]');
+    const count = await badges.count();
+    // ~14 section headers per the plan; assert a floor rather than pinning
+    // the exact count, which is Help's own content, not this spec's concern.
+    expect(count).toBeGreaterThanOrEqual(10);
+    await expect(
+      page.locator('[data-testid="panel-badge"][data-accent="teal"] img[src="/assets/spiderman-teal.svg"]'),
+    ).toHaveCount(count);
   });
 });
 
-test.describe("PanelBadge: left-aligned, not centered", () => {
+// Only Repositories kept f1cb7ee's left-alignment (its variant="repositories"
+// wrapper); Employment Records restored its pre-f1cb7ee centered wrapper.
+// Help's inline mode was never centered/left-aligned to begin with — its
+// pill sits inline at the start of a flex row, unaffected either way.
+test.describe("PanelBadge: Repositories left-aligned, Employment Records centered (restored)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -109,15 +157,15 @@ test.describe("PanelBadge: left-aligned, not centered", () => {
     expect(Math.abs(leftInset - wouldBeCenteredInset)).toBeGreaterThan(20);
   });
 
-  test("Employment Records badge pill is also left-aligned", async ({ page }) => {
+  test("Employment Records badge pill is centered, not left-aligned (pre-f1cb7ee look restored)", async ({ page }) => {
     await gotoReady(page, "/employment");
     const wrapper = await box(page, "panel-badge", 0);
     const pillBox = await page.locator('[data-testid="panel-badge"]').nth(0).locator("span").first().boundingBox();
     expect(pillBox).toBeTruthy();
     if (!pillBox) return;
     const leftInset = pillBox.x - wrapper.x;
-    expect(leftInset).toBeGreaterThanOrEqual(0);
-    expect(leftInset).toBeLessThan(wrapper.width / 4);
+    const centeredInset = (wrapper.width - pillBox.width) / 2;
+    expect(Math.abs(leftInset - centeredInset)).toBeLessThan(2);
   });
 
   test("Help's inline section-header badge still sits at the start of its row (unaffected by the left-align change)", async ({
