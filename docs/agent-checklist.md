@@ -12,13 +12,16 @@ in the same change as any `docs/` edit that affects a convention below.
 - [ ] `pnpm test:e2e` green (real build, 30 spec files, 502 tests × 2 viewports = 1004 runs).
 - [ ] `pnpm test:visual` green (fixture build, 21 recipes × 2 viewports = 42 goldens,
       PLUS `tests/visual/adversarial-fixtures.spec.ts`'s 4 functional assertions × 2
-      viewports = 8 runs, Phase 7b.2 — proves the adversarial fixture data actually
+      viewports = 8 runs — proves the adversarial fixture data actually
       scrolls/wraps/renders-empty, not just that it parses) — unless the change is
       docs-only/test-only with zero rendering impact. Recipe count may grow (a recipe
       covering the repositories syntax-highlighting fix is planned but not yet added);
       a pending rebaseline changes goldens' pixel content, not this count.
 - [ ] `git status tests/visual/goldens` clean, UNLESS this change deliberately
       changes the UI and the rebaseline procedure (below) was followed.
+- [ ] If the change alters what any page RENDERS, regenerate and re-push the
+      Claude Design mirror (see "Claude Design mirror" below) — a UI change that
+      leaves the mirror stale is an incomplete change, not a follow-up.
 
 ## Golden rebaseline policy
 
@@ -163,6 +166,19 @@ in the same change as any `docs/` edit that affects a convention below.
 - [ ] Use the existing `testid` prefix convention for a new element in an
       existing view (`repositories-*`, `employment-*`, `notifications-*`, etc.) —
       never introduce an unprefixed or inconsistently-prefixed testid.
+
+## Claude Design mirror
+
+- [ ] Keep the mirror in sync with the app: any change to what a page renders
+      is followed by `pnpm design-mirror` and a re-push, in the same change.
+- [ ] Push to the pinned project only — `SpideyHub`, whose `projectId` lives in
+      `.design-sync/config.json`. Never create a second project for it.
+- [ ] Push BOTH `pages-real/` (mirrors the live site) and `pages-fixtures/`
+      (mirrors the deterministic test dataset) — they are the same six routes
+      over different data, and a half-pushed mirror is worse than a stale one.
+- [ ] Never commit `ds-bundle/` itself; it is gitignored on purpose.
+- [ ] Confirm a regenerated page still renders standalone from `file://` with
+      zero failed network requests before pushing it.
 
 ## Commit style
 

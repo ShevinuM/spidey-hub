@@ -89,7 +89,18 @@ The one exception is `public/assets/retina-v.png` (2MB): emitted as a sibling
 path instead of inlined.
 
 Output goes to `ds-bundle/pages-real/` and `ds-bundle/pages-fixtures/` — gitignored,
-never committed. Re-run after any UI change that should be reflected in the mirror.
+never committed.
+
+### Pushing the mirror
+
+The generated files are uploaded to the Claude Design project named **SpideyHub**,
+whose `projectId` is pinned in `.design-sync/config.json`. Push with the `DesignSync`
+tool: `finalize_plan` (`localDir` = `ds-bundle/`, writes `pages-real/**`,
+`pages-fixtures/**`, `README.md`), then `write_files` in batches. Always push both
+builds' page sets together — they are the same six routes over different data.
+
+Regenerating and re-pushing is not optional after a UI change: `docs/agent-checklist.md`
+gates it as part of calling any rendering change done.
 
 ## `GITHUB_TOKEN` (optional)
 
