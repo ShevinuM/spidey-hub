@@ -288,21 +288,25 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await gotoReady(page, "/repositories");
     await page.keyboard.press("1"); // focus panel [1], Repositories
     const firstRow = page.locator('[data-testid="repositories-repo-row"]').first();
-    await expect(firstRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.22\)/);
+    // Selection is a red 2px left accent bar + gradient, not a flat fill —
+    // assert the computed border color (raw style text is either the
+    // SSR-literal or browser-normalized spelling depending on whether this
+    // attribute has been client-mutated since load).
+    await expect(firstRow).toHaveCSS("border-left-color", "rgb(224, 69, 60)");
 
     await ctrlB(page);
     await page.keyboard.press("ArrowDown");
     // Still on the first repo — the prefixed ArrowDown was consumed by the
     // tmux prefix system (directional pane nav, a no-op with one pane),
     // never reached Repositories.svelte's own arrow-key handler.
-    await expect(firstRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.22\)/);
+    await expect(firstRow).toHaveCSS("border-left-color", "rgb(224, 69, 60)");
     await expect(page).toHaveURL(/\/repositories$/);
 
     // An un-prefixed ArrowDown right after still works normally.
     await page.keyboard.press("ArrowDown");
-    await expect(page.locator('[data-testid="repositories-repo-row"]').nth(1)).toHaveAttribute(
-      "style",
-      /rgba\(224, 69, 60, 0\.22\)/,
+    await expect(page.locator('[data-testid="repositories-repo-row"]').nth(1)).toHaveCSS(
+      "border-left-color",
+      "rgb(224, 69, 60)",
     );
   });
 
@@ -398,13 +402,15 @@ test.describe("Ctrl-b , rename-window", () => {
     await gotoReady(page, "/repositories");
     await page.keyboard.press("1");
     const firstRow = page.locator('[data-testid="repositories-repo-row"]').first();
-    await expect(firstRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.22\)/);
+    // See the sibling test above — selection is a border-left color now,
+    // not a flat background fill.
+    await expect(firstRow).toHaveCSS("border-left-color", "rgb(224, 69, 60)");
 
     await ctrlB(page);
     await page.keyboard.press(",");
     await page.keyboard.press("j");
     await expect(page.locator('[data-testid="status-prompt"]')).toContainText("reposj");
-    await expect(firstRow).toHaveAttribute("style", /rgba\(224, 69, 60, 0\.22\)/);
+    await expect(firstRow).toHaveCSS("border-left-color", "rgb(224, 69, 60)");
 
     await page.keyboard.press("Escape");
   });

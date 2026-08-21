@@ -178,9 +178,14 @@ test.describe("Repositories: panel [1] repo list — all-projects pinned first +
     // focus panel [1] with zero j/k presses and confirm row 0 (all-projects)
     // already carries the highlighted-selection background.
     await page.keyboard.press("1");
-    await expect(page.locator('[data-testid="repositories-repo-row"]').first()).toHaveAttribute(
-      "style",
-      /rgba\(224, 69, 60, 0\.22\)/,
+    // Selection is a 2px left accent bar + gradient, not a flat fill —
+    // assert the computed border color, not raw style text
+    // (which can be either the SSR-literal or the browser-normalized
+    // spelling depending on whether this row's style attribute has been
+    // client-mutated since load).
+    await expect(page.locator('[data-testid="repositories-repo-row"]').first()).toHaveCSS(
+      "border-left-color",
+      "rgb(224, 69, 60)",
     );
   });
 
@@ -239,9 +244,11 @@ test.describe("Repositories: panel [1] repo list — all-projects pinned first +
     await gotoReady(page, "/repositories");
     await page.keyboard.press("1");
     await page.locator('[data-testid="repositories-repo-row"][data-repo-name="all-projects"]').click();
-    await expect(page.locator('[data-testid="repositories-repo-row"][data-all-projects="true"]')).toHaveAttribute(
-      "style",
-      /rgba\(224, 69, 60, 0\.22\)/,
+    // See the sibling assertion above — selection is a border-left color
+    // now, not a flat background fill.
+    await expect(page.locator('[data-testid="repositories-repo-row"][data-all-projects="true"]')).toHaveCSS(
+      "border-left-color",
+      "rgb(224, 69, 60)",
     );
     await expect(page.locator('[data-testid="repositories-commit-row"]')).toHaveCount(0);
     await expect(page.locator('[data-testid="repositories-panel-4"]')).toContainText("local only");
@@ -308,18 +315,21 @@ test.describe("Repositories: panel [2] lazygit-style tree — expand/collapse, n
   test("bare j does not move the tree selection while ArrowDown does", async ({ page }) => {
     await gotoReady(page, "/repositories");
     const rows = page.locator('[data-testid="repositories-tree-row"]');
-    const highlighted = /rgba\(\s*224,\s*69,\s*60,\s*0?\.18\)/;
+    // Files-tree selection is a blue 2px left accent bar + gradient,
+    // distinct from the repo list's red one — assert the computed border
+    // color rather than raw style text.
+    const SELECTED = "rgb(74, 159, 224)";
 
-    await expect(rows.first()).toHaveAttribute("style", highlighted);
-    await expect(rows.nth(1)).not.toHaveAttribute("style", highlighted);
+    await expect(rows.first()).toHaveCSS("border-left-color", SELECTED);
+    await expect(rows.nth(1)).not.toHaveCSS("border-left-color", SELECTED);
 
     await page.keyboard.press("j");
-    await expect(rows.first()).toHaveAttribute("style", highlighted);
-    await expect(rows.nth(1)).not.toHaveAttribute("style", highlighted);
+    await expect(rows.first()).toHaveCSS("border-left-color", SELECTED);
+    await expect(rows.nth(1)).not.toHaveCSS("border-left-color", SELECTED);
 
     await page.keyboard.press("ArrowDown");
-    await expect(rows.first()).not.toHaveAttribute("style", highlighted);
-    await expect(rows.nth(1)).toHaveAttribute("style", highlighted);
+    await expect(rows.first()).not.toHaveCSS("border-left-color", SELECTED);
+    await expect(rows.nth(1)).toHaveCSS("border-left-color", SELECTED);
   });
 
   test("tree rows render SVG folder/file icons and a ▾/▸ caret, not a plain glyph in the icon slot (Item 1)", async ({

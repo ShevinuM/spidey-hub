@@ -3,6 +3,12 @@
   // Repositories.svelte during the folder+state-class relocation refactor. Pure
   // relocation: same DOM, testids, classes, and inline styles as the
   // original inline markup.
+  //
+  // Selection highlight (mockup Builds.dc.html:94, the "1 · Repositories"
+  // panel's red variant): a 2px left accent bar + a horizontal red fade,
+  // not a flat fill. Every row — selected or not — carries the same 2px
+  // `border-left` (transparent when unselected) so selecting a row never
+  // shifts its text 2px to the right.
   import type { RepositoriesData } from "../../lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
   import RepositoriesPanel from "./RepositoriesPanel.svelte";
@@ -44,10 +50,12 @@
           onkeydown={(e) => {
             if (e.key === "Enter" || e.key === " ") state.activateRepo(i);
           }}
-          style="cursor:pointer;display:flex;align-items:center;gap:6px;color:rgba(196,216,232,.75);{i ===
+          style="cursor:pointer;display:flex;align-items:center;gap:6px;border-left:2px solid {i ===
           state.selectedRepoIdx
-            ? 'background:rgba(224,69,60,.22)'
-            : ''}"
+            ? '#e0453c'
+            : 'transparent'};{i === state.selectedRepoIdx
+            ? 'background:linear-gradient(90deg,rgba(224,69,60,.30),rgba(224,69,60,.04));color:#f4ece9'
+            : 'color:rgba(196,216,232,.75)'}"
         >
           <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
             <span style="color:#5fc6b4">{repo.mark}</span> {repo.key}

@@ -2,6 +2,12 @@
   // Panel [2]: tree browser rows — moved out of Repositories.svelte during the
   // folder+state-class relocation refactor. Pure relocation: same DOM,
   // testids, classes, and inline styles as the original inline markup.
+  //
+  // Selection highlight (mockup Builds.dc.html:174, the "2 · Files" panel's
+  // BLUE variant — distinct from the repo list's red one): a 2px left
+  // accent bar + a horizontal blue fade. Every row — selected or not —
+  // carries the same 2px `border-left` (transparent when unselected) so
+  // selecting a row never shifts its text 2px to the right.
   import type { RepositoriesData } from "../../lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
   import { iconSvgForPath } from "../../lib/fileIcons";
@@ -63,8 +69,10 @@
               if (e.key === "Enter" || e.key === " ") state.activateEntry(entry, { openEditor: true });
             }}
             style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 4px 1px {4 +
-              entry.depth * 14}px;border-radius:2px;{i === state.repoTree.selectedIdx
-              ? 'background:rgba(224,69,60,.18);color:#f0e7e4'
+              entry.depth * 14}px;border-radius:2px;border-left:2px solid {i === state.repoTree.selectedIdx
+              ? '#4a9fe0'
+              : 'transparent'};{i === state.repoTree.selectedIdx
+              ? 'background:linear-gradient(90deg,rgba(74,159,224,.22),rgba(74,159,224,.03));color:#f4ece9'
               : 'color:rgba(196,216,232,.7)'}"
           >
             {#if entry.type === "dir"}

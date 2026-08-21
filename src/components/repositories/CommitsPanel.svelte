@@ -3,6 +3,12 @@
   // Repositories.svelte during the folder+state-class relocation refactor. Pure
   // relocation: same DOM, testids, classes, and inline styles as the
   // original inline markup.
+  //
+  // Selection highlight (mockup Builds.dc.html:236, the "4 · Commits"
+  // panel's own red variant — a THIRD gradient distinct from both the repo
+  // list's and the files tree's): a horizontal red fade only, no left
+  // accent bar — the mockup never gives commit rows one, selected or not,
+  // so there is no alignment shift to guard against here.
   import type { RepositoriesData } from "../../lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
   import RepositoriesPanel from "./RepositoriesPanel.svelte";
@@ -84,7 +90,7 @@
               }}
               style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:34px;{state.focusedPanel ===
                 4 && i === state.clampedCommitIdx
-                ? 'background:rgba(224,69,60,.22)'
+                ? 'background:linear-gradient(90deg,rgba(224,69,60,.26),rgba(224,69,60,.03))'
                 : ''}"
             >
               <span style="color:rgba(217,176,74,.85)">{c.sha8}</span> <span style="color:#9a7fd4"
