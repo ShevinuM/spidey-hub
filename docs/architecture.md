@@ -88,19 +88,22 @@ Four independent suites, each catching a different class of regression:
 All four gate every change; none is optional for a change that touches the code they
 cover.
 
-### Lessons from the iteration-6 post-mortem
+### Blind spots the four suites share
 
-See `docs/post-mortems/2026-08-21-iteration-6.md` for the full account of how 8
-user-visible defects shipped while every one of the four suites above passed. The
-short version: each suite's determinism requirements structurally exclude the exact
-conditions a real first-time visitor experiences — fixture mode disables every
-`infinite` CSS animation and the visual pipeline separately freezes animation at
-capture time, so a dead keyframe renders identically to a live one; the shared e2e
-fixture pre-seeds "boot already seen" for every spec but `boot.spec.ts`, so a
-boot↔notification interaction goes untested from both directions; fixture content is
-fixed-length and never overflows a panel. None of that reflects a lapse in following
-the golden rebaseline procedure below — the sampled rebaselines were all tied to a
-named, deliberate visual-change commit. The fixes it justifies:
+Every suite above buys determinism by excluding the exact conditions a real
+first-time visitor meets, so all four can pass over a visibly broken UI. Know these
+three before trusting a green run:
+
+- Fixture mode disables every `infinite` CSS animation, and the visual pipeline
+  separately freezes animation at capture time — so a dead keyframe renders
+  identically to a live one.
+- The shared e2e fixture pre-seeds "boot already seen" for every spec but
+  `boot.spec.ts`, so a boot↔notification interaction goes untested from both
+  directions.
+- Fixture content is fixed-length and never overflows a panel, so clipping,
+  non-scrollable bodies, and bottom-anchored voids stay invisible.
+
+The standing rules those blind spots justify:
 
 - Never verify a CSS animation with `getComputedStyle(el).animationName` — it
   returns the declared name whether or not that name resolves to a real keyframes

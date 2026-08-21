@@ -211,7 +211,7 @@ test.describe("Grep overlay", () => {
   test("/ inside the employment editor searches the buffer instead of opening grep (editor gets first refusal)", async ({
     page,
   }) => {
-    // v2 (flat list + timeline, docs/changes/employment-records-v2.md): row
+    // v2 (flat list + timeline): row
     // 0 (newest) is selected by default, so a single Enter opens its
     // role.md directly — no more drill-down.
     await gotoReady(page, "/employment");
@@ -245,8 +245,8 @@ test.describe("Grep overlay", () => {
   });
 
   // The Employment `f`-filter this test covered no longer exists (Decision
-  // 7, PLAN.md — dropped along with drill-down/`../` in the v2 rebuild,
-  // docs/changes/employment-records-v2.md). Employment's own "editor gets
+  // 7, PLAN.md — dropped along with drill-down/`../` in the v2 rebuild).
+  // Employment's own "editor gets
   // first refusal over grep" coverage is the test immediately above.
 
   test("overlay list row count matches this viewport's own computed fit", async ({ page }) => {

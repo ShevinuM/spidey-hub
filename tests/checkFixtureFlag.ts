@@ -1,5 +1,4 @@
-// playwright.config.ts's `globalSetup`. Closes the F4 environment footgun
-// from PLAN.md Phase 7.4 / the iteration-6 post-mortem's "standing hazards":
+// playwright.config.ts's `globalSetup`. Closes this environment footgun:
 // `pnpm test:e2e` (real build) and `pnpm test:visual` (fixture build) share
 // ONE webServer definition (port 4322, `reuseExistingServer: true`), so a
 // stray server left over from the other suite — or a `dist/` that was

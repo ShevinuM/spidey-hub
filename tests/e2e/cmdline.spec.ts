@@ -249,7 +249,7 @@ test.describe("Cmdline: `:` stays literal inside other text inputs", () => {
 
   // The Employment `f`-filter prompt this test covered no longer exists
   // (Decision 7, PLAN.md — dropped along with drill-down/`../` in the v2
-  // rebuild, docs/changes/employment-records-v2.md). Employment's own
+  // rebuild). Employment's own
   // ":"-while-editor-open coverage lives in the "editor ex-mode still works
   // through the box" describe block below (the Employment entry point).
 
@@ -424,7 +424,7 @@ test.describe("Cmdline: editor ex-mode still works through the box", () => {
     {
       name: "Employment",
       async open(page) {
-        // v2 (flat list + timeline, docs/changes/employment-records-v2.md):
+        // v2 (flat list + timeline):
         // no more drill-down — row 0 (newest) is selected by default, so a
         // single Enter opens its role.md directly (same as editor-vim.spec.ts's
         // Employment entry point).

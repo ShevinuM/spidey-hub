@@ -67,8 +67,8 @@ export interface Recipe {
  * for months (see git history). "03-repositories-arrow" (was "03-builds-j")
  * explicitly focuses panel [1] (Repositories, bare `1`, unrelated to
  * the `Ctrl-b` prefix) before `ArrowDown`, which moves the repo-list
- * selection highlight. Employment Records v2 (docs/changes/
- * employment-records-v2.md) replaced its old 3-level drill-down with a flat
+ * selection highlight. Employment Records v2 replaced its old 3-level
+ * drill-down with a flat
  * list + timeline: "05-employment-l1" (name kept from the old drill-down
  * recipe naming for golden-history continuity, despite there being no more
  * "level 1" to reach) now captures a non-default row selected (2 x `j`);
@@ -93,7 +93,7 @@ export const recipes: Recipe[] = [
     check: { url: /\/employment$/, visible: '[data-testid="employment-row"]' },
   },
   {
-    // v2 (flat list + timeline, docs/changes/employment-records-v2.md): no
+    // v2 (flat list + timeline): no
     // more drill-down levels to reach — repurposed to a non-default row
     // selected (2 x j from row 0), showing the preview panel and timeline
     // node following a moved selection live. `data-selected` (added for

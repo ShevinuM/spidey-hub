@@ -1,8 +1,7 @@
 // Behavioral e2e suite for the Employment Records view (v2: flat list +
 // service timeline), against the real-content build. Replaces the old
-// drill-down/filter suite entirely — see docs/changes/employment-records-v2.md
-// for the full rebuild rationale (Decision 12 in PLAN.md: rebuilt from
-// scratch in the target folder+state-class pattern, not relocated).
+// drill-down/filter suite entirely: the view was rebuilt from scratch in the
+// folder + state-class pattern, not relocated.
 //
 // The `personnel` collection is a variable-depth tree (content.config.ts's
 // own header comment) — `<org>/<role-slug>/role.md` for every position, plus
@@ -304,7 +303,7 @@ test.describe("Employment: selection — j/k/arrows sync preview and timeline li
   }) => {
     // Decision 7 ("j/k/enter selection stays") drops the `f` filter/
     // drill-down/`../`, not Enter's existing open-in-editor behavior — see
-    // docs/changes/employment-records-v2.md and tests/e2e/editor-vim.spec.ts's
+    // tests/e2e/editor-vim.spec.ts's
     // "Employment entry point". "Harmless-open" (E1) describes why this is
     // safe, not that Enter does nothing: the buffer is always readonly.
     await openEmployment(page);

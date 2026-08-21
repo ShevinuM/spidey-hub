@@ -8,7 +8,7 @@ import { viewports } from "./tests/visual/recipes.ts";
 // does not go through this config.
 export default defineConfig({
   testDir: "./tests",
-  // PLAN.md Phase 7.4 / post-mortem "standing hazards": test:e2e (real
+  // test:e2e (real
   // build) and test:visual (fixture build) share the port-4322 webServer
   // entry below with `reuseExistingServer: true`, so a stale server left
   // over from the other suite would otherwise serve the wrong

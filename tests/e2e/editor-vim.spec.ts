@@ -84,7 +84,7 @@ const entryPoints: EntryPoint[] = [
   {
     name: "Employment",
     async open(page) {
-      // v2 (flat list + timeline, docs/changes/employment-records-v2.md):
+      // v2 (flat list + timeline):
       // no more drill-down — row 0 (newest: Enaimco's Software Developer) is
       // selected by default, so a single Enter opens its role.md directly.
       await gotoReady(page, "/employment");

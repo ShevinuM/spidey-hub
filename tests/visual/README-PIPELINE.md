@@ -389,8 +389,8 @@ The counts in the determinism-check sections above (20 recipes / 40 goldens)
 are accurate as of the re-baselines they each describe — left as-is rather
 than rewritten, since they're historical records of what was true at that
 point. Since the last of those, the sitewide `builds`→`repositories` /
-"Personnel Files"→"Employment Records" rename (`docs/changes/
-employment-records-v2.md`) rebaselined every recipe that touches either
+"Personnel Files"→"Employment Records" rename rebaselined every recipe
+that touches either
 view's status-bar/copy text without changing the recipe count, and one more
 recipe was added: `21-notifications-panel-open` (the signal-inbox panel open
 on the dashboard, PLAN.md Phase G2 — see its own header comment in
