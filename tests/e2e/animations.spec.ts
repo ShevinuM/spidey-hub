@@ -15,13 +15,13 @@
 // finished (unlike `el.getAnimations()`, which only reports animations
 // currently in effect).
 //
-// Must run against the REAL (non-fixture) build: `PORTFOLIO_FIXTURES=1`
-// forces every `infinite` animation's inline `animation:` value to `"none"`
-// (see each component's `state.fixtureMode` ternary), which would hide the
-// entire defect class. This spec is invoked directly
+// Runs against the REAL (non-fixture) build, invoked directly
 // (`pnpm exec playwright test tests/e2e/animations.spec.ts`) against a
 // `pnpm build` + `node tests/visual/static-server.mjs dist 4322`, never via
-// `pnpm test:e2e`/`pnpm test:visual`.
+// `pnpm test:e2e`/`pnpm test:visual`. This is no longer required to dodge a
+// fixture-mode animation gate — as of Phase 7b.1 a fixture build renders
+// every `infinite` animation live too — it's simply this spec's own
+// standing invocation convention.
 import { expect, test, E2E_NOTIFICATIONS_INJECT_SEED, E2E_TOAST_DURATION_SCALE, type Page } from "./fixtures.ts";
 import { BOOT_SEEN_STORAGE_KEY } from "../../src/lib/bootState.ts";
 import { NOTIFICATIONS_INJECT_SEED_STORAGE_KEY, TOAST_DURATION_SCALE_STORAGE_KEY } from "../../src/lib/notificationStore.ts";
@@ -98,11 +98,12 @@ test.describe("Phase 1: every animation-name resolves to a real @keyframes rule 
   });
 });
 
-/** Testids of every element carrying one of the 6 currently-infinite,
- * still-`fixtureMode`-gated animations this phase repairs (`pls` excluded —
- * it was never dead; its two component-scoped duplicates are just removed,
- * not repaired). Used by both the motion assertion below and the
- * prefers-reduced-motion assertion. */
+/** Testids of every element carrying one of the 6 currently-infinite
+ * animations this phase repairs (`pls` excluded — it was never dead; its two
+ * component-scoped duplicates are just removed, not repaired). None of these
+ * are fixtureMode-gated as of Phase 7b.1 — they run live in every build.
+ * Used by both the motion assertion below and the prefers-reduced-motion
+ * assertion. */
 const INFINITE_ANIMATION_TESTIDS = [
   "notifications-sense-ring",
   "notifications-sweep",

@@ -25,7 +25,7 @@ in the same change as any `docs/` edit that affects a convention below.
       snapshot to update.
 - [ ] Rebaseline only in the same commit as the deliberate visual change that
       caused the diff: `pnpm build:fixtures && pnpm exec playwright test
-      tests/visual/identical.spec.ts --update-snapshots`.
+    tests/visual/identical.spec.ts --update-snapshots`.
 - [ ] After any rebaseline, run `pnpm test:visual` three consecutive times and
       confirm all three pass clean before committing.
 - [ ] Visually inspect every changed `.png` yourself (not just the byte diff) for
@@ -111,8 +111,10 @@ in the same change as any `docs/` edit that affects a convention below.
 - [ ] Give every focusable element a visible `:focus-visible` style — never
       `outline: none` without a replacement.
 - [ ] Gate a non-essential CSS animation behind
-      `@media (prefers-reduced-motion: no-preference)`, and disable it entirely
-      under `fixtureMode` (site convention — every `infinite` animation must be).
+      `@media (prefers-reduced-motion: no-preference)`. Do NOT also gate it
+      under a fixture-mode flag — fixture builds render every `infinite`
+      animation live on purpose (Phase 7b.1); golden determinism comes only
+      from the visual pipeline's capture-time `animations:"disabled"`.
 - [ ] Declare a component-local `@keyframes` referenced from an inline
       `style="..."` attribute using Svelte's global form
       (`@keyframes -global-<name>`) — a plain component-scoped declaration
@@ -159,8 +161,7 @@ in the same change as any `docs/` edit that affects a convention below.
 
 ## Commit style
 
-- [ ] Single-line, imperative commit message — no body, no trailer (no
-      `Co-Authored-By`).
+- [ ] Single-line, imperative commit message — no body, no trailer
 - [ ] One reviewable unit of work per commit.
 
 ## Comment hygiene
@@ -181,3 +182,8 @@ in the same change as any `docs/` edit that affects a convention below.
       in user-facing copy.
 - [ ] Use one consistent product name for a given feature everywhere it's
       mentioned.
+
+## Updating docs
+
+- [ ] When docs are updated, update the checklist.
+- [ ]

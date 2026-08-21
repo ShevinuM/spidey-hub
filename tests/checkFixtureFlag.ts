@@ -4,10 +4,11 @@
 // stray server left over from the other suite — or a `dist/` that was
 // built by the wrong script, or interrupted mid-build — would otherwise
 // serve the wrong PORTFOLIO_FIXTURES mode with no signal anywhere. Fixture
-// mode disables every `infinite` CSS animation site-wide
-// (docs/architecture.md's "Fixture mode" section), so an e2e run silently
-// served a fixtures build would report every dead-keyframe defect this
-// iteration fixed as invisible again.
+// mode switches the underlying data (repositories/commits/grep/fs-index/
+// contributions — see docs/architecture.md's "Fixture mode" section), so an
+// e2e run silently served a fixtures build would exercise the wrong dataset
+// entirely — real-content assumptions (real repo counts, overflowing
+// content, etc.) baked into the e2e suite would silently stop holding.
 //
 // Deliberately checks the SERVED CONTENT (`data-fixture-mode` on `<html>`,
 // set by src/layouts/Shell.astro from the same `process.env

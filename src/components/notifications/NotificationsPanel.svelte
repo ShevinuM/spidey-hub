@@ -35,9 +35,7 @@
     </div>
     <span
       data-testid="notifications-sweep"
-      style="position:absolute;left:0;bottom:0;width:34%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,92,102,.85),transparent);pointer-events:none;animation:{state.fixtureMode
-        ? 'none'
-        : 'sweep 3.6s linear infinite'}"
+      style="position:absolute;left:0;bottom:0;width:34%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,92,102,.85),transparent);pointer-events:none;animation:sweep 3.6s linear infinite"
     ></span>
   </div>
 

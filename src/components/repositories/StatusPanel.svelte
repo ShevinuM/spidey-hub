@@ -67,9 +67,7 @@
         {/if}
         <span style="display:flex;align-items:center;gap:6px;color:#5fc6b4">
           <span
-            style="width:7px;height:7px;border-radius:50%;background:#5fc6b4;animation:{state.fixtureMode
-              ? 'none'
-              : 'pls 2.4s ease-in-out infinite'}"
+            style="width:7px;height:7px;border-radius:50%;background:#5fc6b4;animation:pls 2.4s ease-in-out infinite"
           ></span>
           {repositories.statusLine.connectedLabel}
         </span>

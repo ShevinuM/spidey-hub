@@ -85,12 +85,6 @@
      * fixed, hand-authored core with no localStorage, no per-visit
      * injection, and no toasts, for deterministic golden capture. */
     notificationsFixtureMode: boolean;
-    /** Same `PORTFOLIO_FIXTURES=1` flag as `notificationsFixtureMode` above
-     * (identical server-side computation, threaded separately since it
-     * gates a different component's animations) — Repositories' own two
-     * new infinite `pls` dots (Status panel's "connected" indicator, panel
-     * [1]'s open-repo gold dot). */
-    repositoriesFixtureMode: boolean;
     tracker: TrackerData;
     profile: ProfileData;
     repositories: RepositoriesData;
@@ -113,7 +107,6 @@
     dashboard,
     notifications,
     notificationsFixtureMode,
-    repositoriesFixtureMode,
     tracker,
     profile,
     repositories,
@@ -925,7 +918,6 @@
         windowNumberById={core.windowNumberById}
         paneCount={core.totalPaneCount}
         {repositories}
-        {repositoriesFixtureMode}
         {personnel}
         {profile}
         {help}

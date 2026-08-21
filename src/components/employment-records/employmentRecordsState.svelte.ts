@@ -112,12 +112,7 @@ export class EmploymentRecordsState {
   constructor(
     private readonly personnelFn: () => PersonnelData,
     private readonly personnelEntriesFn: () => RoleEntry[],
-    private readonly fixtureModeFn: () => boolean,
   ) {}
-
-  get fixtureMode(): boolean {
-    return this.fixtureModeFn();
-  }
 
   get personnel(): PersonnelData {
     return this.personnelFn();

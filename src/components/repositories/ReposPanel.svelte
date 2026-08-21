@@ -81,9 +81,7 @@
             {:else if state.repoTree?.source.repoName === repo.key}
               <span
                 data-testid="repositories-repo-open-dot"
-                style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ffca28;animation:{state.fixtureMode
-                  ? 'none'
-                  : 'pls 1.6s ease-in-out infinite'}"
+                style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#ffca28;animation:pls 1.6s ease-in-out infinite"
               ></span>
             {:else}
               <span

@@ -7,12 +7,13 @@
   // `pls`/`blink`/`webglow` are dead in the source file itself (Personnel-
   // Panel-Changes.md's animation inventory) and are not ported.
   //
-  // All four infinite keyframe animations are disabled under fixtureMode
-  // (`animation:none`), same convention as Repositories'/Notifications'
-  // own `pls` dot animations (state.fixtureMode ternary) — the continuous
-  // *transitions* (marker/ring/dot easing on selection change) are left
-  // alone: they only ever fire on a selection change, and fixture/golden
-  // captures never trigger one mid-capture.
+  // All four infinite keyframe animations run live in every build,
+  // fixture included (Phase 7b.1) — golden determinism comes from
+  // Playwright's capture-time `animations:"disabled"` alone, not from a
+  // fixtureMode gate. The continuous *transitions* (marker/ring/dot easing
+  // on selection change) are unrelated either way: they only ever fire on
+  // a selection change, and fixture/golden captures never trigger one
+  // mid-capture.
   import type { EmploymentRecordsState } from "./employmentRecordsState.svelte";
 
   interface Props {
@@ -24,21 +25,6 @@
   const markerTop = $derived(
     state.records.length > 0 ? `${((state.sel + 0.5) / state.records.length) * 100}%` : "50%",
   );
-
-  function spinAnim(on: boolean): string {
-    if (state.fixtureMode) return "none";
-    return `spin ${on ? "9s" : "24s"} linear infinite`;
-  }
-  function rspinAnim(): string {
-    return state.fixtureMode ? "none" : "rspin 14s linear infinite";
-  }
-  function sparkAnim(): string {
-    return state.fixtureMode ? "none" : "spark 4.6s linear infinite";
-  }
-  function dashAnim(reverse: boolean): string {
-    if (state.fixtureMode) return "none";
-    return `dash .9s linear infinite${reverse ? " reverse" : ""}`;
-  }
 </script>
 
 <div style="position:relative;width:188px;flex:none;margin:0 10px">
@@ -50,7 +36,7 @@
   <div style="position:absolute;left:50%;top:56px;bottom:16px;width:3px;transform:translateX(-50%);overflow:hidden">
     <div
       data-testid="employment-timeline-spark"
-      style="position:absolute;left:0;right:0;height:34px;background:linear-gradient(180deg,rgba(140,220,255,0),rgba(140,220,255,.9),rgba(140,220,255,0));animation:{sparkAnim()}"
+      style="position:absolute;left:0;right:0;height:34px;background:linear-gradient(180deg,rgba(140,220,255,0),rgba(140,220,255,.9),rgba(140,220,255,0));animation:spark 4.6s linear infinite"
     ></div>
   </div>
 
@@ -60,15 +46,11 @@
     ></div>
     <div
       data-testid="employment-timeline-dash"
-      style="position:absolute;left:0;width:calc(50% - 32px);top:{markerTop};height:1px;background:repeating-linear-gradient(90deg,rgba(224,69,60,.75) 0 8px,rgba(224,69,60,0) 8px 16px);background-size:24px 1px;animation:{dashAnim(
-        false,
-      )};transition:top .45s cubic-bezier(.2,.75,.2,1)"
+      style="position:absolute;left:0;width:calc(50% - 32px);top:{markerTop};height:1px;background:repeating-linear-gradient(90deg,rgba(224,69,60,.75) 0 8px,rgba(224,69,60,0) 8px 16px);background-size:24px 1px;animation:dash .9s linear infinite;transition:top .45s cubic-bezier(.2,.75,.2,1)"
     ></div>
     <div
       data-testid="employment-timeline-dash"
-      style="position:absolute;right:0;width:calc(50% - 32px);top:{markerTop};height:1px;background:repeating-linear-gradient(90deg,rgba(224,69,60,.75) 0 8px,rgba(224,69,60,0) 8px 16px);background-size:24px 1px;animation:{dashAnim(
-        true,
-      )};transition:top .45s cubic-bezier(.2,.75,.2,1)"
+      style="position:absolute;right:0;width:calc(50% - 32px);top:{markerTop};height:1px;background:repeating-linear-gradient(90deg,rgba(224,69,60,.75) 0 8px,rgba(224,69,60,0) 8px 16px);background-size:24px 1px;animation:dash .9s linear infinite reverse;transition:top .45s cubic-bezier(.2,.75,.2,1)"
     ></div>
   </div>
 
@@ -108,7 +90,7 @@
             ? '54px'
             : '30px'};border-radius:50%;border:1px dashed {on
             ? 'rgba(224,69,60,.85)'
-            : 'rgba(140,200,240,.2)'};animation:{spinAnim(on)};transition:width .4s,height .4s"
+            : 'rgba(140,200,240,.2)'};animation:spin {on ? '9s' : '24s'} linear infinite;transition:width .4s,height .4s"
         ></span>
         <span
           data-testid="employment-timeline-ring-rspin"
@@ -116,7 +98,7 @@
             ? '40px'
             : '24px'};border-radius:50%;border:1px solid {on
             ? 'rgba(140,220,255,.6)'
-            : 'rgba(140,200,240,.12)'};animation:{rspinAnim()};transition:width .4s,height .4s"
+            : 'rgba(140,200,240,.12)'};animation:rspin 14s linear infinite;transition:width .4s,height .4s"
         ></span>
         <span
           data-testid="employment-timeline-dot"

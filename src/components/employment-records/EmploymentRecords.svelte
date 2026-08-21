@@ -33,21 +33,13 @@
     /** See PaneTree.svelte's own header comment (multi-instance
      * data-copy-source/paste-target gating). */
     isFocused: boolean;
-    /** `PORTFOLIO_FIXTURES=1`, threaded through as the same boolean
-     * Repositories' own `fixtureMode` prop carries (PaneTree.svelte reuses
-     * `repositoriesFixtureMode` for both — one flag, two prop names,
-     * matching that file's existing "same flag, per-feature name"
-     * convention). Gates the timeline's infinite spin/rspin/spark/dash
-     * keyframe animations to `none` for deterministic goldens. */
-    fixtureMode: boolean;
   }
 
-  const { personnel, personnelEntries, isFocused, fixtureMode }: Props = $props();
+  const { personnel, personnelEntries, isFocused }: Props = $props();
 
   const state = new EmploymentRecordsState(
     () => personnel,
     () => personnelEntries,
-    () => fixtureMode,
   );
 
   /** API parity with Repositories.svelte's own exported `isEditorOpen`/

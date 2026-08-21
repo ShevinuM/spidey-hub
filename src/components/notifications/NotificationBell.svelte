@@ -25,9 +25,7 @@
     {#if state.hasUnread}
       <span
         data-testid="notifications-sense-ring"
-        style="position:absolute;inset:-1px;border:1px solid rgba(255,92,102,.7);pointer-events:none;animation:{state.fixtureMode
-          ? 'none'
-          : 'senseRing 1.9s ease-out infinite'}"
+        style="position:absolute;inset:-1px;border:1px solid rgba(255,92,102,.7);pointer-events:none;animation:senseRing 1.9s ease-out infinite"
       ></span>
     {/if}
     <span style="font-size:17px;line-height:1;color:#ff5c66;text-shadow:0 0 12px rgba(255,92,102,.7)">✉</span>

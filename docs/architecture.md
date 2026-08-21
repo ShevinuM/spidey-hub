@@ -94,9 +94,12 @@ Every suite above buys determinism by excluding the exact conditions a real
 first-time visitor meets, so all four can pass over a visibly broken UI. Know these
 three before trusting a green run:
 
-- Fixture mode disables every `infinite` CSS animation, and the visual pipeline
-  separately freezes animation at capture time — so a dead keyframe renders
-  identically to a live one.
+- The visual pipeline freezes animation at capture time (Playwright's
+  `animations:"disabled"`) — that is the ONLY source of golden determinism
+  for `infinite` CSS animations. Fixture mode itself no longer touches
+  animations (Phase 7b.1): a fixture build renders every `infinite` keyframe
+  live, specifically so a dead keyframe can't hide behind fixture mode the
+  way 9 of them once did.
 - The shared e2e fixture pre-seeds "boot already seen" for every spec but
   `boot.spec.ts`, so a boot↔notification interaction goes untested from both
   directions.
@@ -158,8 +161,10 @@ a small, fixed set of sample projects — with matching `fixtures/commits/*.json
 copied over their built `dist/generated/` counterparts as `build:fixtures`'s last steps
 rather than generated, so the exact same JS bundle runs in both goldens and production —
 only the JSON payloads differ. `personnel`, `profile`, and `help` content is never
-fixture-switched (there's no cross-recipe determinism need for them). Fixture mode also
-disables every CSS `infinite` animation site-wide, so a golden never has to fight a
-running keyframe for pixel stability. It never leaks into `pnpm dev`/`pnpm build`/`pnpm
-test:e2e` — those set no such env var, so a real visitor and the e2e suite both always see
-real content.
+fixture-switched (there's no cross-recipe determinism need for them). It never leaks into
+`pnpm dev`/`pnpm build`/`pnpm test:e2e` — those set no such env var, so a real visitor and
+the e2e suite both always see real content. Fixture mode does NOT touch animations (Phase
+7b.1) — a fixture build renders every `infinite` CSS keyframe live, same as a real build.
+Golden determinism for animation comes entirely from Playwright's capture-time
+`animations:"disabled"` (see "Blind spots the four suites share" above), not from a
+build-time flag.

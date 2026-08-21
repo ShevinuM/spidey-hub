@@ -90,7 +90,6 @@ export class RepositoriesState {
     private readonly repositoriesFn: () => RepositoriesData,
     private readonly projectsFn: () => CollectionEntry<"repositories">[],
     private readonly commitsByRepoFn: () => Record<string, Commit[]>,
-    private readonly fixtureModeFn: () => boolean,
   ) {
     // ---------------------------------------------------------------------
     // Status panel [0]: "last push" relative time, derived once client-side
@@ -255,9 +254,6 @@ export class RepositoriesState {
   }
   get commitsByRepo(): Record<string, Commit[]> {
     return this.commitsByRepoFn();
-  }
-  get fixtureMode(): boolean {
-    return this.fixtureModeFn();
   }
 
   /** Set once, client-side, by the mount effect above; `null` until then

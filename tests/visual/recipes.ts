@@ -379,11 +379,12 @@ export const iteration3Recipes: Recipe[] = [
  * shape is needed.
  *
  * Fixture mode's `buildFixtureState()` (notificationStore.ts) seeds a fixed,
- * non-empty state (2 unread inbox, 1 read inbox, 1 archived, 1 spam) and
- * fixtureMode already disables every CSS `infinite` animation site-wide
- * (sense-ring included, `NotificationBell.svelte`), so the open panel is
- * fully deterministic with no extra clock/seed handling beyond what
- * `captureState()` already does for every other recipe.
+ * non-empty state (2 unread inbox, 1 read inbox, 1 archived, 1 spam). The
+ * sense-ring's infinite animation (`NotificationBell.svelte`) runs live even
+ * in this fixture build (Phase 7b.1) — determinism for the open panel comes
+ * from the visual pipeline's capture-time `animations:"disabled"` alone, with
+ * no extra clock/seed handling beyond what `captureState()` already does for
+ * every other recipe.
  *
  * `check.visible` (not just a `url` check — the panel is an overlay on `/`,
  * same route the dashboard itself renders at) is required here: without it

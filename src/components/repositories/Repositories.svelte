@@ -54,21 +54,14 @@
      * `focusedPanel === N` check below (both must hold: this pane is the
      * window's focused one, AND this is its focused panel). */
     isFocused: boolean;
-    /** `PORTFOLIO_FIXTURES=1` — gates the two new infinite `pls` opacity
-     * animations (Status panel's "connected" dot, panel [1]'s open-repo
-     * gold dot) to `none`, same convention as the notifications sense-ring/
-     * header-sweep (src/components/notifications/NotificationBell.svelte).
-     * Read server-side only in the `.astro` frontmatter, never client-side. */
-    fixtureMode: boolean;
   }
 
-  const { repositories, projects, commitsByRepo, isFocused, fixtureMode }: Props = $props();
+  const { repositories, projects, commitsByRepo, isFocused }: Props = $props();
 
   const state = new RepositoriesState(
     () => repositories,
     () => projects,
     () => commitsByRepo,
-    () => fixtureMode,
   );
 
   // ---------------------------------------------------------------------

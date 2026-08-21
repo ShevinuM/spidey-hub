@@ -66,7 +66,6 @@
      * through to Dashboard.svelte's footer sync line. */
     paneCount: number;
     repositories: RepositoriesData;
-    repositoriesFixtureMode: boolean;
     personnel: PersonnelData;
     profile: ProfileData;
     help: HelpData;
@@ -106,7 +105,6 @@
     windowNumberById,
     paneCount,
     repositories,
-    repositoriesFixtureMode,
     personnel,
     profile,
     help,
@@ -159,7 +157,6 @@
           {windowNumberById}
           {paneCount}
           {repositories}
-          {repositoriesFixtureMode}
           {personnel}
           {profile}
           {help}
@@ -204,7 +201,6 @@
         {projects}
         {commitsByRepo}
         {isFocused}
-        fixtureMode={repositoriesFixtureMode}
       />
     {:else if node.pane.program === "employment"}
       <EmploymentRecords
@@ -212,7 +208,6 @@
         {personnel}
         {personnelEntries}
         {isFocused}
-        fixtureMode={repositoriesFixtureMode}
       />
     {:else if node.pane.program === "help"}
       <HelpView bind:this={leafRef} {help} {isFocused} />
