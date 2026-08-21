@@ -34,10 +34,22 @@ interface Props {
 
 const { title } = Astro.props;
 const { mobileBlock } = getSite();
+
+// Server-computed once per build, same convention every route page already
+// repeats for `notificationsFixtureMode` — mirrored here (not threaded as a
+// prop) because this is the ONE file every route shares, making it the
+// single DOM location a build's actual PORTFOLIO_FIXTURES mode can be read
+// back from at runtime. See playwright.config.ts's `globalSetup`
+// (tests/checkFixtureFlag.ts): both `pnpm test:e2e` and `pnpm test:visual`
+// share one webServer definition (port 4322) with `reuseExistingServer:
+// true`, so a stray server left over from the other suite — or a `dist/`
+// built by the wrong script — would otherwise serve the wrong mode with no
+// signal anywhere. This attribute is that signal.
+const fixtureMode = process.env.PORTFOLIO_FIXTURES === "1";
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-fixture-mode={String(fixtureMode)}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
