@@ -70,8 +70,8 @@ interface PreviewState {
    * EditorFileState below; commit-tree/GitHub-fetched content is never
    * tokenized (no build step runs over it), so it always falls back to flat
    * `lines` rendering. */
-  tokens?: TokenSpan[][];
-  palette?: string[];
+  tokens?: TokenSpan[][] | undefined;
+  palette?: string[] | undefined;
 }
 
 interface EditorFileState {
@@ -81,8 +81,8 @@ interface EditorFileState {
   /** Present only for a working-tree file generate.mjs tokenized —
    * commit-tree/GitHub-fetched content is never tokenized (no build step
    * runs over it), so it always falls back to flat `lines` rendering. */
-  tokens?: TokenSpan[][];
-  palette?: string[];
+  tokens?: TokenSpan[][] | undefined;
+  palette?: string[] | undefined;
 }
 
 export class RepositoriesState {

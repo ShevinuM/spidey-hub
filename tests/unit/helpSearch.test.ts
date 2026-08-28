@@ -143,7 +143,7 @@ test('searchHelp: "dash" resolves to the dashboard COMMAND, not the "d / w / 0" 
 test('searchHelp: exact match ranks above a prefix match ("help" command vs. a longer field that merely starts with "help")', () => {
   const entries: typeof commands = [
     ...commands,
-    { name: "helpful-thing", description: "not a real command", action: undefined },
+    { name: "helpful-thing", description: "not a real command" },
   ];
   const results = searchHelp("help", buildEntries(entries, []), entries);
   assert.equal(results[0].label, "help");

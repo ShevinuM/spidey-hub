@@ -155,7 +155,9 @@
    * `buildResolveContent` above by the time this runs) — a site file (`cat`/
    * `vim` over grep-index.json) has no tokens to find and always falls back
    * flat, same as any other cache-miss/fetch-failure this shell tolerates. */
-  async function tokensFor(target: CatTarget | null): Promise<{ tokens?: TokenSpan[][]; palette?: string[] }> {
+  async function tokensFor(
+    target: CatTarget | null,
+  ): Promise<{ tokens?: TokenSpan[][] | undefined; palette?: string[] | undefined }> {
     if (!target || target.kind !== "repo") return {};
     try {
       const index = await loadRepoIndex(target.repo);
@@ -197,8 +199,8 @@
     /** Present only for a `vim repos/<name>/…` open whose file generate.mjs
      * tokenized — a plain `cat`/`vim` site-file open never has these (see
      * tokensFor's own comment). */
-    tokens?: TokenSpan[][];
-    palette?: string[];
+    tokens?: TokenSpan[][] | undefined;
+    palette?: string[] | undefined;
   }
   let editorFile = $state<EditorFileState | null>(null);
   let editorRef = $state<{

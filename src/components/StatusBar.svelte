@@ -59,7 +59,7 @@
      * window` has something to jump back to. Undefined whenever the
      * session hasn't switched windows yet (fresh session: last === active,
      * no flag). */
-    lastWindowId?: string;
+    lastWindowId?: string | undefined;
     /** Passed the clicked window's own `id` (a site.yaml window id, e.g.
      * "repositories") — no ViewId translation happens in this component; the
      * caller (Terminal.svelte) owns turning a window id into a window

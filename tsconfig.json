@@ -4,6 +4,8 @@
   "exclude": ["dist", "tests/visual/reference", "repos"],
   "compilerOptions": {
     "strictNullChecks": true,
-    "jsx": "preserve"
+    "jsx": "preserve",
+    "exactOptionalPropertyTypes": true,
+    "verbatimModuleSyntax": true
   }
 }

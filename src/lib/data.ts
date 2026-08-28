@@ -234,10 +234,10 @@ export const getTracker = (): TrackerData => loadYaml<TrackerData>("tracker.yaml
 
 export interface ProfileField {
   label: string;
-  value?: string;
-  valuePrefix?: string;
-  linkText?: string;
-  linkHref?: string;
+  value?: string | undefined;
+  valuePrefix?: string | undefined;
+  linkText?: string | undefined;
+  linkHref?: string | undefined;
 }
 
 export interface ContactRow {

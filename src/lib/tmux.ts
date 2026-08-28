@@ -77,7 +77,7 @@ export interface Window {
    * by every op that reassigns `activePaneId` below. Undefined until the
    * window's focus has actually moved at least once (fresh window: nothing
    * to jump back to). */
-  lastPaneId?: string;
+  lastPaneId?: string | undefined;
   /** Every pane id currently in this window's tree, in CREATION order:
    * index 0 is the "main" pane for `main-horizontal`/`main-vertical`
    * layouts (documented tmux fidelity choice — real tmux uses the

@@ -36,7 +36,7 @@ interface EditorLine {
 
 export type LineDecoration =
   | { kind: "full-select" }
-  | { kind: "segments"; segments: { text: string; cls: string; color?: string }[] };
+  | { kind: "segments"; segments: { text: string; cls: string; color?: string | undefined }[] };
 
 // ---------------------------------------------------------------------
 // Ctrl-b ] paste-target registration (one of the "grep query, employment
@@ -333,7 +333,7 @@ export class EditorState {
         }
       }
       const points = [...cuts].sort((a, b) => a - b);
-      const segments: { text: string; cls: string; color?: string }[] = [];
+      const segments: { text: string; cls: string; color?: string | undefined }[] = [];
       for (let i = 0; i < points.length - 1; i++) {
         const s = points[i];
         const eIdx = points[i + 1];

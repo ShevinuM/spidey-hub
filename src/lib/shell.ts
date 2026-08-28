@@ -116,7 +116,7 @@ export function kindOf(entries: FsEntry[], segments: string[]): FsKind {
 export interface DirEntry {
   type: "dir" | "file";
   name: string;
-  size?: number;
+  size?: number | undefined;
 }
 
 /** Immediate children of `segments`, directories before files, then

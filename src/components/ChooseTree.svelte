@@ -64,7 +64,7 @@
   let open = $state(false);
   let expandedSessionIds = $state<Set<string>>(new Set());
   let selectedIdx = $state(0);
-  let killPrompt = $state<{ kind: "window" | "session"; sessionId: string; windowId?: string; text: string } | null>(null);
+  let killPrompt = $state<{ kind: "window" | "session"; sessionId: string; windowId?: string | undefined; text: string } | null>(null);
 
   interface Row {
     kind: "session" | "window";
