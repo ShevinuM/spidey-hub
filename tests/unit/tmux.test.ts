@@ -4,8 +4,7 @@
 // values (the same shape Terminal.svelte's `$state` proxy wraps at runtime —
 // this file proves the operations themselves are correct independent of
 // that wrapping).
-import { test } from "node:test";
-import assert from "node:assert/strict";
+import { expect, test } from "vitest";
 import { createShellState } from "../../src/lib/shell.ts";
 import {
   activeSessionOf,
@@ -85,27 +84,24 @@ function splitTimes(window: Window, direction: "row" | "column", n: number): voi
 
 test("createFactoryClient repositories one session with six windows in seed order, dashboard active by default", () => {
   const client = freshClient();
-  assert.equal(client.sessions.length, 1);
+  expect(client.sessions.length).toBe(1);
   const session = activeSessionOf(client)!;
-  assert.equal(session.name, "10.42.7.13");
-  assert.equal(session.windows.length, 6);
-  assert.deepEqual(
-    session.windows.map((w) => w.id),
-    ["dashboard", "repositories", "employment", "retina-v", "profile", "help"],
-  );
-  assert.equal(session.activeWindowIdx, 0);
-  assert.equal(session.lastWindowIdx, 0);
-  assert.equal(session.createdAt, 1_723_000_000_000);
+  expect(session.name).toBe("10.42.7.13");
+  expect(session.windows.length).toBe(6);
+  expect(session.windows.map((w) => w.id)).toEqual(["dashboard", "repositories", "employment", "retina-v", "profile", "help"]);
+  expect(session.activeWindowIdx).toBe(0);
+  expect(session.lastWindowIdx).toBe(0);
+  expect(session.createdAt).toBe(1_723_000_000_000);
 });
 
 test("createFactoryClient seeds each window with one leaf pane running its own id as the initial program", () => {
   const session = freshSession();
   for (const w of session.windows) {
-    assert.equal(w.root.type, "leaf");
+    expect(w.root.type).toBe("leaf");
     const pane = focusedPane(w);
-    assert.equal(pane.program, w.id);
-    assert.equal(w.activePaneId, pane.id);
-    assert.equal(w.autoName, true);
+    expect(pane.program).toBe(w.id);
+    expect(w.activePaneId).toBe(pane.id);
+    expect(w.autoName).toBe(true);
   }
 });
 
@@ -114,11 +110,8 @@ test("createFactoryClient pane ids are deterministic — a function of (windowId
   const b = freshClient();
   const sessionA = activeSessionOf(a)!;
   const sessionB = activeSessionOf(b)!;
-  assert.deepEqual(
-    sessionA.windows.map((w) => focusedPane(w).id),
-    sessionB.windows.map((w) => focusedPane(w).id),
-  );
-  assert.equal(focusedPane(sessionA.windows[1]).id, "repositories#0");
+  expect(sessionA.windows.map((w) => focusedPane(w).id)).toEqual(sessionB.windows.map((w) => focusedPane(w).id));
+  expect(focusedPane(sessionA.windows[1]).id).toBe("repositories#0");
 });
 
 test("createFactoryClient honors activeWindowId (e.g. a direct /repositories SSR route) with no extra bookkeeping", () => {
@@ -129,8 +122,8 @@ test("createFactoryClient honors activeWindowId (e.g. a direct /repositories SSR
     activeWindowId: "repositories",
   });
   const session = activeSessionOf(client)!;
-  assert.equal(session.activeWindowIdx, 1);
-  assert.equal(session.lastWindowIdx, 1);
+  expect(session.activeWindowIdx).toBe(1);
+  expect(session.lastWindowIdx).toBe(1);
 });
 
 test("createFactoryClient falls back to index 0 for an unknown activeWindowId", () => {
@@ -140,7 +133,7 @@ test("createFactoryClient falls back to index 0 for an unknown activeWindowId", 
     epoch: 0,
     activeWindowId: "nonexistent",
   });
-  assert.equal(activeSessionOf(client)!.activeWindowIdx, 0);
+  expect(activeSessionOf(client)!.activeWindowIdx).toBe(0);
 });
 
 // ---------------------------------------------------------------------
@@ -150,39 +143,39 @@ test("createFactoryClient falls back to index 0 for an unknown activeWindowId", 
 test("selectWindowIndex moves activeWindowIdx and records the previous one as lastWindowIdx", () => {
   const session = freshSession();
   selectWindowIndex(session, 2);
-  assert.equal(session.activeWindowIdx, 2);
-  assert.equal(session.lastWindowIdx, 0);
+  expect(session.activeWindowIdx).toBe(2);
+  expect(session.lastWindowIdx).toBe(0);
   selectWindowIndex(session, 4);
-  assert.equal(session.activeWindowIdx, 4);
-  assert.equal(session.lastWindowIdx, 2);
+  expect(session.activeWindowIdx).toBe(4);
+  expect(session.lastWindowIdx).toBe(2);
 });
 
 test("selectWindowIndex is a no-op (including lastWindowIdx) when re-selecting the already-active window", () => {
   const session = freshSession();
   selectWindowIndex(session, 3);
   selectWindowIndex(session, 3);
-  assert.equal(session.activeWindowIdx, 3);
-  assert.equal(session.lastWindowIdx, 0);
+  expect(session.activeWindowIdx).toBe(3);
+  expect(session.lastWindowIdx).toBe(0);
 });
 
 test("selectWindowIndex ignores an out-of-range index", () => {
   const session = freshSession();
   selectWindowIndex(session, 99);
   selectWindowIndex(session, -1);
-  assert.equal(session.activeWindowIdx, 0);
-  assert.equal(session.lastWindowIdx, 0);
+  expect(session.activeWindowIdx).toBe(0);
+  expect(session.lastWindowIdx).toBe(0);
 });
 
 test("cycleWindow(1) advances and wraps; cycleWindow(-1) is the exact reverse", () => {
   const session = freshSession();
   for (let i = 1; i <= 6; i++) {
     cycleWindow(session, 1);
-    assert.equal(session.activeWindowIdx, i % 6);
+    expect(session.activeWindowIdx).toBe(i % 6);
   }
   // Back at 0. Reverse direction from here retraces the same six windows.
   for (let i = 5; i >= 0; i--) {
     cycleWindow(session, -1);
-    assert.equal(session.activeWindowIdx, i);
+    expect(session.activeWindowIdx).toBe(i);
   }
 });
 
@@ -194,17 +187,17 @@ test("renameWindowManual sets the name and permanently disables autoName", () =>
   const session = freshSession();
   renameWindowManual(session, "repositories", "repositories-x");
   const win = session.windows.find((w) => w.id === "repositories")!;
-  assert.equal(win.name, "repositories-x");
-  assert.equal(win.autoName, false);
+  expect(win.name).toBe("repositories-x");
+  expect(win.autoName).toBe(false);
   // A later program change no longer touches the name.
   setPaneProgram(session, focusedPane(win).id, "employment");
-  assert.equal(win.name, "repositories-x");
+  expect(win.name).toBe("repositories-x");
 });
 
 test("renameWindowManual is a no-op for an unknown window id", () => {
   const session = freshSession();
   renameWindowManual(session, "nope", "whatever");
-  assert.equal(session.windows.length, 6);
+  expect(session.windows.length).toBe(6);
 });
 
 // ---------------------------------------------------------------------
@@ -216,31 +209,28 @@ test("killWindow refuses (no mutation) when it's the only window left", () => {
   for (const w of [...session.windows]) {
     if (session.windows.length > 1) killWindow(session, w.id);
   }
-  assert.equal(session.windows.length, 1);
+  expect(session.windows.length).toBe(1);
   const before = session.windows[0].id;
   const result = killWindow(session, before);
-  assert.deepEqual(result, { ok: false, reason: "only-window" });
-  assert.equal(session.windows.length, 1);
-  assert.equal(session.windows[0].id, before);
+  expect(result).toEqual({ ok: false, reason: "only-window" });
+  expect(session.windows.length).toBe(1);
+  expect(session.windows[0].id).toBe(before);
 });
 
 test("killWindow on the active window falls back to the window that sat right after it", () => {
   const session = freshSession(); // active: dashboard (idx 0)
   const result = killWindow(session, "dashboard");
-  assert.deepEqual(result, { ok: true });
-  assert.deepEqual(
-    session.windows.map((w) => w.id),
-    ["repositories", "employment", "retina-v", "profile", "help"],
-  );
-  assert.equal(session.windows[session.activeWindowIdx].id, "repositories");
+  expect(result).toEqual({ ok: true });
+  expect(session.windows.map((w) => w.id)).toEqual(["repositories", "employment", "retina-v", "profile", "help"]);
+  expect(session.windows[session.activeWindowIdx].id).toBe("repositories");
 });
 
 test("killWindow on the active LAST window wraps to the first remaining window", () => {
   const session = freshSession();
   selectWindowIndex(session, 5); // help — last window, now active
   const result = killWindow(session, "help");
-  assert.deepEqual(result, { ok: true });
-  assert.equal(session.windows[session.activeWindowIdx].id, "dashboard");
+  expect(result).toEqual({ ok: true });
+  expect(session.windows[session.activeWindowIdx].id).toBe("dashboard");
 });
 
 test("killWindow reproduces the exact 'kill down to one' sequence byte-for-byte", () => {
@@ -253,22 +243,19 @@ test("killWindow reproduces the exact 'kill down to one' sequence byte-for-byte"
     killWindow(session, activeId);
     survivors.push(session.windows[session.activeWindowIdx].id);
   }
-  assert.equal(session.windows.length, 1);
-  assert.deepEqual(survivors, ["repositories", "employment", "retina-v", "profile", "help"]);
+  expect(session.windows.length).toBe(1);
+  expect(survivors).toEqual(["repositories", "employment", "retina-v", "profile", "help"]);
 });
 
 test("killWindow on a NON-active window shifts activeWindowIdx/lastWindowIdx down without switching", () => {
   const session = freshSession();
   selectWindowIndex(session, 4); // profile active; lastWindowIdx = 0 (dashboard)
   killWindow(session, "repositories"); // idx 1, before both 4 and 0... only before 4
-  assert.deepEqual(
-    session.windows.map((w) => w.id),
-    ["dashboard", "employment", "retina-v", "profile", "help"],
-  );
+  expect(session.windows.map((w) => w.id)).toEqual(["dashboard", "employment", "retina-v", "profile", "help"]);
   // profile shifted from idx 4 to idx 3; dashboard (lastWindowIdx target) stayed at 0.
-  assert.equal(session.windows[session.activeWindowIdx].id, "profile");
-  assert.equal(session.activeWindowIdx, 3);
-  assert.equal(session.lastWindowIdx, 0);
+  expect(session.windows[session.activeWindowIdx].id).toBe("profile");
+  expect(session.activeWindowIdx).toBe(3);
+  expect(session.lastWindowIdx).toBe(0);
 });
 
 // ---------------------------------------------------------------------
@@ -276,9 +263,9 @@ test("killWindow on a NON-active window shifts activeWindowIdx/lastWindowIdx dow
 // ---------------------------------------------------------------------
 
 test("programDisplayName is the program's own name, except shell -> zsh", () => {
-  assert.equal(programDisplayName("repositories"), "repositories");
-  assert.equal(programDisplayName("dashboard"), "dashboard");
-  assert.equal(programDisplayName("shell"), "zsh");
+  expect(programDisplayName("repositories")).toBe("repositories");
+  expect(programDisplayName("dashboard")).toBe("dashboard");
+  expect(programDisplayName("shell")).toBe("zsh");
 });
 
 test("exitProgram drops a pane to shell and auto-renames the window to zsh", () => {
@@ -286,8 +273,8 @@ test("exitProgram drops a pane to shell and auto-renames the window to zsh", () 
   const win = activeWindowOf(session); // dashboard
   const pane = focusedPane(win);
   exitProgram(session, pane.id);
-  assert.equal(pane.program, "shell");
-  assert.equal(win.name, "zsh");
+  expect(pane.program).toBe("shell");
+  expect(win.name).toBe("zsh");
 });
 
 test("launchProgram relaunches a program in-pane and restores the auto-rename text", () => {
@@ -295,10 +282,10 @@ test("launchProgram relaunches a program in-pane and restores the auto-rename te
   const win = session.windows.find((w) => w.id === "repositories")!;
   const pane = focusedPane(win);
   exitProgram(session, pane.id);
-  assert.equal(win.name, "zsh");
+  expect(win.name).toBe("zsh");
   launchProgram(session, pane.id, "employment");
-  assert.equal(pane.program, "employment");
-  assert.equal(win.name, "employment"); // auto-rename follows the NEW program, not the window's own id
+  expect(pane.program).toBe("employment");
+  expect(win.name).toBe("employment"); // auto-rename follows the NEW program, not the window's own id
 });
 
 test("launchProgram into a manually-renamed window changes the program but never the name", () => {
@@ -306,8 +293,8 @@ test("launchProgram into a manually-renamed window changes the program but never
   const win = session.windows.find((w) => w.id === "repositories")!;
   renameWindowManual(session, "repositories", "scratch");
   launchProgram(session, focusedPane(win).id, "help");
-  assert.equal(focusedPane(win).program, "help");
-  assert.equal(win.name, "scratch");
+  expect(focusedPane(win).program).toBe("help");
+  expect(win.name).toBe("scratch");
 });
 
 test("setPaneProgram / launchProgram / exitProgram are no-ops for an unknown pane id", () => {
@@ -316,7 +303,7 @@ test("setPaneProgram / launchProgram / exitProgram are no-ops for an unknown pan
   setPaneProgram(session, "no-such-pane", "help");
   launchProgram(session, "no-such-pane", "help");
   exitProgram(session, "no-such-pane");
-  assert.equal(JSON.stringify(session.windows), before);
+  expect(JSON.stringify(session.windows)).toBe(before);
 });
 
 // ---------------------------------------------------------------------
@@ -327,10 +314,10 @@ test("allPanes/findPaneById/focusedPane agree on the single leaf pane", () => {
   const session = freshSession();
   const win = activeWindowOf(session);
   const panes = allPanes(win.root);
-  assert.equal(panes.length, 1);
-  assert.equal(findPaneById(win.root, panes[0].id), panes[0]);
-  assert.equal(findPaneById(win.root, "bogus"), undefined);
-  assert.equal(focusedPane(win), panes[0]);
+  expect(panes.length).toBe(1);
+  expect(findPaneById(win.root, panes[0].id)).toBe(panes[0]);
+  expect(findPaneById(win.root, "bogus")).toBe(undefined);
+  expect(focusedPane(win)).toBe(panes[0]);
 });
 
 // ---------------------------------------------------------------------
@@ -339,10 +326,10 @@ test("allPanes/findPaneById/focusedPane agree on the single leaf pane", () => {
 
 test("createFactoryClient seeds attachSeq=1, the default session at lastAttachedSeq=1, and an empty hostPane running shell", () => {
   const client = freshClient();
-  assert.equal(client.attachSeq, 1);
-  assert.equal(activeSessionOf(client)!.lastAttachedSeq, 1);
-  assert.equal(client.hostPane.program, "shell");
-  assert.deepEqual(client.hostPane.shell.lines, []);
+  expect(client.attachSeq).toBe(1);
+  expect(activeSessionOf(client)!.lastAttachedSeq).toBe(1);
+  expect(client.hostPane.program).toBe("shell");
+  expect(client.hostPane.shell.lines).toEqual([]);
 });
 
 test("createFactoryClient seeds the hostPane's scrollback from hostNarrative when given one", () => {
@@ -352,7 +339,7 @@ test("createFactoryClient seeds the hostPane's scrollback from hostNarrative whe
     epoch: 0,
     hostNarrative: [{ text: "hello", kind: "output" }],
   });
-  assert.deepEqual(client.hostPane.shell.lines, [{ text: "hello", kind: "output" }]);
+  expect(client.hostPane.shell.lines).toEqual([{ text: "hello", kind: "output" }]);
 });
 
 // ---------------------------------------------------------------------
@@ -363,15 +350,15 @@ test("createSession adds a new session with one auto-named zsh window (window 0)
   const client = freshClient();
   const before = client.attachedSessionId;
   const session = createSession(client, "test", 5000);
-  assert.equal(client.sessions.length, 2);
-  assert.equal(session.name, "test");
-  assert.equal(session.windows.length, 1);
-  assert.equal(session.windows[0].name, "zsh");
-  assert.equal(session.windows[0].number, 0);
-  assert.equal(focusedPane(session.windows[0]).program, "shell");
-  assert.equal(session.createdAt, 5000);
-  assert.equal(session.lastAttachedSeq, 0);
-  assert.equal(client.attachedSessionId, before); // unchanged — createSession never attaches on its own
+  expect(client.sessions.length).toBe(2);
+  expect(session.name).toBe("test");
+  expect(session.windows.length).toBe(1);
+  expect(session.windows[0].name).toBe("zsh");
+  expect(session.windows[0].number).toBe(0);
+  expect(focusedPane(session.windows[0]).program).toBe("shell");
+  expect(session.createdAt).toBe(5000);
+  expect(session.lastAttachedSeq).toBe(0);
+  expect(client.attachedSessionId).toBe(before); // unchanged — createSession never attaches on its own
 });
 
 // ---------------------------------------------------------------------
@@ -383,12 +370,12 @@ test("createWindow appends a new auto-named zsh window numbered one past the cur
   const session = activeSessionOf(client)!;
   const before = session.activeWindowIdx;
   const win = createWindow(session);
-  assert.equal(session.windows.length, 7);
-  assert.equal(win.number, 6);
-  assert.equal(win.name, "zsh");
-  assert.equal(win.autoName, true);
-  assert.equal(focusedPane(win).program, "shell");
-  assert.equal(session.activeWindowIdx, before); // caller activates, not this function
+  expect(session.windows.length).toBe(7);
+  expect(win.number).toBe(6);
+  expect(win.name).toBe("zsh");
+  expect(win.autoName).toBe(true);
+  expect(focusedPane(win).program).toBe("shell");
+  expect(session.activeWindowIdx).toBe(before); // caller activates, not this function
 });
 
 test("createWindow twice in a row never collides — numbers 6 then 7, distinct ids", () => {
@@ -396,48 +383,48 @@ test("createWindow twice in a row never collides — numbers 6 then 7, distinct 
   const session = activeSessionOf(client)!;
   const first = createWindow(session);
   const second = createWindow(session);
-  assert.equal(first.number, 6);
-  assert.equal(second.number, 7);
-  assert.notEqual(first.id, second.id);
+  expect(first.number).toBe(6);
+  expect(second.number).toBe(7);
+  expect(first.id).not.toBe(second.id);
 });
 
 test("createWindow reuses the freed number (and its deterministic id) after a kill-then-create — the dead window's state is fully gone, so this is harmless (determinism rules: ids are a pure function of session id + number, never a counter)", () => {
   const client = freshClient();
   const session = activeSessionOf(client)!;
   const first = createWindow(session);
-  assert.equal(first.number, 6);
+  expect(first.number).toBe(6);
   killWindow(session, first.id);
   const second = createWindow(session);
-  assert.equal(second.number, 6);
-  assert.equal(second.id, first.id);
+  expect(second.number).toBe(6);
+  expect(second.id).toBe(first.id);
   // The killed window is gone from the array (not merely shadowed) — this
   // is a brand-new 7th entry that happens to reuse the freed number/id, not
   // the old one coming back to life.
-  assert.equal(session.windows.length, 7);
+  expect(session.windows.length).toBe(7);
 });
 
 test("attachSession switches the client and bumps the session's recency counter", () => {
   const client = freshClient();
   const session = createSession(client, "test", 0);
   attachSession(client, session.id);
-  assert.equal(client.attachedSessionId, session.id);
-  assert.equal(client.attachSeq, 2);
-  assert.equal(session.lastAttachedSeq, 2);
+  expect(client.attachedSessionId).toBe(session.id);
+  expect(client.attachSeq).toBe(2);
+  expect(session.lastAttachedSeq).toBe(2);
 });
 
 test("attachSession is a no-op for an unknown session id", () => {
   const client = freshClient();
   const before = client.attachedSessionId;
   attachSession(client, "no-such-session");
-  assert.equal(client.attachedSessionId, before);
-  assert.equal(client.attachSeq, 1);
+  expect(client.attachedSessionId).toBe(before);
+  expect(client.attachSeq).toBe(1);
 });
 
 test("detachClient nulls attachedSessionId without touching the session list", () => {
   const client = freshClient();
   detachClient(client);
-  assert.equal(client.attachedSessionId, null);
-  assert.equal(client.sessions.length, 1);
+  expect(client.attachedSessionId).toBe(null);
+  expect(client.sessions.length).toBe(1);
 });
 
 // ---------------------------------------------------------------------
@@ -449,9 +436,9 @@ test("killWindowCascade on a window that ISN'T the session's last one just remov
   const client = freshClient();
   const session = activeSessionOf(client)!;
   const result = killWindowCascade(client, session, "dashboard");
-  assert.deepEqual(result, { kind: "window-removed" });
-  assert.equal(session.windows.length, 5);
-  assert.equal(client.sessions.length, 1);
+  expect(result).toEqual({ kind: "window-removed" });
+  expect(session.windows.length).toBe(5);
+  expect(client.sessions.length).toBe(1);
 });
 
 test("killWindowCascade on the attached session's LAST window, with another session still around, silently switches to it", () => {
@@ -461,15 +448,15 @@ test("killWindowCascade on the attached session's LAST window, with another sess
 
   const defaultSession = client.sessions.find((s) => s.name === "10.42.7.13")!;
   for (const w of [...defaultSession.windows.slice(1)]) killWindow(defaultSession, w.id);
-  assert.equal(defaultSession.windows.length, 1);
+  expect(defaultSession.windows.length).toBe(1);
 
   // Kill the default session's own last window WHILE `other` is attached —
   // the default session (not attached) is destroyed outright, with no
   // client-level side effect (the attached session is untouched).
   const result = killWindowCascade(client, defaultSession, defaultSession.windows[0].id);
-  assert.deepEqual(result, { kind: "session-destroyed", detachedToHost: false });
-  assert.equal(client.sessions.length, 1);
-  assert.equal(client.attachedSessionId, other.id);
+  expect(result).toEqual({ kind: "session-destroyed", detachedToHost: false });
+  expect(client.sessions.length).toBe(1);
+  expect(client.attachedSessionId).toBe(other.id);
 });
 
 test("killWindowCascade on the ATTACHED session's last window switches the client to the most-recently-used REMAINING session", () => {
@@ -481,22 +468,22 @@ test("killWindowCascade on the ATTACHED session's last window switches the clien
 
   for (const w of [...defaultSession.windows.slice(1)]) killWindow(defaultSession, w.id);
   const result = killWindowCascade(client, defaultSession, defaultSession.windows[0].id);
-  assert.deepEqual(result, { kind: "session-destroyed", detachedToHost: false });
-  assert.equal(client.sessions.length, 1);
-  assert.equal(client.attachedSessionId, other.id); // switched, not detached
-  assert.equal(client.sessions[0].id, other.id);
+  expect(result).toEqual({ kind: "session-destroyed", detachedToHost: false });
+  expect(client.sessions.length).toBe(1);
+  expect(client.attachedSessionId).toBe(other.id); // switched, not detached
+  expect(client.sessions[0].id).toBe(other.id);
 });
 
 test("killWindowCascade on the attached session's last window, with NO other session left, detaches to host", () => {
   const client = freshClient();
   const session = activeSessionOf(client)!;
   for (const w of [...session.windows.slice(1)]) killWindow(session, w.id);
-  assert.equal(session.windows.length, 1);
+  expect(session.windows.length).toBe(1);
 
   const result = killWindowCascade(client, session, session.windows[0].id);
-  assert.deepEqual(result, { kind: "session-destroyed", detachedToHost: true });
-  assert.equal(client.sessions.length, 0);
-  assert.equal(client.attachedSessionId, null);
+  expect(result).toEqual({ kind: "session-destroyed", detachedToHost: true });
+  expect(client.sessions.length).toBe(0);
+  expect(client.attachedSessionId).toBe(null);
 });
 
 // ---------------------------------------------------------------------
@@ -510,9 +497,9 @@ test("killSession on a session that ISN'T attached just removes it, no client-le
   const client = freshClient();
   const other = createSession(client, "other", 0);
   const result = killSession(client, other.id);
-  assert.deepEqual(result, { kind: "session-destroyed", detachedToHost: false });
-  assert.equal(client.sessions.length, 1);
-  assert.equal(client.attachedSessionId, activeSessionOf(client)!.id);
+  expect(result).toEqual({ kind: "session-destroyed", detachedToHost: false });
+  expect(client.sessions.length).toBe(1);
+  expect(client.attachedSessionId).toBe(activeSessionOf(client)!.id);
 });
 
 test("killSession on the ATTACHED session switches to the most-recently-used REMAINING one", () => {
@@ -521,18 +508,18 @@ test("killSession on the ATTACHED session switches to the most-recently-used REM
   const other = createSession(client, "other", 0);
   attachSession(client, other.id);
   const result = killSession(client, other.id);
-  assert.deepEqual(result, { kind: "session-destroyed", detachedToHost: false });
-  assert.equal(client.sessions.length, 1);
-  assert.equal(client.attachedSessionId, defaultSession.id);
+  expect(result).toEqual({ kind: "session-destroyed", detachedToHost: false });
+  expect(client.sessions.length).toBe(1);
+  expect(client.attachedSessionId).toBe(defaultSession.id);
 });
 
 test("killSession on the attached session with no other left detaches to host", () => {
   const client = freshClient();
   const session = activeSessionOf(client)!;
   const result = killSession(client, session.id);
-  assert.deepEqual(result, { kind: "session-destroyed", detachedToHost: true });
-  assert.equal(client.sessions.length, 0);
-  assert.equal(client.attachedSessionId, null);
+  expect(result).toEqual({ kind: "session-destroyed", detachedToHost: true });
+  expect(client.sessions.length).toBe(0);
+  expect(client.attachedSessionId).toBe(null);
 });
 
 // ---------------------------------------------------------------------
@@ -544,28 +531,28 @@ test("splitPane wraps a single leaf in a new 'row' split, 50/50, focusing the ne
   const originalPaneId = win.activePaneId;
   splitPane(win, "row");
 
-  assert.equal(win.root.type, "split");
+  expect(win.root.type).toBe("split");
   if (win.root.type !== "split") throw new Error("unreachable");
-  assert.equal(win.root.direction, "row");
-  assert.deepEqual(win.root.sizes, [0.5, 0.5]);
-  assert.equal(win.root.children.length, 2);
-  assert.equal(win.root.children[0].type, "leaf");
-  assert.equal(win.paneOrder.length, 2);
-  assert.equal(win.paneOrder[0], originalPaneId);
-  assert.notEqual(win.activePaneId, originalPaneId);
-  assert.equal(win.activePaneId, win.paneOrder[1]);
-  assert.equal(win.lastPaneId, originalPaneId);
+  expect(win.root.direction).toBe("row");
+  expect(win.root.sizes).toEqual([0.5, 0.5]);
+  expect(win.root.children.length).toBe(2);
+  expect(win.root.children[0].type).toBe("leaf");
+  expect(win.paneOrder.length).toBe(2);
+  expect(win.paneOrder[0]).toBe(originalPaneId);
+  expect(win.activePaneId).not.toBe(originalPaneId);
+  expect(win.activePaneId).toBe(win.paneOrder[1]);
+  expect(win.lastPaneId).toBe(originalPaneId);
   // The new pane always runs a shell.
-  assert.equal(focusedPane(win).program, "shell");
+  expect(focusedPane(win).program).toBe("shell");
 });
 
 test("splitPane 'column' wraps the same way, direction 'column'", () => {
   const win = freshWindow();
   splitPane(win, "column");
-  assert.equal(win.root.type, "split");
+  expect(win.root.type).toBe("split");
   if (win.root.type !== "split") throw new Error("unreachable");
-  assert.equal(win.root.direction, "column");
-  assert.deepEqual(win.root.sizes, [0.5, 0.5]);
+  expect(win.root.direction).toBe("column");
+  expect(win.root.sizes).toEqual([0.5, 0.5]);
 });
 
 test("| then - (row split, then column split on the NEW focused pane) produces the classic tmux L-shape", () => {
@@ -576,24 +563,24 @@ test("| then - (row split, then column split on the NEW focused pane) produces t
   splitPane(win, "column"); // B splits into B (top) / C (bottom)
   const paneC = win.activePaneId;
 
-  assert.equal(win.root.type, "split");
+  expect(win.root.type).toBe("split");
   if (win.root.type !== "split") throw new Error("unreachable");
-  assert.equal(win.root.direction, "row");
-  assert.equal(win.root.children.length, 2); // A is still a DIRECT sibling — untouched by B's own column split
-  assert.deepEqual(win.root.sizes, [0.5, 0.5]);
-  assert.equal(win.root.children[0].type, "leaf");
+  expect(win.root.direction).toBe("row");
+  expect(win.root.children.length).toBe(2); // A is still a DIRECT sibling — untouched by B's own column split
+  expect(win.root.sizes).toEqual([0.5, 0.5]);
+  expect(win.root.children[0].type).toBe("leaf");
   if (win.root.children[0].type !== "leaf") throw new Error("unreachable");
-  assert.equal(win.root.children[0].pane.id, paneA);
+  expect(win.root.children[0].pane.id).toBe(paneA);
 
   const right = win.root.children[1];
-  assert.equal(right.type, "split");
+  expect(right.type).toBe("split");
   if (right.type !== "split") throw new Error("unreachable");
-  assert.equal(right.direction, "column");
-  assert.deepEqual(right.sizes, [0.5, 0.5]);
-  assert.equal((right.children[0] as { type: "leaf"; pane: Pane }).pane.id, paneB);
-  assert.equal((right.children[1] as { type: "leaf"; pane: Pane }).pane.id, paneC);
+  expect(right.direction).toBe("column");
+  expect(right.sizes).toEqual([0.5, 0.5]);
+  expect((right.children[0] as { type: "leaf"; pane: Pane }).pane.id).toBe(paneB);
+  expect((right.children[1] as { type: "leaf"; pane: Pane }).pane.id).toBe(paneC);
 
-  assert.deepEqual(win.paneOrder, [paneA, paneB, paneC]);
+  expect(win.paneOrder).toEqual([paneA, paneB, paneC]);
 });
 
 test("splitting the SAME direction as the existing parent inserts a sibling, halving only the split pane's own share", () => {
@@ -605,11 +592,11 @@ test("splitting the SAME direction as the existing parent inserts a sibling, hal
   win.activePaneId = paneA;
   splitPane(win, "row");
 
-  assert.equal(win.root.type, "split");
+  expect(win.root.type).toBe("split");
   if (win.root.type !== "split") throw new Error("unreachable");
-  assert.equal(win.root.children.length, 3);
-  assert.deepEqual(win.root.sizes, [0.25, 0.25, 0.5]);
-  assert.equal((win.root.children[0] as { type: "leaf"; pane: Pane }).pane.id, paneA);
+  expect(win.root.children.length).toBe(3);
+  expect(win.root.sizes).toEqual([0.25, 0.25, 0.5]);
+  expect((win.root.children[0] as { type: "leaf"; pane: Pane }).pane.id).toBe(paneA);
 });
 
 test("splitPane ids never collide after a kill-then-split (paneSeq, not paneOrder.length)", () => {
@@ -618,9 +605,9 @@ test("splitPane ids never collide after a kill-then-split (paneSeq, not paneOrde
   const secondPaneId = win.activePaneId;
   killPaneInWindow(win, secondPaneId); // back to one pane; paneOrder.length === 1 again
   splitPane(win, "row"); // if the id were derived from paneOrder.length, this would reuse "#1"
-  assert.equal(win.paneOrder.length, 2);
-  assert.notEqual(win.paneOrder[1], secondPaneId);
-  assert.equal(new Set(win.paneOrder).size, 2); // no collision
+  expect(win.paneOrder.length).toBe(2);
+  expect(win.paneOrder[1]).not.toBe(secondPaneId);
+  expect(new Set(win.paneOrder).size).toBe(2); // no collision
 });
 
 // ---------------------------------------------------------------------
@@ -630,8 +617,8 @@ test("splitPane ids never collide after a kill-then-split (paneSeq, not paneOrde
 test("killPaneInWindow refuses (last-pane) on a single-pane window", () => {
   const win = freshWindow();
   const result = killPaneInWindow(win, win.activePaneId);
-  assert.deepEqual(result, { kind: "last-pane" });
-  assert.equal(win.root.type, "leaf");
+  expect(result).toEqual({ kind: "last-pane" });
+  expect(win.root.type).toBe("leaf");
 });
 
 test("killPaneInWindow on a 2-pane split collapses back to a bare leaf", () => {
@@ -640,11 +627,11 @@ test("killPaneInWindow on a 2-pane split collapses back to a bare leaf", () => {
   splitPane(win, "row");
   const paneB = win.activePaneId;
   const result = killPaneInWindow(win, paneB);
-  assert.deepEqual(result, { kind: "pane-removed" });
-  assert.equal(win.root.type, "leaf");
-  assert.equal((win.root as { type: "leaf"; pane: Pane }).pane.id, paneA);
-  assert.deepEqual(win.paneOrder, [paneA]);
-  assert.equal(win.activePaneId, paneA); // focus falls back to the survivor
+  expect(result).toEqual({ kind: "pane-removed" });
+  expect(win.root.type).toBe("leaf");
+  expect((win.root as { type: "leaf"; pane: Pane }).pane.id).toBe(paneA);
+  expect(win.paneOrder).toEqual([paneA]);
+  expect(win.activePaneId).toBe(paneA); // focus falls back to the survivor
 });
 
 test("killPaneInWindow on a 3-pane row renormalizes the remaining two siblings' sizes back to sum 1", () => {
@@ -656,17 +643,14 @@ test("killPaneInWindow on a 3-pane row renormalizes the remaining two siblings' 
   const paneC = win.activePaneId;
   killPaneInWindow(win, paneC);
 
-  assert.equal(win.root.type, "split");
+  expect(win.root.type).toBe("split");
   if (win.root.type !== "split") throw new Error("unreachable");
-  assert.equal(win.root.children.length, 2);
+  expect(win.root.children.length).toBe(2);
   const sum = win.root.sizes.reduce((a, b) => a + b, 0);
-  assert.ok(Math.abs(sum - 1) < 1e-9);
+  expect(Math.abs(sum - 1) < 1e-9).toBeTruthy();
   // A(.25) and B(.5) survive C's removal — renormalized PROPORTIONALLY
   // (ratio preserved: .25:.5 -> 1:2), not reset to an even 50/50.
-  assert.deepEqual(
-    win.root.sizes.map((s) => Math.round(s * 100) / 100),
-    [0.33, 0.67],
-  );
+  expect(win.root.sizes.map((s) => Math.round(s * 100) / 100)).toEqual([0.33, 0.67]);
 });
 
 test("killPaneInWindow focus fallback: killing the focused pane moves focus to the PREVIOUS one in creation order", () => {
@@ -674,12 +658,12 @@ test("killPaneInWindow focus fallback: killing the focused pane moves focus to t
   splitPane(win, "row");
   splitPane(win, "row"); // three panes total, third one focused
   const [paneA, paneB, paneC] = win.paneOrder;
-  assert.equal(win.activePaneId, paneC);
+  expect(win.activePaneId).toBe(paneC);
   killPaneInWindow(win, paneC);
-  assert.equal(win.activePaneId, paneB); // previous in creation order
+  expect(win.activePaneId).toBe(paneB); // previous in creation order
   killPaneInWindow(win, paneB);
   // no "previous" left (paneB was second) — wraps to the new first pane.
-  assert.equal(win.activePaneId, paneA);
+  expect(win.activePaneId).toBe(paneA);
 });
 
 test("killPaneInWindow on a NON-focused pane doesn't move focus at all", () => {
@@ -691,8 +675,8 @@ test("killPaneInWindow on a NON-focused pane doesn't move focus at all", () => {
   const paneC = win.activePaneId;
   win.activePaneId = paneA; // refocus A
   killPaneInWindow(win, paneC); // kill the NON-focused pane C
-  assert.equal(win.activePaneId, paneA);
-  assert.deepEqual(win.paneOrder, [paneA, paneB]);
+  expect(win.activePaneId).toBe(paneA);
+  expect(win.paneOrder).toEqual([paneA, paneB]);
 });
 
 test("paneIndexInWindow is live-renumbered (0..n-1, no gaps) after a kill", () => {
@@ -700,12 +684,12 @@ test("paneIndexInWindow is live-renumbered (0..n-1, no gaps) after a kill", () =
   splitPane(win, "row");
   splitPane(win, "row");
   const [paneA, paneB, paneC] = win.paneOrder;
-  assert.equal(paneIndexInWindow(win, paneA), 0);
-  assert.equal(paneIndexInWindow(win, paneB), 1);
-  assert.equal(paneIndexInWindow(win, paneC), 2);
+  expect(paneIndexInWindow(win, paneA)).toBe(0);
+  expect(paneIndexInWindow(win, paneB)).toBe(1);
+  expect(paneIndexInWindow(win, paneC)).toBe(2);
   killPaneInWindow(win, paneB);
-  assert.equal(paneIndexInWindow(win, paneA), 0);
-  assert.equal(paneIndexInWindow(win, paneC), 1); // renumbered down, no gap
+  expect(paneIndexInWindow(win, paneA)).toBe(0);
+  expect(paneIndexInWindow(win, paneC)).toBe(1); // renumbered down, no gap
 });
 
 // ---------------------------------------------------------------------
@@ -719,18 +703,18 @@ test("cycleNextPane cycles through paneOrder, wrapping", () => {
   const [paneA, paneB, paneC] = win.paneOrder;
   win.activePaneId = paneA;
   cycleNextPane(win);
-  assert.equal(win.activePaneId, paneB);
+  expect(win.activePaneId).toBe(paneB);
   cycleNextPane(win);
-  assert.equal(win.activePaneId, paneC);
+  expect(win.activePaneId).toBe(paneC);
   cycleNextPane(win);
-  assert.equal(win.activePaneId, paneA); // wraps
+  expect(win.activePaneId).toBe(paneA); // wraps
 });
 
 test("cycleNextPane is a no-op on a single-pane window", () => {
   const win = freshWindow();
   const before = win.activePaneId;
   cycleNextPane(win);
-  assert.equal(win.activePaneId, before);
+  expect(win.activePaneId).toBe(before);
 });
 
 test("focusLastPane toggles back and forth between the two most recently focused panes", () => {
@@ -738,19 +722,19 @@ test("focusLastPane toggles back and forth between the two most recently focused
   const paneA = win.activePaneId;
   splitPane(win, "row");
   const paneB = win.activePaneId;
-  assert.equal(win.lastPaneId, paneA);
+  expect(win.lastPaneId).toBe(paneA);
   focusLastPane(win);
-  assert.equal(win.activePaneId, paneA);
-  assert.equal(win.lastPaneId, paneB);
+  expect(win.activePaneId).toBe(paneA);
+  expect(win.lastPaneId).toBe(paneB);
   focusLastPane(win); // toggles back
-  assert.equal(win.activePaneId, paneB);
+  expect(win.activePaneId).toBe(paneB);
 });
 
 test("focusLastPane is a no-op before any focus change has ever happened", () => {
   const win = freshWindow();
   const before = win.activePaneId;
   focusLastPane(win);
-  assert.equal(win.activePaneId, before);
+  expect(win.activePaneId).toBe(before);
 });
 
 test("computePaneRects / findDirectionalPane resolve geometrically for a main-vertical arrangement", () => {
@@ -782,15 +766,15 @@ test("computePaneRects / findDirectionalPane resolve geometrically for a main-ve
   win.activePaneId = main.id;
 
   const rects = computePaneRects(win.root);
-  assert.equal(findDirectionalPane(rects, main.id, "right"), "b"); // nearest of the two on the right (tie -> first found is fine either way, but b/c are equidistant vertically from main's center — accept either)
-  assert.equal(findDirectionalPane(rects, "b", "down"), "c");
-  assert.equal(findDirectionalPane(rects, "c", "up"), "b");
-  assert.equal(findDirectionalPane(rects, "b", "left"), main.id);
-  assert.equal(findDirectionalPane(rects, main.id, "left"), undefined); // nothing further left
-  assert.equal(findDirectionalPane(rects, main.id, "up"), undefined);
+  expect(findDirectionalPane(rects, main.id, "right")).toBe("b"); // nearest of the two on the right (tie -> first found is fine either way, but b/c are equidistant vertically from main's center — accept either)
+  expect(findDirectionalPane(rects, "b", "down")).toBe("c");
+  expect(findDirectionalPane(rects, "c", "up")).toBe("b");
+  expect(findDirectionalPane(rects, "b", "left")).toBe(main.id);
+  expect(findDirectionalPane(rects, main.id, "left")).toBe(undefined); // nothing further left
+  expect(findDirectionalPane(rects, main.id, "up")).toBe(undefined);
 
   focusDirectional(win, "right");
-  assert.notEqual(win.activePaneId, main.id);
+  expect(win.activePaneId).not.toBe(main.id);
 });
 
 // ---------------------------------------------------------------------
@@ -802,122 +786,122 @@ function makeTestPanes(n: number): Pane[] {
 }
 
 test("isLayoutName accepts exactly the 7 preset names", () => {
-  for (const name of LAYOUT_NAMES) assert.equal(isLayoutName(name), true);
-  assert.equal(isLayoutName("bogus"), false);
-  assert.equal(isLayoutName(""), false);
+  for (const name of LAYOUT_NAMES) expect(isLayoutName(name)).toBe(true);
+  expect(isLayoutName("bogus")).toBe(false);
+  expect(isLayoutName("")).toBe(false);
 });
 
 test("buildLayoutTree: even-horizontal is one row split, N equal children", () => {
   for (const n of [2, 3, 4, 5]) {
     const tree = buildLayoutTree(makeTestPanes(n), "even-horizontal");
-    assert.equal(tree.type, "split");
+    expect(tree.type).toBe("split");
     if (tree.type !== "split") continue;
-    assert.equal(tree.direction, "row");
-    assert.equal(tree.children.length, n);
-    for (const s of tree.sizes) assert.ok(Math.abs(s - 1 / n) < 1e-9);
+    expect(tree.direction).toBe("row");
+    expect(tree.children.length).toBe(n);
+    for (const s of tree.sizes) expect(Math.abs(s - 1 / n) < 1e-9).toBeTruthy();
   }
 });
 
 test("buildLayoutTree: even-vertical is one column split, N equal children", () => {
   const tree = buildLayoutTree(makeTestPanes(4), "even-vertical");
-  assert.equal(tree.type, "split");
+  expect(tree.type).toBe("split");
   if (tree.type !== "split") throw new Error("unreachable");
-  assert.equal(tree.direction, "column");
-  assert.equal(tree.children.length, 4);
+  expect(tree.direction).toBe("column");
+  expect(tree.children.length).toBe(4);
 });
 
 test("buildLayoutTree: main-horizontal is a column split, main pane (index 0) TOP full-width, others in a row below", () => {
   const panes = makeTestPanes(4);
   const tree = buildLayoutTree(panes, "main-horizontal");
-  assert.equal(tree.type, "split");
+  expect(tree.type).toBe("split");
   if (tree.type !== "split") throw new Error("unreachable");
-  assert.equal(tree.direction, "column");
-  assert.equal(tree.children.length, 2);
-  assert.equal(tree.children[0].type, "leaf");
-  assert.equal((tree.children[0] as { type: "leaf"; pane: Pane }).pane.id, panes[0].id); // pane index 0 = main
-  assert.ok(tree.sizes[0] > tree.sizes[1]); // main pane bigger, per fidelity reference
+  expect(tree.direction).toBe("column");
+  expect(tree.children.length).toBe(2);
+  expect(tree.children[0].type).toBe("leaf");
+  expect((tree.children[0] as { type: "leaf"; pane: Pane }).pane.id).toBe(panes[0].id); // pane index 0 = main
+  expect(tree.sizes[0] > tree.sizes[1]).toBeTruthy(); // main pane bigger, per fidelity reference
   const bottom = tree.children[1];
-  assert.equal(bottom.type, "split");
+  expect(bottom.type).toBe("split");
   if (bottom.type !== "split") throw new Error("unreachable");
-  assert.equal(bottom.direction, "row");
-  assert.equal(bottom.children.length, 3); // the other 3 panes
+  expect(bottom.direction).toBe("row");
+  expect(bottom.children.length).toBe(3); // the other 3 panes
 });
 
 test("buildLayoutTree: main-horizontal-mirrored puts the main pane on BOTTOM", () => {
   const panes = makeTestPanes(3);
   const tree = buildLayoutTree(panes, "main-horizontal-mirrored");
-  assert.equal(tree.type, "split");
+  expect(tree.type).toBe("split");
   if (tree.type !== "split") throw new Error("unreachable");
-  assert.equal(tree.children[1].type, "leaf");
-  assert.equal((tree.children[1] as { type: "leaf"; pane: Pane }).pane.id, panes[0].id);
-  assert.ok(tree.sizes[1] > tree.sizes[0]);
+  expect(tree.children[1].type).toBe("leaf");
+  expect((tree.children[1] as { type: "leaf"; pane: Pane }).pane.id).toBe(panes[0].id);
+  expect(tree.sizes[1] > tree.sizes[0]).toBeTruthy();
 });
 
 test("buildLayoutTree: main-vertical is a row split, main pane LEFT full-height, others in a column on the right", () => {
   const panes = makeTestPanes(3);
   const tree = buildLayoutTree(panes, "main-vertical");
-  assert.equal(tree.type, "split");
+  expect(tree.type).toBe("split");
   if (tree.type !== "split") throw new Error("unreachable");
-  assert.equal(tree.direction, "row");
-  assert.equal((tree.children[0] as { type: "leaf"; pane: Pane }).pane.id, panes[0].id);
+  expect(tree.direction).toBe("row");
+  expect((tree.children[0] as { type: "leaf"; pane: Pane }).pane.id).toBe(panes[0].id);
   const right = tree.children[1];
-  assert.equal(right.type, "split");
+  expect(right.type).toBe("split");
   if (right.type !== "split") throw new Error("unreachable");
-  assert.equal(right.direction, "column");
-  assert.equal(right.children.length, 2);
+  expect(right.direction).toBe("column");
+  expect(right.children.length).toBe(2);
 });
 
 test("buildLayoutTree: main-vertical-mirrored puts the main pane on the RIGHT", () => {
   const panes = makeTestPanes(2);
   const tree = buildLayoutTree(panes, "main-vertical-mirrored");
-  assert.equal(tree.type, "split");
+  expect(tree.type).toBe("split");
   if (tree.type !== "split") throw new Error("unreachable");
-  assert.equal(tree.direction, "row");
-  assert.equal((tree.children[1] as { type: "leaf"; pane: Pane }).pane.id, panes[0].id);
-  assert.ok(tree.sizes[1] > tree.sizes[0]);
+  expect(tree.direction).toBe("row");
+  expect((tree.children[1] as { type: "leaf"; pane: Pane }).pane.id).toBe(panes[0].id);
+  expect(tree.sizes[1] > tree.sizes[0]).toBeTruthy();
 });
 
 test("buildLayoutTree: tiled forms a near-even grid for 2/3/4/5 panes", () => {
   // n=2 -> cols=2,rows=1: a single row of 2.
   const t2 = buildLayoutTree(makeTestPanes(2), "tiled");
-  assert.equal(t2.type, "split");
+  expect(t2.type).toBe("split");
   if (t2.type === "split") {
-    assert.equal(t2.direction, "row");
-    assert.equal(t2.children.length, 2);
+    expect(t2.direction).toBe("row");
+    expect(t2.children.length).toBe(2);
   }
 
   // n=3 -> cols=2,rows=2: row of 2, then a short row of exactly 1 pane —
   // which is just that pane's bare leaf (no 1-child row-split wrapper).
   const t3 = buildLayoutTree(makeTestPanes(3), "tiled");
-  assert.equal(t3.type, "split");
+  expect(t3.type).toBe("split");
   if (t3.type !== "split") throw new Error("unreachable");
-  assert.equal(t3.direction, "column");
-  assert.equal(t3.children.length, 2);
-  assert.equal(t3.children[0].type, "split");
-  assert.equal((t3.children[0] as { type: "split"; children: unknown[] }).children.length, 2);
-  assert.equal(t3.children[1].type, "leaf");
+  expect(t3.direction).toBe("column");
+  expect(t3.children.length).toBe(2);
+  expect(t3.children[0].type).toBe("split");
+  expect((t3.children[0] as { type: "split"; children: unknown[] }).children.length).toBe(2);
+  expect(t3.children[1].type).toBe("leaf");
 
   // n=4 -> cols=2,rows=2: a perfect 2x2 grid.
   const t4 = buildLayoutTree(makeTestPanes(4), "tiled");
-  assert.equal(t4.type, "split");
+  expect(t4.type).toBe("split");
   if (t4.type !== "split") throw new Error("unreachable");
-  assert.equal(t4.children.length, 2);
-  for (const row of t4.children as { type: "split"; children: unknown[] }[]) assert.equal(row.children.length, 2);
+  expect(t4.children.length).toBe(2);
+  for (const row of t4.children as { type: "split"; children: unknown[] }[]) expect(row.children.length).toBe(2);
 
   // n=5 -> cols=3,rows=2: row of 3, then a short row of 2.
   const t5 = buildLayoutTree(makeTestPanes(5), "tiled");
-  assert.equal(t5.type, "split");
+  expect(t5.type).toBe("split");
   if (t5.type !== "split") throw new Error("unreachable");
-  assert.equal(t5.children.length, 2);
+  expect(t5.children.length).toBe(2);
   const [r1, r2] = t5.children as { type: "split"; children: unknown[] }[];
-  assert.equal(r1.children.length, 3);
-  assert.equal(r2.children.length, 2);
+  expect(r1.children.length).toBe(3);
+  expect(r2.children.length).toBe(2);
 });
 
 test("buildLayoutTree with a single pane is always a bare leaf, regardless of layout name", () => {
   for (const name of LAYOUT_NAMES) {
     const tree = buildLayoutTree(makeTestPanes(1), name);
-    assert.equal(tree.type, "leaf");
+    expect(tree.type).toBe("leaf");
   }
 });
 
@@ -925,13 +909,13 @@ test("applyLayout rebuilds the window's tree from paneOrder and records lastLayo
   const win = freshWindow();
   splitPane(win, "row");
   splitPane(win, "column"); // some arbitrary manual arrangement, 3 panes
-  assert.equal(win.lastLayout, undefined);
+  expect(win.lastLayout).toBe(undefined);
   applyLayout(win, "even-vertical");
-  assert.equal(win.lastLayout, "even-vertical");
-  assert.equal(win.root.type, "split");
+  expect(win.lastLayout).toBe("even-vertical");
+  expect(win.root.type).toBe("split");
   if (win.root.type !== "split") throw new Error("unreachable");
-  assert.equal(win.root.direction, "column");
-  assert.equal(win.root.children.length, 3);
+  expect(win.root.direction).toBe("column");
+  expect(win.root.children.length).toBe(3);
 });
 
 test("nextLayout starts at index 0 (even-horizontal) when lastLayout is unset, then cycles the exact verified order, wrapping", () => {
@@ -949,10 +933,10 @@ test("nextLayout starts at index 0 (even-horizontal) when lastLayout is unset, t
   ];
   for (const expected of expectedOrder) {
     nextLayout(win);
-    assert.equal(win.lastLayout, expected);
+    expect(win.lastLayout).toBe(expected);
   }
   nextLayout(win); // 8th press wraps back to the start
-  assert.equal(win.lastLayout, "even-horizontal");
+  expect(win.lastLayout).toBe("even-horizontal");
 });
 
 test("reapplyLastLayout is a no-op when nothing has ever been applied", () => {
@@ -960,8 +944,8 @@ test("reapplyLastLayout is a no-op when nothing has ever been applied", () => {
   splitPane(win, "row");
   const before = JSON.stringify(win.root);
   reapplyLastLayout(win);
-  assert.equal(JSON.stringify(win.root), before);
-  assert.equal(win.lastLayout, undefined);
+  expect(JSON.stringify(win.root)).toBe(before);
+  expect(win.lastLayout).toBe(undefined);
 });
 
 test("reapplyLastLayout re-derives the tree fresh from the CURRENT pane list against the last-applied preset", () => {
@@ -971,11 +955,11 @@ test("reapplyLastLayout re-derives the tree fresh from the CURRENT pane list aga
   applyLayout(win, "even-vertical");
   // A manual split diverges the tree from the applied preset...
   splitPane(win, "row");
-  assert.equal(win.paneOrder.length, 4);
+  expect(win.paneOrder.length).toBe(4);
   // ...bare select-layout/reapply snaps it back to even-vertical for all 4.
   reapplyLastLayout(win);
-  assert.equal(win.root.type, "split");
+  expect(win.root.type).toBe("split");
   if (win.root.type !== "split") throw new Error("unreachable");
-  assert.equal(win.root.direction, "column");
-  assert.equal(win.root.children.length, 4);
+  expect(win.root.direction).toBe("column");
+  expect(win.root.children.length).toBe(4);
 });

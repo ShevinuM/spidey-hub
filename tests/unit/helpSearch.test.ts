@@ -4,8 +4,7 @@
 // fixture command/section lists (not the real cmdline.yaml/help content,
 // same "shape, not wording" isolation tests/unit/cmdline.test.ts already
 // uses) so this suite can't drift silently if either source's copy changes.
-import { test } from "node:test";
-import assert from "node:assert/strict";
+import { expect, test } from "vitest";
 import {
   buildEntries,
   commandEntries,
@@ -67,58 +66,46 @@ const shellRows: ShellHelpRowSource[] = [
 
 test("commandEntries includes q (exitProgram meaning)", () => {
   const entries = commandEntries(commands);
-  assert.equal(entries.length, commands.length);
-  assert.ok(entries.some((e) => e.label === "q" && e.action === "exit-program"));
+  expect(entries.length).toBe(commands.length);
+  expect(entries.some((e) => e.label === "q" && e.action === "exit-program")).toBeTruthy();
 });
 
 test("commandEntries preserves cmdline.yaml's own declared order", () => {
   const entries = commandEntries(commands);
-  assert.deepEqual(
-    entries.map((e) => e.label),
-    ["dashboard", "repositories", "employment", "profile", "retina-v", "help", "grep", "reboot", "resume", "q"],
-  );
+  expect(entries.map((e) => e.label)).toEqual(["dashboard", "repositories", "employment", "profile", "retina-v", "help", "grep", "reboot", "resume", "q"]);
 });
 
 test("keymapEntries flattens every section's rows in file order", () => {
   const entries = keymapEntries(sections);
-  assert.equal(entries.length, 4);
-  assert.deepEqual(
-    entries.map((e) => e.label),
-    ["&", "x", "d / w / 0", "/"],
-  );
+  expect(entries.length).toBe(4);
+  expect(entries.map((e) => e.label)).toEqual(["&", "x", "d / w / 0", "/"]);
 });
 
 test("buildEntries puts commands before keymap rows", () => {
   const entries = buildEntries(commands, sections);
-  assert.equal(entries.length, commandEntries(commands).length + keymapEntries(sections).length);
-  assert.equal(entries[0].kind, "command");
-  assert.equal(entries[entries.length - 1].kind, "keymap");
+  expect(entries.length).toBe(commandEntries(commands).length + keymapEntries(sections).length);
+  expect(entries[0].kind).toBe("command");
+  expect(entries[entries.length - 1].kind).toBe("keymap");
 });
 
 test("shellEntries maps shell.yaml's help rows to keymap-shaped entries (cmd -> label, description -> description)", () => {
   const entries = shellEntries(shellRows);
-  assert.deepEqual(
-    entries.map((e) => ({ kind: e.kind, label: e.label, description: e.description })),
-    [
+  expect(entries.map((e) => ({ kind: e.kind, label: e.label, description: e.description }))).toEqual([
       { kind: "keymap", label: "cd <path>", description: "change directory" },
       { kind: "keymap", label: "neofetch", description: "system info card" },
       { kind: "keymap", label: "sudo <...>", description: "try it" },
-    ],
-  );
+    ]);
 });
 
 test("buildEntries appends shell builtins LAST — commands, then help scope keymap rows, then shell rows", () => {
   const entries = buildEntries(commands, sections, shellRows);
-  assert.equal(
-    entries.length,
-    commandEntries(commands).length + keymapEntries(sections).length + shellEntries(shellRows).length,
-  );
-  assert.equal(entries[entries.length - 1].label, "sudo <...>");
+  expect(entries.length).toBe(commandEntries(commands).length + keymapEntries(sections).length + shellEntries(shellRows).length);
+  expect(entries[entries.length - 1].label).toBe("sudo <...>");
 });
 
 test("buildEntries defaults shellRows to [] — existing two-argument callers are unaffected", () => {
   const entries = buildEntries(commands, sections);
-  assert.equal(entries.length, commandEntries(commands).length + keymapEntries(sections).length);
+  expect(entries.length).toBe(commandEntries(commands).length + keymapEntries(sections).length);
 });
 
 // ---------------------------------------------------------------------
@@ -129,15 +116,15 @@ test('searchHelp: "kil" ranks the kill-window and kill-pane keymap rows at the t
   const entries = buildEntries(commands, sections);
   const results = searchHelp("kil", entries, commands);
   const topLabels = results.slice(0, 2).map((r) => r.label);
-  assert.ok(topLabels.includes("&"), `expected "&" (kill-window) near the top, got ${JSON.stringify(topLabels)}`);
-  assert.ok(topLabels.includes("x"), `expected "x" (kill-pane) near the top, got ${JSON.stringify(topLabels)}`);
+  expect(topLabels.includes("&"), `expected "&" (kill-window) near the top, got ${JSON.stringify(topLabels)}`).toBeTruthy();
+  expect(topLabels.includes("x"), `expected "x" (kill-pane) near the top, got ${JSON.stringify(topLabels)}`).toBeTruthy();
 });
 
 test('searchHelp: "dash" resolves to the dashboard COMMAND, not the "d / w / 0" keymap row whose description also contains "dashboard" (corpus-order tiebreak)', () => {
   const entries = buildEntries(commands, sections);
   const results = searchHelp("dash", entries, commands);
-  assert.equal(results[0].kind, "command");
-  assert.equal(results[0].label, "dashboard");
+  expect(results[0].kind).toBe("command");
+  expect(results[0].label).toBe("dashboard");
 });
 
 test('searchHelp: exact match ranks above a prefix match ("help" command vs. a longer field that merely starts with "help")', () => {
@@ -146,32 +133,32 @@ test('searchHelp: exact match ranks above a prefix match ("help" command vs. a l
     { name: "helpful-thing", description: "not a real command" },
   ];
   const results = searchHelp("help", buildEntries(entries, []), entries);
-  assert.equal(results[0].label, "help");
+  expect(results[0].label).toBe("help");
 });
 
 test('searchHelp: "rbt" subsequence-matches "reboot" with no better-tier competitor', () => {
   const entries = buildEntries(commands, sections);
   const results = searchHelp("rbt", entries, commands);
-  assert.equal(results[0].label, "reboot");
+  expect(results[0].label).toBe("reboot");
 });
 
 test('searchHelp: "neof" prefix-matches the shell builtin "neofetch" (shell-builtins canary)', () => {
   const entries = buildEntries(commands, sections, shellRows);
   const results = searchHelp("neof", entries, commands);
-  assert.equal(results[0].kind, "keymap");
-  assert.equal(results[0].label, "neofetch");
+  expect(results[0].kind).toBe("keymap");
+  expect(results[0].label).toBe("neofetch");
 });
 
 test('searchHelp: "sudo" surfaces the shell builtin "sudo <...>"', () => {
   const entries = buildEntries(commands, sections, shellRows);
   const results = searchHelp("sudo", entries, commands);
-  assert.ok(results.some((r) => r.label === "sudo <...>"));
+  expect(results.some((r) => r.label === "sudo <...>")).toBeTruthy();
 });
 
 test("searchHelp: an empty/whitespace query returns no results (caller falls back to commandEntries instead)", () => {
   const entries = buildEntries(commands, sections);
-  assert.deepEqual(searchHelp("", entries, commands), []);
-  assert.deepEqual(searchHelp("   ", entries, commands), []);
+  expect(searchHelp("", entries, commands)).toEqual([]);
+  expect(searchHelp("   ", entries, commands)).toEqual([]);
 });
 
 test("searchHelp: caps results at the given limit", () => {
@@ -181,13 +168,13 @@ test("searchHelp: caps results at the given limit", () => {
   }));
   const entries = buildEntries(manyCommands, []);
   const results = searchHelp("zz-match", entries, manyCommands, 10);
-  assert.equal(results.length, 10);
+  expect(results.length).toBe(10);
 });
 
 test("searchHelp: matches a command's alias, not just its name", () => {
   const entries = buildEntries(commands, sections);
   const results = searchHelp("cv", entries, commands);
-  assert.ok(results.some((r) => r.label === "resume"));
+  expect(results.some((r) => r.label === "resume")).toBeTruthy();
 });
 
 test("searchHelp: word-boundary match on a later word within a description outranks an unrelated subsequence match", () => {
@@ -197,17 +184,14 @@ test("searchHelp: word-boundary match on a later word within a description outra
   ];
   const entries = buildEntries([], wordBoundarySections);
   const results = searchHelp("win", entries, []);
-  assert.equal(results[0].label, "z");
+  expect(results[0].label).toBe("z");
 });
 
 test("searchHelp: determinism — identical input always returns identical output, including tie order", () => {
   const entries = buildEntries(commands, sections);
   const first = searchHelp("o", entries, commands);
   const second = searchHelp("o", entries, commands);
-  assert.deepEqual(
-    first.map((r) => r.id),
-    second.map((r) => r.id),
-  );
+  expect(first.map((r) => r.id)).toEqual(second.map((r) => r.id));
 });
 
 test("searchHelp: two equal-tier substring matches keep the original corpus order (stable ties)", () => {
@@ -219,10 +203,7 @@ test("searchHelp: two equal-tier substring matches keep the original corpus orde
   const results = searchHelp("zzzneedle", entries, tiedCommands);
   // Both are substring matches (neither is exact/prefix/word-boundary), so
   // corpus order (commands before keymap rows, per buildEntries) decides.
-  assert.deepEqual(
-    results.map((r) => r.label),
-    ["second-zzzneedle", "first"],
-  );
+  expect(results.map((r) => r.label)).toEqual(["second-zzzneedle", "first"]);
 });
 
 // ---------------------------------------------------------------------
@@ -230,14 +211,14 @@ test("searchHelp: two equal-tier substring matches keep the original corpus orde
 // ---------------------------------------------------------------------
 
 test("levenshtein: identical strings have distance 0", () => {
-  assert.equal(levenshtein("reboot", "reboot"), 0);
+  expect(levenshtein("reboot", "reboot")).toBe(0);
 });
 
 test("levenshtein: one substitution has distance 1", () => {
-  assert.equal(levenshtein("cat", "cot"), 1);
+  expect(levenshtein("cat", "cot")).toBe(1);
 });
 
 test("levenshtein: empty-string edge cases equal the other string's length", () => {
-  assert.equal(levenshtein("", "abc"), 3);
-  assert.equal(levenshtein("abc", ""), 3);
+  expect(levenshtein("", "abc")).toBe(3);
+  expect(levenshtein("abc", "")).toBe(3);
 });

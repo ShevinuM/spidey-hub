@@ -2,8 +2,7 @@
 // only (no DOM/localStorage/sessionStorage shim needed for most of these;
 // the load/save wrappers are exercised separately with a minimal
 // localStorage stub).
-import { test } from "node:test";
-import assert from "node:assert/strict";
+import { expect, test } from "vitest";
 import {
   agoLabel,
   alertItems,
@@ -58,36 +57,36 @@ function item(overrides: Partial<NotificationItem>): NotificationItem {
 // ---------------------------------------------------------------------------
 
 test("parseStoredState: null/undefined/empty returns null", () => {
-  assert.equal(parseStoredState(null), null);
-  assert.equal(parseStoredState(undefined), null);
-  assert.equal(parseStoredState(""), null);
+  expect(parseStoredState(null)).toBe(null);
+  expect(parseStoredState(undefined)).toBe(null);
+  expect(parseStoredState("")).toBe(null);
 });
 
 test("parseStoredState: invalid JSON returns null (corrupted storage)", () => {
-  assert.equal(parseStoredState("{not json"), null);
+  expect(parseStoredState("{not json")).toBe(null);
 });
 
 test("parseStoredState: wrong shape (no items array) returns null", () => {
-  assert.equal(parseStoredState(JSON.stringify({})), null);
-  assert.equal(parseStoredState(JSON.stringify({ items: "nope" })), null);
+  expect(parseStoredState(JSON.stringify({}))).toBe(null);
+  expect(parseStoredState(JSON.stringify({ items: "nope" }))).toBe(null);
 });
 
 test("parseStoredState: an item missing a required field returns null", () => {
   const bad = { items: [{ id: "x", sev: "alert", title: "t", body: "b", src: "s", read: false, folder: "inbox" }] };
-  assert.equal(parseStoredState(JSON.stringify(bad)), null);
+  expect(parseStoredState(JSON.stringify(bad))).toBe(null);
 });
 
 test("parseStoredState: an item with an invalid sev/folder enum returns null", () => {
   const badSev = { items: [item({ sev: "danger" as never })] };
-  assert.equal(parseStoredState(JSON.stringify(badSev)), null);
+  expect(parseStoredState(JSON.stringify(badSev))).toBe(null);
   const badFolder = { items: [item({ folder: "trash" as never })] };
-  assert.equal(parseStoredState(JSON.stringify(badFolder)), null);
+  expect(parseStoredState(JSON.stringify(badFolder))).toBe(null);
 });
 
 test("parseStoredState: a well-formed state round-trips", () => {
   const state: NotificationState = { items: [item({})] };
   const parsed = parseStoredState(JSON.stringify(state));
-  assert.deepEqual(parsed, state);
+  expect(parsed).toEqual(state);
 });
 
 // ---------------------------------------------------------------------------
@@ -111,13 +110,13 @@ function withLocalStorage<T>(initial: Record<string, string>, fn: () => T): T {
 
 test("loadState: missing key falls back to an empty state", () => {
   withLocalStorage({}, () => {
-    assert.deepEqual(loadState(), { items: [] });
+    expect(loadState()).toEqual({ items: [] });
   });
 });
 
 test("loadState: corrupted value falls back to an empty state (never throws)", () => {
   withLocalStorage({ [NOTIFICATIONS_STORAGE_KEY]: "{{{not json" }, () => {
-    assert.deepEqual(loadState(), { items: [] });
+    expect(loadState()).toEqual({ items: [] });
   });
 });
 
@@ -125,7 +124,7 @@ test("saveState then loadState round-trips", () => {
   withLocalStorage({}, () => {
     const state: NotificationState = { items: [item({ id: "roundtrip" })] };
     saveState(state);
-    assert.deepEqual(loadState(), state);
+    expect(loadState()).toEqual(state);
   });
 });
 
@@ -138,35 +137,35 @@ test("pickRandomUnseen: deterministic with a seeded rand", () => {
   const rand2 = mulberry32(42);
   const a = pickRandomUnseen(POOL, new Set(), 2, rand);
   const b = pickRandomUnseen(POOL, new Set(), 2, rand2);
-  assert.deepEqual(a, b);
+  expect(a).toEqual(b);
 });
 
 test("pickRandomUnseen: never returns an id already in seenIds", () => {
   const seen = new Set(POOL.slice(0, 10).map((p) => p.id));
   const picks = pickRandomUnseen(POOL, seen, 5, Math.random);
-  for (const p of picks) assert.ok(!seen.has(p.id));
+  for (const p of picks) expect(!seen.has(p.id)).toBeTruthy();
 });
 
 test("pickRandomUnseen: caps at the number of unseen entries remaining", () => {
   const seen = new Set(POOL.slice(0, 11).map((p) => p.id));
   const picks = pickRandomUnseen(POOL, seen, 2, Math.random);
-  assert.equal(picks.length, 1);
+  expect(picks.length).toBe(1);
 });
 
 test("pickRandomUnseen: pool exhausted returns an empty array", () => {
   const seen = new Set(POOL.map((p) => p.id));
   const picks = pickRandomUnseen(POOL, seen, 2, Math.random);
-  assert.deepEqual(picks, []);
+  expect(picks).toEqual([]);
 });
 
 test("injectVisit: injects exactly 2 new unread inbox items timestamped `now`", () => {
   const { state, injected } = injectVisit({ items: [] }, POOL, 5000, mulberry32(1));
-  assert.equal(injected.length, 2);
-  assert.equal(state.items.length, 2);
+  expect(injected.length).toBe(2);
+  expect(state.items.length).toBe(2);
   for (const i of state.items) {
-    assert.equal(i.read, false);
-    assert.equal(i.folder, "inbox");
-    assert.equal(i.ts, 5000);
+    expect(i.read).toBe(false);
+    expect(i.folder).toBe("inbox");
+    expect(i.ts).toBe(5000);
   }
 });
 
@@ -174,7 +173,7 @@ test("injectVisit: never re-injects an id already present in state", () => {
   const seenIds = new Set(POOL.slice(0, 10).map((p) => p.id));
   const existing: NotificationItem[] = [...seenIds].map((id) => item({ id }));
   const { injected } = injectVisit({ items: existing }, POOL, 9999, Math.random);
-  for (const i of injected) assert.ok(!seenIds.has(i.id));
+  for (const i of injected) expect(!seenIds.has(i.id)).toBeTruthy();
 });
 
 // ---------------------------------------------------------------------------
@@ -183,12 +182,12 @@ test("injectVisit: never re-injects an id already present in state", () => {
 
 test("oldestArchivedEntry: returns null when nothing is archived", () => {
   const items = POOL.map((p) => item({ id: p.id, folder: "inbox" }));
-  assert.equal(oldestArchivedEntry(items), null);
+  expect(oldestArchivedEntry(items)).toBe(null);
 });
 
 test("oldestArchivedEntry: ignores spam-folder items entirely", () => {
   const items = POOL.map((p) => item({ id: p.id, folder: "spam", ts: 1 }));
-  assert.equal(oldestArchivedEntry(items), null);
+  expect(oldestArchivedEntry(items)).toBe(null);
 });
 
 test("oldestArchivedEntry: picks the lowest ts among archived items", () => {
@@ -198,7 +197,7 @@ test("oldestArchivedEntry: picks the lowest ts among archived items", () => {
     item({ id: "c", folder: "archive", ts: 200 }),
     item({ id: "d", folder: "spam", ts: 50 }),
   ];
-  assert.equal(oldestArchivedEntry(items)?.id, "b");
+  expect(oldestArchivedEntry(items)?.id).toBe("b");
 });
 
 test("injectVisit: exhausted pool re-injects exactly one oldest archived non-spam entry", () => {
@@ -207,31 +206,31 @@ test("injectVisit: exhausted pool re-injects exactly one oldest archived non-spa
   );
   const before: NotificationState = { items: existing };
   const { state, injected } = injectVisit(before, POOL, 5000, Math.random);
-  assert.equal(injected.length, 1);
-  assert.equal(injected[0].id, "pool-0"); // ts 100, the lowest among the 3 archived
+  expect(injected.length).toBe(1);
+  expect(injected[0].id).toBe("pool-0"); // ts 100, the lowest among the 3 archived
   // Re-circulation revives in place — total item count is unchanged (one
   // item MOVES from archive to inbox, none is newly created from the pool).
-  assert.equal(state.items.length, existing.length);
+  expect(state.items.length).toBe(existing.length);
 });
 
 test("injectVisit: re-injected item is unread, in the inbox folder, restamped `now`, and returned in injected[]", () => {
   const existing: NotificationItem[] = POOL.map((p, i) => item({ id: p.id, folder: i === 0 ? "archive" : "inbox", ts: 1, read: true }));
   const { state, injected } = injectVisit({ items: existing }, POOL, 7777, Math.random);
-  assert.equal(injected.length, 1);
+  expect(injected.length).toBe(1);
   const revived = injected[0];
-  assert.equal(revived.read, false);
-  assert.equal(revived.folder, "inbox");
-  assert.equal(revived.ts, 7777);
+  expect(revived.read).toBe(false);
+  expect(revived.folder).toBe("inbox");
+  expect(revived.ts).toBe(7777);
   const inState = state.items.find((i) => i.id === revived.id);
-  assert.deepEqual(inState, revived);
+  expect(inState).toEqual(revived);
 });
 
 test("injectVisit: exhausted pool with only spam archived injects none and leaves state unchanged", () => {
   const existing: NotificationItem[] = POOL.map((p, i) => item({ id: p.id, folder: i === 0 ? "spam" : "inbox" }));
   const before: NotificationState = { items: existing };
   const { state, injected } = injectVisit(before, POOL, 1, Math.random);
-  assert.deepEqual(injected, []);
-  assert.equal(state, before);
+  expect(injected).toEqual([]);
+  expect(state).toBe(before);
 });
 
 test("injectVisit: repeat visits re-circulate oldest-first, deterministically, until the archive drains", () => {
@@ -241,22 +240,22 @@ test("injectVisit: repeat visits re-circulate oldest-first, deterministically, u
   let state: NotificationState = { items: existing };
 
   const first = injectVisit(state, POOL, 1000, Math.random);
-  assert.equal(first.injected[0].id, "pool-0"); // ts 100
+  expect(first.injected[0].id).toBe("pool-0"); // ts 100
   state = first.state;
 
   const second = injectVisit(state, POOL, 2000, Math.random);
-  assert.equal(second.injected[0].id, "pool-1"); // ts 110
+  expect(second.injected[0].id).toBe("pool-1"); // ts 110
   state = second.state;
 
   const third = injectVisit(state, POOL, 3000, Math.random);
-  assert.equal(third.injected[0].id, "pool-2"); // ts 120
+  expect(third.injected[0].id).toBe("pool-2"); // ts 120
   state = third.state;
 
   // Archive is now empty (all three revived to inbox) — a fourth visit
   // injects nothing.
   const fourth = injectVisit(state, POOL, 4000, Math.random);
-  assert.deepEqual(fourth.injected, []);
-  assert.equal(fourth.state, state);
+  expect(fourth.injected).toEqual([]);
+  expect(fourth.state).toBe(state);
 });
 
 test("injectVisit: re-circulated state round-trips through save/load", () => {
@@ -264,7 +263,7 @@ test("injectVisit: re-circulated state round-trips through save/load", () => {
     const existing: NotificationItem[] = POOL.map((p, i) => item({ id: p.id, folder: i === 0 ? "archive" : "inbox", ts: 1 }));
     const { state } = injectVisit({ items: existing }, POOL, 4242, Math.random);
     saveState(state);
-    assert.deepEqual(loadState(), state);
+    expect(loadState()).toEqual(state);
   });
 });
 
@@ -272,8 +271,8 @@ test("injectVisit: pool with exactly 1 unseen entry injects only that 1", () => 
   const allButOne = POOL.slice(1).map((p) => p.id);
   const existing: NotificationItem[] = allButOne.map((id) => item({ id }));
   const { injected } = injectVisit({ items: existing }, POOL, 1, Math.random);
-  assert.equal(injected.length, 1);
-  assert.equal(injected[0].id, POOL[0].id);
+  expect(injected.length).toBe(1);
+  expect(injected[0].id).toBe(POOL[0].id);
 });
 
 // ---------------------------------------------------------------------------
@@ -283,35 +282,35 @@ test("injectVisit: pool with exactly 1 unseen entry injects only that 1", () => 
 test("toggleRead: flips only the matching item's read flag", () => {
   const state: NotificationState = { items: [item({ id: "a", read: false }), item({ id: "b", read: true })] };
   const next = toggleRead(state, "a");
-  assert.equal(next.items.find((i) => i.id === "a")!.read, true);
-  assert.equal(next.items.find((i) => i.id === "b")!.read, true);
+  expect(next.items.find((i) => i.id === "a")!.read).toBe(true);
+  expect(next.items.find((i) => i.id === "b")!.read).toBe(true);
 });
 
 test("dismiss: an inbox item moves to archive and becomes read", () => {
   const state: NotificationState = { items: [item({ id: "a", folder: "inbox", read: false })] };
   const next = dismiss(state, "a");
-  assert.equal(next.items.length, 1);
-  assert.equal(next.items[0].folder, "archive");
-  assert.equal(next.items[0].read, true);
+  expect(next.items.length).toBe(1);
+  expect(next.items[0].folder).toBe("archive");
+  expect(next.items[0].read).toBe(true);
 });
 
 test("dismiss: an archived item is deleted outright", () => {
   const state: NotificationState = { items: [item({ id: "a", folder: "archive" })] };
   const next = dismiss(state, "a");
-  assert.equal(next.items.length, 0);
+  expect(next.items.length).toBe(0);
 });
 
 test("dismiss: a spam item is deleted outright", () => {
   const state: NotificationState = { items: [item({ id: "a", folder: "spam" })] };
   const next = dismiss(state, "a");
-  assert.equal(next.items.length, 0);
+  expect(next.items.length).toBe(0);
 });
 
 test("markSpam: moves an item to the spam folder without touching read state", () => {
   const state: NotificationState = { items: [item({ id: "a", folder: "inbox", read: false })] };
   const next = markSpam(state, "a");
-  assert.equal(next.items[0].folder, "spam");
-  assert.equal(next.items[0].read, false);
+  expect(next.items[0].folder).toBe("spam");
+  expect(next.items[0].read).toBe(false);
 });
 
 test("markAllRead: marks every inbox item read, leaves archive/spam untouched", () => {
@@ -324,10 +323,10 @@ test("markAllRead: marks every inbox item read, leaves archive/spam untouched", 
     ],
   };
   const next = markAllRead(state);
-  assert.equal(next.items.find((i) => i.id === "a")!.read, true);
-  assert.equal(next.items.find((i) => i.id === "b")!.read, true);
-  assert.equal(next.items.find((i) => i.id === "c")!.read, false);
-  assert.equal(next.items.find((i) => i.id === "d")!.read, false);
+  expect(next.items.find((i) => i.id === "a")!.read).toBe(true);
+  expect(next.items.find((i) => i.id === "b")!.read).toBe(true);
+  expect(next.items.find((i) => i.id === "c")!.read).toBe(false);
+  expect(next.items.find((i) => i.id === "d")!.read).toBe(false);
 });
 
 // ---------------------------------------------------------------------------
@@ -344,15 +343,12 @@ test("folderItems / alertItems / unreadInboxCount", () => {
       item({ id: "e", folder: "spam", sev: "warn", read: false }),
     ],
   };
-  assert.equal(folderItems(state, "inbox").length, 3);
-  assert.equal(folderItems(state, "archive").length, 1);
-  assert.equal(folderItems(state, "spam").length, 1);
+  expect(folderItems(state, "inbox").length).toBe(3);
+  expect(folderItems(state, "archive").length).toBe(1);
+  expect(folderItems(state, "spam").length).toBe(1);
   // alerts tab: inbox-folder AND sev alert only — archived alert (d) excluded.
-  assert.deepEqual(
-    alertItems(state).map((i) => i.id),
-    ["a", "c"],
-  );
-  assert.equal(unreadInboxCount(state), 2);
+  expect(alertItems(state).map((i) => i.id)).toEqual(["a", "c"]);
+  expect(unreadInboxCount(state)).toBe(2);
 });
 
 // ---------------------------------------------------------------------------
@@ -361,14 +357,14 @@ test("folderItems / alertItems / unreadInboxCount", () => {
 
 test("agoLabel: seconds/minutes/hours/days thresholds", () => {
   const now = 1_000_000_000;
-  assert.equal(agoLabel(now - 42_000, now), "42s");
-  assert.equal(agoLabel(now - 6 * 60_000, now), "6m");
-  assert.equal(agoLabel(now - 2 * 3_600_000, now), "2h");
-  assert.equal(agoLabel(now - 3 * 86_400_000, now), "3d");
+  expect(agoLabel(now - 42_000, now)).toBe("42s");
+  expect(agoLabel(now - 6 * 60_000, now)).toBe("6m");
+  expect(agoLabel(now - 2 * 3_600_000, now)).toBe("2h");
+  expect(agoLabel(now - 3 * 86_400_000, now)).toBe("3d");
 });
 
 test("agoLabel: never negative even if ts is momentarily ahead of now", () => {
-  assert.equal(agoLabel(1000, 999), "0s");
+  expect(agoLabel(1000, 999)).toBe("0s");
 });
 
 // ---------------------------------------------------------------------------
@@ -376,30 +372,30 @@ test("agoLabel: never negative even if ts is momentarily ahead of now", () => {
 // ---------------------------------------------------------------------------
 
 test("toastDurationMs: severity-scaled durations", () => {
-  assert.equal(toastDurationMs("alert"), 10000);
-  assert.equal(toastDurationMs("warn"), 5000);
-  assert.equal(toastDurationMs("info"), 3000);
-  assert.equal(toastDurationMs("alert", 0.1), 1000);
+  expect(toastDurationMs("alert")).toBe(10000);
+  expect(toastDurationMs("warn")).toBe(5000);
+  expect(toastDurationMs("info")).toBe(3000);
+  expect(toastDurationMs("alert", 0.1)).toBe(1000);
 });
 
 test("remainingOnHold: floors at the minimum remainder", () => {
-  assert.equal(remainingOnHold(1000, 999), 400);
-  assert.equal(remainingOnHold(2000, 1000), 1000);
+  expect(remainingOnHold(1000, 999)).toBe(400);
+  expect(remainingOnHold(2000, 1000)).toBe(1000);
 });
 
 test("parseToastDurationScale: rejects non-positive/unparseable values", () => {
-  assert.equal(parseToastDurationScale(null), null);
-  assert.equal(parseToastDurationScale(""), null);
-  assert.equal(parseToastDurationScale("not-a-number"), null);
-  assert.equal(parseToastDurationScale("0"), null);
-  assert.equal(parseToastDurationScale("-1"), null);
-  assert.equal(parseToastDurationScale("0.02"), 0.02);
+  expect(parseToastDurationScale(null)).toBe(null);
+  expect(parseToastDurationScale("")).toBe(null);
+  expect(parseToastDurationScale("not-a-number")).toBe(null);
+  expect(parseToastDurationScale("0")).toBe(null);
+  expect(parseToastDurationScale("-1")).toBe(null);
+  expect(parseToastDurationScale("0.02")).toBe(0.02);
 });
 
 test("parseInjectSeed: coerces to a uint32, rejects unparseable input", () => {
-  assert.equal(parseInjectSeed(null), null);
-  assert.equal(parseInjectSeed("not-a-number"), null);
-  assert.equal(parseInjectSeed("424242"), 424242);
+  expect(parseInjectSeed(null)).toBe(null);
+  expect(parseInjectSeed("not-a-number")).toBe(null);
+  expect(parseInjectSeed("424242")).toBe(424242);
 });
 
 // ---------------------------------------------------------------------------
@@ -408,13 +404,13 @@ test("parseInjectSeed: coerces to a uint32, rejects unparseable input", () => {
 
 test("buildFixtureState: fixed item count/folders, never touches localStorage", () => {
   const state = buildFixtureState(2_000_000);
-  assert.equal(state.items.length, 5);
-  assert.equal(folderItems(state, "inbox").length, 3);
-  assert.equal(folderItems(state, "archive").length, 1);
-  assert.equal(folderItems(state, "spam").length, 1);
-  assert.equal(unreadInboxCount(state), 2);
+  expect(state.items.length).toBe(5);
+  expect(folderItems(state, "inbox").length).toBe(3);
+  expect(folderItems(state, "archive").length).toBe(1);
+  expect(folderItems(state, "spam").length).toBe(1);
+  expect(unreadInboxCount(state)).toBe(2);
 });
 
 test("buildFixtureState: deterministic for the same `now`", () => {
-  assert.deepEqual(buildFixtureState(123456), buildFixtureState(123456));
+  expect(buildFixtureState(123456)).toEqual(buildFixtureState(123456));
 });

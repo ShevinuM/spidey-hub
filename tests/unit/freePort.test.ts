@@ -1,8 +1,7 @@
 // Unit tests for scripts/lib/freePort.ts — PLAN.md Phase 7.4's fix for
 // scripts/capture-screenshots.mjs's hardcoded `PORT = 4323`, which used to
 // collide silently with a running `astro dev` fallback port.
-import { test } from "node:test";
-import assert from "node:assert/strict";
+import { expect, test } from "vitest";
 import { createServer, type AddressInfo } from "node:net";
 import { pickPort } from "../../scripts/lib/freePort.ts";
 
@@ -15,8 +14,8 @@ test("pickPort: returns the preferred port unchanged when it's free", async () =
   await new Promise<void>((resolve) => probe.close(() => resolve()));
 
   const result = await pickPort(free);
-  assert.equal(result.port, free);
-  assert.equal(result.usedPreferred, true);
+  expect(result.port).toBe(free);
+  expect(result.usedPreferred).toBe(true);
 });
 
 test("pickPort: falls back to a different OS-assigned port when the preferred one is occupied", async () => {
@@ -26,9 +25,9 @@ test("pickPort: falls back to a different OS-assigned port when the preferred on
 
   try {
     const result = await pickPort(occupiedPort);
-    assert.notEqual(result.port, occupiedPort);
-    assert.equal(result.usedPreferred, false);
-    assert.ok(result.port > 0 && result.port < 65536);
+    expect(result.port).not.toBe(occupiedPort);
+    expect(result.usedPreferred).toBe(false);
+    expect(result.port > 0 && result.port < 65536).toBeTruthy();
   } finally {
     await new Promise<void>((resolve) => occupied.close(() => resolve()));
   }

@@ -2,8 +2,7 @@
 // small inline fixture snippets (not repos/ content — the submodules can
 // move/change independently of this test) so determinism, the palette
 // round-trip, and the size-cap fallback are each pinned to a stable input.
-import { test } from "node:test";
-import assert from "node:assert/strict";
+import { expect, test } from "vitest";
 import { PaletteBuilder, tokenizeFile, tokenLineText } from "../../src/lib/highlight.ts";
 
 const TS_SNIPPET = `import { readFileSync } from "node:fs";
@@ -20,60 +19,57 @@ test("tokenizeFile is deterministic: same input tokenizes to the same output twi
   const paletteB = new PaletteBuilder();
   const resultB = await tokenizeFile("ts", TS_SNIPPET, paletteB, 200 * 1024);
 
-  assert.ok(resultA, "expected tokenization to succeed");
-  assert.deepEqual(resultA, resultB);
-  assert.deepEqual(paletteA.palette, paletteB.palette);
+  expect(resultA, "expected tokenization to succeed").toBeTruthy();
+  expect(resultA).toEqual(resultB);
+  expect(paletteA.palette).toEqual(paletteB.palette);
 });
 
 test("tokenizeFile output is a lossless round-trip of the source text, line for line", async () => {
   const palette = new PaletteBuilder();
   const result = await tokenizeFile("ts", TS_SNIPPET, palette, 200 * 1024);
-  assert.ok(result);
+  expect(result).toBeTruthy();
 
   const sourceLines = TS_SNIPPET.split("\n");
-  assert.equal(result.length, sourceLines.length);
+  expect(result!.length).toBe(sourceLines.length);
   for (let i = 0; i < sourceLines.length; i++) {
-    assert.equal(tokenLineText(result[i]), sourceLines[i]);
+    expect(tokenLineText(result![i])).toBe(sourceLines[i]);
   }
 });
 
 test("tokenizeFile dedupes same-color runs into a shared palette (paletteIndex, not a repeated hex)", async () => {
   const palette = new PaletteBuilder();
   const result = await tokenizeFile("ts", TS_SNIPPET, palette, 200 * 1024);
-  assert.ok(result);
+  expect(result).toBeTruthy();
 
-  const usedIndices = new Set(result.flat().map(([idx]) => idx));
+  const usedIndices = new Set(result!.flat().map(([idx]) => idx));
   for (const idx of usedIndices) {
-    assert.ok(idx >= 0 && idx < palette.palette.length, `paletteIndex ${idx} must resolve into the palette array`);
+    expect(idx >= 0 && idx < palette.palette.length, `paletteIndex ${idx} must resolve into the palette array`).toBeTruthy();
   }
   // The snippet reuses the default/plain color across many tokens (spaces,
   // punctuation) — the palette must not have one entry per token.
-  assert.ok(palette.palette.length < result.flat().length);
+  expect(palette.palette.length < result!.flat().length).toBeTruthy();
 });
 
 test("tokenizeFile returns null (flat fallback) once content exceeds the size cap", async () => {
   const palette = new PaletteBuilder();
   const result = await tokenizeFile("ts", TS_SNIPPET, palette, 10);
-  assert.equal(result, null);
-  assert.deepEqual(palette.palette, []);
+  expect(result).toBe(null);
+  expect(palette.palette).toEqual([]);
 });
 
 test("tokenizeFile returns null for an extension with no grammar (e.g. markdown) — flat fallback, not an error", async () => {
   const palette = new PaletteBuilder();
   const result = await tokenizeFile("md", "# Heading\n\nSome body text.\n", palette, 200 * 1024);
-  assert.equal(result, null);
+  expect(result).toBe(null);
 });
 
 test("tokenLineText reconstructs plain text from an arbitrary token line", () => {
-  assert.equal(
-    tokenLineText([
+  expect(tokenLineText([
       [0, "const "],
       [1, "x"],
       [0, " = "],
       [2, "1"],
       [0, ";"],
-    ]),
-    "const x = 1;",
-  );
-  assert.equal(tokenLineText([]), "");
+    ])).toBe("const x = 1;");
+  expect(tokenLineText([])).toBe("");
 });

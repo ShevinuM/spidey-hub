@@ -7,8 +7,7 @@
 // what the verifier checked by hand — every path in the *current* real
 // index maps to exactly the view an explicit, hand-audited whitelist says
 // it should, and nothing else.
-import { test } from "node:test";
-import assert from "node:assert/strict";
+import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { grepPathToView, viewToTmuxBinding } from "../../src/lib/views.ts";
@@ -37,7 +36,7 @@ function expectedView(path: string): "employment" | "repositories" | "retina-v" 
 }
 
 test("every path in the real grep index routes exactly as hand-audited (no false positives)", () => {
-  assert.ok(realIndex.length > 0, "real grep index must be non-empty (run `pnpm generate` first)");
+  expect(realIndex.length > 0, "real grep index must be non-empty (run `pnpm generate` first)").toBeTruthy();
 
   const mismatches: string[] = [];
   for (const { path } of realIndex) {
@@ -47,15 +46,15 @@ test("every path in the real grep index routes exactly as hand-audited (no false
       mismatches.push(`${path}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
     }
   }
-  assert.deepEqual(mismatches, []);
+  expect(mismatches).toEqual([]);
 });
 
 test("routed paths are exactly the personnel content dir, the repositories content dir, and the 4 named components", () => {
   const routed = realIndex.filter(({ path }) => grepPathToView(path) !== null).map((f) => f.path);
   const expectedRouted = realIndex.filter(({ path }) => expectedView(path) !== null).map((f) => f.path);
-  assert.deepEqual([...routed].sort(), [...expectedRouted].sort());
+  expect([...routed].sort()).toEqual([...expectedRouted].sort());
   // Sanity: this isn't a vacuous "always null" pass — there ARE routed paths.
-  assert.ok(routed.length >= 8, `expected at least 8 routed real paths, got ${routed.length}`);
+  expect(routed.length >= 8, `expected at least 8 routed real paths, got ${routed.length}`).toBeTruthy();
 });
 
 test("a hypothetical future real path containing the legacy bare words does NOT mis-route", () => {
@@ -64,11 +63,11 @@ test("a hypothetical future real path containing the legacy bare words does NOT 
   // subjects/i`) would have wrongly routed had a real file like this ever
   // been added — none of them exist in the real index today, but the
   // tightened rules must reject them regardless of the index's contents.
-  assert.equal(grepPathToView("src/lib/info.ts"), null);
-  assert.equal(grepPathToView("src/lib/xp-utils.ts"), null);
-  assert.equal(grepPathToView("src/data/projects-notes.md"), null);
-  assert.equal(grepPathToView("tests/e2e/radar.spec.ts"), null);
-  assert.equal(grepPathToView("src/components/RadarBlip.svelte"), null);
+  expect(grepPathToView("src/lib/info.ts")).toBe(null);
+  expect(grepPathToView("src/lib/xp-utils.ts")).toBe(null);
+  expect(grepPathToView("src/data/projects-notes.md")).toBe(null);
+  expect(grepPathToView("tests/e2e/radar.spec.ts")).toBe(null);
+  expect(grepPathToView("src/components/RadarBlip.svelte")).toBe(null);
 });
 
 test("variable-depth personnel content paths (path-derived tree) route to employment", () => {
@@ -79,9 +78,9 @@ test("variable-depth personnel content paths (path-derived tree) route to employ
   // memorial-university/<slug>/role.md) needs no code change here — this
   // test locks that in explicitly rather than relying solely on the
   // generated-index comparison above.
-  assert.equal(grepPathToView("src/content/personnel/enaimco/software-developer/role.md"), "employment");
-  assert.equal(grepPathToView("src/content/personnel/enaimco/software-developer/full-time/role.md"), "employment");
-  assert.equal(grepPathToView("src/content/personnel/memorial-university/computer-science-tutor/role.md"), "employment");
+  expect(grepPathToView("src/content/personnel/enaimco/software-developer/role.md")).toBe("employment");
+  expect(grepPathToView("src/content/personnel/enaimco/software-developer/full-time/role.md")).toBe("employment");
+  expect(grepPathToView("src/content/personnel/memorial-university/computer-science-tutor/role.md")).toBe("employment");
 });
 
 test("fixture-only legacy paths (all under src/) never route via the bare-word fallback", () => {
@@ -97,21 +96,21 @@ test("fixture-only legacy paths (all under src/) never route via the bare-word f
     "src/components/Radar.svelte",
     "src/content/xp/ontario-tech.md",
   ]) {
-    assert.equal(grepPathToView(p), null, p);
+    expect(grepPathToView(p), p).toBe(null);
   }
 });
 
 test("viewToTmuxBinding looks up the live window number, never a fixed table", () => {
   const windowNumbers = { dashboard: 0, repositories: 1, employment: 2, "retina-v": 3, profile: 4, help: 5 };
-  assert.equal(viewToTmuxBinding("repositories", windowNumbers), "C-b 1");
-  assert.equal(viewToTmuxBinding("help", windowNumbers), "C-b 5");
+  expect(viewToTmuxBinding("repositories", windowNumbers)).toBe("C-b 1");
+  expect(viewToTmuxBinding("help", windowNumbers)).toBe("C-b 5");
 
   // A window's number moving (e.g. after a kill/re-create elsewhere)
   // changes the binding — nothing here is hardcoded by menu position.
   const reshuffled = { ...windowNumbers, help: 9 };
-  assert.equal(viewToTmuxBinding("help", reshuffled), "C-b 9");
+  expect(viewToTmuxBinding("help", reshuffled)).toBe("C-b 9");
 
   // A view whose window isn't present in the live session has no binding.
   const { help: _help, ...withoutHelp } = windowNumbers;
-  assert.equal(viewToTmuxBinding("help", withoutHelp), undefined);
+  expect(viewToTmuxBinding("help", withoutHelp)).toBe(undefined);
 });

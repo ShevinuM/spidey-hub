@@ -22,8 +22,7 @@
 // false failure, only actual content/shape drift does). A future edit that
 // forgets to regenerate the fixture JSON fails this test immediately
 // instead of silently corrupting goldens.
-import { test } from "node:test";
-import assert from "node:assert/strict";
+import { expect, test } from "vitest";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
@@ -65,19 +64,15 @@ function buildAllProjectsIndex(srcDir: string): RepoIndex {
 test("fixtures/repos/all-projects.json exactly matches an index freshly built from fixtures/repositories/*.md", () => {
   const expected = buildAllProjectsIndex(FIXTURES_PROJECTS_DIR);
   const committed = JSON.parse(readFileSync(FIXTURES_ALL_PROJECTS_JSON, "utf8")) as RepoIndex;
-  assert.deepEqual(
-    committed,
-    expected,
-    "fixtures/repos/all-projects.json is stale — regenerate it from fixtures/repositories/*.md (see README's " +
-      '"all-projects fixture" section) after editing any fixture project markdown file',
-  );
+  expect(committed, "fixtures/repos/all-projects.json is stale — regenerate it from fixtures/repositories/*.md (see README's " +
+      '"all-projects fixture" section) after editing any fixture project markdown file').toEqual(expected);
 });
 
 test("the fixture all-projects index is non-empty and every file has non-trivial content", () => {
   const index = buildAllProjectsIndex(FIXTURES_PROJECTS_DIR);
-  assert.ok(index.files.length > 0, "expected at least one fixture project .md file");
+  expect(index.files.length > 0, "expected at least one fixture project .md file").toBeTruthy();
   for (const file of index.files) {
-    assert.ok(file.path.endsWith(".md"), `${file.path} should be a markdown file`);
-    assert.ok(file.lines.length > 1, `${file.path} should have more than one line`);
+    expect(file.path.endsWith(".md"), `${file.path} should be a markdown file`).toBeTruthy();
+    expect(file.lines.length > 1, `${file.path} should have more than one line`).toBeTruthy();
   }
 });

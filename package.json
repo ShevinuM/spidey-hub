@@ -14,7 +14,7 @@
     "check": "astro check && tsc --noEmit && svelte-check --threshold error",
     "goldens": "node tests/visual/capture-goldens.mjs",
     "design-mirror": "node scripts/generate-design-mirror.mjs",
-    "test:unit": "node --test tests/unit/*.test.ts",
+    "test:unit": "vitest run",
     "test:visual": "pnpm build:fixtures && E2E_EXPECT_FIXTURES=1 playwright test tests/visual/identical.spec.ts tests/visual/adversarial-fixtures.spec.ts",
     "test:e2e": "pnpm build && E2E_EXPECT_FIXTURES=0 playwright test tests/e2e"
   },
@@ -36,7 +36,8 @@
     "shiki": "4.4.3",
     "svelte-check": "4.7.6",
     "tailwindcss": "4.3.3",
-    "typescript": "5.7.3"
+    "typescript": "5.7.3",
+    "vitest": "4.1.11"
   },
   "packageManager": "pnpm@11.20.0"
 }

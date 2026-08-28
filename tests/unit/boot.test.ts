@@ -5,8 +5,7 @@
 // formulas (Boot Sequence.dc.html lines 369-437) — this is the guard
 // against a transcription slip in src/lib/boot.ts, independent of
 // BootSequence.svelte or any browser.
-import { test } from "node:test";
-import assert from "node:assert/strict";
+import { expect, test } from "vitest";
 import {
   bootDuration,
   handshakeText,
@@ -40,18 +39,18 @@ const HANDSHAKE: BootData["handshake"] = {
 // ---------------------------------------------------------------------------
 
 test("progress: linear 0..1, clamped at the duration", () => {
-  assert.equal(progress(0, 4600), 0);
-  assert.equal(progress(2300, 4600), 0.5);
-  assert.equal(progress(4600, 4600), 1);
-  assert.equal(progress(9999, 4600), 1); // hard-stop overshoot never exceeds 1
+  expect(progress(0, 4600)).toBe(0);
+  expect(progress(2300, 4600)).toBe(0.5);
+  expect(progress(4600, 4600)).toBe(1);
+  expect(progress(9999, 4600)).toBe(1); // hard-stop overshoot never exceeds 1
 });
 
 test("pct: matches the mock's eased+jittered formula at hand-computed points", () => {
   // p=0: eased=0, jitter gated off (p must be >0.02) -> pct=0.
-  assert.equal(pct(0, 4600), 0);
+  expect(pct(0, 4600)).toBe(0);
 
   // p=1 (elapsed==duration): eased=1, jitter gated off (p must be <0.99) -> pct=100.
-  assert.equal(pct(4600, 4600), 100);
+  expect(pct(4600, 4600)).toBe(100);
 
   // p=0.5, elapsed=2300: eased = 1 - (1-0.5)^1.7 = 1 - 0.5^1.7.
   // jitter = 2.4*sin(2300/78). Hand-computed against Math.pow/Math.sin
@@ -61,13 +60,13 @@ test("pct: matches the mock's eased+jittered formula at hand-computed points", (
   const eased = 1 - Math.pow(1 - p, 1.7);
   const jitter = 2.4 * Math.sin(2300 / 78);
   const expected = Math.max(0, Math.min(100, Math.round(eased * 100 + jitter)));
-  assert.equal(pct(2300, 4600), expected);
+  expect(pct(2300, 4600)).toBe(expected);
 });
 
 test("pct: never leaves 0..100 even with jitter added", () => {
   for (let e = 0; e <= 4700; e += 37) {
     const v = pct(e, 4600);
-    assert.ok(v >= 0 && v <= 100, `pct(${e}) = ${v} out of range`);
+    expect(v >= 0 && v <= 100, `pct(${e}) = ${v} out of range`).toBeTruthy();
   }
 });
 
@@ -76,16 +75,16 @@ test("pct: never leaves 0..100 even with jitter added", () => {
 // ---------------------------------------------------------------------------
 
 test("phaseLabel: INIT/SCAN/LINK/LOCK/READY at the exact boundary values", () => {
-  assert.equal(phaseLabel(0, PHASE_LABELS), "INIT");
-  assert.equal(phaseLabel(29, PHASE_LABELS), "INIT");
-  assert.equal(phaseLabel(30, PHASE_LABELS), "SCAN");
-  assert.equal(phaseLabel(59, PHASE_LABELS), "SCAN");
-  assert.equal(phaseLabel(60, PHASE_LABELS), "LINK");
-  assert.equal(phaseLabel(85, PHASE_LABELS), "LINK");
-  assert.equal(phaseLabel(86, PHASE_LABELS), "LOCK");
-  assert.equal(phaseLabel(98, PHASE_LABELS), "LOCK");
-  assert.equal(phaseLabel(99, PHASE_LABELS), "READY");
-  assert.equal(phaseLabel(100, PHASE_LABELS), "READY");
+  expect(phaseLabel(0, PHASE_LABELS)).toBe("INIT");
+  expect(phaseLabel(29, PHASE_LABELS)).toBe("INIT");
+  expect(phaseLabel(30, PHASE_LABELS)).toBe("SCAN");
+  expect(phaseLabel(59, PHASE_LABELS)).toBe("SCAN");
+  expect(phaseLabel(60, PHASE_LABELS)).toBe("LINK");
+  expect(phaseLabel(85, PHASE_LABELS)).toBe("LINK");
+  expect(phaseLabel(86, PHASE_LABELS)).toBe("LOCK");
+  expect(phaseLabel(98, PHASE_LABELS)).toBe("LOCK");
+  expect(phaseLabel(99, PHASE_LABELS)).toBe("READY");
+  expect(phaseLabel(100, PHASE_LABELS)).toBe("READY");
 });
 
 // ---------------------------------------------------------------------------
@@ -93,15 +92,15 @@ test("phaseLabel: INIT/SCAN/LINK/LOCK/READY at the exact boundary values", () =>
 // ---------------------------------------------------------------------------
 
 test("handshakeText: negotiating below 8% progress, OK above it", () => {
-  assert.equal(handshakeText(0.08, 0, HANDSHAKE), "negotiating.");
-  assert.equal(handshakeText(0.081, 0, HANDSHAKE), "OK · 0.94 / 0.91");
+  expect(handshakeText(0.08, 0, HANDSHAKE)).toBe("negotiating.");
+  expect(handshakeText(0.081, 0, HANDSHAKE)).toBe("OK · 0.94 / 0.91");
 });
 
 test("handshakeText: dot count cycles 1/2/3 every 220ms of elapsed time", () => {
-  assert.equal(handshakeText(0, 0, HANDSHAKE), "negotiating.");
-  assert.equal(handshakeText(0, 220, HANDSHAKE), "negotiating..");
-  assert.equal(handshakeText(0, 440, HANDSHAKE), "negotiating...");
-  assert.equal(handshakeText(0, 660, HANDSHAKE), "negotiating."); // wraps back to 1
+  expect(handshakeText(0, 0, HANDSHAKE)).toBe("negotiating.");
+  expect(handshakeText(0, 220, HANDSHAKE)).toBe("negotiating..");
+  expect(handshakeText(0, 440, HANDSHAKE)).toBe("negotiating...");
+  expect(handshakeText(0, 660, HANDSHAKE)).toBe("negotiating."); // wraps back to 1
 });
 
 // ---------------------------------------------------------------------------
@@ -120,35 +119,35 @@ const LOG: BootLogEntry[] = [
 ];
 
 test("logRows: nothing before the first threshold", () => {
-  assert.deepEqual(logRows(0, LOG), []);
+  expect(logRows(0, LOG)).toEqual([]);
 });
 
 test("logRows: reveals rows in order as progress crosses thresholds, capped to 5", () => {
   const rows = logRows(0.5, LOG);
   // Thresholds 0.02..0.45 have all been reached (6 rows) but only the last
   // 5 are kept, most-recent-last.
-  assert.equal(rows.length, 5);
-  assert.equal(rows[rows.length - 1].label, "commit snapshots");
-  assert.equal(rows[0].label, "hydrating island");
+  expect(rows.length).toBe(5);
+  expect(rows[rows.length - 1].label).toBe("commit snapshots");
+  expect(rows[0].label).toBe("hydrating island");
 });
 
 test("logRows: warn/done tags carry the mock's exact glyph + color", () => {
   const rows = logRows(1, LOG);
   const warnRow = rows.find((r) => r.label === "retina-v anomaly")!;
-  assert.equal(warnRow.tag, "[!!]");
-  assert.equal(warnRow.tagColor, "#ff6b6f");
-  assert.equal(warnRow.valColor, "#ff6b6f");
+  expect(warnRow.tag).toBe("[!!]");
+  expect(warnRow.tagColor).toBe("#ff6b6f");
+  expect(warnRow.valColor).toBe("#ff6b6f");
 
   const doneRow = rows.find((r) => r.label === "e.d.i.t.h online")!;
-  assert.equal(doneRow.tag, "[>>]");
-  assert.equal(doneRow.tagColor, "#d9b04a");
-  assert.equal(doneRow.valColor, "#d9b04a");
+  expect(doneRow.tag).toBe("[>>]");
+  expect(doneRow.tagColor).toBe("#d9b04a");
+  expect(doneRow.valColor).toBe("#d9b04a");
 
   const okRow = rows.find((r) => r.label === "grep index")!;
-  assert.equal(okRow.tag, "[ok]");
-  assert.equal(okRow.tagColor, "#5fc6b4");
-  assert.equal(okRow.valColor, "rgba(244,236,233,.9)");
-  assert.equal(okRow.val, "22 files"); // flavor text kept verbatim
+  expect(okRow.tag).toBe("[ok]");
+  expect(okRow.tagColor).toBe("#5fc6b4");
+  expect(okRow.valColor).toBe("rgba(244,236,233,.9)");
+  expect(okRow.val).toBe("22 files"); // flavor text kept verbatim
 });
 
 // ---------------------------------------------------------------------------
@@ -156,16 +155,16 @@ test("logRows: warn/done tags carry the mock's exact glyph + color", () => {
 // ---------------------------------------------------------------------------
 
 test("padStatusValue: right-pads/truncates to exactly 16 characters", () => {
-  assert.equal(padStatusValue("ONLINE"), "ONLINE          ");
-  assert.equal(padStatusValue("ONLINE").length, 16);
-  assert.equal(padStatusValue("········").length, 16);
-  assert.equal(padStatusValue("0123456789ABCDEFGH").length, 16); // truncated
+  expect(padStatusValue("ONLINE")).toBe("ONLINE          ");
+  expect(padStatusValue("ONLINE").length).toBe(16);
+  expect(padStatusValue("········").length).toBe(16);
+  expect(padStatusValue("0123456789ABCDEFGH").length).toBe(16); // truncated
 });
 
 test("statusRowValue: dots below threshold, onlineText (padded) above it", () => {
   const row: BootStatusRow = { prefix: "│ core ............ ", threshold: 14, onlineText: "ONLINE" };
-  assert.equal(statusRowValue(14, row), padStatusValue("········"));
-  assert.equal(statusRowValue(15, row), padStatusValue("ONLINE"));
+  expect(statusRowValue(14, row)).toBe(padStatusValue("········"));
+  expect(statusRowValue(15, row)).toBe(padStatusValue("ONLINE"));
 });
 
 // ---------------------------------------------------------------------------
@@ -174,20 +173,20 @@ test("statusRowValue: dots below threshold, onlineText (padded) above it", () =>
 
 test("progFillStyle: omits the bright-lead stop below 8deg (pct < ~2.2%)", () => {
   const style = progFillStyle(0);
-  assert.ok(!style.includes("rgba(255,150,140,.95)"));
-  assert.ok(style.includes("#ffb3a6 0deg"));
+  expect(!style.includes("rgba(255,150,140,.95)")).toBeTruthy();
+  expect(style.includes("#ffb3a6 0deg")).toBeTruthy();
 });
 
 test("progFillStyle: includes the bright-lead stop once deg exceeds 8", () => {
   const style = progFillStyle(50); // deg = 180
-  assert.ok(style.includes("rgba(255,150,140,.95) 172deg"));
-  assert.ok(style.includes("#ffb3a6 180deg"));
+  expect(style.includes("rgba(255,150,140,.95) 172deg")).toBeTruthy();
+  expect(style.includes("#ffb3a6 180deg")).toBeTruthy();
 });
 
 test("progFillStyle: full circle at pct=100 (deg=360)", () => {
   const style = progFillStyle(100);
-  assert.ok(style.includes("#ffb3a6 360deg"));
-  assert.ok(style.includes("360deg 360deg"));
+  expect(style.includes("#ffb3a6 360deg")).toBeTruthy();
+  expect(style.includes("360deg 360deg")).toBeTruthy();
 });
 
 // ---------------------------------------------------------------------------
@@ -196,9 +195,9 @@ test("progFillStyle: full circle at pct=100 (deg=360)", () => {
 
 test("spinnerFrame: cycles the 8 braille glyphs every 90ms", () => {
   const frames = "⣾⣽⣻⢿⡿⣟⣯⣷";
-  assert.equal(spinnerFrame(0), frames[0]);
-  assert.equal(spinnerFrame(90), frames[1]);
-  assert.equal(spinnerFrame(90 * 8), frames[0]); // wraps
+  expect(spinnerFrame(0)).toBe(frames[0]);
+  expect(spinnerFrame(90)).toBe(frames[1]);
+  expect(spinnerFrame(90 * 8)).toBe(frames[0]); // wraps
 });
 
 // ---------------------------------------------------------------------------
@@ -206,9 +205,9 @@ test("spinnerFrame: cycles the 8 braille glyphs every 90ms", () => {
 // ---------------------------------------------------------------------------
 
 test("bootDuration: passes through a valid value, falls back to 4600 otherwise", () => {
-  assert.equal(bootDuration(4600), 4600);
-  assert.equal(bootDuration(1800), 1800);
-  assert.equal(bootDuration(0), 4600);
-  assert.equal(bootDuration(-100), 4600);
-  assert.equal(bootDuration(NaN), 4600);
+  expect(bootDuration(4600)).toBe(4600);
+  expect(bootDuration(1800)).toBe(1800);
+  expect(bootDuration(0)).toBe(4600);
+  expect(bootDuration(-100)).toBe(4600);
+  expect(bootDuration(NaN)).toBe(4600);
 });

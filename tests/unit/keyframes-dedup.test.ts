@@ -13,8 +13,7 @@
 // declared more than once across the whole `src/` tree (a component's own
 // `-global-<name>` declaration and a same-named plain declaration
 // elsewhere would collide just as badly as two plain declarations would).
-import { test } from "node:test";
-import assert from "node:assert/strict";
+import { expect, test } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
 import { join, extname } from "node:path";
 
@@ -61,9 +60,5 @@ test("no @keyframes name is declared in more than one place across src/", () => 
   }
 
   const duplicates = Array.from(byName.entries()).filter(([, sites]) => sites.length > 1);
-  assert.deepEqual(
-    duplicates,
-    [],
-    `duplicate @keyframes declaration(s): ${duplicates.map(([name, sites]) => `${name} in [${sites.join(", ")}]`).join("; ")}`,
-  );
+  expect(duplicates, `duplicate @keyframes declaration(s): ${duplicates.map(([name, sites]) => `${name} in [${sites.join(", ")}]`).join("; ")}`).toEqual([]);
 });

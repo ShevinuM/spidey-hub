@@ -11,8 +11,7 @@
 // Component class; the personnel-doc entries regenerated from
 // classifyDoc() itself against the real files). Run via
 // `pnpm test:unit` / `node --test`.
-import { test } from "node:test";
-import assert from "node:assert/strict";
+import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { classifyDoc, docColors, xpColors } from "../../src/lib/docline.ts";
@@ -34,15 +33,15 @@ function bodyLines(raw: string): string[] {
 }
 
 test("docColors / xpColors match the prototype's color maps verbatim", () => {
-  assert.deepEqual(docColors.h, expected.docColors.h);
-  assert.deepEqual(docColors.p, expected.docColors.p);
-  assert.deepEqual(docColors.b, expected.docColors.b);
-  assert.deepEqual(docColors.c, expected.docColors.c);
-  assert.deepEqual(xpColors.h, expected.xpColors.h);
-  assert.deepEqual(xpColors.m, expected.xpColors.m);
-  assert.deepEqual(xpColors.p, expected.xpColors.p);
-  assert.deepEqual(xpColors.b, expected.xpColors.b);
-  assert.deepEqual(xpColors.c, expected.xpColors.c);
+  expect(docColors.h).toEqual(expected.docColors.h);
+  expect(docColors.p).toEqual(expected.docColors.p);
+  expect(docColors.b).toEqual(expected.docColors.b);
+  expect(docColors.c).toEqual(expected.docColors.c);
+  expect(xpColors.h).toEqual(expected.xpColors.h);
+  expect(xpColors.m).toEqual(expected.xpColors.m);
+  expect(xpColors.p).toEqual(expected.xpColors.p);
+  expect(xpColors.b).toEqual(expected.xpColors.b);
+  expect(xpColors.c).toEqual(expected.xpColors.c);
 });
 
 for (const doc of expected.docs) {
@@ -51,7 +50,7 @@ for (const doc of expected.docs) {
     const lines = bodyLines(raw);
     const mode = doc.kind === "project" ? "project" : "personnel";
     const kinds = classifyDoc(lines, mode);
-    assert.equal(lines.length, doc.kinds.length, "line count must match the prototype doc array length");
-    assert.deepEqual(kinds, doc.kinds);
+    expect(lines.length, "line count must match the prototype doc array length").toBe(doc.kinds.length);
+    expect(kinds).toEqual(doc.kinds);
   });
 }

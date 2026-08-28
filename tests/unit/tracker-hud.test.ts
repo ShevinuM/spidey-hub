@@ -5,8 +5,7 @@
 // (referenced from tracker.yaml's own comment) by asserting every line in
 // the box, including the re-padded header and the untouched closing edge,
 // is exactly the same code-point width.
-import { test } from "node:test";
-import assert from "node:assert/strict";
+import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
@@ -24,14 +23,14 @@ function realTracker(): TrackerYaml {
 test("every hud.left line is exactly 37 code points wide (box alignment survives the retina-v rename)", () => {
   const { hud } = realTracker();
   const widths = hud.left.map((line) => [...line].length);
-  assert.deepEqual(widths, hud.left.map(() => 37));
+  expect(widths).toEqual(hud.left.map(() => 37));
 });
 
 test("the header names retina-v, not spider-tracker, and the closing edge is untouched box-drawing", () => {
   const { hud } = realTracker();
   const header = hud.left[0];
   const footer = hud.left[hud.left.length - 1];
-  assert.match(header, /^┌─ retina-v ─+┐$/);
-  assert.doesNotMatch(header, /spider-tracker/);
-  assert.match(footer, /^└─+┘$/);
+  expect(header).toMatch(/^┌─ retina-v ─+┐$/);
+  expect(header).not.toMatch(/spider-tracker/);
+  expect(footer).toMatch(/^└─+┘$/);
 });
