@@ -1,0 +1,316 @@
+---
+role: "Evidence Cataloguer"
+dates: "Jun 2025 – Present"
+loc: "New York, NY"
+order: 0
+---
+# Evidence Cataloguer
+Department of Damage Control · New York, NY · Jun 2025 – Present
+
+`ledger` `webbing-samples` `chain-of-custody` `salvage-tagging`
+
+## Summary
+- Sole cataloguer of record for every recovered anomaly, salvage fragment, and
+  webbing sample logged after a containment event.
+- Maintains the master evidence ledger across 6 field offices, one line per
+  recovered item, in strict chain-of-custody order.
+
+## Catalog (partial — 290 most recent entries, oldest first)
+- EC-0001: one webbed wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0002: one irradiated glider fin, recovered at the Hell's Kitchen alley.
+- EC-0003: one cryo-cracked talon shard, recovered at the Financial District rooftop.
+- EC-0004: one magnetized sand canister, recovered at the Triborough Bridge cable.
+- EC-0005: one singed girder fragment, recovered at the Chrysler Building spire.
+- EC-0006: one corroded wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0007: one phase-shifted glider fin, recovered at the Central Park reservoir.
+- EC-0008: one sonic-fractured talon shard, recovered at the Coney Island boardwalk.
+- EC-0009: one venom-slicked sand canister, recovered at the Roosevelt Island tram.
+- EC-0010: one sand-warped girder fragment, recovered at the Queens overpass.
+- EC-0011: one electro-charred wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0012: one goblin-gassed glider fin, recovered at the Hell's Kitchen alley.
+- EC-0013: one symbiote-stained talon shard, recovered at the Financial District rooftop.
+- EC-0014: one vulture-clawed sand canister, recovered at the Triborough Bridge cable.
+- EC-0015: one scorched girder fragment, recovered at the Chrysler Building spire.
+- EC-0016: one webbed wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0017: one irradiated glider fin, recovered at the Central Park reservoir.
+- EC-0018: one cryo-cracked talon shard, recovered at the Coney Island boardwalk.
+- EC-0019: one magnetized sand canister, recovered at the Roosevelt Island tram.
+- EC-0020: one singed girder fragment, recovered at the Queens overpass.
+- EC-0021: one corroded wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0022: one phase-shifted glider fin, recovered at the Hell's Kitchen alley.
+- EC-0023: one sonic-fractured talon shard, recovered at the Financial District rooftop.
+- EC-0024: one venom-slicked sand canister, recovered at the Triborough Bridge cable.
+- EC-0025: one sand-warped girder fragment, recovered at the Chrysler Building spire.
+- EC-0026: one electro-charred wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0027: one goblin-gassed glider fin, recovered at the Central Park reservoir.
+- EC-0028: one symbiote-stained talon shard, recovered at the Coney Island boardwalk.
+- EC-0029: one vulture-clawed sand canister, recovered at the Roosevelt Island tram.
+- EC-0030: one scorched girder fragment, recovered at the Queens overpass.
+- EC-0031: one webbed wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0032: one irradiated glider fin, recovered at the Hell's Kitchen alley.
+- EC-0033: one cryo-cracked talon shard, recovered at the Financial District rooftop.
+- EC-0034: one magnetized sand canister, recovered at the Triborough Bridge cable.
+- EC-0035: one singed girder fragment, recovered at the Chrysler Building spire.
+- EC-0036: one corroded wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0037: one phase-shifted glider fin, recovered at the Central Park reservoir.
+- EC-0038: one sonic-fractured talon shard, recovered at the Coney Island boardwalk.
+- EC-0039: one venom-slicked sand canister, recovered at the Roosevelt Island tram.
+- EC-0040: one sand-warped girder fragment, recovered at the Queens overpass.
+- EC-0041: one electro-charred wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0042: one goblin-gassed glider fin, recovered at the Hell's Kitchen alley.
+- EC-0043: one symbiote-stained talon shard, recovered at the Financial District rooftop.
+- EC-0044: one vulture-clawed sand canister, recovered at the Triborough Bridge cable.
+- EC-0045: one scorched girder fragment, recovered at the Chrysler Building spire.
+- EC-0046: one webbed wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0047: one irradiated glider fin, recovered at the Central Park reservoir.
+- EC-0048: one cryo-cracked talon shard, recovered at the Coney Island boardwalk.
+- EC-0049: one magnetized sand canister, recovered at the Roosevelt Island tram.
+- EC-0050: one singed girder fragment, recovered at the Queens overpass.
+- EC-0051: one corroded wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0052: one phase-shifted glider fin, recovered at the Hell's Kitchen alley.
+- EC-0053: one sonic-fractured talon shard, recovered at the Financial District rooftop.
+- EC-0054: one venom-slicked sand canister, recovered at the Triborough Bridge cable.
+- EC-0055: one sand-warped girder fragment, recovered at the Chrysler Building spire.
+- EC-0056: one electro-charred wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0057: one goblin-gassed glider fin, recovered at the Central Park reservoir.
+- EC-0058: one symbiote-stained talon shard, recovered at the Coney Island boardwalk.
+- EC-0059: one vulture-clawed sand canister, recovered at the Roosevelt Island tram.
+- EC-0060: one scorched girder fragment, recovered at the Queens overpass.
+- EC-0061: one webbed wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0062: one irradiated glider fin, recovered at the Hell's Kitchen alley.
+- EC-0063: one cryo-cracked talon shard, recovered at the Financial District rooftop.
+- EC-0064: one magnetized sand canister, recovered at the Triborough Bridge cable.
+- EC-0065: one singed girder fragment, recovered at the Chrysler Building spire.
+- EC-0066: one corroded wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0067: one phase-shifted glider fin, recovered at the Central Park reservoir.
+- EC-0068: one sonic-fractured talon shard, recovered at the Coney Island boardwalk.
+- EC-0069: one venom-slicked sand canister, recovered at the Roosevelt Island tram.
+- EC-0070: one sand-warped girder fragment, recovered at the Queens overpass.
+- EC-0071: one electro-charred wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0072: one goblin-gassed glider fin, recovered at the Hell's Kitchen alley.
+- EC-0073: one symbiote-stained talon shard, recovered at the Financial District rooftop.
+- EC-0074: one vulture-clawed sand canister, recovered at the Triborough Bridge cable.
+- EC-0075: one scorched girder fragment, recovered at the Chrysler Building spire.
+- EC-0076: one webbed wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0077: one irradiated glider fin, recovered at the Central Park reservoir.
+- EC-0078: one cryo-cracked talon shard, recovered at the Coney Island boardwalk.
+- EC-0079: one magnetized sand canister, recovered at the Roosevelt Island tram.
+- EC-0080: one singed girder fragment, recovered at the Queens overpass.
+- EC-0081: one corroded wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0082: one phase-shifted glider fin, recovered at the Hell's Kitchen alley.
+- EC-0083: one sonic-fractured talon shard, recovered at the Financial District rooftop.
+- EC-0084: one venom-slicked sand canister, recovered at the Triborough Bridge cable.
+- EC-0085: one sand-warped girder fragment, recovered at the Chrysler Building spire.
+- EC-0086: one electro-charred wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0087: one goblin-gassed glider fin, recovered at the Central Park reservoir.
+- EC-0088: one symbiote-stained talon shard, recovered at the Coney Island boardwalk.
+- EC-0089: one vulture-clawed sand canister, recovered at the Roosevelt Island tram.
+- EC-0090: one scorched girder fragment, recovered at the Queens overpass.
+- EC-0091: one webbed wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0092: one irradiated glider fin, recovered at the Hell's Kitchen alley.
+- EC-0093: one cryo-cracked talon shard, recovered at the Financial District rooftop.
+- EC-0094: one magnetized sand canister, recovered at the Triborough Bridge cable.
+- EC-0095: one singed girder fragment, recovered at the Chrysler Building spire.
+- EC-0096: one corroded wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0097: one phase-shifted glider fin, recovered at the Central Park reservoir.
+- EC-0098: one sonic-fractured talon shard, recovered at the Coney Island boardwalk.
+- EC-0099: one venom-slicked sand canister, recovered at the Roosevelt Island tram.
+- EC-0100: one sand-warped girder fragment, recovered at the Queens overpass.
+- EC-0101: one electro-charred wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0102: one goblin-gassed glider fin, recovered at the Hell's Kitchen alley.
+- EC-0103: one symbiote-stained talon shard, recovered at the Financial District rooftop.
+- EC-0104: one vulture-clawed sand canister, recovered at the Triborough Bridge cable.
+- EC-0105: one scorched girder fragment, recovered at the Chrysler Building spire.
+- EC-0106: one webbed wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0107: one irradiated glider fin, recovered at the Central Park reservoir.
+- EC-0108: one cryo-cracked talon shard, recovered at the Coney Island boardwalk.
+- EC-0109: one magnetized sand canister, recovered at the Roosevelt Island tram.
+- EC-0110: one singed girder fragment, recovered at the Queens overpass.
+- EC-0111: one corroded wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0112: one phase-shifted glider fin, recovered at the Hell's Kitchen alley.
+- EC-0113: one sonic-fractured talon shard, recovered at the Financial District rooftop.
+- EC-0114: one venom-slicked sand canister, recovered at the Triborough Bridge cable.
+- EC-0115: one sand-warped girder fragment, recovered at the Chrysler Building spire.
+- EC-0116: one electro-charred wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0117: one goblin-gassed glider fin, recovered at the Central Park reservoir.
+- EC-0118: one symbiote-stained talon shard, recovered at the Coney Island boardwalk.
+- EC-0119: one vulture-clawed sand canister, recovered at the Roosevelt Island tram.
+- EC-0120: one scorched girder fragment, recovered at the Queens overpass.
+- EC-0121: one webbed wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0122: one irradiated glider fin, recovered at the Hell's Kitchen alley.
+- EC-0123: one cryo-cracked talon shard, recovered at the Financial District rooftop.
+- EC-0124: one magnetized sand canister, recovered at the Triborough Bridge cable.
+- EC-0125: one singed girder fragment, recovered at the Chrysler Building spire.
+- EC-0126: one corroded wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0127: one phase-shifted glider fin, recovered at the Central Park reservoir.
+- EC-0128: one sonic-fractured talon shard, recovered at the Coney Island boardwalk.
+- EC-0129: one venom-slicked sand canister, recovered at the Roosevelt Island tram.
+- EC-0130: one sand-warped girder fragment, recovered at the Queens overpass.
+- EC-0131: one electro-charred wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0132: one goblin-gassed glider fin, recovered at the Hell's Kitchen alley.
+- EC-0133: one symbiote-stained talon shard, recovered at the Financial District rooftop.
+- EC-0134: one vulture-clawed sand canister, recovered at the Triborough Bridge cable.
+- EC-0135: one scorched girder fragment, recovered at the Chrysler Building spire.
+- EC-0136: one webbed wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0137: one irradiated glider fin, recovered at the Central Park reservoir.
+- EC-0138: one cryo-cracked talon shard, recovered at the Coney Island boardwalk.
+- EC-0139: one magnetized sand canister, recovered at the Roosevelt Island tram.
+- EC-0140: one singed girder fragment, recovered at the Queens overpass.
+- EC-0141: one corroded wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0142: one phase-shifted glider fin, recovered at the Hell's Kitchen alley.
+- EC-0143: one sonic-fractured talon shard, recovered at the Financial District rooftop.
+- EC-0144: one venom-slicked sand canister, recovered at the Triborough Bridge cable.
+- EC-0145: one sand-warped girder fragment, recovered at the Chrysler Building spire.
+- EC-0146: one electro-charred wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0147: one goblin-gassed glider fin, recovered at the Central Park reservoir.
+- EC-0148: one symbiote-stained talon shard, recovered at the Coney Island boardwalk.
+- EC-0149: one vulture-clawed sand canister, recovered at the Roosevelt Island tram.
+- EC-0150: one scorched girder fragment, recovered at the Queens overpass.
+- EC-0151: one webbed wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0152: one irradiated glider fin, recovered at the Hell's Kitchen alley.
+- EC-0153: one cryo-cracked talon shard, recovered at the Financial District rooftop.
+- EC-0154: one magnetized sand canister, recovered at the Triborough Bridge cable.
+- EC-0155: one singed girder fragment, recovered at the Chrysler Building spire.
+- EC-0156: one corroded wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0157: one phase-shifted glider fin, recovered at the Central Park reservoir.
+- EC-0158: one sonic-fractured talon shard, recovered at the Coney Island boardwalk.
+- EC-0159: one venom-slicked sand canister, recovered at the Roosevelt Island tram.
+- EC-0160: one sand-warped girder fragment, recovered at the Queens overpass.
+- EC-0161: one electro-charred wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0162: one goblin-gassed glider fin, recovered at the Hell's Kitchen alley.
+- EC-0163: one symbiote-stained talon shard, recovered at the Financial District rooftop.
+- EC-0164: one vulture-clawed sand canister, recovered at the Triborough Bridge cable.
+- EC-0165: one scorched girder fragment, recovered at the Chrysler Building spire.
+- EC-0166: one webbed wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0167: one irradiated glider fin, recovered at the Central Park reservoir.
+- EC-0168: one cryo-cracked talon shard, recovered at the Coney Island boardwalk.
+- EC-0169: one magnetized sand canister, recovered at the Roosevelt Island tram.
+- EC-0170: one singed girder fragment, recovered at the Queens overpass.
+- EC-0171: one corroded wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0172: one phase-shifted glider fin, recovered at the Hell's Kitchen alley.
+- EC-0173: one sonic-fractured talon shard, recovered at the Financial District rooftop.
+- EC-0174: one venom-slicked sand canister, recovered at the Triborough Bridge cable.
+- EC-0175: one sand-warped girder fragment, recovered at the Chrysler Building spire.
+- EC-0176: one electro-charred wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0177: one goblin-gassed glider fin, recovered at the Central Park reservoir.
+- EC-0178: one symbiote-stained talon shard, recovered at the Coney Island boardwalk.
+- EC-0179: one vulture-clawed sand canister, recovered at the Roosevelt Island tram.
+- EC-0180: one scorched girder fragment, recovered at the Queens overpass.
+- EC-0181: one webbed wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0182: one irradiated glider fin, recovered at the Hell's Kitchen alley.
+- EC-0183: one cryo-cracked talon shard, recovered at the Financial District rooftop.
+- EC-0184: one magnetized sand canister, recovered at the Triborough Bridge cable.
+- EC-0185: one singed girder fragment, recovered at the Chrysler Building spire.
+- EC-0186: one corroded wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0187: one phase-shifted glider fin, recovered at the Central Park reservoir.
+- EC-0188: one sonic-fractured talon shard, recovered at the Coney Island boardwalk.
+- EC-0189: one venom-slicked sand canister, recovered at the Roosevelt Island tram.
+- EC-0190: one sand-warped girder fragment, recovered at the Queens overpass.
+- EC-0191: one electro-charred wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0192: one goblin-gassed glider fin, recovered at the Hell's Kitchen alley.
+- EC-0193: one symbiote-stained talon shard, recovered at the Financial District rooftop.
+- EC-0194: one vulture-clawed sand canister, recovered at the Triborough Bridge cable.
+- EC-0195: one scorched girder fragment, recovered at the Chrysler Building spire.
+- EC-0196: one webbed wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0197: one irradiated glider fin, recovered at the Central Park reservoir.
+- EC-0198: one cryo-cracked talon shard, recovered at the Coney Island boardwalk.
+- EC-0199: one magnetized sand canister, recovered at the Roosevelt Island tram.
+- EC-0200: one singed girder fragment, recovered at the Queens overpass.
+- EC-0201: one corroded wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0202: one phase-shifted glider fin, recovered at the Hell's Kitchen alley.
+- EC-0203: one sonic-fractured talon shard, recovered at the Financial District rooftop.
+- EC-0204: one venom-slicked sand canister, recovered at the Triborough Bridge cable.
+- EC-0205: one sand-warped girder fragment, recovered at the Chrysler Building spire.
+- EC-0206: one electro-charred wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0207: one goblin-gassed glider fin, recovered at the Central Park reservoir.
+- EC-0208: one symbiote-stained talon shard, recovered at the Coney Island boardwalk.
+- EC-0209: one vulture-clawed sand canister, recovered at the Roosevelt Island tram.
+- EC-0210: one scorched girder fragment, recovered at the Queens overpass.
+- EC-0211: one webbed wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0212: one irradiated glider fin, recovered at the Hell's Kitchen alley.
+- EC-0213: one cryo-cracked talon shard, recovered at the Financial District rooftop.
+- EC-0214: one magnetized sand canister, recovered at the Triborough Bridge cable.
+- EC-0215: one singed girder fragment, recovered at the Chrysler Building spire.
+- EC-0216: one corroded wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0217: one phase-shifted glider fin, recovered at the Central Park reservoir.
+- EC-0218: one sonic-fractured talon shard, recovered at the Coney Island boardwalk.
+- EC-0219: one venom-slicked sand canister, recovered at the Roosevelt Island tram.
+- EC-0220: one sand-warped girder fragment, recovered at the Queens overpass.
+- EC-0221: one electro-charred wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0222: one goblin-gassed glider fin, recovered at the Hell's Kitchen alley.
+- EC-0223: one symbiote-stained talon shard, recovered at the Financial District rooftop.
+- EC-0224: one vulture-clawed sand canister, recovered at the Triborough Bridge cable.
+- EC-0225: one scorched girder fragment, recovered at the Chrysler Building spire.
+- EC-0226: one webbed wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0227: one irradiated glider fin, recovered at the Central Park reservoir.
+- EC-0228: one cryo-cracked talon shard, recovered at the Coney Island boardwalk.
+- EC-0229: one magnetized sand canister, recovered at the Roosevelt Island tram.
+- EC-0230: one singed girder fragment, recovered at the Queens overpass.
+- EC-0231: one corroded wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0232: one phase-shifted glider fin, recovered at the Hell's Kitchen alley.
+- EC-0233: one sonic-fractured talon shard, recovered at the Financial District rooftop.
+- EC-0234: one venom-slicked sand canister, recovered at the Triborough Bridge cable.
+- EC-0235: one sand-warped girder fragment, recovered at the Chrysler Building spire.
+- EC-0236: one electro-charred wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0237: one goblin-gassed glider fin, recovered at the Central Park reservoir.
+- EC-0238: one symbiote-stained talon shard, recovered at the Coney Island boardwalk.
+- EC-0239: one vulture-clawed sand canister, recovered at the Roosevelt Island tram.
+- EC-0240: one scorched girder fragment, recovered at the Queens overpass.
+- EC-0241: one webbed wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0242: one irradiated glider fin, recovered at the Hell's Kitchen alley.
+- EC-0243: one cryo-cracked talon shard, recovered at the Financial District rooftop.
+- EC-0244: one magnetized sand canister, recovered at the Triborough Bridge cable.
+- EC-0245: one singed girder fragment, recovered at the Chrysler Building spire.
+- EC-0246: one corroded wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0247: one phase-shifted glider fin, recovered at the Central Park reservoir.
+- EC-0248: one sonic-fractured talon shard, recovered at the Coney Island boardwalk.
+- EC-0249: one venom-slicked sand canister, recovered at the Roosevelt Island tram.
+- EC-0250: one sand-warped girder fragment, recovered at the Queens overpass.
+- EC-0251: one electro-charred wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0252: one goblin-gassed glider fin, recovered at the Hell's Kitchen alley.
+- EC-0253: one symbiote-stained talon shard, recovered at the Financial District rooftop.
+- EC-0254: one vulture-clawed sand canister, recovered at the Triborough Bridge cable.
+- EC-0255: one scorched girder fragment, recovered at the Chrysler Building spire.
+- EC-0256: one webbed wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0257: one irradiated glider fin, recovered at the Central Park reservoir.
+- EC-0258: one cryo-cracked talon shard, recovered at the Coney Island boardwalk.
+- EC-0259: one magnetized sand canister, recovered at the Roosevelt Island tram.
+- EC-0260: one singed girder fragment, recovered at the Queens overpass.
+- EC-0261: one corroded wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0262: one phase-shifted glider fin, recovered at the Hell's Kitchen alley.
+- EC-0263: one sonic-fractured talon shard, recovered at the Financial District rooftop.
+- EC-0264: one venom-slicked sand canister, recovered at the Triborough Bridge cable.
+- EC-0265: one sand-warped girder fragment, recovered at the Chrysler Building spire.
+- EC-0266: one electro-charred wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0267: one goblin-gassed glider fin, recovered at the Central Park reservoir.
+- EC-0268: one symbiote-stained talon shard, recovered at the Coney Island boardwalk.
+- EC-0269: one vulture-clawed sand canister, recovered at the Roosevelt Island tram.
+- EC-0270: one scorched girder fragment, recovered at the Queens overpass.
+- EC-0271: one webbed wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0272: one irradiated glider fin, recovered at the Hell's Kitchen alley.
+- EC-0273: one cryo-cracked talon shard, recovered at the Financial District rooftop.
+- EC-0274: one magnetized sand canister, recovered at the Triborough Bridge cable.
+- EC-0275: one singed girder fragment, recovered at the Chrysler Building spire.
+- EC-0276: one corroded wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0277: one phase-shifted glider fin, recovered at the Central Park reservoir.
+- EC-0278: one sonic-fractured talon shard, recovered at the Coney Island boardwalk.
+- EC-0279: one venom-slicked sand canister, recovered at the Roosevelt Island tram.
+- EC-0280: one sand-warped girder fragment, recovered at the Queens overpass.
+- EC-0281: one electro-charred wing strut, recovered at the Oscorp Tower sublevel.
+- EC-0282: one goblin-gassed glider fin, recovered at the Hell's Kitchen alley.
+- EC-0283: one symbiote-stained talon shard, recovered at the Financial District rooftop.
+- EC-0284: one vulture-clawed sand canister, recovered at the Triborough Bridge cable.
+- EC-0285: one scorched girder fragment, recovered at the Chrysler Building spire.
+- EC-0286: one webbed wing strut, recovered at the Brooklyn Navy Yard.
+- EC-0287: one irradiated glider fin, recovered at the Central Park reservoir.
+- EC-0288: one cryo-cracked talon shard, recovered at the Coney Island boardwalk.
+- EC-0289: one magnetized sand canister, recovered at the Roosevelt Island tram.
+- EC-0290: one singed girder fragment, recovered at the Queens overpass.
+
+## Trace reference
+- Master ledger checksum for this batch (chain-of-custody trace id, deliberately
+0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+
+## Status
+active · ledger current through this visit
+

@@ -1,0 +1,42 @@
+# Signal inbox bell/panel/toast chrome (`ui`). The notification pool that
+# src/lib/notificationStore.ts injects 2 unseen entries from per visit is
+# content now, in src/content/notifications/*.md (one file per
+# notification, frontmatter sev/title/src/order, body = the message text).
+# `sev` is one of alert|warn|info (drives the row/toast color + glyph, see
+# notificationStore.ts's SEVERITY_META — not repeated here since it's a
+# fixed 3-way enum, not editable prose).
+
+ui:
+  bellTitle: "Signal inbox — press n"
+  badge: "E.D.I.T.H."
+  title: "signal inbox"
+  version: "v2.6"
+  feedStatusUnread: "{n} unread"
+  feedStatusClear: "all clear"
+  closeGlyph: "✕"
+  tabs:
+    inbox: "inbox"
+    alerts: "alerts"
+    archive: "archive"
+    spam: "web·trap"
+  spamBanner: "caught in the web — nothing here reaches the toast layer"
+  emptyGlyph: "🕸"
+  empty:
+    inbox: "inbox clear — the web is quiet"
+    alerts: "no active alerts · spider-sense idle"
+    archive: "nothing archived yet"
+    spam: "web-trap empty"
+  readTitleMarkRead: "mark as read"
+  readTitleMarkUnread: "mark as unread"
+  dismissTitleArchive: "dismiss to archive"
+  dismissTitleDelete: "delete"
+  dismissGlyphArchive: "✕"
+  dismissGlyphDelete: "⌫"
+  spamActionTitle: "mark as spam"
+  spamActionGlyph: "⌗"
+  footerHints:
+    - key: "n"
+      label: "toggle"
+    - key: "esc"
+      label: "close"
+  markAllRead: "mark all read"

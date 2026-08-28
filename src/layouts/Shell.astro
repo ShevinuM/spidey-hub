@@ -1,0 +1,145 @@
+---
+// Global shell: fonts (via global.css's @fontsource imports) + Tailwind
+// theme/utilities, wired through the real Astro/Vite pipeline. Every route
+// page wraps its Terminal.svelte island in this layout so the five static
+// pages share one <head>/base-style setup.
+//
+// Mobile-block card (README "Mobile policy"): server-
+// rendered here (not a Svelte island — it needs no interactivity beyond a
+// static link) and CSS-gated by a `(max-width: 899px), (pointer: coarse)`
+// media query that hides `.terminal-root` (the Terminal island + its
+// wallpaper/status bar) and shows `.mobile-block` in its place, plus the
+// mirror-image default (card hidden, terminal shown) for desktop+fine
+// pointer. This is the CSS half of the guard; Terminal.svelte (and
+// StatusBar/Meter) carry the matching JS half — no keydown listener, no
+// clock/meter timer ever attaches outside that same media query, checked
+// via `window.matchMedia` (see Terminal.svelte's `desktopMode` effect) —
+// so a blocked-mode visitor gets a page that is inert by construction, not
+// merely visually hidden.
+//
+// Copy comes from src/data/site.yaml's `mobileBlock` (no user-visible
+// string is hardcoded here), read
+// directly via getSite() rather than threaded through as a prop from each
+// of the five route pages (this file is the only consumer).
+import "../styles/global.css";
+import { getSite } from "../lib/data";
+
+interface Props {
+  // `title` is required: every one of the six route pages already passes
+  // its own explicit title, so `astro check` fails loudly if a future page
+  // ever forgets to pass one, instead of silently falling back to
+  // hardcoded copy.
+  title: string;
+}
+
+const { title } = Astro.props;
+const { mobileBlock } = getSite();
+
+// Server-computed once per build, same convention every route page already
+// repeats for `notificationsFixtureMode` — mirrored here (not threaded as a
+// prop) because this is the ONE file every route shares, making it the
+// single DOM location a build's actual PORTFOLIO_FIXTURES mode can be read
+// back from at runtime. See playwright.config.ts's `globalSetup`
+// (tests/checkFixtureFlag.ts): both `pnpm test:e2e` and `pnpm test:visual`
+// share one webServer definition (port 4322) with `reuseExistingServer:
+// true`, so a stray server left over from the other suite — or a `dist/`
+// built by the wrong script — would otherwise serve the wrong mode with no
+// signal anywhere. This attribute is that signal.
+const fixtureMode = process.env.PORTFOLIO_FIXTURES === "1";
+---
+
+<!doctype html>
+<html lang="en" data-fixture-mode={String(fixtureMode)}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <div class="terminal-root" data-testid="terminal-root">
+      <slot />
+    </div>
+
+    <div class="mobile-block" data-testid="mobile-block">
+      <div class="mobile-block-card">
+        <div class="mobile-block-heading" data-testid="mobile-block-heading">{mobileBlock.heading}</div>
+        <div class="mobile-block-body" data-testid="mobile-block-body">{mobileBlock.body}</div>
+        <a
+          class="mobile-block-link"
+          data-testid="mobile-block-link"
+          href={mobileBlock.escapeHatchHref}
+          target="_blank"
+          rel="noreferrer"
+        >
+          {mobileBlock.escapeHatchText}
+        </a>
+      </div>
+    </div>
+  </body>
+</html>
+
+<style>
+  /* Default (desktop + fine pointer, or any width >= 900px): the terminal
+     renders, the card stays out of the DOM's visible flow entirely. */
+  .mobile-block {
+    display: none;
+  }
+
+  /* README "Mobile policy": <900px width OR coarse pointer (whichever
+     fires first — an OR of two media features via a comma-separated
+     list). No scaled-down layout, no hamburger, no attempt to reflow the
+     terminal's own panes — the terminal subtree is removed from view
+     entirely and replaced by this single centered card. */
+  @media (max-width: 899px), (pointer: coarse) {
+    .terminal-root {
+      display: none;
+    }
+    .mobile-block {
+      display: flex;
+      position: fixed;
+      inset: 0;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background:
+        radial-gradient(rgba(196, 216, 232, 0.16) 1px, transparent 1px) 0 0 / 26px 26px,
+        #0b0f14;
+      font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+    }
+  }
+
+  .mobile-block-card {
+    width: min(360px, 100%);
+    border: 1px solid #e0453c;
+    border-radius: 4px;
+    background: rgba(9, 13, 18, 0.85);
+    padding: 20px 22px;
+    text-align: center;
+    color: #f4ece9;
+  }
+
+  .mobile-block-heading {
+    color: #e0453c;
+    letter-spacing: 0.06em;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .mobile-block-body {
+    color: rgba(196, 216, 232, 0.78);
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+
+  .mobile-block-link {
+    display: inline-block;
+    color: #5fc6b4;
+    font-size: 13px;
+    text-decoration: none;
+  }
+  .mobile-block-link:hover {
+    color: #8fd0f5;
+  }
+</style>

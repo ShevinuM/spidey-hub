@@ -1,0 +1,55 @@
+---
+// Route: "/employment" — see src/pages/index.astro for the shared shape notes.
+import Shell from "../layouts/Shell.astro";
+import Terminal from "../components/terminal/Terminal.svelte";
+import { getCollection } from "astro:content";
+import { getSite, getDashboard, getTracker, getRepositories, getPersonnel, getGrep, getCmdline, getHelpSearch, getShell, getChooseTree, buildProfile, buildHelp, buildNotifications, buildBoot } from "../lib/data";
+import { getCommitsByRepo } from "../lib/commits";
+
+const site = getSite();
+const dashboard = getDashboard();
+const tracker = getTracker();
+const repositories = getRepositories();
+const personnel = getPersonnel();
+const grep = getGrep();
+const cmdline = getCmdline();
+const helpSearch = getHelpSearch();
+const shell = getShell();
+const chooseTree = getChooseTree();
+const projects = await getCollection("repositories");
+const personnelEntries = await getCollection("personnel");
+const profile = buildProfile((await getCollection("profile"))[0]);
+const help = buildHelp(await getCollection("help"));
+const notifications = buildNotifications(await getCollection("notifications"));
+const boot = buildBoot(await getCollection("boot"));
+const commitsByRepo = getCommitsByRepo(projects);
+// PORTFOLIO_FIXTURES gates the notification system into a fixed,
+// hand-authored state for deterministic golden capture (Notifications.svelte's
+// own header comment) — read server-side only, never client-side.
+const notificationsFixtureMode = process.env.PORTFOLIO_FIXTURES === "1";
+---
+
+<Shell title="Employment Records — shevinum.dev">
+  <Terminal
+    client:load
+    initialView="employment"
+    {site}
+    {dashboard}
+    {notifications}
+    {notificationsFixtureMode}
+    {tracker}
+    {profile}
+    {repositories}
+    {personnel}
+    {grep}
+    {help}
+    {boot}
+    {cmdline}
+    {helpSearch}
+    {shell}
+    {chooseTree}
+    {projects}
+    {personnelEntries}
+    {commitsByRepo}
+  />
+</Shell>

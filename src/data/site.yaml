@@ -1,0 +1,76 @@
+# Shared, cross-view copy: the tmux status bar and global keymap hints.
+# Source: design/Homepage.dc.html lines 427-446 (status bar), README.md
+# "Mobile policy" (mobile-block card), "Keymap (global)".
+
+statusBar:
+  # The left
+  # cluster stays "Session: 10.42.7.13 ·" for the default session, but the
+  # NAME is dynamic per attached session (`tmux new -s test` etc.) —
+  # StatusBar.svelte substitutes `{name}` from the live client model.
+  sessionTemplate: "Session: {name}"
+  separator: "·"
+  # Window list, always rendered in this numeric order 0-5 (bug fix 1: the
+  # prototype's Retina-V view renders "...4:profile 3:retina-v*" — out of
+  # order — because the tracker window is appended after profile instead of
+  # rendered in place; we always render 0-5 with the active one highlighted
+  # in place instead of reordered). Dashboard
+  # and help are real, clickable windows, not implicit/absent.
+  windows:
+    - number: 0
+      id: dashboard
+      name: dashboard
+    - number: 1
+      id: repositories
+      name: repos
+    - number: 2
+      id: employment
+      name: employment
+    - number: 3
+      id: retina-v
+      name: retina-v
+    - number: 4
+      id: profile
+      name: profile
+    - number: 5
+      id: help
+      name: help
+  grepHint: "[/] grep"
+  # ↻ reboot — status-bar right-cluster control
+  # that replays the boot sequence from any view. Explicitly "reboot", not
+  # the mock's own "↻ replay boot" (user's own wording, Homepage.dc.html
+  # line 157's mock equivalent renamed per direct request).
+  rebootLabel: "↻ reboot"
+  # tmux-style status-line prompt templates.
+  # `{...}` placeholders are the same convention every other data.ts template
+  # already uses (grep.yaml's filePosTemplate, repositories.yaml's
+  # subtitleTemplate, etc.) — StatusBar.svelte does the substitution.
+  prompts:
+    # "(rename-window) " prefix in front of the editable, prefilled window
+    # name (Ctrl-b ,).
+    renamePrefix: "(rename-window) "
+    # Ctrl-b & (kill-window) — window kill still keyed by NAME.
+    killWindowTemplate: "kill-window {name}? (y/n)"
+    # Ctrl-b x — REAL kill-pane: ALWAYS prompts, even on a single-pane window, keyed by
+    # the pane's stable `pane_index` (Window.paneOrder's own live-renumbered
+    # position), never a name — real tmux panes have no name.
+    killPaneTemplate: "kill-pane {pane}? (y/n)"
+    # Shown instead of removing the window when it's the only one left.
+    killLastWindowMessage: "can't kill the only window"
+    # Ctrl-b ] with no active text input, or an empty paste buffer.
+    pasteEmptyMessage: "nothing to paste"
+
+# Ctrl-b [ copy-mode overlay. One generic
+# overlay reused across every view's `data-copy-source` pane — see
+# CopyMode.svelte's header comment for the capture contract.
+copyMode:
+  titlePrefix: "COPY MODE"
+  titleTilde: "~"
+  hint: "j/k/h/l/gg/G move · Ctrl-d/u page · v select · y / Enter yank · q / Esc exit"
+  emptyText: "(nothing to copy)"
+
+mobileBlock:
+  # Copy shown on a viewport under the 900px minimum.
+  heading: "RETINA-V"
+  body: "viewport too small — this session requires a desktop terminal (≥900px)."
+  escapeHatchText: "github.com/shevinum"
+  escapeHatchHref: "https://github.com/shevinum"

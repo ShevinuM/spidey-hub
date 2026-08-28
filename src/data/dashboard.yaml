@@ -1,0 +1,45 @@
+# Dashboard (home) view copy.
+# Source: design/Homepage.dc.html lines 130-154 (plate, menu, footer),
+# lines 104-124 (toasts).
+#
+# The plate is a SPIDEY-HUB wordmark (own arched
+# rendering in Dashboard.svelte using the self-hosted Webslinger font — see
+# src/styles/global.css's @font-face — never Marvel's actual logo artwork).
+
+plate:
+  title: "SPIDEY-HUB"
+
+# Menu rows, top to bottom. There is no per-row `invert` key (the
+# single-leading-character inverted-background cursor on "Repositories" —
+# design/Homepage.dc.html line 142); every row renders its plain label.
+# `icon` is either a glyph character or the literal token
+# "spider-mask" meaning: render the spiderman.svg CSS mask (never an <img>)
+# instead of a text glyph, exactly like the "Retina-V" row.
+menu:
+  - id: projects
+    icon: "▤"
+    label: "Repositories"
+  - id: xp
+    icon: "◆"
+    label: "Employment Records"
+  - id: info
+    icon: "◉"
+    label: "Profile"
+  - id: tracker
+    icon: "spider-mask"
+    label: "Retina-V"
+  - id: help
+    icon: "?"
+    label: "Help"
+
+footer:
+  # "{n}" appears twice, both replaced with the SAME live pane count
+  # (Dashboard.svelte's `paneCount` prop, summed from the tmux model) —
+  # never a hardcoded number.
+  syncLineTemplate: "⚡ synced {n}/{n} panes in 48.23ms"
+  # "-- switching to window {label} --" — dead code in the prototype: every
+  # menu id (projects/xp/tracker/info) has an explicit early-return branch in
+  # open() that never falls through to this message, so it's unreachable in
+  # practice. Kept verbatim in case a future menu entry lacks a dedicated
+  # view and needs the generic transition message.
+  switchingTemplate: "-- switching to window {label} --"

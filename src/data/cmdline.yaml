@@ -1,0 +1,130 @@
+# Site-wide floating Cmdline. One noice.nvim-style
+# floating box (src/components/Cmdline.svelte) — same visual family as
+# GrepOverlay (bordered box, box-drawing inset title, `>` prompt + block
+# cursor, existing palette) — shared by THREE entry contexts:
+#
+#   (a) editor ex mode (`:` while a Repositories/Personnel file editor is open):
+#       the existing q/q!/w/wq/:<n> ex-command state machine (PARSED by
+#       src/lib/cmdline.ts's parseExCommand, EXECUTED by Editor.svelte's own
+#       runExCommand — only its
+#       PRESENTATION lives in this box) tried first, falling through to
+#       `commands` below on anything it doesn't recognize — "editor context
+#       wins": `:q` while an editor is open always closes the editor, never
+#       kills the window, even though `commands` below also defines a
+#       site-wide `q`.
+#   (b) site mode (`:` everywhere else, no other text input active — `:`
+#       stays a literal character inside the grep query / personnel filter /
+#       rename prompt, which all already own the keyboard while active):
+#       `commands` below only.
+#   (c) tmux command-prompt mode (`Ctrl-b :`, real tmux's own
+#       "command-prompt" binding): `tmuxCommands` below only, executed
+#       through the existing rename/kill/select-window implementations
+#       in Terminal.svelte — never duplicated here.
+#
+# `commands[].action`/`exCommands` entries with no `action` are internal
+# identifiers Terminal.svelte/Cmdline.svelte switch on — never rendered —
+# same convention as src/lib/views.ts's menu/window ids.
+
+title: "─ Cmdline ─"
+
+prompt:
+  glyph: ">"
+  cursorGlyph: "▌"
+
+# The "takes an argument" notation (e.g. "grep <…>") is data-driven rather
+# than a string literal baked into a component. Cmdline.svelte itself does
+# not render a command list (the suggestions UI is gone); this string is
+# consumed instead by HelpSearch.svelte's own command-row rendering
+# (src/components/HelpSearch.svelte), the browsable command list. Appended
+# verbatim (with its own leading space) after a command's name when
+# `takesArgs` is true; empty otherwise.
+argsPlaceholder: " <…>"
+
+# Ex-mode-only display entries (context (a) — see file header). Real
+# execution is parseExCommand/Editor.svelte's own logic; these
+# exist only so the box's suggestion list has a name+description to show,
+# and so `q`/`w` shadow the site-wide `commands` entries of the same name
+# while an editor is open (src/lib/cmdline.ts's mergeCommandLists).
+exCommands:
+  - name: "q"
+    aliases: ["q!"]
+    description: "close the file editor (back to the browser view underneath)"
+  - name: "w"
+    aliases: ["wq"]
+    description: "write — readonly, always errors (this viewer never writes)"
+
+# Site-wide command set. Every one of these also works while
+# an editor is open (context (a): the ex-mode commands plus the site-wide
+# set below), falling through only after the ex-command machine above has
+# had first refusal.
+commands:
+  - name: "dashboard"
+    aliases: ["home"]
+    description: "jump to the dashboard"
+    action: "view:home"
+  - name: "repositories"
+    description: "jump to Repositories"
+    action: "view:repositories"
+  - name: "employment"
+    description: "jump to Employment Records"
+    action: "view:employment"
+  - name: "profile"
+    description: "jump to Profile"
+    action: "view:profile"
+  - name: "retina-v"
+    description: "jump to Retina-V"
+    action: "view:retina-v"
+  - name: "help"
+    description: "jump to Help"
+    action: "view:help"
+  - name: "grep"
+    description: "open the grep overlay, pre-filled and searching <query>"
+    action: "grep"
+    takesArgs: true
+  - name: "reboot"
+    description: "restart the session from a blank terminal"
+    action: "reboot"
+  - name: "resume"
+    aliases: ["cv"]
+    description: "download resume.pdf in a new tab"
+    action: "resume"
+  - name: "q"
+    description: "quit the current program to a shell in this window"
+    action: "exit-program"
+
+# tmux command-prompt mode (Ctrl-b :). A distinct, smaller
+# vocabulary matching real tmux's own command-prompt commands; EXECUTED
+# through the existing rename/kill/select-window implementations
+# (Terminal.svelte's renameWindow/killWindow/killPaneOrWindow/setView) —
+# never duplicated here.
+tmuxCommands:
+  - name: "rename-window"
+    description: "rename-window <name> — rename the current window"
+    takesArgs: true
+  - name: "kill-window"
+    description: "kill the current window (refuses to kill the last one)"
+  - name: "kill-pane"
+    description: "kill the focused pane, immediately (no confirm) — cascades to kill-window when it's the only pane in the window"
+  - name: "select-window"
+    description: "select-window <0-5> — jump straight to that window"
+    takesArgs: true
+  - name: "select-layout"
+    description: "select-layout <name> — apply a preset layout (even-horizontal, even-vertical, main-horizontal, main-horizontal-mirrored, main-vertical, main-vertical-mirrored, tiled); bare select-layout reapplies the last one"
+    takesArgs: true
+
+# Error/usage strings the box itself renders (as opposed to the editor's own
+# E21/E45 bell messages, which stay in src/data/repositories.yaml /
+# src/data/personnel.yaml — those only ever fire from inside an already-open
+# editor, so they keep using that editor instance's own labels).
+errors:
+  # The unknown-command message is reused verbatim
+  # (same wording as repositories.yaml/personnel.yaml's own
+  # notAnEditorCommandTemplate) so a gibberish `:` command reads exactly
+  # like vim's own ex-command error, in EVERY context, not just inside an
+  # open editor — this whole box is, in spirit, one big vim command-line.
+  unknownCommandTemplate: "E492: Not an editor command: {cmd}"
+  usageRenameWindow: "usage: rename-window <name>"
+  usageSelectWindow: "usage: select-window <0-5>"
+  noSuchWindowTemplate: "no such window: {arg}"
+  # For `select-layout <garbage>`.
+  unknownLayoutTemplate: "unknown layout: {name}"

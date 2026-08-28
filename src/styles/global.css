@@ -1,0 +1,207 @@
+/* Tailwind 4, CSS-first config. Preflight intentionally OMITTED: the
+   prototype relies on browser UA defaults (margins, list styles, etc.)
+   staying untouched. Only theme tokens + utilities are pulled in. */
+@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss/utilities" layer(utilities);
+
+/* @fontsource/jetbrains-mono, self-hosted, per-weight (400/500/700 only —
+   the weights the design actually uses). Each file below declares several
+   @font-face blocks (one per unicode-range subset: cyrillic-ext, cyrillic,
+   greek, vietnamese, latin-ext, latin) — importing the whole file (not a
+   hand-picked subset) keeps fallback-glyph behavior identical to the
+   vendored visual-regression reference, which imports the same files. */
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/700.css";
+
+/* "Webslinger" by Quinn Davis Type (fontspace.com/webslinger-2-font-f71972),
+   Public Domain per the designer's FontSpace listing (no credit/permission
+   required) and the license.txt bundled in the download. Self-hosted as a
+   subset woff2 (glyphs: A-Z + hyphen only — everything the dashboard's
+   "SPIDEY-HUB" wordmark needs) — applied ONLY
+   to that wordmark (Dashboard.svelte), never site-wide. */
+@font-face {
+  font-family: "Webslinger";
+  src: url("/fonts/webslinger-subset.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Design tokens — see design_handoff_shevinum_dev/README.md "Design tokens". */
+@theme {
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  /* Color */
+  --color-alert: #e0453c; /* alert / primary red: borders, labels, active tab, plate */
+  --color-red-bright: #ff4a4a; /* spider mask fill, danger text */
+  --color-red-bright-2: #ff6b6f; /* danger text (alt) */
+  --color-signal-cyan: #5fc6b4; /* hotkeys, links, secondary labels */
+  --color-friendly-blue: #8fd0f5; /* spider subjects, tracker toast */
+  --color-friendly-blue-2: #8fc7f0;
+  --color-friendly-blue-3: #4a9fe0;
+  --color-gold: #d9b04a; /* key hints, CV panel */
+  --color-text-primary: #f4ece9; /* selected rows, titles */
+  --color-pane-fill: rgba(9, 13, 18, 0.6); /* all windows */
+  --color-deep-bg: #0a0e13; /* inset title backgrounds */
+  --color-deep-bg-2: #0b0f14; /* page background */
+  --color-status-bar: #0d2a2f; /* tmux bar */
+  --color-status-bar-text: #5fc6b4;
+  --color-status-bar-session: #7fd8a8;
+  --color-selection: rgba(224, 69, 60, 0.22); /* list highlight */
+
+  /* Spacing scale used across panes/panels */
+  --spacing-2: 2px;
+  --spacing-4: 4px;
+  --spacing-6: 6px;
+  --spacing-8: 8px;
+  --spacing-10: 10px;
+  --spacing-12: 12px;
+  --spacing-14: 14px;
+  --spacing-16: 16px;
+  --spacing-18: 18px;
+  --spacing-22: 22px;
+
+  /* Radius */
+  --radius-pane: 6px;
+  --radius-panel: 4px;
+  --radius-pill: 3px;
+  --radius-meter-bar: 1px;
+  --radius-plate: 10px;
+}
+
+/* Prototype base styles, verbatim (design/Homepage.dc.html lines 12-18). */
+body {
+  margin: 0;
+  background: #0b0f14;
+}
+a {
+  color: #e0453c;
+  text-decoration: none;
+}
+a:hover {
+  color: #f4a374;
+}
+@keyframes blk {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes swp {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes pls {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes png {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(3.8);
+    opacity: 0;
+  }
+}
+
+/* Boot-sequence keyframes (design/"Boot Sequence.dc.html" lines 16-26).
+   `swpR` is `swp`'s reverse — the mock defines it alongside `swp` for
+   rings that spin counter-clockwise; `bFlick` is defined by the mock but
+   never referenced by its own template (dead keyframe) — kept here anyway
+   for 1:1 fidelity with "every keyframe", never applied by
+   BootSequence.svelte. */
+@keyframes swpR {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes bIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes bAsmIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.78);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+@keyframes bWave {
+  0% {
+    transform: scale(0.16);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.04);
+    opacity: 0;
+  }
+}
+@keyframes bBloom {
+  0% {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  44% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+}
+@keyframes bDashIn {
+  from {
+    opacity: 0;
+    transform: scale(1.025);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes bFlick {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  47% {
+    opacity: 0.62;
+  }
+  53% {
+    opacity: 0.9;
+  }
+}
+@keyframes bScan {
+  0% {
+    transform: translateY(-12vh);
+  }
+  100% {
+    transform: translateY(112vh);
+  }
+}

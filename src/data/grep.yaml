@@ -1,0 +1,46 @@
+# Grep overlay copy. Source: design/Homepage.dc.html lines 384-425 and the
+# Component class's grepHits()/renderVals() (lines 812-832, 1039-1070).
+
+leftPane:
+  titlePrefix: "GREP "
+  titleTilde: "〜"
+  promptIcon: "❯"
+  # The blinking prompt cursor glyph (Homepage.dc.html line 409's `▌`,
+  # `animation:blk 1.05s steps(1) infinite` — the component copies that
+  # animation declaration verbatim so Playwright's frozen-animation frame
+  # matches the goldens).
+  cursorGlyph: "▌"
+
+modeLine:
+  # qLen ? liveGrep : repoFiles — Component.renderVals() line 1044.
+  liveGrep: "live_grep · shevinum.dev@main"
+  repoFiles: "repo files · shevinum.dev@main"
+
+# Loading/error text for the lazy index fetch — loaded lazily at runtime
+# (fetch on first `/` press). No prototype precedent
+# (the prototype's repoSrc was inline data, never fetched) — mirrors
+# RepoBrowserData's loadingText/errorText for the same reason:
+# a real network request needs a graceful transient state.
+loadingText: "loading index…"
+errorText: "grep index unavailable"
+
+# Position-pill templates (same "Top/Bot must come from data" precedent
+# applied to grep's own two position strings, Component.renderVals() lines
+# 1064/1080 — the literal "{n} lines" *inside* a matched row's snippet
+# text is grep.ts's own tested search() output and stays there unchanged).
+rowPosTemplate: ":{line}:{col}"
+filePosTemplate: "{line}:{col}"
+fileLinesTemplate: "{n} lines"
+
+# "no matches in {n} tracked files" — the prototype hardcodes n=22 (line
+# 403), which is a miscount: repoSrc has 24 entries and the visible counter
+# (grepCount) renders 24/24 against its own index. Our version is
+# data-driven: {n} is interpolated from the real index length at render
+# time, not hardcoded.
+emptyStateTemplate: "no matches in {n} tracked files"
+
+noResultsFile: "no results"
+
+footer:
+  hintsLeft: "type to filter · ↑↓ or ctrl-n/p moves · enter opens the pane · esc closes"
+  closeHint: "[esc] close"

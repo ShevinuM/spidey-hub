@@ -1,0 +1,38 @@
+[
+  {
+    "sha8": "2cb16c27",
+    "msg": "tmux: fix prefix+w session filter",
+    "html_url": "https://github.com/shevinum/shevinum.dev/commit/2cb16c27",
+    "initials": "Sh"
+  },
+  {
+    "sha8": "475d16a4",
+    "msg": "dashboard: 7 panes, ip in status line",
+    "html_url": "https://github.com/shevinum/shevinum.dev/commit/475d16a4",
+    "initials": "Sh"
+  },
+  {
+    "sha8": "6a5fbeda",
+    "msg": "theme: retune red accent ramp",
+    "html_url": "https://github.com/shevinum/shevinum.dev/commit/6a5fbeda",
+    "initials": "Sh"
+  },
+  {
+    "sha8": "ecd7c959",
+    "msg": "add spidey tracker view",
+    "html_url": "https://github.com/shevinum/shevinum.dev/commit/ecd7c959",
+    "initials": "Sh"
+  },
+  {
+    "sha8": "cdb801f3",
+    "msg": "status: window list from menu items",
+    "html_url": "https://github.com/shevinum/shevinum.dev/commit/cdb801f3",
+    "initials": "Sh"
+  },
+  {
+    "sha8": "c005c719",
+    "msg": "type: jetbrains mono everywhere",
+    "html_url": "https://github.com/shevinum/shevinum.dev/commit/c005c719",
+    "initials": "Sh"
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "sha8": "9f31ab02",
+    "msg": "core: dual signature lock",
+    "html_url": "https://github.com/shevinum/spider-tracker-core/commit/9f31ab02",
+    "initials": "Sh"
+  },
+  {
+    "sha8": "71d0c4ee",
+    "msg": "ui: radar rings scale with viewport",
+    "html_url": "https://github.com/shevinum/spider-tracker-core/commit/71d0c4ee",
+    "initials": "Sh"
+  },
+  {
+    "sha8": "4ac9910b",
+    "msg": "sigd: drop false webbing matches",
+    "html_url": "https://github.com/shevinum/spider-tracker-core/commit/4ac9910b",
+    "initials": "Sh"
+  },
+  {
+    "sha8": "18ee73c1",
+    "msg": "core: latveria grid calibration",
+    "html_url": "https://github.com/shevinum/spider-tracker-core/commit/18ee73c1",
+    "initials": "Sh"
+  },
+  {
+    "sha8": "a0b71d55",
+    "msg": "ui: reticle labels flip on collision",
+    "html_url": "https://github.com/shevinum/spider-tracker-core/commit/a0b71d55",
+    "initials": "Sh"
+  }
+]

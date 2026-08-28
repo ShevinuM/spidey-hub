@@ -1,0 +1,166 @@
+{
+  "docColors": {
+    "h": "color:#e0453c;font-weight:700",
+    "p": "color:rgba(196,216,232,.72)",
+    "b": "color:#5fc6b4",
+    "c": "color:rgba(217,176,74,.85)"
+  },
+  "xpColors": {
+    "h": "color:#e0453c;font-weight:700",
+    "m": "color:rgba(217,176,74,.85)",
+    "p": "color:rgba(196,216,232,.72)",
+    "b": "color:#5fc6b4",
+    "c": "color:rgba(154,127,212,.9)"
+  },
+  "docs": [
+    {
+      "kind": "project",
+      "path": "fixtures/repositories/shevinum-dev.md",
+      "kinds": [
+        "h",
+        "p",
+        "p",
+        "p",
+        "p",
+        "h",
+        "b",
+        "b",
+        "b",
+        "p",
+        "h",
+        "c"
+      ]
+    },
+    {
+      "kind": "project",
+      "path": "fixtures/repositories/spider-tracker.md",
+      "kinds": [
+        "h",
+        "p",
+        "p",
+        "p",
+        "p",
+        "h",
+        "b",
+        "b",
+        "b",
+        "p",
+        "p",
+        "h",
+        "c"
+      ]
+    },
+    {
+      "kind": "project",
+      "path": "fixtures/repositories/flerken-watch.md",
+      "kinds": [
+        "h",
+        "p",
+        "p",
+        "p",
+        "p",
+        "h",
+        "b",
+        "b",
+        "p",
+        "h",
+        "p",
+        "p",
+        "p",
+        "p",
+        "h",
+        "c"
+      ]
+    },
+    {
+      "kind": "project",
+      "path": "fixtures/repositories/latveria-atlas.md",
+      "kinds": [
+        "h",
+        "p",
+        "p",
+        "p",
+        "p",
+        "h",
+        "b",
+        "b",
+        "b",
+        "p",
+        "h",
+        "c"
+      ]
+    },
+    {
+      "kind": "personnel",
+      "path": "src/content/personnel/enaimco/software-developer/full-time/role.md",
+      "kinds": [
+        "h",
+        "m",
+        "p",
+        "c",
+        "p",
+        "h",
+        "b",
+        "p",
+        "p",
+        "b",
+        "p",
+        "p"
+      ]
+    },
+    {
+      "kind": "personnel",
+      "path": "src/content/personnel/enaimco/software-developer/part-time/role.md",
+      "kinds": [
+        "h",
+        "m",
+        "p",
+        "c",
+        "p",
+        "h",
+        "b",
+        "p",
+        "b",
+        "p",
+        "b",
+        "p",
+        "p"
+      ]
+    },
+    {
+      "kind": "personnel",
+      "path": "src/content/personnel/enaimco/software-developer/co-op/role.md",
+      "kinds": [
+        "h",
+        "m",
+        "p",
+        "c",
+        "p",
+        "h",
+        "b",
+        "b",
+        "b",
+        "b",
+        "b",
+        "b",
+        "b",
+        "p",
+        "h",
+        "b",
+        "p",
+        "b",
+        "p",
+        "p",
+        "p",
+        "b",
+        "p",
+        "p",
+        "b",
+        "p",
+        "p",
+        "p",
+        "p"
+      ]
+    }
+  ]
+}

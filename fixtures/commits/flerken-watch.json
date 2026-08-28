@@ -1,0 +1,26 @@
+[
+  {
+    "sha8": "6b21e0aa",
+    "msg": "watch: raise threat level on purr",
+    "html_url": "https://github.com/shevinum/flerken-watch/commit/6b21e0aa",
+    "initials": "Sh"
+  },
+  {
+    "sha8": "d9c7481f",
+    "msg": "feed: doomstadt sensor added",
+    "html_url": "https://github.com/shevinum/flerken-watch/commit/d9c7481f",
+    "initials": "Sh"
+  },
+  {
+    "sha8": "3e50aa17",
+    "msg": "watch: tentacle count heuristics",
+    "html_url": "https://github.com/shevinum/flerken-watch/commit/3e50aa17",
+    "initials": "Sh"
+  },
+  {
+    "sha8": "bb1904cd",
+    "msg": "feed: retry backoff",
+    "html_url": "https://github.com/shevinum/flerken-watch/commit/bb1904cd",
+    "initials": "Sh"
+  }
+]

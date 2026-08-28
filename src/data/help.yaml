@@ -1,0 +1,15 @@
+# Help page chrome (header/filter/legend copy) — the sidebar scopes and
+# their keybinding rows are content now, in src/content/help/*.md (one file
+# per scope, frontmatter rows). Copy rule for both: a first-time visitor
+# with zero context must understand what pressing the key(s) does from
+# `desc` alone — no file paths, no implementation mechanics, no internal
+# names.
+
+title: "Need some help?"
+filterPlaceholder: "filter bindings…"
+allScopeLabel: "All bindings"
+emptyStateText: "No binding matches that filter."
+legend:
+  - "↑ / ↓ — scroll the list"
+  - "? — opens the command search"
+  - "Esc — leaves the filter box (keeps what you typed)"

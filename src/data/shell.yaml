@@ -1,0 +1,193 @@
+# In-window shell — a program's
+# `:q` drops its pane back to this; the detached, fullscreen HOST shell
+# reuses the exact same component/data. Every user-visible shell
+# string lives here (content-purity rule) — src/lib/shell.ts only ever does
+# substitution/formatting, never holds copy of its own.
+
+prompt:
+  # Pane-mode prompt (a program's `:q` shell, one per window/pane) —
+  # `{path}` is "" at the fs root, else "/" followed by the cwd's segments
+  # joined with "/" (e.g. "/src/lib").
+  paneTemplate: "shev@edith:~/shevinum.dev{path} $ "
+  # Host-mode prompt (the detached fullscreen shell) — matches
+  # the user's own mock screenshot verbatim.
+  hostTemplate: "shev@edith:~/shevinum.dev git:(main) $ "
+
+# `pwd`'s own output prefix — the project directory's display name, reused
+# by the prompt template above for consistency.
+homeLabel: "~/shevinum.dev"
+
+errors:
+  commandNotFoundTemplate: "{cmd}: command not found"
+  cdNoSuchDirTemplate: "cd: no such file or directory: {path}"
+  cdNotADirTemplate: "cd: not a directory: {path}"
+  lsNoSuchTemplate: "ls: cannot access '{path}': No such file or directory"
+  catMissingArgMessage: "cat: missing operand"
+  catNoSuchFileTemplate: "cat: {path}: No such file or directory"
+  catIsADirTemplate: "cat: {path}: Is a directory"
+  # Exact wording for a path that exists in
+  # the fs tree but has no captured text content (outside the size cap, a
+  # binary file, or simply not walked into either generated index).
+  catUnindexedTemplate: "cat: {path}: binary or unindexed"
+  # `vim`/`vi`/`nvim <file>` shell builtin,
+  # vim-style wording (this viewer never writes, so there's no "create a new
+  # buffer" behavior to offer for a missing path — an error instead).
+  vimMissingArgMessage: "vim: missing file operand"
+  vimNoSuchFileTemplate: "vim: {path}: No such file or directory"
+  vimIsADirTemplate: "vim: {path}: Is a directory"
+  # `tmux new`/`tmux a` inside a pane shell
+  # always refuse with this exact string, regardless of argument.
+  nestedTmuxMessage: "sessions should be nested with care, unset $TMUX to force"
+  tmuxUnknownSubcommandTemplate: "usage: tmux {cmd}"
+
+# The detached HOST shell (`Ctrl-b d`,
+# same Shell.svelte component in `mode: "host"`).
+host:
+  # Pre-seeded scrollback, shown fullscreen over the dim radar on first
+  # detach — a narrative read plausibly as: the user's REAL terminal created
+  # the tmux session and attached to it (line 3), then detached from it
+  # (line 4, the same exact bracket string `detachedTemplate` below produces
+  # for every REAL detach) so they could hand it off, then ran `edith` from
+  # that now-detached real terminal (line 5, boot.yaml's own
+  # `commandLineTemplate` — this is the exact command the boot mock's own
+  # command line shows) to launch the site, which is what silently attached
+  # THIS client (the browser tab) to the session — everything the user has
+  # been looking at since is that attachment. `{session}` is substituted
+  # with the real default session name (src/lib/shell.ts's
+  # `seedHostNarrative()`) — never hardcoded twice.
+  narrative:
+    - text: "E.D.I.T.H shell · zsh 5.9 · session {session}"
+      kind: output
+    - text: "type `help` for a list of builtins, `edith` to reattach the session"
+      kind: output
+    - text: "shev@edith:~/shevinum.dev git:(main) $ tmux new -s {session}"
+      kind: input
+    - text: "[detached (from session {session})]"
+      kind: output
+    - text: "shev@edith:~/shevinum.dev git:(main) $ edith --boot --session {session}"
+      kind: input
+  # tmux fidelity reference: appended verbatim on every REAL `Ctrl-b d`
+  # detach (the narrative's own 4th line above uses this same exact text,
+  # for a detach that already happened before the page ever loaded).
+  detachedTemplate: "[detached (from session {name})]"
+  # tmux fidelity reference: killing the attached session's last window when
+  # no other session remains.
+  exitedMessage: "[exited]"
+  # Host `exit` builtin — printed immediately before the page reload.
+  logoutMessage: "logout"
+  # A bare view-name command typed in host mode — the site's own UX hint,
+  # not a real-tmux string.
+  notAttachedMessage: "not attached — try: tmux a"
+  # `open <view>`/`edith` in host mode, when the target session exists but
+  # the specific window was killed at some point — attaches anyway, staying
+  # on whatever window is already active there.
+  windowGoneTemplate: "{view} window not found — attached to session {name}"
+
+sudo:
+  message: "shev is not in the sudoers file. This incident will be reported to D.O.O.M."
+
+whoami: "shev"
+
+viewNames:
+  label: "available views:"
+
+help:
+  intro: "builtins:"
+  # One row per builtin, printed verbatim (in this order) by the `help`
+  # builtin. `cmd` is the literal thing you type — kept here rather than in
+  # code so a future rename never needs a code change alongside it.
+  rows:
+    - cmd: "cd <path>"
+      description: "change directory"
+    - cmd: "ls [path]"
+      description: "list a directory's contents"
+    - cmd: "cat <path>"
+      description: "print a file's contents"
+    - cmd: "pwd"
+      description: "print the current directory"
+    - cmd: "tree"
+      description: "print the current directory as a tree (depth 3)"
+    - cmd: "clear"
+      description: "clear the scrollback"
+    - cmd: "whoami"
+      description: "print the current user"
+    - cmd: "help"
+      description: "show this list"
+    - cmd: "open <view>"
+      description: "launch a program in this pane"
+    - cmd: "vim <file>"
+      description: "open a file read-only in the vim editor (vi/nvim work too)"
+    - cmd: "view-names"
+      description: "list the launchable programs"
+    - cmd: "neofetch"
+      description: "system info card"
+    - cmd: "sudo <...>"
+      description: "try it"
+    - cmd: "exit"
+      description: "close this pane"
+    - cmd: "reboot"
+      description: "factory-reset the session"
+    - cmd: "tmux ls"
+      description: "list sessions"
+    - cmd: "tmux new [-s name]"
+      description: "create (and attach) a session — host shell only"
+    - cmd: "tmux a [-t name]"
+      description: "attach a session — host shell only"
+    - cmd: "edith"
+      description: "reattach the default session — host shell only"
+    - cmd: "<view name>"
+      description: "launch that program in this pane (same as open)"
+
+neofetch:
+  # Small hand-authored glyph (never copied artwork), printed to the left
+  # of the info fields.
+  art:
+    - "     /\\"
+    - "    /  \\"
+    - "   | () |"
+    - "    \\  /"
+    - "     \\/"
+  fields:
+    - label: "OS"
+      value: "E.D.I.T.H OS (Battleworld build)"
+    - label: "Host"
+      value: "10.42.7.13"
+    - label: "Shell"
+      value: "zsh (tmux)"
+    - label: "Resolution"
+      value: "RETINA-V"
+  uptimeLabel: "Uptime"
+  uptimeTemplate: "{mins} min"
+
+tmux:
+  lsRowTemplate: "{name}: {n} windows (created {ctime})"
+  lsAttachedSuffix: " (attached)"
+  # tmux fidelity reference — exact strings, verified against tmux 3.7b.
+  noSessionsMessage: "no sessions"
+  duplicateSessionTemplate: "duplicate session: {name}"
+  cantFindSessionTemplate: "can't find session: {name}"
+
+# Labels for the read-only vim Editor the
+# `vim`/`vi`/`nvim <file>` builtin opens over the shell pane. Byte-for-byte
+# the same block repositories.yaml's/personnel.yaml's own `editor:` sections
+# carry (Homepage.dc.html lines 317-336: "NORMAL", "⑂ main") — kept here
+# too, in this file, rather than imported, because it's the exact same
+# reproduced prototype markup, not shared storage (same convention those two
+# files' own comments already document against each other).
+editor:
+  modeLabel: "NORMAL"
+  modeVisualLabel: "VISUAL"
+  modeVisualLineLabel: "VISUAL LINE"
+  branch: "⑂ main"
+  breadcrumbSeparator: "›"
+  closePillLabel: "[:q]"
+  tabIcon: "▤"
+  topLabel: "Top"
+  bottomLabel: "Bot"
+  percentTemplate: "{n}%"
+  positionTemplate: "{line}:{col}"
+  searchPromptGlyph: "/"
+  cmdlinePromptGlyph: ":"
+  readonlyBellMessage: "E21: Cannot make changes, 'modifiable' is off"
+  writeReadonlyMessage: "E45: 'readonly' option is set"
+  notAnEditorCommandTemplate: "E492: Not an editor command: {cmd}"
