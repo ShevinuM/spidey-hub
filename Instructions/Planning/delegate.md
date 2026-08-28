@@ -1,5 +1,7 @@
 # Delegate to a package, not a bounded context
 
+> **Status: working plan, not yet executed.** "Already done" below describes v1's current state, not this repo — nothing has been ported under v2's `src/` yet (`src/content/` is the only thing that exists so far, and it's empty). Source of truth for "done" is v1's own tree, referenced by file name only; no v1 path is checked into this repo.
+
 Five modules from v1's `src/lib/` where the right move is (or already was) reaching for an external package instead of hand-rolling — the DDD "generic subdomain" call: a solved, non-differentiating problem doesn't earn bespoke engineering effort, so buy/reuse and spend the effort on what actually makes this site *this* site (the terminal/tmux/vim emulation).
 
 This is the mirror image of `docs/checklist/general/architecture.md`'s bounded-context rules: those are about where *your own* code lives; this doc is about which problems shouldn't become your own code at all.

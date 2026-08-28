@@ -7,7 +7,7 @@ The compiler, gates, formatters, and scripts. Items marked `open` are not yet de
 - [ ] **R001** TypeScript runs in `strict` mode from the first commit — write code that satisfies it rather than loosening a flag per file.
 - [ ] **R002** Playwright is pinned to an exact version (no `^`) — the visual goldens are only valid for the exact Chromium build that captured them; bumping the pin requires a re-baseline in the same change.
 - [ ] **R003** A single combined type/lint gate (Astro's own check + `tsc --noEmit` + `svelte-check`) runs clean before any change is declared done.
-- [ ] **R004** Unit tests run on Node's built-in test runner (`node --test`) over pure `lib`/`engine` modules only — no DOM, no browser dependency, so this suite stays fast. A module a unit test imports directly must stay DOM-free and rune-free.
+- [ ] **R004** Unit tests run on Vitest over pure `lib`/`engine` modules only — no DOM, no browser dependency, so this suite stays fast. A module a unit test imports directly must stay DOM-free and rune-free.
 - [ ] **R005** e2e and visual suites run through Playwright against a real (or fixture) build — never assert against dev-server-only behavior.
 - [ ] **R006** Never wrap a checker in a `... | grep || echo "clean"` pipeline — it silently masks a missing or failed command as a false pass.
 
@@ -25,8 +25,7 @@ The compiler, gates, formatters, and scripts. Items marked `open` are not yet de
 
 ## Open — settle before the first feature lands
 
-- [ ] **R013** *(open)* Exact lint tool and rule set — decide whether to add ESLint/oxlint beyond `astro check`/`svelte-check`.
-- [ ] **R014** *(open)* Whether relative TS imports need an explicit extension, and whether `exactOptionalPropertyTypes`/`verbatimModuleSyntax` are enabled — settle once and record here so no feature picks its own convention.
-- [ ] **R015** *(open)* Whether the unit-test runner is `node --test` (zero extra dependency) or Vitest — decide before the first `common/engines/` module gets its tests.
+- [ ] **R013** Lint tool is `oxlint`, run alongside (never instead of) `astro check`/`svelte-check` — near-zero config, fast, matches the project's delegate-to-a-solved-package stance rather than hand-maintaining an ESLint plugin/rule stack.
+- [ ] **R014** Settled (D2, pre-phase): relative TS imports are **extensionless**; `exactOptionalPropertyTypes: true` and `verbatimModuleSyntax: true` are both enabled in `tsconfig.json`. No feature picks its own convention.
 
-The Claude Design mirror export workflow carries over from v1 — see `design-mirror.md` for its full spec (one item there is still open: the v2 project identity).
+The Claude Design mirror export workflow carries over from v1 — see `design-mirror.md` for its full spec.

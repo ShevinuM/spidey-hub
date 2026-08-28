@@ -9,7 +9,7 @@ src/
   features/
     <feature>/
       tests/
-        unit/                  node --test, pure lib/state-class logic — no browser
+        unit/                  Vitest, pure lib/state-class logic — no browser
         ui/                    everything Playwright-driven — grouped because both
                                 suites below need a browser and share page objects
           e2e/

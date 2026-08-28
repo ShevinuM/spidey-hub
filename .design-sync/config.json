@@ -1,0 +1,6 @@
+{
+  "projectId": "7843b461-c831-40a6-9e98-384d79d380c8",
+  "projectName": "SpideyHub v2",
+  "shape": "page-mirror",
+  "note": "Mirrors whole rendered pages (one .dc.html snapshot per route per build), not components. v1's mirror project (\"SpideyHub\", projectId 1fe80714-74c4-47b7-9975-76a8f686f91d) does not carry over — this is v2's own pinned project, created empty; it gets populated by running scripts/generate-design-mirror.mjs against v2's own code once that exists."
+}

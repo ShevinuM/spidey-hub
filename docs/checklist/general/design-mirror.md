@@ -1,6 +1,6 @@
 # Claude Design mirror
 
-Rules for `ds-bundle/`, the self-contained page-mirror export pushed to Claude Design. Mechanics carried over from v1's `scripts/generate-design-mirror.mjs` unchanged — only the pinned project identity is v2-specific and still open (see R008).
+Rules for `ds-bundle/`, the self-contained page-mirror export pushed to Claude Design. Mechanics carried over from v1's `scripts/generate-design-mirror.mjs` unchanged; the pinned project identity is v2-specific (see R008).
 
 ## What it is
 
@@ -17,7 +17,7 @@ Rules for `ds-bundle/`, the self-contained page-mirror export pushed to Claude D
 ## Output & config
 
 - [ ] **R007** Output goes to `ds-bundle/pages-real/` and `ds-bundle/pages-fixtures/` — gitignored, never committed.
-- [ ] **R008** *(open)* The pinned target lives in `.design-sync/config.json` (`projectId`, `projectName`, `shape: "page-mirror"`, a `note` clarifying it mirrors whole pages, not components). v2 needs its own Claude Design project — v1's `projectId` does not carry over — so this rule stays incomplete until that project exists; fill in the real `projectId`/`projectName` here the moment it's created, per `documentation-practice.md` R004.
+- [ ] **R008** The pinned target lives in `.design-sync/config.json`: `projectId: "7843b461-c831-40a6-9e98-384d79d380c8"`, `projectName: "SpideyHub v2"`, `shape: "page-mirror"`. Created empty — v1's project ("SpideyHub", `projectId 1fe80714-74c4-47b7-9975-76a8f686f91d`) does not carry over, so this one gets populated by running `scripts/generate-design-mirror.mjs` against v2's own code once that exists, not by copying v1's snapshots.
 - [ ] **R009** Never create a second project for the mirror once R008 is settled — one pinned project, always pushed to.
 
 ## Pushing

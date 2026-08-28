@@ -32,5 +32,5 @@ Cross-suite rules (where test code lives, root-level audits) live in `testing/RE
 | `general/classes.md` | When to reach for a class vs. a plain type, encapsulation, construction invariants, member order, error messages. |
 | `general/comments.md` | What earns a comment, the two kinds of comment, TODO discipline. |
 | `general/toolchain.md` | Compiler/gate/formatting discipline and commit-message convention. Three items marked open. |
-| `general/design-mirror.md` | The Claude Design page-mirror export (`ds-bundle/`) carried over from v1: generation mechanics, self-containment rules, and the push procedure. One item open: v2's own pinned project identity. |
+| `general/design-mirror.md` | The Claude Design page-mirror export (`ds-bundle/`) carried over from v1: generation mechanics, self-containment rules, and the push procedure. |
 | `general/documentation-practice.md` | How this checklist and other project docs stay accurate as the codebase changes. |
