@@ -206,7 +206,7 @@ test("renameWindowManual is a no-op for an unknown window id", () => {
 
 test("killWindow refuses (no mutation) when it's the only window left", () => {
   const session = freshSession();
-  for (const w of [...session.windows]) {
+  for (const w of session.windows) {
     if (session.windows.length > 1) killWindow(session, w.id);
   }
   expect(session.windows.length).toBe(1);
@@ -447,7 +447,7 @@ test("killWindowCascade on the attached session's LAST window, with another sess
   attachSession(client, other.id); // other is now the "most recent" and the ATTACHED one
 
   const defaultSession = client.sessions.find((s) => s.name === "10.42.7.13")!;
-  for (const w of [...defaultSession.windows.slice(1)]) killWindow(defaultSession, w.id);
+  for (const w of defaultSession.windows.slice(1)) killWindow(defaultSession, w.id);
   expect(defaultSession.windows.length).toBe(1);
 
   // Kill the default session's own last window WHILE `other` is attached —
@@ -466,7 +466,7 @@ test("killWindowCascade on the ATTACHED session's last window switches the clien
   attachSession(client, other.id); // other: lastAttachedSeq=2, attached
   attachSession(client, defaultSession.id); // back to default: lastAttachedSeq=3, attached; other is now "most recent unattached"
 
-  for (const w of [...defaultSession.windows.slice(1)]) killWindow(defaultSession, w.id);
+  for (const w of defaultSession.windows.slice(1)) killWindow(defaultSession, w.id);
   const result = killWindowCascade(client, defaultSession, defaultSession.windows[0].id);
   expect(result).toEqual({ kind: "session-destroyed", detachedToHost: false });
   expect(client.sessions.length).toBe(1);
@@ -477,7 +477,7 @@ test("killWindowCascade on the ATTACHED session's last window switches the clien
 test("killWindowCascade on the attached session's last window, with NO other session left, detaches to host", () => {
   const client = freshClient();
   const session = activeSessionOf(client)!;
-  for (const w of [...session.windows.slice(1)]) killWindow(session, w.id);
+  for (const w of session.windows.slice(1)) killWindow(session, w.id);
   expect(session.windows.length).toBe(1);
 
   const result = killWindowCascade(client, session, session.windows[0].id);

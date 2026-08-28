@@ -26,8 +26,8 @@ const realIndex = JSON.parse(readFileSync(join(ROOT, "public/generated/grep-inde
  * asserted null below, not merely spot-checked.
  */
 function expectedView(path: string): "employment" | "repositories" | "retina-v" | "profile" | null {
-  if (/^src\/content\/personnel\//.test(path)) return "employment";
-  if (/^src\/content\/repositories\//.test(path)) return "repositories";
+  if (path.startsWith("src/content/personnel/")) return "employment";
+  if (path.startsWith("src/content/repositories/")) return "repositories";
   if (path === "src/components/employment-records/EmploymentRecords.svelte") return "employment";
   if (path === "src/components/repositories/Repositories.svelte") return "repositories";
   if (path === "src/components/Wallpaper.svelte") return "retina-v";
