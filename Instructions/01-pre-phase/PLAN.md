@@ -1,6 +1,6 @@
 # Phase 01 — pre-phase
 
-> **Status: planned, not started.** Contract for this phase's executor. Binding decisions: `Instructions/00-phases.md` (read it first — D-numbers below refer to it).
+> **Status: steps 1-9 done and verified green; step 10's generate half done, push half blocked (DesignSync tool unavailable this session).** See Results below for the full account, including a first-run RED at step 1 (submodules never initialized on this machine) that the orchestrator authorized fixing via `git submodule update --init`, and the corrected second run. Contract for this phase's executor. Binding decisions: `Instructions/00-phases.md` (read it first — D-numbers below refer to it).
 
 ## Context
 
