@@ -4,8 +4,8 @@
 // SSR the single Terminal.svelte island with `initialView` so the matching
 // view is in the static HTML with no client-side flash. Later view switches
 // are client-side only (pushState).
-import Shell from "../layouts/Shell.astro";
-import Terminal from "../components/terminal/Terminal.svelte";
+import Layout from "../bootstrap/Layout.astro";
+import Terminal from "../bootstrap/Terminal.svelte";
 import { getCollection } from "astro:content";
 import { getSite, getDashboard, getTracker, getRepositories, getPersonnel, getGrep, getCmdline, getHelpSearch, getShell, getChooseTree, buildProfile, buildHelp, buildNotifications, buildBoot } from "../common/lib/data";
 import { getCommitsByRepo } from "../lib/commits";
@@ -33,7 +33,7 @@ const commitsByRepo = getCommitsByRepo(projects);
 const notificationsFixtureMode = process.env.PORTFOLIO_FIXTURES === "1";
 ---
 
-<Shell title="shevinum.dev">
+<Layout title="shevinum.dev">
   <Terminal
     client:load
     initialView="home"
@@ -56,4 +56,4 @@ const notificationsFixtureMode = process.env.PORTFOLIO_FIXTURES === "1";
     {personnelEntries}
     {commitsByRepo}
   />
-</Shell>
+</Layout>

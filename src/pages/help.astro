@@ -1,8 +1,8 @@
 ---
 // Route: "/help" — see src/pages/index.astro for the shared shape notes.
 // The sixth status-bar window.
-import Shell from "../layouts/Shell.astro";
-import Terminal from "../components/terminal/Terminal.svelte";
+import Layout from "../bootstrap/Layout.astro";
+import Terminal from "../bootstrap/Terminal.svelte";
 import { getCollection } from "astro:content";
 import { getSite, getDashboard, getTracker, getRepositories, getPersonnel, getGrep, getCmdline, getHelpSearch, getShell, getChooseTree, buildProfile, buildHelp, buildNotifications, buildBoot } from "../common/lib/data";
 import { getCommitsByRepo } from "../lib/commits";
@@ -30,7 +30,7 @@ const commitsByRepo = getCommitsByRepo(projects);
 const notificationsFixtureMode = process.env.PORTFOLIO_FIXTURES === "1";
 ---
 
-<Shell title="Help — shevinum.dev">
+<Layout title="Help — shevinum.dev">
   <Terminal
     client:load
     initialView="help"
@@ -53,4 +53,4 @@ const notificationsFixtureMode = process.env.PORTFOLIO_FIXTURES === "1";
     {personnelEntries}
     {commitsByRepo}
   />
-</Shell>
+</Layout>

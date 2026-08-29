@@ -11,7 +11,7 @@
 // content, etc.) baked into the e2e suite would silently stop holding.
 //
 // Deliberately checks the SERVED CONTENT (`data-fixture-mode` on `<html>`,
-// set by src/layouts/Shell.astro from the same `process.env
+// set by src/bootstrap/Layout.astro from the same `process.env
 // .PORTFOLIO_FIXTURES` every route page already reads), not just "is a
 // process listening on the port": tests/visual/static-server.mjs reads
 // `dist/` fresh from disk on every request, so the PROCESS is never the
@@ -52,7 +52,7 @@ export default async function globalSetup(): Promise<void> {
   if (actual === null) {
     throw new Error(
       "[checkFixtureFlag] could not find data-fixture-mode on the served <html> — " +
-        "is dist/ built from a version of src/layouts/Shell.astro that predates the " +
+        "is dist/ built from a version of src/bootstrap/Layout.astro that predates the " +
         "PLAN.md Phase 7.4 fixture-mode guard? Rebuild with `pnpm build` or `pnpm build:fixtures`.",
     );
   }

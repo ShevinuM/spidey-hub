@@ -39,24 +39,24 @@
     HelpSearchData,
     ShellData,
     ChooseTreeData,
-  } from "../../common/lib/data";
-  import type { Commit } from "../../lib/commits";
-  import type { ViewId } from "../../common/lib/views";
-  import { pathToView, viewIdToProgram } from "../../common/lib/views";
-  import type { PaneDirection } from "../../common/engines/tmux/tmux";
-  import type { ShellMode } from "../../lib/shell";
+  } from "../common/lib/data";
+  import type { Commit } from "../lib/commits";
+  import type { ViewId } from "../common/lib/views";
+  import { pathToView, viewIdToProgram } from "../common/lib/views";
+  import type { PaneDirection } from "../common/engines/tmux/tmux";
+  import type { ShellMode } from "../lib/shell";
   import { TerminalState, DEFAULT_SESSION_NAME } from "./terminalState.svelte";
-  import Wallpaper from "../../common/components/Wallpaper.svelte";
-  import StatusBar from "../../common/components/StatusBar.svelte";
-  import PaneTree from "../../common/components/PaneTree.svelte";
-  import Shell from "../Shell.svelte";
-  import Notifications from "../notifications/Notifications.svelte";
-  import GrepOverlay from "../grep-overlay/GrepOverlay.svelte";
-  import CopyMode from "../../common/components/CopyMode.svelte";
-  import ChooseTree from "../../common/components/ChooseTree.svelte";
-  import BootSequence from "../BootSequence.svelte";
-  import Cmdline from "../../common/components/Cmdline.svelte";
-  import HelpSearch from "../HelpSearch.svelte";
+  import Wallpaper from "../common/components/Wallpaper.svelte";
+  import StatusBar from "../common/components/StatusBar.svelte";
+  import PaneTree from "../common/components/PaneTree.svelte";
+  import Shell from "../components/Shell.svelte";
+  import Notifications from "../components/notifications/Notifications.svelte";
+  import GrepOverlay from "../components/grep-overlay/GrepOverlay.svelte";
+  import CopyMode from "../common/components/CopyMode.svelte";
+  import ChooseTree from "../common/components/ChooseTree.svelte";
+  import BootSequence from "../components/BootSequence.svelte";
+  import Cmdline from "../common/components/Cmdline.svelte";
+  import HelpSearch from "../components/HelpSearch.svelte";
 
   /** Unified optional-methods contract every mounted program component's
    * `bind:this` ref may expose, since PaneTree.svelte's single ref registry
