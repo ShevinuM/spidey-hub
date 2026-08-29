@@ -30,10 +30,12 @@ The smallest feature migrated end-to-end — proving the per-feature loop: specs
 - [ ] **3. Full gate.** check + lint + unit + D20 both invocations, all projects.
 - [ ] **4. Golden parity.** Zero churn (`diff -rq` all goldens vs v1 slices).
 - [ ] **5. Move unit tests** → `src/features/profile/tests/unit/`. *Verify:* `pnpm test:unit` green, count unchanged.
+- [ ] **6. Feature harness (D24) — this phase SETTLES the mechanism for 04–11.** Build the fixture-build-only harness route (preferred: `src/pages/harness/[feature].astro`, `getStaticPaths` → `[]` unless `PORTFOLIO_FIXTURES=1`) mounting `Profile` with seeded fixture props; specs in `src/features/profile/tests/ui/harness/` under a `profile-harness` project (fixture build); record the mechanism in `Instructions/01-pre-phase/recipe-feature-map.md` alongside D21's shape, and add the checklist entries per D24(c) in the same change.
+  *Verify:* fixture build → `--project=profile-harness` green; real build → `dist/` contains no `harness/` output; checklist entries present.
 
 ## Acceptance criteria
 
-Loop verified 1–5; verifier PASS + auditor clean on `src/features/profile` (D23 exemptions); commit per 00-phases.md (contingent on git question). Stop: no POM refactor, no behavior change, no golden regeneration.
+Loop verified 1–6; verifier PASS + auditor clean on `src/features/profile` (D23 exemptions); commit per 00-phases.md. Stop: no POM refactor, no behavior change, no golden regeneration.
 
 ## Results
 

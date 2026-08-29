@@ -28,10 +28,12 @@ The full Repositories feature — panels, repo browse, preview highlighting, com
 ## Steps
 
 - [ ] **1–5.** The per-feature loop per `Instructions/03-profile/PLAN.md`, with this table; D21 reused verbatim. Step 2 additionally: run `node scripts/generate.mjs` after the move and confirm it completes with all 5 artifact kinds (its keep-existing fallbacks make missing-network acceptable; a thrown error is not).
+- [ ] **6. Feature harness (D24).** Reuse phase 03's mechanism: harness route mounting `Repositories` with seeded fixture props (fixture repos/commits JSON); specs in `tests/ui/harness/`, project `repositories-harness` (fixture build).
+  *Verify:* fixture build → `--project=repositories-harness` green; real build → no `harness/` output in `dist/`.
 
 ## Acceptance criteria
 
-Loop verified; generate.mjs green post-move; verifier PASS + auditor clean on `src/features/repositories` (D23); commit per 00-phases.md. Stop: no generator redesign; no icon/theme changes; `material-file-icons`/Shiki stay build-time-only (delegate.md pattern).
+Loop + harness verified; generate.mjs green post-move; verifier PASS + auditor clean on `src/features/repositories` (D23); commit per 00-phases.md. Stop: no generator redesign; no icon/theme changes; `material-file-icons`/Shiki stay build-time-only (delegate.md pattern).
 
 ## Results
 

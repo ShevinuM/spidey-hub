@@ -24,10 +24,12 @@ Bell/panel/toast system migrated verbatim and green (3 specs, 30 content docs); 
 ## Steps
 
 - [ ] **1–5.** The per-feature loop per `Instructions/03-profile/PLAN.md`, with this table; D21 reused verbatim; support-fixture import updates in step 2.
+- [ ] **6. Feature harness (D24).** Reuse phase 03's mechanism: harness route mounting the notifications orchestrator (bell + panel + toast stack) with seeded fixture props; specs in `tests/ui/harness/`, project `notifications-harness` (fixture build).
+  *Verify:* fixture build → `--project=notifications-harness` green; real build → no `harness/` output in `dist/`.
 
 ## Acceptance criteria
 
-Loop verified; verifier PASS + auditor clean on `src/features/notifications` (D23); commit per 00-phases.md. Stop: no toast-timing/seed-logic changes (specs compute expected values from `mulberry32`/`pickRandomUnseen` — single source of truth preserved via imports, not duplicated constants).
+Loop + harness verified; verifier PASS + auditor clean on `src/features/notifications` (D23); commit per 00-phases.md. Stop: no toast-timing/seed-logic changes (specs compute expected values from `mulberry32`/`pickRandomUnseen` — single source of truth preserved via imports, not duplicated constants).
 
 ## Results
 

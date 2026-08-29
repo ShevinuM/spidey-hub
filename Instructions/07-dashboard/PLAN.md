@@ -26,10 +26,12 @@ Judgment call: `public/generated/contributions.json` generation (generate.mjs st
 ## Steps
 
 - [ ] **1–5.** The per-feature loop per `Instructions/03-profile/PLAN.md`, with this table; D21 reused verbatim.
+- [ ] **6. Feature harness (D24).** Reuse phase 03's mechanism: harness route mounting `Dashboard` with seeded fixture props (fixture contributions data); specs in `tests/ui/harness/`, project `dashboard-harness` (fixture build).
+  *Verify:* fixture build → `--project=dashboard-harness` green; real build → no `harness/` output in `dist/`.
 
 ## Acceptance criteria
 
-Loop verified; verifier PASS + auditor clean on `src/features/dashboard` (D23); commit per 00-phases.md. Stop: no contribution-graph/tracker logic changes.
+Loop + harness verified; verifier PASS + auditor clean on `src/features/dashboard` (D23); commit per 00-phases.md. Stop: no contribution-graph/tracker logic changes.
 
 ## Results
 

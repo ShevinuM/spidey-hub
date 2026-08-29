@@ -27,9 +27,12 @@ Help views + `?` fuzzy search migrated verbatim and green; then, as a separate v
 - [ ] **6. Fuzzysort swap (D11) — only after 1–5 are verified green.** Add exact-pinned `fuzzysort`; replace the tiered cascade + hand-written Levenshtein in `help-search.ts`; keep the two-shaped corpus building (`cmdline.yaml`/`content/help`/`shell.yaml`) and the commands-before-keymap-rows tie-break as a thin sort after scoring; delete dead code.
   *Verify:* unit + `--project=help` green (real build); **fixture build → `--project=help-visual` green with zero golden churn** — recipe `20-help-search`'s pixels are the hard gate. If ranking for the golden query changes: revert the swap, report back, the swap moves to Deferred (post-rebaseline). Deliberate `help-search.spec.ts` assertion changes allowed only if pixels hold, isolated in this step's own commit.
 
+- [ ] **7. Feature harness (D24).** Reuse phase 03's settled mechanism: harness route mounting the help orchestrator (both `HelpView` and the `?` search palette reachable) with seeded fixture props; specs in `tests/ui/harness/`, project `help-harness` (fixture build).
+  *Verify:* fixture build → `--project=help-harness` green; real build → no `harness/` output in `dist/`.
+
 ## Acceptance criteria
 
-Loop + swap verified (or swap explicitly reverted-and-reported); verifier PASS + auditor clean on `src/features/help` (D23); commit discipline per 00-phases.md. Stop: no search-UX changes beyond what fuzzysort's scoring implies within the golden constraint.
+Loop + swap + harness verified (or swap explicitly reverted-and-reported); verifier PASS + auditor clean on `src/features/help` (D23); commit discipline per 00-phases.md. Stop: no search-UX changes beyond what fuzzysort's scoring implies within the golden constraint.
 
 ## Results
 

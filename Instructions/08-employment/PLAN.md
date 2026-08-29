@@ -26,10 +26,12 @@ Note: `PreviewPanel.svelte` exists in both `employment-records/` and `repositori
 ## Steps
 
 - [ ] **1–5.** The per-feature loop per `Instructions/03-profile/PLAN.md`, with this table; D21 reused verbatim; fixture-switch updates (D22) land in step 1 with the fixture move, gated by the fixture-build invocation.
+- [ ] **6. Feature harness (D24).** Reuse phase 03's mechanism: harness route mounting `EmploymentRecords` with seeded fixture personnel props (editor comes from `common/` — that import is allowed and part of what the harness proves); specs in `tests/ui/harness/`, project `employment-harness` (fixture build).
+  *Verify:* fixture build → `--project=employment-harness` green; real build → no `harness/` output in `dist/`.
 
 ## Acceptance criteria
 
-Loop verified; verifier PASS + auditor clean on `src/features/employment` (D23); commit per 00-phases.md. Stop: no editor changes (that's common's code); no personnel-tree reshaping.
+Loop + harness verified; verifier PASS + auditor clean on `src/features/employment` (D23); commit per 00-phases.md. Stop: no editor changes (that's common's code); no personnel-tree reshaping.
 
 ## Results
 

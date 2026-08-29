@@ -25,10 +25,12 @@ Note: `boot.spec.ts` imports raw `@playwright/test` (not the shared fixture) on 
 ## Steps
 
 - [ ] **1–5.** The per-feature loop exactly as `Instructions/03-profile/PLAN.md` defines it, with this phase's table; D21 mechanics reused verbatim. The shared-support-fixture import update is part of step 2's same-change fallout.
+- [ ] **6. Feature harness (D24).** Reuse phase 03's mechanism: harness route mounting `BootSequence` with seeded fixture props; specs in `tests/ui/harness/`, project `boot-harness` (fixture build).
+  *Verify:* fixture build → `--project=boot-harness` green; real build → no `harness/` output in `dist/`.
 
 ## Acceptance criteria
 
-Loop verified; verifier PASS + auditor clean on `src/features/boot` (D23); commit per 00-phases.md. Stop: no boot-timing/behavior changes; no golden regeneration.
+Loop + harness verified; verifier PASS + auditor clean on `src/features/boot` (D23); commit per 00-phases.md. Stop: no boot-timing/behavior changes; no golden regeneration.
 
 ## Results
 

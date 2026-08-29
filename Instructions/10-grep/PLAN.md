@@ -26,10 +26,12 @@ Grep overlay migrated verbatim and green, with `grep.spec.ts`'s literal path ass
 ## Steps
 
 - [ ] **1–5.** The per-feature loop per `Instructions/03-profile/PLAN.md`, with this table; D21 reused verbatim; the assertion sweep and index regeneration are part of step 2.
+- [ ] **6. Feature harness (D24).** Reuse phase 03's mechanism: harness route mounting `GrepOverlay` with the fixture grep index; specs in `tests/ui/harness/`, project `grep-harness` (fixture build).
+  *Verify:* fixture build → `--project=grep-harness` green; real build → no `harness/` output in `dist/`.
 
 ## Acceptance criteria
 
-Loop verified; real-build grep e2e asserts current-tree paths; verifier PASS + auditor clean on `src/features/grep` (D23); commit per 00-phases.md. Stop: no scoring/search changes; fixture index content changes only via orchestrator decision.
+Loop + harness verified; real-build grep e2e asserts current-tree paths; verifier PASS + auditor clean on `src/features/grep` (D23); commit per 00-phases.md. Stop: no scoring/search changes; fixture index content changes only via orchestrator decision.
 
 ## Results
 
