@@ -4,7 +4,7 @@
 //     `n`/`p` cycle all six windows and `5`/`?` jump straight to Help;
 //   - the prefix takes precedence over the grep overlay ("Prefix precedence
 //     over grep"): Ctrl-b arms even while grep is open.
-import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
+import { expect, test, type Page } from "../support/fixtures";
 // This spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's

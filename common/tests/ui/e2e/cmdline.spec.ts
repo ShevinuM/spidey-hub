@@ -9,7 +9,7 @@
 // sweep is generated FROM the yaml so the list can't drift").
 // The new `?` HelpSearch palette that took over the browsable/discoverable
 // role has its own suite — tests/e2e/help-search.spec.ts.
-import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
+import { expect, test, type Page } from "../support/fixtures";
 // This spec's `context` fixture (imported from
 // ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's
@@ -22,9 +22,9 @@ import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
-import { search, formatCount, type RepoFile } from "../../src/lib/grep.ts";
+import { search, formatCount, type RepoFile } from "../../../../src/lib/grep";
 
-const ROOT = join(import.meta.dirname, "../..");
+const ROOT = join(import.meta.dirname, "../../../..");
 
 interface CmdlineCommandDef {
   name: string;

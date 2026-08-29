@@ -43,7 +43,7 @@ import { execSync } from "node:child_process";
 import { cpSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { serveStatic } from "../tests/visual/static-server.mjs";
+import { serveStatic } from "../common/tests/ui/support/static-server.mjs";
 import { BOOT_SEEN_STORAGE_KEY } from "../src/lib/bootState.ts";
 import { pickPort } from "./lib/freePort.ts";
 

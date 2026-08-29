@@ -2,7 +2,7 @@
 // layouts. Companion to tests/e2e/tmux.spec.ts (the prefix state machine
 // itself, whose own single-pane kill-pane smoke test covers the new real
 // semantics) and tests/e2e/choose-tree.spec.ts (item 6.5).
-import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
+import { expect, test, type Page } from "../support/fixtures";
 
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);

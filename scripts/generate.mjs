@@ -264,10 +264,11 @@ function generateAllProjectsIndex() {
 // handoff copy, see tests/visual/README-PIPELINE.md), plus a short list of
 // root config files and README.md.
 //
-// `tests/visual/reference/**` is excluded because it's ~3MB of vendored
-// third-party HTML/JS/images that is never shipped (not in src/public) —
-// including it would flood the live grep overlay with the design reference
-// itself rather than "the site's own source".
+// `common/tests/ui/support/reference/**` is excluded (via the "reference"
+// basename below) because it's ~3MB of vendored third-party HTML/JS/images
+// that is never shipped (not in src/public) — including it would flood the
+// live grep overlay with the design reference itself rather than "the
+// site's own source".
 
 const GREP_SKIP_DIRS = new Set([
   "node_modules",

@@ -36,8 +36,8 @@
 // vendored-prototype path is retired to historical/guarded status (see its
 // own header comment) and is never run as part of normal development.
 import { expect, test } from "@playwright/test";
-import { bootRecipes, cmdlineRecipes, extraRecipes, iteration3Recipes, notificationsRecipes, recipes } from "./recipes.ts";
-import { captureBootState, captureState } from "./pipeline.mjs";
+import { bootRecipes, cmdlineRecipes, extraRecipes, iteration3Recipes, notificationsRecipes, recipes } from "../../common/tests/ui/support/recipes.ts";
+import { captureBootState, captureState } from "../../common/tests/ui/support/pipeline.mjs";
 
 // The 19 standard (key/type replay) recipes, captured via captureState().
 // bootRecipes are handled by their own describe block below via
@@ -45,7 +45,19 @@ import { captureBootState, captureState } from "./pipeline.mjs";
 // different recipe shape. `iteration3Recipes` (16-shell/17-host-shell/18-split/19-choose-tree/
 // 20-help-search) and `notificationsRecipes` (21-notifications-panel-open)
 // join the union — 21 recipes total, 42 goldens across both viewports.
-const keyRecipes = [...recipes, ...extraRecipes, ...cmdlineRecipes, ...iteration3Recipes, ...notificationsRecipes];
+//
+// Phase 02 (common) owns 4 of those 21 per
+// Instructions/01-pre-phase/recipe-feature-map.md's "owning phase" column —
+// "06-editor" (recipes), "15-cmdline" (cmdlineRecipes), "18-split" and
+// "19-choose-tree" (iteration3Recipes) — and now runs them itself under
+// common/tests/ui/visual/ (common-visual-<viewport> projects) against its
+// own goldens/ tree, so they're excluded here to keep every recipe captured
+// exactly once (00-phases.md D21). As later phases move their own recipes
+// out, COMMON_OWNED_RECIPE_NAMES grows the same way.
+const COMMON_OWNED_RECIPE_NAMES = new Set(["06-editor", "15-cmdline", "18-split", "19-choose-tree"]);
+const keyRecipes = [...recipes, ...extraRecipes, ...cmdlineRecipes, ...iteration3Recipes, ...notificationsRecipes].filter(
+  (recipe) => !COMMON_OWNED_RECIPE_NAMES.has(recipe.name),
+);
 
 // Visual-regression harness policy: start maxDiffPixels: 0; if
 // antialiasing noise appears, relax to at most

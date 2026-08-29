@@ -6,7 +6,7 @@
 // same convention grep.spec.ts/repositories.spec.ts already use for on-disk
 // content) rather than hardcoded copy, so this suite can't drift from
 // whatever each view's data files actually render.
-import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
+import { expect, test, type Page } from "../support/fixtures";
 // This spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's

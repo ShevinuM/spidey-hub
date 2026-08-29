@@ -20,9 +20,9 @@ import { execSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { serveStatic } from "../tests/visual/static-server.mjs";
+import { serveStatic } from "../common/tests/ui/support/static-server.mjs";
 import { BOOT_SEEN_STORAGE_KEY } from "../src/lib/bootState.ts";
-import { recipes, extraRecipes, iteration3Recipes } from "../tests/visual/recipes.ts";
+import { recipes, extraRecipes, iteration3Recipes } from "../common/tests/ui/support/recipes.ts";
 import { pickPort } from "./lib/freePort.ts";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -37,7 +37,7 @@ const VIEWPORT = { width: 1512, height: 945 };
 /** Look up a recipe's `actions` by name across every recipe array. */
 function actionsOf(name) {
   const recipe = [...recipes, ...extraRecipes, ...iteration3Recipes].find((r) => r.name === name);
-  if (!recipe) throw new Error(`no recipe named ${name} in tests/visual/recipes.ts`);
+  if (!recipe) throw new Error(`no recipe named ${name} in common/tests/ui/support/recipes.ts`);
   return recipe.actions;
 }
 

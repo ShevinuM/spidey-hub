@@ -7,13 +7,13 @@
 // shell) and tests/e2e/tmux.spec.ts (the prefix state machine, including its
 // own updated "w/0 still go home, d now detaches" and "[exited]" cascade
 // coverage) — this file is the one that actually exercises SESSIONS.
-import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
+import { expect, test, type Page } from "../support/fixtures";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
-import { formatCtime } from "../../src/lib/clock.ts";
+import { formatCtime } from "../../../../src/lib/clock";
 
-const ROOT = join(import.meta.dirname, "../..");
+const ROOT = join(import.meta.dirname, "../../../..");
 
 interface ShellYaml {
   host: {
