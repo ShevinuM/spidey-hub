@@ -5,7 +5,7 @@
 // tests/e2e/repositories.spec.ts (route-fulfill / route-abort against a live
 // page), not here — this only pins the shape-mapping logic itself.
 import { expect, test } from "vitest";
-import { mapGithubCommits } from "../../src/lib/githubCommits.ts";
+import { mapGithubCommits } from "../../src/lib/githubCommits";
 
 test("maps a GitHub commits API response to {sha8, msg, html_url, initials}", () => {
   const api = [

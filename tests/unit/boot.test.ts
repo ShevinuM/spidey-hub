@@ -17,8 +17,8 @@ import {
   progress,
   spinnerFrame,
   statusRowValue,
-} from "../../src/lib/boot.ts";
-import type { BootData, BootLogEntry, BootStatusRow } from "../../src/lib/data.ts";
+} from "../../src/lib/boot";
+import type { BootData, BootLogEntry, BootStatusRow } from "../../src/lib/data";
 
 const PHASE_LABELS: BootData["phaseLabels"] = {
   init: "INIT",

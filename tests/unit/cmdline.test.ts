@@ -16,7 +16,7 @@ import {
   parseTmuxCommand,
   resolveCommand,
   type CommandDef,
-} from "../../src/lib/cmdline.ts";
+} from "../../src/lib/cmdline";
 
 const commands: CommandDef[] = [
   { name: "dashboard", aliases: ["home"], description: "jump to the dashboard", action: "view:home" },

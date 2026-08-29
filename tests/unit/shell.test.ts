@@ -27,9 +27,9 @@ import {
   type RunContext,
   type SessionRosterEntry,
   type ShellState,
-} from "../../src/lib/shell.ts";
-import type { ShellData } from "../../src/lib/data.ts";
-import { formatCtime } from "../../src/lib/clock.ts";
+} from "../../src/lib/shell";
+import type { ShellData } from "../../src/lib/data";
+import { formatCtime } from "../../src/lib/clock";
 
 const FS: FsEntry[] = [
   { path: "package.json", size: 100 },

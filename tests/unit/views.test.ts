@@ -10,7 +10,7 @@
 import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { grepPathToView, viewToTmuxBinding } from "../../src/lib/views.ts";
+import { grepPathToView, viewToTmuxBinding } from "../../src/lib/views";
 
 const ROOT = join(import.meta.dirname, "../..");
 const realIndex = JSON.parse(readFileSync(join(ROOT, "public/generated/grep-index.json"), "utf8")) as {

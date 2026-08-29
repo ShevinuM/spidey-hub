@@ -5,7 +5,7 @@
 import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { search, totalLines, formatCount, type RepoFile } from "../../src/lib/grep.ts";
+import { search, totalLines, formatCount, type RepoFile } from "../../src/lib/grep";
 
 const ROOT = join(import.meta.dirname, "../..");
 const grepIndex = JSON.parse(readFileSync(join(ROOT, "fixtures/grep-index.json"), "utf8")) as RepoFile[];

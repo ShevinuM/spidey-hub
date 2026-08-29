@@ -15,7 +15,7 @@ import {
   netStats,
   qFromDown,
   smoothRtt,
-} from "../../src/lib/net.ts";
+} from "../../src/lib/net";
 
 test("computeThroughputMbps: sums transferSize>2000 && duration>1 entries, floors at 0.2 Mb/s, null when none qualify", () => {
   expect(computeThroughputMbps([])).toBe(null);

@@ -25,7 +25,7 @@ import {
   wordEnd,
   wordForward,
   type CursorPos,
-} from "../../src/lib/vim.ts";
+} from "../../src/lib/vim";
 
 function pos(line: number, col: number): CursorPos {
   return { line, col };

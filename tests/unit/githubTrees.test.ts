@@ -13,7 +13,7 @@ import {
   setCachedTree,
   treeCacheKey,
   contentCacheKey,
-} from "../../src/lib/githubTrees.ts";
+} from "../../src/lib/githubTrees";
 
 test("mapTreeResponse keeps only blob entries and their paths", () => {
   const api = {

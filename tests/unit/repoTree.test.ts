@@ -17,7 +17,7 @@ import {
   flattenVisible,
   type RepoFile,
   type RepoIndex,
-} from "../../src/lib/repoTree.ts";
+} from "../../src/lib/repoTree";
 
 const ROOT = join(import.meta.dirname, "../..");
 const dailyTechDigest = JSON.parse(

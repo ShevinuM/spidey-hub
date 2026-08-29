@@ -14,7 +14,7 @@
 import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { classifyDoc, docColors, xpColors } from "../../src/lib/docline.ts";
+import { classifyDoc, docColors, xpColors } from "../../src/lib/docline";
 
 const ROOT = join(import.meta.dirname, "../..");
 const fixturesPath = join(import.meta.dirname, "docline.fixtures.json");

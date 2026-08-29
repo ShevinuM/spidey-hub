@@ -5,7 +5,7 @@
 // this file proves the operations themselves are correct independent of
 // that wrapping).
 import { expect, test } from "vitest";
-import { createShellState } from "../../src/lib/shell.ts";
+import { createShellState } from "../../src/lib/shell";
 import {
   activeSessionOf,
   activeWindowOf,
@@ -47,7 +47,7 @@ import {
   type Session,
   type Window,
   type WindowSeed,
-} from "../../src/lib/tmux.ts";
+} from "../../src/lib/tmux";
 
 const SIX_WINDOWS: WindowSeed[] = [
   { number: 0, id: "dashboard", name: "dashboard" },

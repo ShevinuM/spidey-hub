@@ -3,7 +3,7 @@
 // collide silently with a running `astro dev` fallback port.
 import { expect, test } from "vitest";
 import { createServer, type AddressInfo } from "node:net";
-import { pickPort } from "../../scripts/lib/freePort.ts";
+import { pickPort } from "../../scripts/lib/freePort";
 
 test("pickPort: returns the preferred port unchanged when it's free", async () => {
   // Ask the OS for a currently-unused port to use as "preferred" — avoids

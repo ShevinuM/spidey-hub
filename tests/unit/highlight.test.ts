@@ -3,7 +3,7 @@
 // move/change independently of this test) so determinism, the palette
 // round-trip, and the size-cap fallback are each pinned to a stable input.
 import { expect, test } from "vitest";
-import { PaletteBuilder, tokenizeFile, tokenLineText } from "../../src/lib/highlight.ts";
+import { PaletteBuilder, tokenizeFile, tokenLineText } from "../../src/lib/highlight";
 
 const TS_SNIPPET = `import { readFileSync } from "node:fs";
 
