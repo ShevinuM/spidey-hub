@@ -1,6 +1,6 @@
 # Phase 02 — common
 
-> **Status: planned, not started. Blocked on phase 01.** Binding decisions: `Instructions/00-phases.md` (D5–D10, D15–D17, D20–D23).
+> **Status: executor pass complete 2026-08-29** — steps 1–5 all green, D20 both invocations passing at the final commit, zero golden churn; awaiting verifier/auditor per the orchestrator's execute→verify loop before phase close. Binding decisions: `Instructions/00-phases.md` (D5–D10, D15–D17, D20–D23).
 
 ## Context
 
@@ -51,10 +51,14 @@ Judgment calls for the executor (consult advisor): `pages/*.astro` and `src/cont
   - **D17 "data.ts's glob" — clarifying finding, not a deviation:** `data.ts` has no `import.meta.glob` at all; it's 13 explicit per-file `?raw` imports (Vite-inlined at build time). "Widened to span `src/data/` + `src/common/content/`" was achieved the only way this file's shape allows: each of the 3 moved yaml files' own `?raw` import was repointed to `../content/<name>.yaml?raw`, the other 10 stayed pointed at `../../data/<name>.yaml?raw`. Functionally identical outcome to a widened glob; no glob mechanism was introduced (would have been unrequested rework of a file that isn't broken).
   - **Grep-index content-collision fallout (D8, found via the full e2e gate, not inspection):** `tests/e2e/grep.spec.ts`'s "Enter on a Repositories.svelte hit lands in the repositories view" test typed the query `"components/repositories/Repositories.svelte"`, previously guaranteed to match only the real file's own PATH. Once `PaneTree.svelte` moved to `common/components/` its own relative import literal (`../../components/repositories/Repositories.svelte`) started containing that exact fragment as file CONTENT, and because `src/common/` sorts alphabetically before `src/components/` in the generated grep index, PaneTree's content hit started winning the "first result" race the test asserts on (`search()` in `src/lib/grep.ts` has no relevance scoring — it's pure file-array order, path-hit-then-content-hit per file). Fixed by prefixing the typed query with `"src/"` (a relative import literal never spells that out, so the fragment stays unique to the real file's own path) — a test-only change, D8-sanctioned ("literal-path assertions... updated in the same change as the move that invalidates them"), verified by re-running the isolated test before and after.
   - Both `advisor()` calls before this step (source-move judgment calls) and the standing PLAN.md contract were followed throughout; no deviation from either.
-- [ ] **3. Full gate.** `pnpm check` + lint + `pnpm test:unit` + D20 both invocations (all projects).
-- [ ] **4. Golden parity.** Zero golden churn anywhere (`diff -rq` vs v1 slices).
-- [ ] **5. Move unit tests** per table; Vitest globs widened once to cover `common/tests/unit` + `src/features/*/tests/unit`.
+  - **Self-caught tooling bug, fixed in a follow-up commit:** the broad prose-comment sweep (fixing `src/lib/X.ts`-style path mentions across the whole tree) accidentally rewrote two lines of `tests/unit/shell.test.ts`'s synthetic `FS` mock (`{ path: "src/lib/tmux.ts", ... }` / `{ path: "src/lib/clock.ts", ... }`) — hand-built sample data unrelated to any real dependency, textually matching the sweep's pattern by coincidence. Caught by `pnpm test:unit` (`listDir descends into a nested directory` failed: the mock's real/fake "src" now had 3 subdirectories instead of the hardcoded expectation of 2), reverted to the original literal strings in commit `75a1afd`. Cross-checked every other unit test for the same class of collateral damage (`grep.test.ts`'s fixture-file-derived `grepIndex`, `repoTree.test.ts`'s synthetic `a.ts`/`b.ts`, `views.test.ts`'s synthetic `info.ts`/`xp-utils.ts`) — none else affected. Also caught and fixed a git-index staging bug of my own making: two `git commit`s after this point briefly captured a stale pre-edit snapshot of the 4 moved unit test files (their `git mv` had staged the OLD import depths before my subsequent `perl` fix landed in the working tree) — caught immediately via `git diff` after the commit and corrected in commit `a9558d3`, so the final committed state is correct even though the intermediate `cc369e8` commit briefly wasn't.
+- [x] **3. Full gate.** `pnpm check` + lint + `pnpm test:unit` + D20 both invocations (all projects).
+  *Result:* all green at the final committed state (verified fresh, after all fix-up commits): `pnpm check` (astro check + tsc + svelte-check) 0 errors; `oxlint` 0 findings; `pnpm test:unit` 339/339 (19 files); D20 real-build invocation (`smoke`+`legacy-1512x945`+`legacy-1920x1080`+`common-1512x945`+`common-1920x1080`) 1012/1012 passed; D20 fixture-build invocation (`tests/visual/identical.spec.ts`+`adversarial-fixtures.spec.ts`+`common/tests/ui/visual/identical.spec.ts`) 50/50 passed. No `repositories.spec.ts:223` flake observed in any run this phase.
+- [x] **4. Golden parity.** Zero golden churn anywhere (`diff -rq` vs v1 slices).
+  *Result:* `diff -rq tests/visual/goldens <v1>/tests/visual/goldens` reports only the 4 files that legitimately left this tree ("Only in v1": `06-editor.png`/`15-cmdline.png`/`18-split.png`/`19-choose-tree.png` at each viewport) — zero `differ` lines, so the 34 remaining PNGs/viewport are byte-identical. All 8 files that moved to `common/tests/ui/visual/goldens/` were individually `cmp`-verified byte-identical against the same recipe's PNG in v1. Count check: 17 (legacy) + 4 (common) = 21 recipes/viewport, matching the 21/42 total the recipe-feature-map establishes.
+- [x] **5. Move unit tests** per table; Vitest globs widened once to cover `common/tests/unit` + `src/features/*/tests/unit`.
   *Verify:* `pnpm test:unit` green, same test count as phase 01 close.
+  *Result:* `tmux.test.ts`/`cmdline.test.ts`/`views.test.ts`/`vim.test.ts` moved to `common/tests/unit/` (top-level, matching the `common/tests/ui/` sibling convention already established in step 1 — not `src/common/tests/`, not engine-adjacent; `unit-testing.md` R001 governs suite *scope*, not file location, so it didn't override the established precedent). Import depths and `ROOT`-relative `readFileSync` joins fixed (+1 level: `common/tests/unit/` sits one level deeper than the original `tests/unit/`). `vitest.config.ts`'s `include` widened to `["tests/unit/**/*.test.ts", "common/tests/unit/**/*.test.ts", "src/features/*/tests/unit/**/*.test.ts"]` in the same change (the third entry is forward-declared for phase 03+, per D9's plan wording — currently matches nothing, harmless). `pnpm test:unit`: 339/339 tests, 19/19 files — identical count to before the move (a pure relocation, no tests added/removed/changed).
 
 ## Acceptance criteria
 
@@ -62,4 +66,26 @@ Full D20 gate green; check/lint/unit green; goldens byte-identical; architecture
 
 ## Results
 
-(executor fills in)
+All 5 steps complete and green at the final commit; see each step's own *Result* line above for detail. Summary for the orchestrator:
+
+**Commits (local, `frontend-rewrite`, in order):**
+1. `40388a7` — planning-doc alignment (harness steps, D23-24 rulings, phase 01 closed) — done first per the task's instructions, before any phase-02 work.
+2. `4d7969e` — step 1: port 12 kernel+editor specs + visual infra to `common/`, settle D21(a)+(b), seed 8 common goldens.
+3. `93b2dc6` — step 2a: move tmux/vim engines + 7 lib modules + 3 kernel yaml to `src/common/`.
+4. `1e75bba` — developer-approved scope addition: rename `SmokePage`→`TerminalPage`, move to `common/tests/ui/pages/`.
+5. `a6c2ca8` — step 2b: move editor folder + `editorRender.ts` + 8 chrome components to `src/common/components/`.
+6. `0913e16` — step 2c: move `Terminal.svelte`/`terminalState.svelte.ts`/`Shell.astro`→`Layout.astro` to `src/bootstrap/`.
+7. `75a1afd` — self-caught fix: revert the path sweep's accidental edit to `shell.test.ts`'s synthetic fixture.
+8. `cc369e8` — step 2 results write-up in PLAN.md (this file).
+9. `a9558d3` — step 5: move + fix the 4 unit tests, widen `vitest.config.ts`.
+10. `8815f1a` — regenerate `fs-index.json`/`grep-index.json` after the final gate run.
+
+**D21 decisions (for phase 03+ to reuse verbatim):** recorded in full in `Instructions/01-pre-phase/recipe-feature-map.md`'s "D21 snapshot-path decision" section — (a) per-project `snapshotPathTemplate` with the viewport hardcoded as a literal, not derived from `{projectName}`; (b) shared visual/test infra's home is the **top-level** `common/tests/ui/support/` (not `src/common/tests/`), matching pre-phase's own already-committed precedent (`fixtures.ts`/`content-fixtures.ts`); `identical.spec.ts` targets goldens directly (`toMatchSnapshot`+`snapshotPathTemplate`), never the port-4400 reference server, so per-context golden splitting is fully feasible.
+
+**D16 rule-of-three verdicts:** every module named in the phase 02 move table proved genuinely multi-consumer on re-grep — none stayed behind for a later feature phase. One un-listed module (`shell.ts`) was found to now have 3 real consumers (tmux engine, bootstrap, and the still-transient `Shell.svelte`) but was deliberately NOT promoted — D16 governs table entries, and promoting a module the table doesn't name is scope creep beyond "src/common + declared wiring." Flagged for phase 11 (shell-fs) to settle.
+
+**Architecturally significant judgment calls (each preceded by an `advisor()` consult):** the `tmux.ts` `ProgramName` R007 fix (union widened to `string`, "shell" branch kept as engine-intrinsic tmux semantics); the `PaneTree.svelte`→`common` edge importing 6 still-transient feature components (ruled tolerated under D1/D23(c), not redesigned); `Terminal.svelte`→`bootstrap` importing every feature (ruled R008's literal definition, no concern); the narrow reading of D10's "pages import only from bootstrap" (pages keep reading `common/lib/data` directly; only the two composition pieces route through `src/bootstrap/`). Full rationale for each is in step 2's own *Result* entry above.
+
+**Deviations from a clean single-pass execution (self-caught and corrected, not left for the verifier to find):** one text-sweep regex accidentally touched a synthetic unit-test fixture's literal strings (reverted); one git-index staging mistake briefly committed 4 unit test files at a pre-fix snapshot (caught via `git diff` immediately after committing, corrected in the very next commit — the repository's current HEAD is correct, only one intermediate commit in its history was transiently inconsistent). Both are called out explicitly in step 2/5's *Result* entries rather than being silently squashed away.
+
+**Nothing deferred or left red.** No golden churn, no engine redesign, no POM/locator refactors, nothing moved into `features/`. Ready for verifier/auditor.
