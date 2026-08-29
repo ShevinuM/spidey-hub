@@ -114,7 +114,7 @@ test.describe("Grep overlay", () => {
     await page.keyboard.press("Enter");
     await expect(overlay(page)).not.toBeVisible();
     // There is no `employment-path` breadcrumb element. GrepOverlay's own
-    // routing (`grepPathToView`, src/lib/views.ts) is coarse — it only
+    // routing (`grepPathToView`, src/common/lib/views.ts) is coarse — it only
     // switches the active VIEW to "employment", it never deep-links to the
     // specific directory the hit lives in — so the real claim here is just
     // "we landed on the employment view", never anything path-specific;

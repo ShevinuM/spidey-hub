@@ -1,7 +1,7 @@
 // View-id plumbing shared by the router pages and Terminal.svelte. Not
 // copy — these are internal identifiers (route paths, dashboard.yaml menu
 // ids, site.yaml status-bar window ids), never rendered as text directly.
-import type { ProgramName } from "./tmux";
+import type { ProgramName } from "../engines/tmux/tmux";
 
 export type ViewId = "home" | "repositories" | "employment" | "retina-v" | "profile" | "help";
 
@@ -61,7 +61,7 @@ export function windowIdToView(id: string): ViewId {
 // ---------------------------------------------------------------------------
 // tmux.ts <-> ViewId bridge — the two
 // vocabularies meet here, same as every other translation in this file.
-// `ProgramName` (src/lib/tmux.ts) is what a PANE is currently running;
+// `ProgramName` (src/common/engines/tmux/tmux.ts) is what a PANE is currently running;
 // `ViewId` is a ROUTE. They agree on every string except "home"/"dashboard"
 // (same asymmetry activeWindowId/windowIdToView above already carry) and
 // "shell" itself, which is not a route at all — a shelled-in pane freezes

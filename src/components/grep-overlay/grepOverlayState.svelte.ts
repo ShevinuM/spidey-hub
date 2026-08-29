@@ -6,9 +6,9 @@
 // behavior change. The keymap itself (handleKey/openSelectedRow/pickRow/
 // close/isOpen/openWithQuery) stays on GrepOverlay.svelte, the orchestrator
 // — see that file's own comment.
-import type { GrepData } from "../../lib/data";
+import type { GrepData } from "../../common/lib/data";
 import { search, formatCount, type RepoFile } from "../../lib/grep";
-import { pushPasteTarget, removePasteTarget } from "../../lib/pasteTargets";
+import { pushPasteTarget, removePasteTarget } from "../../common/lib/paste-targets";
 import { iconSvgForPath } from "../../lib/fileIcons";
 
 const INDEX_PATH = "/generated/grep-index.json";

@@ -15,7 +15,7 @@
   // `document.querySelector('[data-copy-source]')` at open-time is enough
   // to find "the active pane" with no view-aware wiring needed here.
   //
-  // Deliberately reuses src/lib/vim.ts's pure motion helpers (clampCursor /
+  // Deliberately reuses src/common/engines/vim/vim.ts's pure motion helpers (clampCursor /
   // moveHorizontal / moveVertical / normalizeCharRange / extractCharRange)
   // rather than re-deriving cursor math — same engine Editor.svelte's vim-
   // lite mode already uses, applied here to captured plain text instead of
@@ -33,10 +33,10 @@
     moveVertical,
     normalizeCharRange,
     type CursorPos,
-  } from "../lib/vim";
-  import { setPasteBuffer, writeToSystemClipboard } from "../lib/pasteBuffer";
-  import type { CopyModeData } from "../lib/data";
-  import { STATUS_BAR_HEIGHT_PX } from "../lib/layout";
+  } from "../common/engines/vim/vim";
+  import { setPasteBuffer, writeToSystemClipboard } from "../common/lib/paste-buffer";
+  import type { CopyModeData } from "../common/lib/data";
+  import { STATUS_BAR_HEIGHT_PX } from "../common/lib/layout";
 
   interface Props {
     copyMode: CopyModeData;

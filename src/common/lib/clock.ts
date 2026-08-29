@@ -46,7 +46,7 @@ export function msUntilNextMinute(d: Date): number {
 
 // ---------------------------------------------------------------------------
 // Frozen page clock — no wall-clock timestamps except via the frozen page
-// clock helpers in src/lib/clock.ts: tmux session `createdAt`, `tmux ls`'s
+// clock helpers in src/common/lib/clock.ts: tmux session `createdAt`, `tmux ls`'s
 // "created {ctime}" column, and neofetch's uptime line all read this ONE
 // epoch, resolved once
 // per page load/reboot, rather than calling `Date.now()` repeatedly at

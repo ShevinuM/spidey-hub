@@ -4,9 +4,9 @@
 // Terminal.svelte own the stateful/effectful parts (open/close, text state,
 // dispatching a resolved command to a view switch / grep open / window
 // mutation / etc.), exactly the same split Editor.svelte already uses for
-// src/lib/vim.ts.
+// src/common/engines/vim/vim.ts.
 
-/** One entry in src/data/cmdline.yaml's `commands`/`exCommands`/
+/** One entry in src/common/content/cmdline.yaml's `commands`/`exCommands`/
  * `tmuxCommands` arrays. `action` is an internal identifier the caller
  * switches on (never rendered) for the site-wide list; ex/tmux commands are
  * matched by `name` itself (parseExCommand/parseTmuxCommand below) rather
@@ -164,7 +164,7 @@ export function parseExCommand(cmd: string): ExCommand {
 
 /** The 7 preset names `select-layout` accepts. Deliberately its OWN small
  * literal list, not an import of
- * src/lib/tmux.ts's `LAYOUT_NAMES` — mirrors src/lib/shell.ts's documented
+ * src/common/engines/tmux/tmux.ts's `LAYOUT_NAMES` — mirrors src/lib/shell.ts's documented
  * decoupling convention (that file's own `pickMostRecentUnattached` comment:
  * these small pure modules stay independent of tmux.ts's shape, duplicating
  * a short constant rather than adding a cross-module dependency). */

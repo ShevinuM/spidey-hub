@@ -5,7 +5,7 @@
 // folder+state-class pattern established by RepositoriesState/
 // NotificationsState, not a port.
 import type { CollectionEntry } from "astro:content";
-import type { PersonnelData } from "../../lib/data";
+import type { PersonnelData } from "../../common/lib/data";
 import { classifyBody, colorFor } from "../../lib/docline";
 import { iconSvgForPath } from "../../lib/fileIcons";
 
@@ -32,7 +32,7 @@ const MONTH_NUM: Record<string, number> = {
  * a single shared instant for both halves of every record. Read at
  * component-mount time in the browser, so Playwright's `page.clock.install`
  * (tests/visual/recipes.ts CLOCK_TIME) freezes it for goldens the same way
- * it freezes the status-bar clock — this module never imports src/lib/clock.ts
+ * it freezes the status-bar clock — this module never imports src/common/lib/clock.ts
  * itself (that module's frozen epoch is for the tmux/session layer only),
  * but relies on the same underlying `Date` override. */
 function parseMonthYear(raw: string, now: Date): { y: number; m: number } {

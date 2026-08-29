@@ -1,4 +1,4 @@
-// Unit tests for the pure vim-lite engine (src/lib/vim.ts) — engine purity,
+// Unit tests for the pure vim-lite engine (src/common/engines/vim/vim.ts) — engine purity,
 // covering word-boundary motions across
 // punctuation/whitespace/line boundaries, numeric counts, 0/^/$ semantics,
 // visual-range normalization (charwise + linewise) and their yanked text,
@@ -25,7 +25,7 @@ import {
   wordEnd,
   wordForward,
   type CursorPos,
-} from "../../src/lib/vim";
+} from "../../src/common/engines/vim/vim";
 
 function pos(line: number, col: number): CursorPos {
   return { line, col };

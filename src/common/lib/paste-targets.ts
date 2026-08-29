@@ -1,6 +1,6 @@
 // Paste-target registry, designed so any text input can register itself
 // without touching Terminal.svelte's paste handler. `Ctrl-b ]`
-// (Terminal.svelte) inserts the shared paste buffer (src/lib/pasteBuffer.ts)
+// (Terminal.svelte) inserts the shared paste buffer (src/common/lib/paste-buffer.ts)
 // into whichever text input is currently "active" — the grep query, the
 // employment filter, the status-bar rename prompt, or the cmdline box, each
 // registering itself the same way.

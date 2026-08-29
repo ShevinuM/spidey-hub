@@ -7,7 +7,7 @@
 import Shell from "../layouts/Shell.astro";
 import Terminal from "../components/terminal/Terminal.svelte";
 import { getCollection } from "astro:content";
-import { getSite, getDashboard, getTracker, getRepositories, getPersonnel, getGrep, getCmdline, getHelpSearch, getShell, getChooseTree, buildProfile, buildHelp, buildNotifications, buildBoot } from "../lib/data";
+import { getSite, getDashboard, getTracker, getRepositories, getPersonnel, getGrep, getCmdline, getHelpSearch, getShell, getChooseTree, buildProfile, buildHelp, buildNotifications, buildBoot } from "../common/lib/data";
 import { getCommitsByRepo } from "../lib/commits";
 
 const site = getSite();

@@ -6,8 +6,8 @@
   // full opacity + full screen in the Retina-V (tracker) view — the
   // wallpaper markup itself never changes, only its container's opacity
   // ("tracker-wallpaper opacity logic").
-  import type { TrackerData, Subject } from "../lib/data";
-  import type { ViewId } from "../lib/views";
+  import type { TrackerData, Subject } from "../common/lib/data";
+  import type { ViewId } from "../common/lib/views";
 
   interface Props {
     tracker: TrackerData;

@@ -1,8 +1,8 @@
 // Pure line-parser/builtins/fs-navigation logic for the in-window shell —
 // src/components/Shell.svelte owns the stateful/effectful parts (keydown
 // handling, the lazy fetch+cache of the generated fs/grep/repo indexes,
-// calling into src/lib/tmux.ts to launch/exit a program or reboot the
-// client), exactly the same split src/lib/cmdline.ts already uses for
+// calling into src/common/engines/tmux/tmux.ts to launch/exit a program or reboot the
+// client), exactly the same split src/common/lib/cmdline.ts already uses for
 // Cmdline.svelte. No DOM, no Svelte state, no fetch — every builtin below is
 // a pure function of (state, already-resolved data) so it's unit-testable
 // against a small fixture fs index with no network/browser involved.
@@ -12,8 +12,8 @@
 // (`mode: "host"`) without rework — every function below already takes
 // `mode` where it matters (the prompt, and the `tmux` builtin's
 // nesting-refusal rule).
-import type { ShellData } from "./data.ts";
-import { formatCtime } from "./clock.ts";
+import type { ShellData } from "../common/lib/data";
+import { formatCtime } from "../common/lib/clock";
 
 // ---------------------------------------------------------------------
 // State

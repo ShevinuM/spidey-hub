@@ -1,5 +1,5 @@
 // tmux client/session/window/pane model — 100% pure, no DOM, no Svelte
-// imports, unit-testable exactly like src/lib/vim.ts/boot.ts.
+// imports, unit-testable exactly like src/common/engines/vim/vim.ts/boot.ts.
 // Terminal.svelte owns exactly one `$state` `Client` object and calls into
 // the operations below to mutate it; every operation mutates its
 // argument(s) in place and leaves the client fully consistent at return (no
@@ -13,13 +13,16 @@
 // is byte-for-byte reproducible and every id is stable within a given tree
 // shape.
 
-import { createShellState, type ShellLine, type ShellState } from "./shell.ts";
+import { createShellState, type ShellLine, type ShellState } from "../../../lib/shell";
 
 /** A pane's currently-running program. "shell" is the in-window shell a
- * program's `:q` drops back to — every OTHER value is one of the site's six
- * view components, reused verbatim as the window's own auto-rename text
- * (see `programDisplayName` below). */
-export type ProgramName = "dashboard" | "repositories" | "employment" | "profile" | "retina-v" | "help" | "shell";
+ * program's `:q` drops back to (real tmux's own semantics: a pane's default
+ * program is a shell, and its auto-rename text follows — see
+ * `programDisplayName` below) — every OTHER value is one of bootstrap's
+ * registered window ids, injected by the caller (site.yaml's window seeds,
+ * see `FactoryOptions.windows` below), never hardcoded here (architecture
+ * R007: this engine knows no feature names). */
+export type ProgramName = string;
 
 export interface Pane {
   id: string;
@@ -965,13 +968,13 @@ export interface FactoryOptions {
    * StatusBar.svelte; this file only ever holds the bare name). */
   sessionName: string;
   /** Seed window list — site.yaml's `statusBar.windows`, content-driven (no
-   * window names hardcoded in this file). Every seed's `id` MUST be a valid
-   * `ProgramName` (site.yaml's six window ids already are: dashboard/repositories/
-   * employment/retina-v/profile/help) — that id doubles as the window's
-   * initial program AND its permanent identity: a window's identity never
-   * changes even once its pane runs some other program or a shell. */
+   * window names hardcoded in this file). Every seed's `id` doubles as the
+   * window's initial program AND its permanent identity: a window's
+   * identity never changes even once its pane runs some other program or a
+   * shell. This engine places no constraint on which ids are valid — that's
+   * entirely bootstrap's registry (architecture R007). */
   windows: WindowSeed[];
-  /** Frozen page-clock epoch (src/lib/clock.ts's `resolvePageEpoch()`) —
+  /** Frozen page-clock epoch (src/common/lib/clock.ts's `resolvePageEpoch()`) —
    * this file never calls `Date.now()` itself (determinism rules). */
   epoch: number;
   /** Which window is active on creation — defaults to the first seed
@@ -1004,7 +1007,7 @@ export function createFactoryClient(opts: FactoryOptions): Client {
   const sessionId = opts.sessionId ?? "session-0";
 
   const windows: Window[] = opts.windows.map((seed) => {
-    const program = seed.id as ProgramName;
+    const program = seed.id;
     const pane = makePane(seed.id, 0, program);
     return {
       id: seed.id,

@@ -3,7 +3,7 @@
   // during the folder+state-class relocation refactor. Pure relocation:
   // same DOM, testids, classes, and inline styles as the original inline
   // markup.
-  import type { GrepData } from "../../lib/data";
+  import type { GrepData } from "../../common/lib/data";
   import type { GrepOverlayState, Row } from "./grepOverlayState.svelte";
 
   interface Props {

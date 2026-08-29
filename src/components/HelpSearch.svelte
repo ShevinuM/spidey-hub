@@ -22,10 +22,10 @@
   // flashes the box border briefly rather than closing or navigating
   // anywhere, and there is nothing for an e2e test to assert beyond "the
   // palette is still open and nothing navigated" (see help-search.spec.ts).
-  import type { CmdlineData, HelpData, HelpSearchData, ShellData } from "../lib/data";
+  import type { CmdlineData, HelpData, HelpSearchData, ShellData } from "../common/lib/data";
   import { buildEntries, commandEntries, searchHelp, type HelpSearchEntry } from "../lib/helpSearch";
-  import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
-  import { STATUS_BAR_HEIGHT_PX } from "../lib/layout";
+  import { pushPasteTarget, removePasteTarget } from "../common/lib/paste-targets";
+  import { STATUS_BAR_HEIGHT_PX } from "../common/lib/layout";
 
   interface Props {
     helpSearch: HelpSearchData;
@@ -61,7 +61,7 @@
   // A help row is {name, desc, keys[]} (HelpView.svelte's own scope/
   // chip shape) — adapted here into helpSearch.ts's decoupled {key,
   // description} shape (see that file's own header comment on why it stays
-  // independent of src/lib/data.ts's types) rather than changing that
+  // independent of src/common/lib/data.ts's types) rather than changing that
   // module and its unit tests to match a UI-specific row shape.
   const searchSections = $derived(
     help.scopes.map((s) => ({

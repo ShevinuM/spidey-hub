@@ -14,8 +14,8 @@
   // as spam, since real persistence needs a way to move an item into
   // web·trap); the footer hint drops the mockup's unwired "x dismiss" (this
   // build's dismissal is a per-row button, not a bare key).
-  import type { NotificationsData } from "../../lib/data";
-  import type { ViewId } from "../../lib/views";
+  import type { NotificationsData } from "../../common/lib/data";
+  import type { ViewId } from "../../common/lib/views";
   import { NotificationsState } from "./notificationsState.svelte";
   import NotificationBell from "./NotificationBell.svelte";
   import NotificationsPanel from "./NotificationsPanel.svelte";

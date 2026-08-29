@@ -1,7 +1,7 @@
 <script lang="ts">
   // Profile ("Agent Profile") view — design/Homepage.dc.html lines 184-269.
   // All copy comes from the `profile` content collection (ProfileData,
-  // built by src/lib/data.ts's `buildProfile` from src/content/profile);
+  // built by src/common/lib/data.ts's `buildProfile` from src/content/profile);
   // this component only supplies structure/styling and the `r`
   // resume-download hotkey. View navigation is status-bar clicks / the
   // tmux prefix / the dashboard menu, never a bare key or an in-view click
@@ -20,7 +20,7 @@
   // (tests/visual/pipeline.mjs) — this is the row the pipeline masks out
   // (the meter's bar heights and readout text depend on real load timing,
   // never frozen by the faked clock).
-  import type { ProfileData } from "../lib/data";
+  import type { ProfileData } from "../common/lib/data";
   import { downloadResume } from "../lib/resume";
   import Meter from "./Meter.svelte";
 

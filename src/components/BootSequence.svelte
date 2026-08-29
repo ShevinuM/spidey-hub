@@ -47,7 +47,7 @@
   // frame of the boot overlay on a skip; "skips it" is judged functionally
   // (no 4.6s wait, no timers run), not frame-perfectly.
   import { untrack } from "svelte";
-  import type { BootData, BootStatusRow } from "../lib/data";
+  import type { BootData, BootStatusRow } from "../common/lib/data";
   import {
     bootDuration,
     handshakeText,

@@ -11,7 +11,7 @@ import { expect, test, type Page } from "../support/fixtures";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
-import { formatCtime } from "../../../../src/lib/clock";
+import { formatCtime } from "../../../../src/common/lib/clock";
 
 const ROOT = join(import.meta.dirname, "../../../..");
 

@@ -1,11 +1,11 @@
 <script lang="ts">
   // Single Svelte island mounted by every route page: owns the tmux
-  // client/session/window/pane model (src/lib/tmux.ts), the global keymap,
+  // client/session/window/pane model (src/common/engines/tmux/tmux.ts), the global keymap,
   // and pushState/popstate URL sync. Astro SSRs this island with
   // `initialView` so the first paint matches the route with no client-side
   // flash; all window switches after that are client-side only.
   //
-  // One `client: Client` $state object (src/lib/tmux.ts) drives everything
+  // One `client: Client` $state object (src/common/engines/tmux/tmux.ts) drives everything
   // — sessions own windows, windows own a pane tree, panes own a running
   // program — rendered through <PaneTree>. `view`/`activeWindowId` below
   // are DERIVED read models over that client, kept only because
@@ -39,11 +39,11 @@
     HelpSearchData,
     ShellData,
     ChooseTreeData,
-  } from "../../lib/data";
+  } from "../../common/lib/data";
   import type { Commit } from "../../lib/commits";
-  import type { ViewId } from "../../lib/views";
-  import { pathToView, viewIdToProgram } from "../../lib/views";
-  import type { PaneDirection } from "../../lib/tmux";
+  import type { ViewId } from "../../common/lib/views";
+  import { pathToView, viewIdToProgram } from "../../common/lib/views";
+  import type { PaneDirection } from "../../common/engines/tmux/tmux";
   import type { ShellMode } from "../../lib/shell";
   import { TerminalState, DEFAULT_SESSION_NAME } from "./terminalState.svelte";
   import Wallpaper from "../Wallpaper.svelte";
@@ -66,7 +66,7 @@
    * needs the same "owns the keyboard while focused" treatment an open vim
    * Editor already gets).
    *
-   * `Ctrl-b x` always kills the real tmux PANE (src/lib/tmux.ts), never a
+   * `Ctrl-b x` always kills the real tmux PANE (src/common/engines/tmux/tmux.ts), never a
    * Repositories-internal panel. */
   interface ProgramRef {
     handleKey?: (e: KeyboardEvent) => boolean;

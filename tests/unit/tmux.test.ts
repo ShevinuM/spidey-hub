@@ -1,5 +1,5 @@
 // Unit tests for the tmux client/session/window/pane model
-// — src/lib/tmux.ts. No DOM, no Svelte state:
+// — src/common/engines/tmux/tmux.ts. No DOM, no Svelte state:
 // every operation is exercised directly against plain-object Session/Client
 // values (the same shape Terminal.svelte's `$state` proxy wraps at runtime —
 // this file proves the operations themselves are correct independent of
@@ -47,7 +47,7 @@ import {
   type Session,
   type Window,
   type WindowSeed,
-} from "../../src/lib/tmux";
+} from "../../src/common/engines/tmux/tmux";
 
 const SIX_WINDOWS: WindowSeed[] = [
   { number: 0, id: "dashboard", name: "dashboard" },

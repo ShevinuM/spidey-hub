@@ -16,11 +16,11 @@ import {
   type CursorPos,
   type LineRange,
   type VisualRange,
-} from "../../lib/vim";
-import { setPasteBuffer, writeToSystemClipboard, type PasteBufferKind } from "../../lib/pasteBuffer";
-import { pushPasteTarget, removePasteTarget } from "../../lib/pasteTargets";
+} from "../../common/engines/vim/vim";
+import { setPasteBuffer, writeToSystemClipboard, type PasteBufferKind } from "../../common/lib/paste-buffer";
+import { pushPasteTarget, removePasteTarget } from "../../common/lib/paste-targets";
 import { lineText } from "../../lib/editorRender";
-import type { EditorLabels } from "../../lib/data";
+import type { EditorLabels } from "../../common/lib/data";
 import type { TokenSpan } from "../../lib/repoTree";
 
 // Mirrors Editor.svelte's own `EditorLine` export structurally — a plain

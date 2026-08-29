@@ -1,4 +1,4 @@
-// Locks grepPathToView() (src/lib/views.ts) against the real grep index
+// Locks grepPathToView() (src/common/lib/views.ts) against the real grep index
 // (public/generated/grep-index.json, refreshed by `pnpm generate`) — the
 // no-false-positive property requires real-index rules to be
 // segment-anchored so a future real file
@@ -10,7 +10,7 @@
 import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { grepPathToView, viewToTmuxBinding } from "../../src/lib/views";
+import { grepPathToView, viewToTmuxBinding } from "../../src/common/lib/views";
 
 const ROOT = join(import.meta.dirname, "../..");
 const realIndex = JSON.parse(readFileSync(join(ROOT, "public/generated/grep-index.json"), "utf8")) as {

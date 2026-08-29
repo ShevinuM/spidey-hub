@@ -7,8 +7,8 @@
 // (close/handleKey) stays on Notifications.svelte, the orchestrator — see
 // that file's own comment.
 import { onDestroy, onMount } from "svelte";
-import type { NotificationsData } from "../../lib/data";
-import type { ViewId } from "../../lib/views";
+import type { NotificationsData } from "../../common/lib/data";
+import type { ViewId } from "../../common/lib/views";
 import {
   agoLabel,
   alertItems,

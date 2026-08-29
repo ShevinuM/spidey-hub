@@ -279,7 +279,7 @@ test.describe("choose-tree across sessions (create a second session via the host
 
   /** `tmux new -s test` (host mode) creates AND attaches "test" — real tmux's
    * own "starting a new session from outside both creates and attaches".
-   * `createSession` APPENDS to `client.sessions` (src/lib/tmux.ts), so the
+   * `createSession` APPENDS to `client.sessions` (src/common/engines/tmux/tmux.ts), so the
    * default session "10.42.7.13" stays FIRST in array order (and therefore
    * FIRST in choose-tree's own row list — sessions are rendered in that
    * same array order) even though "test" is now the ATTACHED one. */

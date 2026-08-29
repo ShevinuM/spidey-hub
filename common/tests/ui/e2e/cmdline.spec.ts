@@ -4,7 +4,7 @@
 // command-prompt `Ctrl-b :`), the palette feel (silent Tab completion +
 // zsh-style repeated-Tab cycling — no suggestions list ever renders,
 // asserted absent throughout this file), and a DATA-DRIVEN sweep over
-// src/data/cmdline.yaml's own `commands` list so a future addition to that
+// src/common/content/cmdline.yaml's own `commands` list so a future addition to that
 // file is asserted automatically rather than silently untested ("the e2e
 // sweep is generated FROM the yaml so the list can't drift").
 // The new `?` HelpSearch palette that took over the browsable/discoverable
@@ -41,7 +41,7 @@ interface CmdlineYaml {
 }
 
 function loadCmdlineYaml(): CmdlineYaml {
-  return YAML.parse(readFileSync(join(ROOT, "src/data/cmdline.yaml"), "utf8")) as CmdlineYaml;
+  return YAML.parse(readFileSync(join(ROOT, "src/common/content/cmdline.yaml"), "utf8")) as CmdlineYaml;
 }
 
 async function gotoReady(page: Page, path: string) {
@@ -628,7 +628,7 @@ test.describe("Cmdline: tmux command-prompt mode (executes through the same flow
 });
 
 // ---------------------------------------------------------------------
-// Data-driven sweep over src/data/cmdline.yaml's own `commands` list —
+// Data-driven sweep over src/common/content/cmdline.yaml's own `commands` list —
 // every entry there is executed here by its `action` id,
 // so a future addition to that file fails loudly (an unhandled `action`)
 // rather than silently shipping untested.
@@ -643,7 +643,7 @@ const VIEW_ROUTE_BY_ACTION: Record<string, RegExp> = {
   "view:help": /\/help$/,
 };
 
-test.describe("Cmdline: data-driven sweep of every src/data/cmdline.yaml command", () => {
+test.describe("Cmdline: data-driven sweep of every src/common/content/cmdline.yaml command", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });

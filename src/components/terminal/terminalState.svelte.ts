@@ -13,10 +13,10 @@
 // reference leaves this class; functions only ever invoked via `state.foo()`
 // from within Terminal.svelte's own dispatch code are plain methods.
 import { tick } from "svelte";
-import type { SiteData, ShellData, CmdlineData } from "../../lib/data";
-import type { ViewId } from "../../lib/views";
-import { VIEW_ROUTES, programToViewId, viewIdToProgram, windowIdToView } from "../../lib/views";
-import type { Client, ProgramName, Session, LayoutName, PaneDirection } from "../../lib/tmux";
+import type { SiteData, ShellData, CmdlineData } from "../../common/lib/data";
+import type { ViewId } from "../../common/lib/views";
+import { VIEW_ROUTES, programToViewId, viewIdToProgram, windowIdToView } from "../../common/lib/views";
+import type { Client, ProgramName, Session, LayoutName, PaneDirection } from "../../common/engines/tmux/tmux";
 import {
   activeSessionOf,
   activeWindowOf,
@@ -43,13 +43,13 @@ import {
   selectWindowIndex,
   splitPane,
   windowOfPane,
-} from "../../lib/tmux";
+} from "../../common/engines/tmux/tmux";
 import type { SessionRosterEntry, ShellLineKind } from "../../lib/shell";
 import { seedHostNarrative } from "../../lib/shell";
-import { resolvePageEpoch } from "../../lib/clock";
-import { getPasteBuffer } from "../../lib/pasteBuffer";
-import { getActivePasteTarget } from "../../lib/pasteTargets";
-import { parseInput, parseTmuxCommand, resolveCommand } from "../../lib/cmdline";
+import { resolvePageEpoch } from "../../common/lib/clock";
+import { getPasteBuffer } from "../../common/lib/paste-buffer";
+import { getActivePasteTarget } from "../../common/lib/paste-targets";
+import { parseInput, parseTmuxCommand, resolveCommand } from "../../common/lib/cmdline";
 import { downloadResume } from "../../lib/resume";
 
 /** Mirrors Cmdline.svelte's own `CmdlineMode` export structurally — a plain

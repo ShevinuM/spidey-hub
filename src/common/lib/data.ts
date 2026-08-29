@@ -1,7 +1,11 @@
-// Build-time loader for src/data/*.yaml — every user-visible string that
-// isn't part of a content collection lives in one of these files. Astro
-// pages/layouts read this module and pass plain data down as props; Svelte
-// islands never read the filesystem themselves.
+// Build-time loader for the site's copy/labels yaml — every user-visible
+// string that isn't part of a content collection lives in one of these
+// files. Astro pages/layouts read this module and pass plain data down as
+// props; Svelte islands never read the filesystem themselves. Kernel-owned
+// yaml (site/cmdline/choosetree, D10) lives in `src/common/content/`
+// alongside this loader; the rest stays in `src/data/` until each owning
+// feature phase moves its own (00-phases.md D17) — both directories are
+// read from the explicit `?raw` imports below, one per file, not a glob.
 //
 // Each file is a static `?raw` import (inlined as a string by Vite at
 // build time) rather than a runtime `node:fs` read relative to
@@ -14,19 +18,19 @@
 // independent of where the chunk ends up at runtime.
 import YAML from "yaml";
 import type { CollectionEntry } from "astro:content";
-import siteRaw from "../data/site.yaml?raw";
-import dashboardRaw from "../data/dashboard.yaml?raw";
-import trackerRaw from "../data/tracker.yaml?raw";
-import repositoriesRaw from "../data/repositories.yaml?raw";
-import grepRaw from "../data/grep.yaml?raw";
-import personnelRaw from "../data/personnel.yaml?raw";
-import helpRaw from "../data/help.yaml?raw";
-import bootRaw from "../data/boot.yaml?raw";
-import cmdlineRaw from "../data/cmdline.yaml?raw";
-import helpsearchRaw from "../data/helpsearch.yaml?raw";
-import notificationsRaw from "../data/notifications.yaml?raw";
-import shellRaw from "../data/shell.yaml?raw";
-import choosetreeRaw from "../data/choosetree.yaml?raw";
+import siteRaw from "../content/site.yaml?raw";
+import dashboardRaw from "../../data/dashboard.yaml?raw";
+import trackerRaw from "../../data/tracker.yaml?raw";
+import repositoriesRaw from "../../data/repositories.yaml?raw";
+import grepRaw from "../../data/grep.yaml?raw";
+import personnelRaw from "../../data/personnel.yaml?raw";
+import helpRaw from "../../data/help.yaml?raw";
+import bootRaw from "../../data/boot.yaml?raw";
+import cmdlineRaw from "../content/cmdline.yaml?raw";
+import helpsearchRaw from "../../data/helpsearch.yaml?raw";
+import notificationsRaw from "../../data/notifications.yaml?raw";
+import shellRaw from "../../data/shell.yaml?raw";
+import choosetreeRaw from "../content/choosetree.yaml?raw";
 
 const RAW: Record<string, string> = {
   "site.yaml": siteRaw,
@@ -50,7 +54,7 @@ function loadYaml<T>(file: string): T {
   const cached = cache.get(file);
   if (cached !== undefined) return cached as T;
   const raw = RAW[file];
-  if (raw === undefined) throw new Error(`src/lib/data.ts: no ?raw import registered for "${file}"`);
+  if (raw === undefined) throw new Error(`src/common/lib/data.ts: no ?raw import registered for "${file}"`);
   const parsed = YAML.parse(raw) as T;
   cache.set(file, parsed);
   return parsed;
@@ -573,12 +577,12 @@ export const buildBoot = (entries: CollectionEntry<"boot">[]): BootData => {
   const textById = new Map(entries.flatMap((e) => e.data.entries).map((row) => [row.id, row]));
   const log = config.log.map((row) => {
     const text = textById.get(row.id);
-    if (!text) throw new Error(`src/lib/data.ts: boot.yaml log id "${row.id}" has no matching src/content/boot entry`);
+    if (!text) throw new Error(`src/common/lib/data.ts: boot.yaml log id "${row.id}" has no matching src/content/boot entry`);
     return { threshold: row.threshold, tag: row.tag, label: text.label, val: text.val };
   });
   const unmatched = [...textById.keys()].filter((id) => !config.log.some((row) => row.id === id));
   if (unmatched.length > 0) {
-    throw new Error(`src/lib/data.ts: src/content/boot has entries with no matching boot.yaml log id: ${unmatched.join(", ")}`);
+    throw new Error(`src/common/lib/data.ts: src/content/boot has entries with no matching boot.yaml log id: ${unmatched.join(", ")}`);
   }
   return { ...config, log };
 };
@@ -587,7 +591,7 @@ export const buildBoot = (entries: CollectionEntry<"boot">[]): BootData => {
 // cmdline.yaml
 // ---------------------------------------------------------------------------
 
-/** Shape matches src/lib/cmdline.ts's own `CommandDef` structurally (kept as
+/** Shape matches src/common/lib/cmdline.ts's own `CommandDef` structurally (kept as
  * a separate declaration rather than importing it here so that pure,
  * DOM-free module has zero dependency on this build-time YAML loader). */
 export interface CmdlineCommandDef {

@@ -35,7 +35,7 @@
   // fallback (removed sitewide) — this is what lets the file editor get
   // first refusal over GrepOverlay while it's open.
   import type { CollectionEntry } from "astro:content";
-  import type { RepositoriesData } from "../../lib/data";
+  import type { RepositoriesData } from "../../common/lib/data";
   import type { Commit } from "../../lib/commits";
   import Editor from "../editor/Editor.svelte";
   import { RepositoriesState } from "./repositoriesState.svelte";

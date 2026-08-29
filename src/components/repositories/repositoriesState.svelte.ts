@@ -5,7 +5,7 @@
 // moved verbatim from the original monolith — no reactivity, timing, or
 // behavior change.
 import type { CollectionEntry } from "astro:content";
-import type { RepositoriesData } from "../../lib/data";
+import type { RepositoriesData } from "../../common/lib/data";
 import type { Commit } from "../../lib/commits";
 import { untrack } from "svelte";
 import { classifyBody, classifyDoc, colorFor, docColors } from "../../lib/docline";

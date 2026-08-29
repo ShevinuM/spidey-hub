@@ -1,8 +1,8 @@
 <script lang="ts">
   // Home/dashboard card (design/Homepage.dc.html lines 142-169).
-  import type { DashboardData } from "../lib/data";
-  import type { ViewId } from "../lib/views";
-  import { menuIdToView, viewToTmuxBinding } from "../lib/views";
+  import type { DashboardData } from "../common/lib/data";
+  import type { ViewId } from "../common/lib/views";
+  import { menuIdToView, viewToTmuxBinding } from "../common/lib/views";
   import { wordmarkChars } from "../lib/wordmark";
 
   interface Props {
@@ -18,7 +18,7 @@
      * instead of a fixed table. */
     windowNumbers: Record<string, number>;
     /** Live count of every pane across every window of the active session
-     * (src/lib/tmux.ts `allPanes`, summed) — the footer's "synced N/N panes"
+     * (src/common/engines/tmux/tmux.ts `allPanes`, summed) — the footer's "synced N/N panes"
      * reads real session state instead of a hardcoded number. */
     paneCount: number;
     onSelect: (view: ViewId) => void;

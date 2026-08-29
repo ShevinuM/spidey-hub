@@ -24,7 +24,7 @@
   // ACTUAL active leaf — never shown at all on a single-pane window
   // (`multiPane` gate), matching real tmux's own "no border to speak of
   // with only one pane".
-  import type { ProgramName, PaneNode } from "../lib/tmux";
+  import type { ProgramName, PaneNode } from "../common/engines/tmux/tmux";
   import type {
     DashboardData,
     RepositoriesData,
@@ -32,7 +32,7 @@
     ProfileData,
     HelpData,
     ShellData,
-  } from "../lib/data";
+  } from "../common/lib/data";
   import type { CollectionEntry } from "astro:content";
   import type { Commit } from "../lib/commits";
   import type { SessionRosterEntry, ShellMode } from "../lib/shell";
@@ -42,7 +42,7 @@
   import Profile from "./Profile.svelte";
   import HelpView from "./HelpView.svelte";
   import Shell from "./Shell.svelte";
-  import { viewIdToProgram } from "../lib/views";
+  import { viewIdToProgram } from "../common/lib/views";
 
   interface Props {
     node: PaneNode;

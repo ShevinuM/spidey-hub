@@ -1,5 +1,5 @@
 // Unit tests for the pure parser/completion logic behind the site-wide
-// floating Cmdline — src/lib/cmdline.ts. No
+// floating Cmdline — src/common/lib/cmdline.ts. No
 // DOM, no Svelte state: parse, prefix-filter, alias resolution, Tab
 // completion, the lifted ex-command machine, and the tmux
 // command-prompt grammar, each exercised directly against fixture command
@@ -16,7 +16,7 @@ import {
   parseTmuxCommand,
   resolveCommand,
   type CommandDef,
-} from "../../src/lib/cmdline";
+} from "../../src/common/lib/cmdline";
 
 const commands: CommandDef[] = [
   { name: "dashboard", aliases: ["home"], description: "jump to the dashboard", action: "view:home" },

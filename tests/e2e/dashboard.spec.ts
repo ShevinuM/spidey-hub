@@ -20,7 +20,7 @@ async function goDashboard(page: Page) {
 /** src/data/dashboard.yaml's `menu` list, top to bottom, plus the tmux
  * binding each id's mapped view actually carries (window numbers per
  * site.yaml: dashboard=0, repositories=1, employment=2, retina-v=3, profile=4,
- * help=5 — see src/lib/views.ts's `viewToTmuxBinding`). Yaml order does NOT
+ * help=5 — see src/common/lib/views.ts's `viewToTmuxBinding`). Yaml order does NOT
  * match window-number order (info/tracker are swapped relative to their
  * bindings), which is exactly why this table is hand-mirrored rather than
  * assumed sorted. */

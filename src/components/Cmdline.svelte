@@ -14,12 +14,12 @@
   //            `cmdline.commands` are offered/executed.
   //   "ex"   — `:` while a Repositories/Personnel file editor is open. Terminal
   //            tries the ex-command state machine first
-  //            (src/lib/cmdline.ts's parseExCommand, executed by
+  //            (src/common/lib/cmdline.ts's parseExCommand, executed by
   //            Editor.svelte's own runExCommand) via the `onSubmit` prop;
   //            only a command that machine doesn't recognize falls through
   //            to the site-wide set — "editor context wins".
   //            Tab-completion candidates here are exCommands ∪ commands,
-  //            exCommands winning name collisions (src/lib/cmdline.ts's
+  //            exCommands winning name collisions (src/common/lib/cmdline.ts's
   //            mergeCommandLists) — same "editor context wins" precedence.
   //   "tmux" — `Ctrl-b :`, real tmux's own "command-prompt" binding. Only
   //            `cmdline.tmuxCommands` are offered/executed.
@@ -29,15 +29,15 @@
   // resume, window rename/kill/select) — Terminal.svelte owns every one of
   // those side effects, exactly like GrepOverlay's `onNavigate` prop. This
   // component only owns: open/closed + which mode, the typed text, silent
-  // zsh-style Tab-cycling (src/lib/cmdline.ts's pure cycleComplete —
+  // zsh-style Tab-cycling (src/common/lib/cmdline.ts's pure cycleComplete —
   // deliberately no visible suggestions list under the input: the `?`
   // HelpSearch.svelte palette is the discoverable/browsable surface, this
   // box stays a plain, quiet command line), and rendering the transient
   // error `onSubmit` hands back.
-  import type { CmdlineData } from "../lib/data";
-  import { cycleComplete, mergeCommandLists, type CommandDef, type TabCycleState } from "../lib/cmdline";
-  import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
-  import { STATUS_BAR_HEIGHT_PX } from "../lib/layout";
+  import type { CmdlineData } from "../common/lib/data";
+  import { cycleComplete, mergeCommandLists, type CommandDef, type TabCycleState } from "../common/lib/cmdline";
+  import { pushPasteTarget, removePasteTarget } from "../common/lib/paste-targets";
+  import { STATUS_BAR_HEIGHT_PX } from "../common/lib/layout";
 
   export type CmdlineMode = "site" | "ex" | "tmux";
 

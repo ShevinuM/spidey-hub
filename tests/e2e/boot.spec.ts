@@ -24,7 +24,7 @@ import { BOOT_SEEN_STORAGE_KEY } from "../../src/lib/bootState.ts";
 
 // Must match src/data/boot.yaml's bootMs / phaseLabels — no runtime import
 // of that file is possible here (its `?raw` imports are Vite-only syntax,
-// see src/lib/data.ts), so these are the same kind of hand-mirrored
+// see src/common/lib/data.ts), so these are the same kind of hand-mirrored
 // literal every other e2e spec already uses for its view's yaml copy
 // (e.g. nav.spec.ts's WINDOWS array, tmux.spec.ts's window list).
 const BOOT_MS = 4600;

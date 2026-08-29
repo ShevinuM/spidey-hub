@@ -24,7 +24,7 @@ interface CmdlineYaml {
 }
 
 function loadCommands(): CmdlineCommandDef[] {
-  const doc = YAML.parse(readFileSync(join(ROOT, "src/data/cmdline.yaml"), "utf8")) as CmdlineYaml;
+  const doc = YAML.parse(readFileSync(join(ROOT, "src/common/content/cmdline.yaml"), "utf8")) as CmdlineYaml;
   return doc.commands;
 }
 

@@ -28,14 +28,14 @@ import {
   type SessionRosterEntry,
   type ShellState,
 } from "../../src/lib/shell";
-import type { ShellData } from "../../src/lib/data";
-import { formatCtime } from "../../src/lib/clock";
+import type { ShellData } from "../../src/common/lib/data";
+import { formatCtime } from "../../src/common/lib/clock";
 
 const FS: FsEntry[] = [
   { path: "package.json", size: 100 },
   { path: "README.md", size: 200 },
-  { path: "src/lib/tmux.ts", size: 300 },
-  { path: "src/lib/clock.ts", size: 150 },
+  { path: "src/common/engines/tmux/tmux.ts", size: 300 },
+  { path: "src/common/lib/clock.ts", size: 150 },
   { path: "src/lib/deep/a/b/c.ts", size: 10 },
   { path: "src/components/terminal/Terminal.svelte", size: 400 },
   { path: "repos/Sheldon/README.md" },

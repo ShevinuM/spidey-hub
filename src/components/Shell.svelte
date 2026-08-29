@@ -2,7 +2,7 @@
   // In-window shell — one instance per shell PANE (`bind:this` registered
   // into PaneTree's ref registry, same contract every other program
   // component uses). A program's `:q` drops its pane's `program` to "shell"
-  // (src/lib/tmux.ts's `exitProgram`); this component then renders whatever
+  // (src/common/engines/tmux/tmux.ts's `exitProgram`); this component then renders whatever
   // that pane's own `Pane.shell` buffer holds. Also serves as the detached
   // HOST shell (`mode: "host"`, fullscreen, no status bar): `tmux
   // new`/`attach`, and `open <view>`/bare-name attaching instead of
@@ -24,8 +24,8 @@
   // (auto-scroll) only reads `pane.shell.lines.length` and writes to a DOM
   // node's `scrollTop` — never back into `pane.shell` — so there is no
   // read-then-write-the-same-$state loop.
-  import type { ShellData } from "../lib/data";
-  import type { Pane } from "../lib/tmux";
+  import type { ShellData } from "../common/lib/data";
+  import type { Pane } from "../common/engines/tmux/tmux";
   import {
     backspace,
     formatPrompt,
@@ -43,8 +43,8 @@
   } from "../lib/shell";
   import { loadFsIndex, loadGrepFiles, loadRepoIndex } from "../lib/shellIndex";
   import { repoFileText, type TokenSpan } from "../lib/repoTree";
-  import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
-  import { resolvePageEpoch } from "../lib/clock";
+  import { pushPasteTarget, removePasteTarget } from "../common/lib/paste-targets";
+  import { resolvePageEpoch } from "../common/lib/clock";
   import { classifyDoc, colorFor, docColors } from "../lib/docline";
   import Editor, { type EditorLine } from "./editor/Editor.svelte";
 

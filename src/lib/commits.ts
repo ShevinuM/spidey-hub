@@ -14,7 +14,7 @@
 // so a project entry's `repos[n].name` always resolves to a commits file in
 // the matching mode.
 //
-// Server-only, same as src/lib/data.ts: this module must never be imported
+// Server-only, same as src/common/lib/data.ts: this module must never be imported
 // from a Svelte island (Repositories.svelte etc.) — `process.env.PORTFOLIO_FIXTURES`
 // doesn't exist in the browser. It also can't read the snapshot with a
 // runtime `node:fs` path built from `dirname(import.meta.url)`: Astro's

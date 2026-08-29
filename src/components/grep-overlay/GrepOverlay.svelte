@@ -41,10 +41,10 @@
   // PORTFOLIO_FIXTURES=1 not serving the fixture index (unsupported; no
   // test or workflow needs it, since test:visual always goes through a full
   // `build:fixtures`).
-  import type { ViewId } from "../../lib/views";
-  import { grepPathToView } from "../../lib/views";
-  import type { GrepData } from "../../lib/data";
-  import { STATUS_BAR_HEIGHT_PX } from "../../lib/layout";
+  import type { ViewId } from "../../common/lib/views";
+  import { grepPathToView } from "../../common/lib/views";
+  import type { GrepData } from "../../common/lib/data";
+  import { STATUS_BAR_HEIGHT_PX } from "../../common/lib/layout";
   import { GrepOverlayState, type Row } from "./grepOverlayState.svelte";
   import QueryListPanel from "./QueryListPanel.svelte";
   import PreviewPanel from "./PreviewPanel.svelte";

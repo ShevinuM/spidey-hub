@@ -1,12 +1,12 @@
 // Pure scoring/search logic for the site-wide `?` fuzzy help palette —
 // src/components/HelpSearch.svelte and Terminal.svelte own the
 // stateful/effectful parts (open/close, typed text, Up/Down selection,
-// executing a chosen command), exactly the same split src/lib/cmdline.ts
+// executing a chosen command), exactly the same split src/common/lib/cmdline.ts
 // already uses for Cmdline.svelte. No DOM, no Svelte state, no side effects.
 //
 // The palette's corpus is two different shapes glued together for search
-// purposes (deliberately decoupled from src/lib/data.ts's YAML-loader
-// types, same reasoning as src/lib/cmdline.ts's own CommandDef — this file
+// purposes (deliberately decoupled from src/common/lib/data.ts's YAML-loader
+// types, same reasoning as src/common/lib/cmdline.ts's own CommandDef — this file
 // stays a zero-dependency pure module):
 //   - "command" entries: cmdline.yaml's own site-wide `commands` list
 //     (dashboard/repositories/employment/profile/retina-v/help/grep/reboot/resume/q)
@@ -59,7 +59,7 @@ export interface HelpSectionSource {
   rows: HelpRowSource[];
 }
 
-/** shell.yaml's `help.rows[]` shape (src/lib/data.ts's `ShellHelpRow`,
+/** shell.yaml's `help.rows[]` shape (src/common/lib/data.ts's `ShellHelpRow`,
  * structurally mirrored here rather than imported — same zero-dependency
  * convention as `CommandSource`/`HelpRowSource` above). */
 export interface ShellHelpRowSource {

@@ -1,8 +1,8 @@
 // Pure timing/progress/log math for the E.D.I.T.H boot sequence (source of
 // truth `Boot Sequence.dc.html`'s `Component` class,
 // `renderVals()`/`pct()`/`progress()`). Kept framework-free and dependency-
-// free (no Svelte imports) — same rationale as src/lib/vim.ts and
-// src/lib/pasteBuffer.ts — so BootSequence.svelte is a thin renderer over
+// free (no Svelte imports) — same rationale as src/common/engines/vim/vim.ts and
+// src/common/lib/paste-buffer.ts — so BootSequence.svelte is a thin renderer over
 // this module and tests/unit/boot.test.ts can spot-check the formulas
 // (thresholds, easing, jitter) without a browser.
 //
@@ -13,7 +13,7 @@
 // exponent, the jitter divisor, or the threshold constants; they were
 // tuned by eye against the reference screenshots.
 
-import type { BootData, BootLogEntry, BootStatusRow } from "./data";
+import type { BootData, BootLogEntry, BootStatusRow } from "../common/lib/data";
 
 /** `Component.progress()` (line 369-371): 0..1 linear elapsed fraction,
  * clamped at 1 once `elapsedMs` reaches (or exceeds, from the hard-stop

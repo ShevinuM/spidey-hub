@@ -24,7 +24,7 @@ interface NotificationFrontmatter {
 
 /** Reads the real `notifications` content collection (src/content/
  * notifications/*.md), sorted by frontmatter `order` — the same order
- * src/lib/data.ts's `buildNotificationPool` reconstructs at build time, so
+ * src/common/lib/data.ts's `buildNotificationPool` reconstructs at build time, so
  * this suite's seeded pick expectations match the real site. */
 function loadPool(): PoolEntry[] {
   const entries = readContentDir<NotificationFrontmatter>(join(ROOT, "src/content/notifications"));

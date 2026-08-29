@@ -32,10 +32,10 @@
   // — typing "j" into a rename must not scroll a list behind it. A bare
   // `message` state does NOT own the keyboard (it's purely informational and
   // auto-clears on its own), so `handleKey()` returns `false` for it.
-  import type { SiteData, WindowEntry } from "../lib/data";
-  import { formatClockDate, formatClockTime, msUntilNextMinute } from "../lib/clock";
-  import { pushPasteTarget, removePasteTarget } from "../lib/pasteTargets";
-  import { STATUS_BAR_HEIGHT_PX } from "../lib/layout";
+  import type { SiteData, WindowEntry } from "../common/lib/data";
+  import { formatClockDate, formatClockTime, msUntilNextMinute } from "../common/lib/clock";
+  import { pushPasteTarget, removePasteTarget } from "../common/lib/paste-targets";
+  import { STATUS_BAR_HEIGHT_PX } from "../common/lib/layout";
 
   interface Props {
     site: SiteData;

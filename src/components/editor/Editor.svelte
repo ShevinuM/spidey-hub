@@ -49,7 +49,7 @@
   // both ways (Firefox/WebKit) — the only rendering difference from the
   // prototype's markup, and invisible whenever content fits (the
   // 06-editor golden, which never scrolls, is unaffected).
-  import type { EditorLabels } from "../../lib/data";
+  import type { EditorLabels } from "../../common/lib/data";
   import {
     clamp,
     extractCharRange,
@@ -66,8 +66,8 @@
     wordBackward,
     wordEnd,
     wordForward,
-  } from "../../lib/vim";
-  import { parseExCommand } from "../../lib/cmdline";
+  } from "../../common/engines/vim/vim";
+  import { parseExCommand } from "../../common/lib/cmdline";
   import type { TokenSpan } from "../../lib/repoTree";
   import { EditorState } from "./editorState.svelte";
   import EditorBuffer from "./EditorBuffer.svelte";
@@ -238,7 +238,7 @@
    * for commands this machine actually recognizes) and, if so, any
    * resulting error string (using this editor instance's OWN labels —
    * `w`/`wq`'s readonly error never moves to a generic site-wide copy).
-   * The PARSING itself is `src/lib/cmdline.ts`'s `parseExCommand`, pure and
+   * The PARSING itself is `src/common/lib/cmdline.ts`'s `parseExCommand`, pure and
    * unit-tested on its own — never rebuilt here. */
   export function runExCommand(cmd: string): { recognized: boolean; error?: string } {
     const ex = parseExCommand(cmd);
