@@ -32,7 +32,7 @@ A byte-parity-verified, fully green copy of v1 running inside this repo, with th
   *Verify:* `pnpm test:unit` 0, 19 files passing; diff shows import/assertion API changes only.
 - [x] **7. oxlint gate (toolchain R013).** Exact-pinned oxlint + config, wired alongside the check gate (never replacing astro check/tsc/svelte-check). Fix or explicitly configure-out findings.
   *Verify:* lint + `pnpm check` exit 0.
-- [x] **8. Recipe→feature map.** From `tests/visual/recipes.ts` (23 recipes, 21 goldens/viewport), write `Instructions/01-pre-phase/recipe-feature-map.md` (status header per doc-practice R007) mapping every recipe + golden PNG to phase 02–11 (or `smoke`/none). This file also becomes home to D21's snapshot-path decision (phase 03 records it).
+- [x] **8. Recipe→feature map.** From `tests/visual/recipes.ts` (21 recipes, 21 goldens/viewport), write `Instructions/01-pre-phase/recipe-feature-map.md` (status header per doc-practice R007) mapping every recipe + golden PNG to phase 02–11 (or `smoke`/none). This file also becomes home to D21's snapshot-path decision (phase 03 records it).
   *Verify:* all 42 PNGs mapped exactly once.
 - [x] **9. Playwright projects (D6, D12).** Root config: `legacy` project pinning v1's current spec set/behavior; new `smoke` project + `tests/ui/smoke/` spec (6 routes load, no console errors, terminal boots). Move `tests/e2e/fixtures.ts`/`contentFixtures.ts` → `common/tests/ui/support/` (kebab-case, D15), import paths updated (modules still at `src/lib/`).
   *Verify (D20):* real build → `--project=smoke --project=legacy` green; fixture build → legacy visual green; zero golden churn.

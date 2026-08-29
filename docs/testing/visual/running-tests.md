@@ -1,6 +1,6 @@
 # Running the visual tests
 
-> **Status: target command contract, not yet real.** Same caveat as `../e2e/running-tests.md` — this repo has no `package.json`/`playwright.config.ts` yet. Remove this header once the scaffold implements the commands below (`../../checklist/general/documentation-practice.md` R007).
+> **Status: partially real (pre-phase, 2026-08-29).** `package.json`/`playwright.config.ts` exist; `pnpm test:visual` runs today, but against the two **transitional** viewport-named projects (`1512x945`/`1920x1080`, `testDir: tests/visual` — no per-feature `<feature>-visual` project exists yet, since no feature has moved its own recipes out of the bulk-imported legacy suite; see `../e2e/running-tests.md`'s own header and `Instructions/00-phases.md` D21 for why these two keep the viewport-as-project-name convention until the first golden-seeding phase decides otherwise). The `--project=<feature>-visual` commands below are the target shape once that split happens — remove this header once every `<feature>-visual` project exists and the two transitional viewport projects are gone (`../../checklist/general/documentation-practice.md` R007).
 
 ## Prerequisites
 
@@ -11,9 +11,10 @@
 
 | command | what it does |
 |---|---|
-| `pnpm exec playwright test --project=<feature>-visual` | Runs one feature's golden comparisons against its fixture build. |
-| `pnpm exec playwright test --project="*-visual"` | Runs every feature's visual project. |
-| `pnpm exec playwright test --project=<feature>-visual --update-snapshots` | Rebaselines one feature's goldens — **only** in the same change as a deliberate visual change (see below). |
+| `pnpm test:visual` | **Real today.** Fixture build then both transitional viewport projects (`1512x945`/`1920x1080`) against `tests/visual/identical.spec.ts` + `adversarial-fixtures.spec.ts` — the whole bulk-imported golden set, not yet split per feature. |
+| `pnpm exec playwright test --project=<feature>-visual` | **Not yet real** — runs one feature's golden comparisons against its fixture build, once that feature's recipes have moved out of the transitional viewport projects. |
+| `pnpm exec playwright test --project="*-visual"` | **Not yet real** — runs every feature's visual project, same caveat. |
+| `pnpm exec playwright test --project=<feature>-visual --update-snapshots` | **Not yet real**, same caveat. Rebaselines one feature's goldens — **only** in the same change as a deliberate visual change (see below), never before that split exists. |
 
 ## Rebaselining — the procedure, not just the flag
 
