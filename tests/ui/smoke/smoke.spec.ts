@@ -11,6 +11,7 @@
 // specifically to prove the real (unskipped) boot sequence completes on a
 // fresh tab for every route, not just that the app renders past it.
 import { test, expect } from "@playwright/test";
+import { SmokePage } from "./pages/SmokePage";
 
 const ROUTES = ["/", "/repositories", "/employment", "/retina-v", "/profile", "/help"];
 
@@ -30,7 +31,7 @@ for (const route of ROUTES) {
     // skip flag, since "the terminal boots" is exactly what this check
     // proves. Generous timeout: this is the real (non-fixture) build, and a
     // slow CI runner shouldn't flake a broad health check.
-    await page.locator('[data-terminal-ready="true"]').waitFor({ state: "attached", timeout: 15_000 });
+    await new SmokePage(page).terminalReady.waitFor({ state: "attached", timeout: 15_000 });
 
     expect(consoleErrors, `console errors on ${route}: ${JSON.stringify(consoleErrors)}`).toEqual([]);
     expect(pageErrors, `page errors on ${route}: ${JSON.stringify(pageErrors)}`).toEqual([]);
