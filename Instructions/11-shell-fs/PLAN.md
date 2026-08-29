@@ -15,7 +15,8 @@ The in-window shell migrated verbatim and green; the legacy tree gone; `src/` co
 | v1 | v2 |
 |---|---|
 | `src/components/Shell.svelte` (the shell feature — distinct from the layout renamed in phase 02) | `src/features/shell-fs/components/Shell.svelte` |
-| `src/lib/shell.ts`, `src/lib/shellIndex.ts` | `src/features/shell-fs/lib/shell.ts`, `shell-index.ts` (D15) |
+| `src/lib/shell.ts` | **`src/common/lib/shell.ts`** — NOT the feature's lib: `common/engines/tmux/tmux.ts` hard-imports it (phase-02 audit ruling: once `src/lib` stops being transient for this file, an engine→feature import would be a hard architecture R004 violation; promotion to common is mandatory in this phase, D16's ≥2-consumer test is already met) |
+| `src/lib/shellIndex.ts` | `src/features/shell-fs/lib/shell-index.ts` (D15) — verify its consumers first; if the tmux engine or common code reaches it too, it follows `shell.ts` into `common/lib/` |
 | `src/data/shell.yaml` | `src/features/shell-fs/content/` (D17) |
 | `fixtures/fs-index.json` | `src/features/shell-fs/tests/ui/support/` + D22 (same golden-affecting caveat as phase 10's fixture index: real-path content changes go to the orchestrator) |
 | spec `shell.spec.ts`; unit `shell.test.ts` | `tests/ui/e2e/`; `tests/unit/` |
