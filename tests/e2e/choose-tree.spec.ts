@@ -2,7 +2,7 @@
 // to tests/e2e/panes.spec.ts (splits/nav/kill/layouts) and
 // tests/e2e/sessions.spec.ts (the session model itself, whose
 // `tmux new -s <name>` this file reuses to get a second session to browse).
-import { expect, test, type Page } from "./fixtures.ts";
+import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
 
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);

@@ -1,0 +1,38 @@
+// Root-level smoke tier (`e2e-testing.md` R016): broad, shallow, whole-app
+// health checks — every route loads with no console error, and the terminal
+// boots. Never a feature-specific behavioral assertion; that belongs in the
+// owning feature's own `tests/ui/e2e/` (or, until each phase splits it out,
+// the bulk-imported `legacy` project). Cheap enough to run on every PR
+// regardless of what changed — the pre-merge gate.
+//
+// Deliberately imports the raw `@playwright/test` (same reasoning as
+// `tests/e2e/boot.spec.ts`'s own header comment), not the shared
+// `common/tests/ui/support/fixtures.ts` boot-skip helper — this suite exists
+// specifically to prove the real (unskipped) boot sequence completes on a
+// fresh tab for every route, not just that the app renders past it.
+import { test, expect } from "@playwright/test";
+
+const ROUTES = ["/", "/repositories", "/employment", "/retina-v", "/profile", "/help"];
+
+for (const route of ROUTES) {
+  test(`${route || "/"} loads, boots with no console error`, async ({ page }) => {
+    const consoleErrors: string[] = [];
+    const pageErrors: string[] = [];
+    page.on("console", (msg) => {
+      if (msg.type() === "error") consoleErrors.push(msg.text());
+    });
+    page.on("pageerror", (err) => pageErrors.push(err.message));
+
+    await page.goto(route);
+    // The boot overlay swallows all input and plays a full ~4.6s unskippable
+    // sequence on a fresh tab (see common/tests/ui/support/fixtures.ts's own
+    // header comment) — wait it out for real rather than pre-seeding the
+    // skip flag, since "the terminal boots" is exactly what this check
+    // proves. Generous timeout: this is the real (non-fixture) build, and a
+    // slow CI runner shouldn't flake a broad health check.
+    await page.locator('[data-terminal-ready="true"]').waitFor({ state: "attached", timeout: 15_000 });
+
+    expect(consoleErrors, `console errors on ${route}: ${JSON.stringify(consoleErrors)}`).toEqual([]);
+    expect(pageErrors, `page errors on ${route}: ${JSON.stringify(pageErrors)}`).toEqual([]);
+  });
+}

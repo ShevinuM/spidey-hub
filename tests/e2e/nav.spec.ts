@@ -13,7 +13,7 @@
 // view switch. Every test below drives navigation via a status-bar click
 // instead (see `goDashboard()`), and the dedicated q/Esc describe block
 // asserts NO navigation happens, in every view.
-import { expect, test, type Page } from "./fixtures.ts";
+import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
 // This spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's

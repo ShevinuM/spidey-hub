@@ -5,7 +5,7 @@
 // "Employment Records" included), click AND keyboard (Enter/Space)
 // navigation from every row, the synced-panes footer line, and wordmark
 // presence/label.
-import { expect, test, type Page } from "./fixtures.ts";
+import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
 
 async function gotoReady(page: Page, path = "/") {
   await page.goto(path);

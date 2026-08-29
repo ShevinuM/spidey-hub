@@ -2,7 +2,7 @@
 // redesign (real, non-fixture build). Grown in step with the feature: this
 // file starts with the Command Log coverage; the spacing suite lands in a
 // later commit alongside its own fix.
-import { expect, test, type Page } from "./fixtures.ts";
+import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
 
 /** Asserts `actual` is within `tol` px of `target` — real-build layout
  * measurements are exact CSS px values (no zoom/scale involved), so a small

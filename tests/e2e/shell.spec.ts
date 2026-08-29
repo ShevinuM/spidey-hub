@@ -10,7 +10,7 @@
 // reboot's factory-reset of BOTH the tmux client and every pane's shell
 // buffer, and the window-chrome delegation contract ("?"/":" type into a
 // focused shell instead of opening HelpSearch/Cmdline/Grep).
-import { expect, test, type Page } from "./fixtures.ts";
+import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";

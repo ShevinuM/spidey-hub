@@ -22,7 +22,7 @@
 // fixture-mode animation gate — as of Phase 7b.1 a fixture build renders
 // every `infinite` animation live too — it's simply this spec's own
 // standing invocation convention.
-import { expect, test, E2E_NOTIFICATIONS_INJECT_SEED, E2E_TOAST_DURATION_SCALE, type Page } from "./fixtures.ts";
+import { expect, test, E2E_NOTIFICATIONS_INJECT_SEED, E2E_TOAST_DURATION_SCALE, type Page } from "../../common/tests/ui/support/fixtures.ts";
 import { BOOT_SEEN_STORAGE_KEY } from "../../src/lib/bootState.ts";
 import { NOTIFICATIONS_INJECT_SEED_STORAGE_KEY, TOAST_DURATION_SCALE_STORAGE_KEY } from "../../src/lib/notificationStore.ts";
 

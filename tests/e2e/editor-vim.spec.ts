@@ -8,7 +8,7 @@
 // repositories.spec.ts / employment.spec.ts already use for their own editor
 // assertions) rather than hardcoding line text, so this suite can't drift
 // from whatever the fixture repos/role docs actually contain.
-import { expect, test, type Page } from "./fixtures.ts";
+import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
 // This spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's

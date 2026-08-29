@@ -7,7 +7,7 @@
 // no-ops on a keymap row), Esc, and window-chrome close-on-switch. The
 // sibling Cmdline suite (cmdline.spec.ts) covers the regression that `?`
 // still types literally into an already-open grep query / Cmdline input.
-import { expect, test, type Page } from "./fixtures.ts";
+import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";

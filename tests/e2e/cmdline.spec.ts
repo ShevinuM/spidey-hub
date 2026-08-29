@@ -9,7 +9,7 @@
 // sweep is generated FROM the yaml so the list can't drift").
 // The new `?` HelpSearch palette that took over the browsable/discoverable
 // role has its own suite — tests/e2e/help-search.spec.ts.
-import { expect, test, type Page } from "./fixtures.ts";
+import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
 // This spec's `context` fixture (imported from
 // ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's

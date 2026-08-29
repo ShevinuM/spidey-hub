@@ -21,7 +21,7 @@
 // content edit doesn't silently desync this suite from the truth it's
 // supposed to check.
 import type { Locator } from "@playwright/test";
-import { expect, test, type Page } from "./fixtures.ts";
+import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 

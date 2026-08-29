@@ -9,7 +9,7 @@
 // single check catches both wrapping AND truncation/overflow in one go)
 // and confirming every row renders at the same height (rows are two lines
 // tall by design — name over description — not one).
-import { expect, test, type Page } from "./fixtures.ts";
+import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
 
 const VIEWPORTS = [
   { width: 1512, height: 945 },

@@ -15,7 +15,7 @@
 // overflow.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { expect, test, type Page } from "./fixtures.ts";
+import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
 
 const ROOT = join(import.meta.dirname, "../..");
 const PERSONNEL_DIR = join(ROOT, "src/content/personnel");

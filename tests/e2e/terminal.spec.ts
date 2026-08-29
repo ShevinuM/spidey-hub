@@ -9,7 +9,7 @@
 // global `r` reboot backstop reached from every non-Profile view (boot.spec.ts
 // only exercises it from the dashboard and Profile), and the status bar's
 // active-window highlight style.
-import { expect, test, type Page } from "./fixtures.ts";
+import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
 
 const STATUS_BAR = '[data-testid="status-bar-windows"]';
 async function statusBarText(page: Page) {
