@@ -2,10 +2,9 @@
 // string that isn't part of a content collection lives in one of these
 // files. Astro pages/layouts read this module and pass plain data down as
 // props; Svelte islands never read the filesystem themselves. Kernel-owned
-// yaml (site/cmdline/choosetree, D10) lives in `src/common/content/`
-// alongside this loader; the rest stays in `src/data/` until each owning
-// feature phase moves its own (00-phases.md D17) — both directories are
-// read from the explicit `?raw` imports below, one per file, not a glob.
+// yaml (site/cmdline/choosetree) lives in `src/common/content/` alongside
+// this loader; feature-owned yaml lives in `src/data/` — both directories
+// are read from the explicit `?raw` imports below, one per file, not a glob.
 //
 // Each file is a static `?raw` import (inlined as a string by Vite at
 // build time) rather than a runtime `node:fs` read relative to

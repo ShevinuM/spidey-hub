@@ -689,11 +689,11 @@ export function buildLayoutTree(panes: Pane[], layoutName: LayoutName): PaneNode
 
     case "tiled": {
       // Near-even grid: cols = ceil(sqrt(n)), rows = ceil(n/cols) — matches
-      // real tmux's own tiled arrangement for every count this phase tests
-      // (2-5 panes). Any short final row simply has fewer, evenly-widened
-      // columns (its own row-split only has as many children as it has
-      // panes) — real tmux's own behavior for a non-perfect grid. When
-      // every pane fits in a SINGLE row (cols >= n, e.g. n=2 → cols=2), the
+      // real tmux's own tiled arrangement for 2-5 panes. Any short final
+      // row simply has fewer, evenly-widened columns (its own row-split
+      // only has as many children as it has panes) — real tmux's own
+      // behavior for a non-perfect grid. When every pane fits in a SINGLE
+      // row (cols >= n, e.g. n=2 → cols=2), the
       // grid degenerates to a plain row — returned directly rather than
       // wrapped in a column split with only one child (this file's own "no
       // 1-child splits" invariant, see `removePaneNode`'s comment).

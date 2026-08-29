@@ -18,7 +18,7 @@
 // now carries a "common-visual-" context prefix that the viewport-only
 // literal directory name must not (D21(a)).
 import { expect, test } from "@playwright/test";
-import { cmdlineRecipes, iteration3Recipes, recipes } from "../support/recipes.ts";
+import { cmdlineRecipes, iteration3Recipes, recipes } from "../support/recipes";
 import { captureState } from "../support/pipeline.mjs";
 
 const COMMON_OWNED_RECIPE_NAMES = new Set(["06-editor", "15-cmdline", "18-split", "19-choose-tree"]);
