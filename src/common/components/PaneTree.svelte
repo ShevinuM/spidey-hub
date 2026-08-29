@@ -24,7 +24,7 @@
   // ACTUAL active leaf — never shown at all on a single-pane window
   // (`multiPane` gate), matching real tmux's own "no border to speak of
   // with only one pane".
-  import type { ProgramName, PaneNode } from "../common/engines/tmux/tmux";
+  import type { ProgramName, PaneNode } from "../engines/tmux/tmux";
   import type {
     DashboardData,
     RepositoriesData,
@@ -32,17 +32,17 @@
     ProfileData,
     HelpData,
     ShellData,
-  } from "../common/lib/data";
+  } from "../lib/data";
   import type { CollectionEntry } from "astro:content";
-  import type { Commit } from "../lib/commits";
-  import type { SessionRosterEntry, ShellMode } from "../lib/shell";
-  import Dashboard from "./Dashboard.svelte";
-  import Repositories from "./repositories/Repositories.svelte";
-  import EmploymentRecords from "./employment-records/EmploymentRecords.svelte";
-  import Profile from "./Profile.svelte";
-  import HelpView from "./HelpView.svelte";
-  import Shell from "./Shell.svelte";
-  import { viewIdToProgram } from "../common/lib/views";
+  import type { Commit } from "../../lib/commits";
+  import type { SessionRosterEntry, ShellMode } from "../../lib/shell";
+  import Dashboard from "../../components/Dashboard.svelte";
+  import Repositories from "../../components/repositories/Repositories.svelte";
+  import EmploymentRecords from "../../components/employment-records/EmploymentRecords.svelte";
+  import Profile from "../../components/Profile.svelte";
+  import HelpView from "../../components/HelpView.svelte";
+  import Shell from "../../components/Shell.svelte";
+  import { viewIdToProgram } from "../lib/views";
 
   interface Props {
     node: PaneNode;

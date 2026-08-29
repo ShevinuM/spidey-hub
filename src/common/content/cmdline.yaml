@@ -1,5 +1,5 @@
 # Site-wide floating Cmdline. One noice.nvim-style
-# floating box (src/components/Cmdline.svelte) — same visual family as
+# floating box (src/common/components/Cmdline.svelte) — same visual family as
 # GrepOverlay (bordered box, box-drawing inset title, `>` prompt + block
 # cursor, existing palette) — shared by THREE entry contexts:
 #

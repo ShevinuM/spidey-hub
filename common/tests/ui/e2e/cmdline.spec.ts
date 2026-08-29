@@ -1,5 +1,5 @@
 // Behavioral e2e suite for the site-wide floating Cmdline —
-// src/components/Cmdline.svelte, driven by Terminal.svelte. Covers
+// src/common/components/Cmdline.svelte, driven by Terminal.svelte. Covers
 // all THREE entry contexts (site `:`, editor ex-mode `:`, tmux
 // command-prompt `Ctrl-b :`), the palette feel (silent Tab completion +
 // zsh-style repeated-Tab cycling — no suggestions list ever renders,

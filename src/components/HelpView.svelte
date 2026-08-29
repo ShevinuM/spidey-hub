@@ -16,7 +16,7 @@
   // at any viewport (the one deviation from the mockup's fixed `300px`
   // column — see tests/e2e/help-layout.spec.ts).
   import type { HelpData, HelpRow } from "../common/lib/data";
-  import PanelBadge from "./PanelBadge.svelte";
+  import PanelBadge from "../common/components/PanelBadge.svelte";
 
   interface Props {
     help: HelpData;

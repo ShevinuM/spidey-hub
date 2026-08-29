@@ -46,7 +46,7 @@
   import { pushPasteTarget, removePasteTarget } from "../common/lib/paste-targets";
   import { resolvePageEpoch } from "../common/lib/clock";
   import { classifyDoc, colorFor, docColors } from "../lib/docline";
-  import Editor, { type EditorLine } from "./editor/Editor.svelte";
+  import Editor, { type EditorLine } from "../common/components/editor/Editor.svelte";
 
   interface Props {
     shell: ShellData;

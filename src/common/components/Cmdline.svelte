@@ -34,10 +34,10 @@
   // HelpSearch.svelte palette is the discoverable/browsable surface, this
   // box stays a plain, quiet command line), and rendering the transient
   // error `onSubmit` hands back.
-  import type { CmdlineData } from "../common/lib/data";
-  import { cycleComplete, mergeCommandLists, type CommandDef, type TabCycleState } from "../common/lib/cmdline";
-  import { pushPasteTarget, removePasteTarget } from "../common/lib/paste-targets";
-  import { STATUS_BAR_HEIGHT_PX } from "../common/lib/layout";
+  import type { CmdlineData } from "../lib/data";
+  import { cycleComplete, mergeCommandLists, type CommandDef, type TabCycleState } from "../lib/cmdline";
+  import { pushPasteTarget, removePasteTarget } from "../lib/paste-targets";
+  import { STATUS_BAR_HEIGHT_PX } from "../lib/layout";
 
   export type CmdlineMode = "site" | "ex" | "tmux";
 

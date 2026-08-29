@@ -10,7 +10,7 @@
   // left-alignment + glyph-between-number-and-label rendering to this page
   // only — every other PanelBadge consumer keeps the default centered look.
   import type { Snippet } from "svelte";
-  import PanelBadge from "../PanelBadge.svelte";
+  import PanelBadge from "../../common/components/PanelBadge.svelte";
 
   interface Props {
     testid?: string;

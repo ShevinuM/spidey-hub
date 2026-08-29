@@ -22,7 +22,7 @@
   // never frozen by the faked clock).
   import type { ProfileData } from "../common/lib/data";
   import { downloadResume } from "../lib/resume";
-  import Meter from "./Meter.svelte";
+  import Meter from "../common/components/Meter.svelte";
 
   interface Props {
     profile: ProfileData;

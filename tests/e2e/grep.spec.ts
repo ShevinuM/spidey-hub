@@ -130,9 +130,18 @@ test.describe("Grep overlay", () => {
     // header comments mention "Repositories.svelte" in prose (e.g.
     // CopyMode.svelte's data-copy-source contract doc), which would
     // otherwise win the path-substring-vs-content-hit race for
-    // `rows(page).first()` depending on alphabetical file order. This
-    // fragment only ever matches the real component's own PATH.
-    await page.keyboard.type("components/repositories/Repositories.svelte");
+    // `rows(page).first()` depending on alphabetical file order. Prefixed
+    // with "src/" (not just "components/...") since phase 02 (00-phases.md)
+    // moved several kernel components under `src/common/components/`,
+    // whose own relative imports of this file (e.g. PaneTree.svelte's
+    // `../../components/repositories/Repositories.svelte`) now also contain
+    // the un-prefixed fragment as file CONTENT — a second, competing hit
+    // that (per this file's own scoring: path-hit-then-content-hit, in file
+    // order) can win the race depending on where `common/` sorts relative
+    // to `components/`. Only the real file's own PATH is ever prefixed with
+    // "src/" — a relative import literal never spells that out — so this
+    // fragment stays unique to it.
+    await page.keyboard.type("src/components/repositories/Repositories.svelte");
     await expect(rows(page).first()).toHaveAttribute("data-path", "src/components/repositories/Repositories.svelte");
     await page.keyboard.press("Enter");
     await expect(overlay(page)).not.toBeVisible();

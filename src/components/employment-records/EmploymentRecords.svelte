@@ -19,7 +19,7 @@
   // readonly, so it can never desync from the live preview/timeline.
   import type { CollectionEntry } from "astro:content";
   import type { PersonnelData } from "../../common/lib/data";
-  import Editor from "../editor/Editor.svelte";
+  import Editor from "../../common/components/editor/Editor.svelte";
   import { EmploymentRecordsState } from "./employmentRecordsState.svelte";
   import RecordsPanel from "./RecordsPanel.svelte";
   import TimelinePanel from "./TimelinePanel.svelte";

@@ -1,6 +1,6 @@
 // Pure parser/completion logic for the site-wide floating Cmdline
 // (unit-testable: parse, match/filter, complete). No DOM, no
-// Svelte state, no side effects — src/components/Cmdline.svelte and
+// Svelte state, no side effects — src/common/components/Cmdline.svelte and
 // Terminal.svelte own the stateful/effectful parts (open/close, text state,
 // dispatching a resolved command to a view switch / grep open / window
 // mutation / etc.), exactly the same split Editor.svelte already uses for

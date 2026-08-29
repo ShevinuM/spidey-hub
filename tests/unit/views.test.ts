@@ -30,7 +30,7 @@ function expectedView(path: string): "employment" | "repositories" | "retina-v" 
   if (path.startsWith("src/content/repositories/")) return "repositories";
   if (path === "src/components/employment-records/EmploymentRecords.svelte") return "employment";
   if (path === "src/components/repositories/Repositories.svelte") return "repositories";
-  if (path === "src/components/Wallpaper.svelte") return "retina-v";
+  if (path === "src/common/components/Wallpaper.svelte") return "retina-v";
   if (path === "src/components/Profile.svelte") return "profile";
   return null;
 }

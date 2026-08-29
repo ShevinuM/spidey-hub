@@ -1,6 +1,6 @@
 # choose-tree overlay (`Ctrl-b w` —
 # REBINDS the old "go home" binding). One generic
-# always-mounted overlay (src/components/ChooseTree.svelte), same visual
+# always-mounted overlay (src/common/components/ChooseTree.svelte), same visual
 # family as GrepOverlay/CopyMode (bordered box, box-drawing inset title) but
 # a FULL window-content overlay (status bar stays visible below it, unlike
 # grep/copy-mode's own "leave room for the status bar" convention which this

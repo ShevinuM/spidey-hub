@@ -40,10 +40,10 @@
   //     of `handleKey()`) — "does NOT open [the help palette]... while
   //     choose-tree is open" falls out for free, since
   //     Terminal.svelte's bare-`?` opener is never reached.
-  import type { Client } from "../common/engines/tmux/tmux";
-  import { allPanes } from "../common/engines/tmux/tmux";
-  import type { ChooseTreeData } from "../common/lib/data";
-  import { STATUS_BAR_HEIGHT_PX } from "../common/lib/layout";
+  import type { Client } from "../engines/tmux/tmux";
+  import { allPanes } from "../engines/tmux/tmux";
+  import type { ChooseTreeData } from "../lib/data";
+  import { STATUS_BAR_HEIGHT_PX } from "../lib/layout";
 
   interface Props {
     client: Client;

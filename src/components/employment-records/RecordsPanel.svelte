@@ -3,7 +3,7 @@
   // top-stacked inside the bordered box with explicit `gap` between the
   // three blocks. The row list is the one block that grows/scrolls when its
   // content exceeds the box's remaining height.
-  import PanelBadge from "../PanelBadge.svelte";
+  import PanelBadge from "../../common/components/PanelBadge.svelte";
   import type { EmploymentRecordsState } from "./employmentRecordsState.svelte";
 
   interface Props {

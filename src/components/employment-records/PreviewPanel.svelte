@@ -4,7 +4,7 @@
   // ("personnel" mode). The line container scrolls vertically when the
   // body is taller than the panel, and each line wraps instead of clipping
   // so no character is ever hidden.
-  import PanelBadge from "../PanelBadge.svelte";
+  import PanelBadge from "../../common/components/PanelBadge.svelte";
   import type { EmploymentRecordsState } from "./employmentRecordsState.svelte";
 
   interface Props {

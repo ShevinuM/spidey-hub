@@ -33,10 +33,10 @@
     moveVertical,
     normalizeCharRange,
     type CursorPos,
-  } from "../common/engines/vim/vim";
-  import { setPasteBuffer, writeToSystemClipboard } from "../common/lib/paste-buffer";
-  import type { CopyModeData } from "../common/lib/data";
-  import { STATUS_BAR_HEIGHT_PX } from "../common/lib/layout";
+  } from "../engines/vim/vim";
+  import { setPasteBuffer, writeToSystemClipboard } from "../lib/paste-buffer";
+  import type { CopyModeData } from "../lib/data";
+  import { STATUS_BAR_HEIGHT_PX } from "../lib/layout";
 
   interface Props {
     copyMode: CopyModeData;

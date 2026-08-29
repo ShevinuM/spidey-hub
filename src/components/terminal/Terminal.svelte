@@ -46,16 +46,16 @@
   import type { PaneDirection } from "../../common/engines/tmux/tmux";
   import type { ShellMode } from "../../lib/shell";
   import { TerminalState, DEFAULT_SESSION_NAME } from "./terminalState.svelte";
-  import Wallpaper from "../Wallpaper.svelte";
-  import StatusBar from "../StatusBar.svelte";
-  import PaneTree from "../PaneTree.svelte";
+  import Wallpaper from "../../common/components/Wallpaper.svelte";
+  import StatusBar from "../../common/components/StatusBar.svelte";
+  import PaneTree from "../../common/components/PaneTree.svelte";
   import Shell from "../Shell.svelte";
   import Notifications from "../notifications/Notifications.svelte";
   import GrepOverlay from "../grep-overlay/GrepOverlay.svelte";
-  import CopyMode from "../CopyMode.svelte";
-  import ChooseTree from "../ChooseTree.svelte";
+  import CopyMode from "../../common/components/CopyMode.svelte";
+  import ChooseTree from "../../common/components/ChooseTree.svelte";
   import BootSequence from "../BootSequence.svelte";
-  import Cmdline from "../Cmdline.svelte";
+  import Cmdline from "../../common/components/Cmdline.svelte";
   import HelpSearch from "../HelpSearch.svelte";
 
   /** Unified optional-methods contract every mounted program component's

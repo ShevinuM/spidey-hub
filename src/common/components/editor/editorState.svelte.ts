@@ -16,12 +16,12 @@ import {
   type CursorPos,
   type LineRange,
   type VisualRange,
-} from "../../common/engines/vim/vim";
-import { setPasteBuffer, writeToSystemClipboard, type PasteBufferKind } from "../../common/lib/paste-buffer";
-import { pushPasteTarget, removePasteTarget } from "../../common/lib/paste-targets";
-import { lineText } from "../../lib/editorRender";
-import type { EditorLabels } from "../../common/lib/data";
-import type { TokenSpan } from "../../lib/repoTree";
+} from "../../engines/vim/vim";
+import { setPasteBuffer, writeToSystemClipboard, type PasteBufferKind } from "../../lib/paste-buffer";
+import { pushPasteTarget, removePasteTarget } from "../../lib/paste-targets";
+import { lineText } from "./editor-render";
+import type { EditorLabels } from "../../lib/data";
+import type { TokenSpan } from "../../../lib/repoTree";
 
 // Mirrors Editor.svelte's own `EditorLine` export structurally — a plain
 // .ts module can't import a named type from a .svelte file under `tsc`

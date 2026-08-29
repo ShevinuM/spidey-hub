@@ -37,7 +37,7 @@
   import type { CollectionEntry } from "astro:content";
   import type { RepositoriesData } from "../../common/lib/data";
   import type { Commit } from "../../lib/commits";
-  import Editor from "../editor/Editor.svelte";
+  import Editor from "../../common/components/editor/Editor.svelte";
   import { RepositoriesState } from "./repositoriesState.svelte";
   import StatusPanel from "./StatusPanel.svelte";
   import FilesPanel from "./FilesPanel.svelte";

@@ -49,7 +49,7 @@
   // both ways (Firefox/WebKit) — the only rendering difference from the
   // prototype's markup, and invisible whenever content fits (the
   // 06-editor golden, which never scrolls, is unaffected).
-  import type { EditorLabels } from "../../common/lib/data";
+  import type { EditorLabels } from "../../lib/data";
   import {
     clamp,
     extractCharRange,
@@ -66,9 +66,9 @@
     wordBackward,
     wordEnd,
     wordForward,
-  } from "../../common/engines/vim/vim";
-  import { parseExCommand } from "../../common/lib/cmdline";
-  import type { TokenSpan } from "../../lib/repoTree";
+  } from "../../engines/vim/vim";
+  import { parseExCommand } from "../../lib/cmdline";
+  import type { TokenSpan } from "../../../lib/repoTree";
   import { EditorState } from "./editorState.svelte";
   import EditorBuffer from "./EditorBuffer.svelte";
   import EditorStatusLine from "./EditorStatusLine.svelte";
@@ -231,7 +231,7 @@
   /** The ex-command state machine's EFFECT application: the `:` keystroke
    * itself, the text entry, and the resulting error/message PRESENTATION
    * all belong to the site-wide floating Cmdline box
-   * (src/components/Cmdline.svelte, driven by Terminal.svelte); this
+   * (src/common/components/Cmdline.svelte, driven by Terminal.svelte); this
    * function applies the already-typed command's EFFECT and reports back
    * whether it was recognized at all (so Terminal.svelte knows whether to
    * fall through to the site-wide command set — "editor context wins" only
