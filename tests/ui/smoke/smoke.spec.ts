@@ -31,7 +31,7 @@ for (const route of ROUTES) {
     // skip flag, since "the terminal boots" is exactly what this check
     // proves. Generous timeout: this is the real (non-fixture) build, and a
     // slow CI runner shouldn't flake a broad health check.
-    await new SmokePage(page).terminalReady.waitFor({ state: "attached", timeout: 15_000 });
+    await new SmokePage(page).waitUntilBooted();
 
     expect(consoleErrors, `console errors on ${route}: ${JSON.stringify(consoleErrors)}`).toEqual([]);
     expect(pageErrors, `page errors on ${route}: ${JSON.stringify(pageErrors)}`).toEqual([]);

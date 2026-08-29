@@ -880,6 +880,7 @@
 </script>
 
 <div
+  data-testid="terminal-ready"
   data-terminal-ready={keysReady}
   style="position:relative;min-height:100vh;overflow:hidden;background:#0b0f14;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;color:#c9d1d9;animation:{dashIn
     ? 'bDashIn 1.05s cubic-bezier(.2,.7,.3,1) both'
