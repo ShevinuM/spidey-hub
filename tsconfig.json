@@ -6,6 +6,7 @@
     "strictNullChecks": true,
     "jsx": "preserve",
     "exactOptionalPropertyTypes": true,
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+    "noImplicitOverride": true
   }
 }

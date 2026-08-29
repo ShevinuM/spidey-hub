@@ -4,7 +4,7 @@ Compiler-configuration, type-modelling, and narrowing rules. Class/encapsulation
 
 ## Compiler flags beyond `strict`
 
-- [ ] **R001** `strict` alone doesn't turn on everything worth having — evaluate `noUncheckedIndexedAccess` (an indexed access returns `T | undefined`, not `T`) and `noImplicitOverride` (a subclass method overriding a base method must say `override`, catching silent breakage when a base class is refactored) for v2's tsconfig; record the decision once made rather than leaving it implicit.
+- [ ] **R001** Settled (pre-phase, 2026-08-29): `noImplicitOverride` is **on** — enabling it against the bulk-imported tree surfaced 0 `tsc --noEmit` errors, so it costs nothing and stays on. `noUncheckedIndexedAccess` is **deferred until after phase 11** — enabling it surfaced 316 errors on the legacy (pre-restructure) tree, far past the ~50 threshold that would make fixing it a mechanical pre-phase task; re-evaluate once the tree is fully restructured into `common`/`src/features/*` (phase 11 close), when the error count and fix locations will actually reflect the target architecture instead of code about to move.
 - [ ] **R002** `strictPropertyInitialization` (part of `strict`) requires every class field to be assigned in the constructor or via a field initializer — a compiler-enforced version of the construction-invariant discipline in `../general/classes.md`, not a separate rule to remember.
 - [ ] **R003** Never reach for a blanket suppression flag to silence an error class project-wide — fix the specific site, or suppress narrowly at that one line with a comment saying why, so the rest of the codebase keeps the real check.
 
