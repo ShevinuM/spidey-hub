@@ -35,7 +35,7 @@ prompt:
 # than a string literal baked into a component. Cmdline.svelte itself does
 # not render a command list (the suggestions UI is gone); this string is
 # consumed instead by HelpSearch.svelte's own command-row rendering
-# (src/components/HelpSearch.svelte), the browsable command list. Appended
+# (src/features/help/components/HelpSearch.svelte), the browsable command list. Appended
 # verbatim (with its own leading space) after a command's name when
 # `takesArgs` is true; empty otherwise.
 argsPlaceholder: " <…>"

@@ -1,11 +1,11 @@
-# Site-wide `?` fuzzy help palette — src/components/HelpSearch.svelte,
+# Site-wide `?` fuzzy help palette — src/features/help/components/HelpSearch.svelte,
 # driven by Terminal.svelte. Same visual family as the Cmdline box
-# (src/data/cmdline.yaml — bordered floating panel, box-drawing inset
+# (src/common/content/cmdline.yaml — bordered floating panel, box-drawing inset
 # title, `>` prompt + block cursor) but its OWN component/state: empty
 # query lists cmdline.yaml's own site-wide `commands` list; typing
 # fuzzy-searches those commands PLUS every help scope's keymap row
-# (src/content/help/*.md, src/lib/helpSearch.ts owns the scoring — pure,
-# unit-tested, no DOM).
+# (src/features/help/content/*.md, src/features/help/lib/help-search.ts owns
+# the scoring — pure, unit-tested, no DOM).
 
 title: "─ Help ─"
 
