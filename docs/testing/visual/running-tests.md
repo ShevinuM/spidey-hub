@@ -1,6 +1,6 @@
 # Running the visual tests
 
-> **Status: partially real (pre-phase, 2026-08-29).** `package.json`/`playwright.config.ts` exist; `pnpm test:visual` runs today, but against the two **transitional** viewport-named projects (`1512x945`/`1920x1080`, `testDir: tests/visual` — no per-feature `<feature>-visual` project exists yet, since no feature has moved its own recipes out of the bulk-imported legacy suite; see `../e2e/running-tests.md`'s own header and `Instructions/00-phases.md` D21 for why these two keep the viewport-as-project-name convention until the first golden-seeding phase decides otherwise). The `--project=<feature>-visual` commands below are the target shape once that split happens — remove this header once every `<feature>-visual` project exists and the two transitional viewport projects are gone (`../../checklist/general/documentation-practice.md` R007).
+> **Status: partially real.** `package.json`/`playwright.config.ts` exist; `pnpm test:visual` runs today against a mix of the **transitional** viewport-named projects (`1512x945`/`1920x1080`, `testDir: tests/visual` — the bulk-imported recipes no context/feature has claimed yet) and the real per-context/per-feature splits that exist so far: `common-visual-<viewport>` and `profile-visual-<viewport>`. Each split project sets its own `snapshotPathTemplate` with the viewport hardcoded as a literal (not derived from `{projectName}`, since a split project's name carries a context/feature prefix) — recorded in full in `Instructions/01-pre-phase/recipe-feature-map.md`. The two transitional viewport projects keep the original root-level template unchanged, since their `{projectName}` is still exactly the viewport. Remove this header once every feature has its own `<feature>-visual` project and the two transitional viewport projects are empty (`../../checklist/general/documentation-practice.md` R007).
 
 ## Prerequisites
 
@@ -11,10 +11,13 @@
 
 | command | what it does |
 |---|---|
-| `pnpm test:visual` | **Real today.** Fixture build then both transitional viewport projects (`1512x945`/`1920x1080`) against `tests/visual/identical.spec.ts` + `adversarial-fixtures.spec.ts` — the whole bulk-imported golden set, not yet split per feature. |
-| `pnpm exec playwright test --project=<feature>-visual` | **Not yet real** — runs one feature's golden comparisons against its fixture build, once that feature's recipes have moved out of the transitional viewport projects. |
-| `pnpm exec playwright test --project="*-visual"` | **Not yet real** — runs every feature's visual project, same caveat. |
-| `pnpm exec playwright test --project=<feature>-visual --update-snapshots` | **Not yet real**, same caveat. Rebaselines one feature's goldens — **only** in the same change as a deliberate visual change (see below), never before that split exists. |
+| `pnpm test:visual` | **Real today.** Fixture build then the two transitional viewport projects (`1512x945`/`1920x1080`) against `tests/visual/identical.spec.ts` + `adversarial-fixtures.spec.ts`, plus `common/tests/ui/visual/identical.spec.ts` (`common-visual-<viewport>`), plus `src/features/profile/tests/ui/visual/identical.spec.ts` (`profile-visual-<viewport>`), plus `src/features/profile/tests/ui/harness/profile.spec.ts` (`profile-harness` — functional-only, no goldens, riding along on the same fixture build since it needs one too). |
+| `pnpm exec playwright test --project=common-visual-1512x945 --project=common-visual-1920x1080` | Real — runs just `common`'s split-out recipes against `common/tests/ui/visual/goldens/`. |
+| `pnpm exec playwright test --project=profile-visual-1512x945 --project=profile-visual-1920x1080` | Real — runs just `profile`'s split-out recipe against `src/features/profile/tests/ui/visual/goldens/`. |
+| `pnpm exec playwright test --project=profile-harness` | Real — runs the `profile` feature's harness spec (mount + core interactions, no goldens) against the fixture build's `/harness/profile` route. |
+| `pnpm exec playwright test --project=<feature>-visual` | **Not yet real for the remaining features** (boot, notifications, dashboard, employment, repositories, grep, shell-fs) — runs one feature's golden comparisons against its fixture build, once that feature's recipes have moved out of the transitional viewport projects. |
+| `pnpm exec playwright test --project="*-visual"` | Runs every existing `*-visual` project (currently `common-visual-*` + `profile-visual-*`), plus the two transitional viewport projects for whatever recipes remain unclaimed. |
+| `pnpm exec playwright test --project=<feature>-visual --update-snapshots` | Rebaselines one feature's goldens — **only** in the same change as a deliberate visual change (see below). Real for `common`/`profile`; **not yet real** for the remaining features until each settles its own split. |
 
 ## Rebaselining — the procedure, not just the flag
 

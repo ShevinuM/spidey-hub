@@ -1,6 +1,6 @@
 # Running the e2e tests
 
-> **Status: partially real (pre-phase, 2026-08-29).** `package.json`/`playwright.config.ts` exist and the commands below run today. `--project=smoke` is real (`tests/ui/smoke/`). Per-feature `--project=<feature>`/`--project=<feature>-visual` projects don't exist yet — no feature has moved out of the bulk-imported legacy tree — until then, that tree's own specs run under the **transitional** `legacy-1512x945`/`legacy-1920x1080` projects (two projects, one per viewport, both `testDir: tests/e2e`; see `Instructions/00-phases.md` D6 and `Instructions/01-pre-phase/PLAN.md` step 9 for why the plural is one `legacy` tier split by viewport rather than one project) — `legacy-*` is deleted once the last feature phase empties it (phase 11). Update this table as each feature phase adds its own project entries; remove this header once `legacy-*` is gone (`../checklist/general/documentation-practice.md` R007).
+> **Status: partially real.** `package.json`/`playwright.config.ts` exist and the commands below run today. `--project=smoke` is real (`tests/ui/smoke/`). Two features have moved their own specs out of the bulk-imported legacy tree so far — `common` and `profile` — each as its own `--project=<context>-<viewport>` pair; every other feature's specs still run under the **transitional** `legacy-1512x945`/`legacy-1920x1080` projects (two projects, one per viewport, both `testDir: tests/e2e`) — `legacy-*` shrinks as each remaining feature phase moves its own specs out, and is deleted once the last one empties it. Update this table as each feature phase adds its own project entries; remove this header once `legacy-*` is gone (`../checklist/general/documentation-practice.md` R007).
 
 There's no backend, database, or login flow in this app — every command below runs against a real (or fixture) static build, not a seeded environment.
 
@@ -13,12 +13,14 @@ There's no backend, database, or login flow in this app — every command below 
 
 | command | what it does |
 |---|---|
-| `pnpm test:e2e` | Real build then `playwright test tests/e2e` — today this runs the **transitional** `legacy-1512x945`/`legacy-1920x1080` projects (every bulk-imported spec, at both viewports — v1's own historical behavior, pinned). |
-| `pnpm test:visual` | Fixture build then the two viewport-named visual projects (`1512x945`/`1920x1080`) against `tests/visual/identical.spec.ts` + `adversarial-fixtures.spec.ts`. |
+| `pnpm test:e2e` | Real build then `playwright test --project=smoke --project=legacy-1512x945 --project=legacy-1920x1080 --project=common-1512x945 --project=common-1920x1080 --project=profile-1512x945 --project=profile-1920x1080` — the transitional legacy tiers plus every feature that has moved its specs out so far. |
+| `pnpm test:visual` | Fixture build then the shared/legacy visual specs plus every split-out `<context>-visual-<viewport>` project (see `../visual/running-tests.md`) plus the `profile-harness` functional (non-golden) project. |
 | `pnpm exec playwright test --project=smoke` | Runs only the root smoke tier (`tests/ui/smoke/`) — broad, shallow, cross-feature checks. This is the pre-merge gate. Real. |
-| `pnpm exec playwright test --project=<feature>` | **Not yet real** — runs one feature's own e2e project (its `tests/ui/e2e/**` specs) once that feature has moved out of `legacy-*`. |
-| `pnpm exec playwright test --project=<feature>-visual` | **Not yet real** — runs one feature's visual recipes against the fixture build, same caveat. |
-| `pnpm exec playwright test` (no `--project`) | Runs every project — the full suite (today: `smoke` + both `legacy-*` + both viewport visual projects). |
+| `pnpm exec playwright test --project=common-1512x945 --project=common-1920x1080` | Real — runs `common`'s kernel+editor e2e specs (`common/tests/ui/e2e/`). |
+| `pnpm exec playwright test --project=profile-1512x945 --project=profile-1920x1080` | Real — runs the `profile` feature's e2e specs (`src/features/profile/tests/ui/e2e/`). |
+| `pnpm exec playwright test --project=<feature>` | **Not yet real for the remaining features** (boot, notifications, dashboard, employment, repositories, grep, shell-fs) — runs one feature's own e2e project once that feature has moved out of `legacy-*`. |
+| `pnpm exec playwright test --project=<feature>-visual` | **Not yet real for the remaining features** — runs one feature's visual recipes against the fixture build, same caveat. |
+| `pnpm exec playwright test` (no `--project`) | Runs every project — the full suite. |
 | `pnpm exec playwright test --headed` | Any of the above, with a visible browser window. |
 | `pnpm exec playwright test --ui` | Opens Playwright's interactive UI — step through tests, time-travel through actions, re-run as you edit spec files. |
 
