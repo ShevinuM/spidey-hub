@@ -1,12 +1,12 @@
 # Phase index — v1 → v2 migration
 
-> **Status: phases 03 (profile) and 04 (help) approved by the developer 2026-09-08 and in execution, in order — 04 does not start until 03 closes. Phases 01–02 closed (each: verifier PASS + auditor clean after fix rounds). ~40 local commits on `frontend-rewrite`, nothing pushed.** Source of truth for rules: `docs/checklist/**`, `docs/testing/**`. Sequencing intent: `Instructions/Planning/test-setup.md`, `Instructions/Planning/delegate.md`. Migration source: the v1 working tree at `/Users/shev/Development/spidey-hub` **as it stands** (uncommitted changes included — the working tree, not HEAD, is what migrates). Each phase's own `PLAN.md` is the executable contract; this file is the only cross-phase document any phase may read.
+> **Status: phase 03 closed 2026-09-08 (verifier PASS full + 3 scoped rounds; auditor clean after 2 fix rounds + a recommit for per-commit index consistency). Phase 04 (help) in execution per the developer's 2026-09-08 approval. Phases 01–03 closed. ~55 local commits on `frontend-rewrite`, nothing pushed.** Source of truth for rules: `docs/checklist/**`, `docs/testing/**`. Sequencing intent: `Instructions/Planning/test-setup.md`, `Instructions/Planning/delegate.md`. Migration source: the v1 working tree at `/Users/shev/Development/spidey-hub` **as it stands** (uncommitted changes included — the working tree, not HEAD, is what migrates). Each phase's own `PLAN.md` is the executable contract; this file is the only cross-phase document any phase may read.
 
 | # | phase | context | goal | status |
 |---|---|---|---|---|
 | 01 | pre-phase | out of context | v1 pre-flight, docs alignment, bulk-import green baseline, toolchain (flags/Vitest/oxlint), Playwright `legacy`+`smoke` projects, recipe→feature map, initial design-mirror push | **closed** |
 | 02 | common | `src/common` | tmux + vim engines, editor, kernel chrome components, shared lib; kernel+editor specs → `common` project; Terminal.svelte → `bootstrap/` (declared out-of-context wiring) | **closed** |
-| 03 | profile | `src/features/profile` | smallest feature — proves the per-feature loop | not started |
+| 03 | profile | `src/features/profile` | smallest feature — proves the per-feature loop | **closed** |
 | 04 | help | `src/features/help` | help views + search; then the delegated fuzzysort swap (D11) | not started |
 | 05 | boot | `src/features/boot` | boot sequence + boot state | not started |
 | 06 | notifications | `src/features/notifications` | bell/panel/toast system | not started |
