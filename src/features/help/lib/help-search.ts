@@ -1,5 +1,5 @@
 // Pure scoring/search logic for the site-wide `?` fuzzy help palette —
-// src/components/HelpSearch.svelte and Terminal.svelte own the
+// src/features/help/components/HelpSearch.svelte and Terminal.svelte own the
 // stateful/effectful parts (open/close, typed text, Up/Down selection,
 // executing a chosen command), exactly the same split src/common/lib/cmdline.ts
 // already uses for Cmdline.svelte. No DOM, no Svelte state, no side effects.
@@ -15,8 +15,8 @@
 //     executeSiteAction). `q` is included with its exitProgram meaning
 //     (site-mode `:q`/cmdline `q` exits the active pane's program to a
 //     shell — it does not kill the window), same as every other command.
-//   - "keymap" entries: every row of every help scope (src/content/help/
-//     *.md, one file per scope), PLUS every row of src/data/shell.yaml's
+//   - "keymap" entries: every row of every help scope (src/features/help/
+//     content/*.md, one file per scope), PLUS every row of src/data/shell.yaml's
 //     own `help.rows` (the in-window shell's `cd`/`ls`/`cat`/.../
 //     `neofetch`/`sudo`/... — see src/lib/shell.ts's `runCommand` "help"
 //     case, which prints this exact same list inside the shell itself) —

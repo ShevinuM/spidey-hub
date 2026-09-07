@@ -2,9 +2,11 @@
 // string that isn't part of a content collection lives in one of these
 // files. Astro pages/layouts read this module and pass plain data down as
 // props; Svelte islands never read the filesystem themselves. Kernel-owned
-// yaml (site/cmdline/choosetree) lives in `src/common/content/` alongside
-// this loader; feature-owned yaml lives in `src/data/` — both directories
-// are read from the explicit `?raw` imports below, one per file, not a glob.
+// yaml (site/cmdline/choosetree) lives in `src/common/content/`; a feature
+// with its own bounded context keeps its yaml beside its own content (e.g.
+// `src/features/help/content/help.yaml`); every other feature's yaml still
+// lives in `src/data/` — every one of these is read from its own explicit
+// `?raw` import below, one per file, not a glob.
 //
 // Each file is a static `?raw` import (inlined as a string by Vite at
 // build time) rather than a runtime `node:fs` read relative to
@@ -23,10 +25,10 @@ import trackerRaw from "../../data/tracker.yaml?raw";
 import repositoriesRaw from "../../data/repositories.yaml?raw";
 import grepRaw from "../../data/grep.yaml?raw";
 import personnelRaw from "../../data/personnel.yaml?raw";
-import helpRaw from "../../data/help.yaml?raw";
+import helpRaw from "../../features/help/content/help.yaml?raw";
 import bootRaw from "../../data/boot.yaml?raw";
 import cmdlineRaw from "../content/cmdline.yaml?raw";
-import helpsearchRaw from "../../data/helpsearch.yaml?raw";
+import helpsearchRaw from "../../features/help/content/helpsearch.yaml?raw";
 import notificationsRaw from "../../data/notifications.yaml?raw";
 import shellRaw from "../../data/shell.yaml?raw";
 import choosetreeRaw from "../content/choosetree.yaml?raw";
@@ -448,7 +450,7 @@ export interface PersonnelData {
 export const getPersonnel = (): PersonnelData => loadYaml<PersonnelData>("personnel.yaml");
 
 // ---------------------------------------------------------------------------
-// help.yaml + src/content/help/*.md
+// src/features/help/content/help.yaml + src/features/help/content/*.md
 // ---------------------------------------------------------------------------
 
 /** One keymap row: a short `name`, a plain-language one-line `desc`

@@ -1,5 +1,5 @@
 // Unit tests for the pure scoring/search logic behind the site-wide `?`
-// fuzzy help palette — src/lib/helpSearch.ts. No DOM, no Svelte state:
+// fuzzy help palette — src/features/help/lib/help-search.ts. No DOM, no Svelte state:
 // exercised against
 // fixture command/section lists (not the real cmdline.yaml/help content,
 // same "shape, not wording" isolation tests/unit/cmdline.test.ts already
@@ -15,7 +15,7 @@ import {
   type CommandSource,
   type HelpSectionSource,
   type ShellHelpRowSource,
-} from "../../src/lib/helpSearch";
+} from "../../src/features/help/lib/help-search";
 
 const commands: CommandSource[] = [
   { name: "dashboard", aliases: ["home"], description: "jump to the dashboard", action: "view:home" },

@@ -1,5 +1,5 @@
 // Behavioral e2e suite for the site-wide `?` fuzzy HelpSearch palette —
-// src/components/HelpSearch.svelte, driven by Terminal.svelte. Covers:
+// src/features/help/components/HelpSearch.svelte, driven by Terminal.svelte. Covers:
 // opening from multiple contexts, the gating rules (editor/grep/Cmdline/
 // status-bar prompt/boot all block it), the empty-query command listing, fuzzy
 // filtering + fuzzy canaries mirroring the pure unit-test canaries in

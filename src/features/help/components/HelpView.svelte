@@ -2,7 +2,7 @@
   // Help window ("5:help") — sidebar-scoped keymap reference plus a live
   // filter, following Mockup A's layout (header + 230px scope sidebar +
   // section rows with right-aligned key chips). Renders the `HelpData`
-  // built from src/data/help.yaml's chrome plus the `help` content
+  // built from this feature's own help.yaml chrome plus the `help` content
   // collection's scopes verbatim; this component owns no copy of its own
   // beyond structure/styling.
   //
@@ -14,9 +14,10 @@
   // to that row's own content instead of a fixed width, which is what
   // guarantees no row's name/description/chips ever wraps to a second line
   // at any viewport (the one deviation from the mockup's fixed `300px`
-  // column — see tests/e2e/help-layout.spec.ts).
-  import type { HelpData, HelpRow } from "../common/lib/data";
-  import PanelBadge from "../common/components/PanelBadge.svelte";
+  // column — see tests/ui/e2e/help-layout.spec.ts in this feature's own
+  // test tree).
+  import type { HelpData, HelpRow } from "../../../common/lib/data";
+  import PanelBadge from "../../../common/components/PanelBadge.svelte";
 
   interface Props {
     help: HelpData;

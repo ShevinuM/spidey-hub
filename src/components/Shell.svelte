@@ -45,7 +45,7 @@
   import { repoFileText, type TokenSpan } from "../lib/repoTree";
   import { pushPasteTarget, removePasteTarget } from "../common/lib/paste-targets";
   import { resolvePageEpoch } from "../common/lib/clock";
-  import { classifyDoc, colorFor, docColors } from "../lib/docline";
+  import { classifyDoc, colorFor, docColors } from "../common/lib/docline";
   import Editor, { type EditorLine } from "../common/components/editor/Editor.svelte";
 
   interface Props {

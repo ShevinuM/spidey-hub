@@ -8,7 +8,7 @@ import type { CollectionEntry } from "astro:content";
 import type { RepositoriesData } from "../../common/lib/data";
 import type { Commit } from "../../lib/commits";
 import { untrack } from "svelte";
-import { classifyBody, classifyDoc, colorFor, docColors } from "../../lib/docline";
+import { classifyBody, classifyDoc, colorFor, docColors } from "../../common/lib/docline";
 import {
   findFile,
   buildTree,

@@ -140,7 +140,7 @@ const profile = defineCollection({
 const help = defineCollection({
   loader: glob({
     pattern: "*.md",
-    base: "src/content/help",
+    base: "src/features/help/content",
     generateId: ({ entry }) => entry.replace(/\.md$/, ""),
   }),
   schema: z.object({

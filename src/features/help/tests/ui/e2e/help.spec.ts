@@ -4,9 +4,9 @@
 // binding, not a bare letter — there is no bare-key dashboard hotkey; a bare
 // `?` opens the site-wide HelpSearch palette instead, see
 // help-search.spec.ts in this same folder). Content is asserted against the real
-// src/data/help.yaml chrome + src/content/help/*.md scopes (read directly,
-// same pattern as grep.spec.ts's real-index comparisons) so this suite can
-// never drift from the actual copy.
+// src/features/help/content/help.yaml chrome + src/features/help/content/*.md
+// scopes (read directly, same pattern as grep.spec.ts's real-index
+// comparisons) so this suite can never drift from the actual copy.
 import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
 // This spec's `context` fixture (imported from common/tests/ui/support/fixtures,
 // not raw "@playwright/test") pre-seeds the boot-seen sessionStorage flag
@@ -48,8 +48,8 @@ interface HelpScopeFrontmatter {
 }
 
 function realHelp(): HelpData {
-  const chrome = YAML.parse(readFileSync(join(ROOT, "src/data/help.yaml"), "utf8")) as HelpChrome;
-  const entries = readContentDir<HelpScopeFrontmatter>(join(ROOT, "src/content/help"));
+  const chrome = YAML.parse(readFileSync(join(ROOT, "src/features/help/content/help.yaml"), "utf8")) as HelpChrome;
+  const entries = readContentDir<HelpScopeFrontmatter>(join(ROOT, "src/features/help/content"));
   const scopes = entries
     .slice()
     .sort((a, b) => a.data.order - b.data.order)
@@ -109,7 +109,7 @@ test.describe("Help: reachability", () => {
   });
 });
 
-test.describe("Help: content is sourced from src/data/help.yaml + src/content/help", () => {
+test.describe("Help: content is sourced from src/features/help/content/help.yaml + src/features/help/content", () => {
   test("title and total row count match the real file", async ({ page }) => {
     await gotoReady(page, "/help");
     const help = realHelp();

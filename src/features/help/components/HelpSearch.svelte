@@ -22,17 +22,17 @@
   // flashes the box border briefly rather than closing or navigating
   // anywhere, and there is nothing for an e2e test to assert beyond "the
   // palette is still open and nothing navigated" (see help-search.spec.ts).
-  import type { CmdlineData, HelpData, HelpSearchData, ShellData } from "../common/lib/data";
-  import { buildEntries, commandEntries, searchHelp, type HelpSearchEntry } from "../lib/helpSearch";
-  import { pushPasteTarget, removePasteTarget } from "../common/lib/paste-targets";
-  import { STATUS_BAR_HEIGHT_PX } from "../common/lib/layout";
+  import type { CmdlineData, HelpData, HelpSearchData, ShellData } from "../../../common/lib/data";
+  import { buildEntries, commandEntries, searchHelp, type HelpSearchEntry } from "../lib/help-search";
+  import { pushPasteTarget, removePasteTarget } from "../../../common/lib/paste-targets";
+  import { STATUS_BAR_HEIGHT_PX } from "../../../common/lib/layout";
 
   interface Props {
     helpSearch: HelpSearchData;
     cmdline: CmdlineData;
     help: HelpData;
     /** shell.yaml — only its own `help.rows[]` is consulted here (see
-     * helpSearch.ts's `shellEntries`); the rest of ShellData is irrelevant
+     * help-search.ts's `shellEntries`); the rest of ShellData is irrelevant
      * to this palette. */
     shell: ShellData;
     /** Runs a resolved command entry's `action` id — Terminal.svelte's own
@@ -59,7 +59,7 @@
   let flashTimer: ReturnType<typeof setTimeout> | undefined;
 
   // A help row is {name, desc, keys[]} (HelpView.svelte's own scope/
-  // chip shape) — adapted here into helpSearch.ts's decoupled {key,
+  // chip shape) — adapted here into help-search.ts's decoupled {key,
   // description} shape (see that file's own header comment on why it stays
   // independent of src/common/lib/data.ts's types) rather than changing that
   // module and its unit tests to match a UI-specific row shape.

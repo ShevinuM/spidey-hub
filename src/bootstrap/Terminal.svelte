@@ -56,7 +56,7 @@
   import ChooseTree from "../common/components/ChooseTree.svelte";
   import BootSequence from "../components/BootSequence.svelte";
   import Cmdline from "../common/components/Cmdline.svelte";
-  import HelpSearch from "../components/HelpSearch.svelte";
+  import HelpSearch from "../features/help/components/HelpSearch.svelte";
 
   /** Unified optional-methods contract every mounted program component's
    * `bind:this` ref may expose, since PaneTree.svelte's single ref registry

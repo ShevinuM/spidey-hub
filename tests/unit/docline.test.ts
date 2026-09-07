@@ -1,4 +1,4 @@
-// Pins classifyDoc() (src/lib/docline.ts) to a fixed set of hand-verified
+// Pins classifyDoc() (src/common/lib/docline.ts) to a fixed set of hand-verified
 // kind arrays for 4 fixture project docs + 3 real Enaimco personnel role
 // docs (the 3 sub-role files under enaimco/software-developer/, part of a
 // path-derived personnel tree; these fixtures were regenerated against
@@ -14,7 +14,7 @@
 import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { classifyDoc, docColors, xpColors } from "../../src/lib/docline";
+import { classifyDoc, docColors, xpColors } from "../../src/common/lib/docline";
 
 const ROOT = join(import.meta.dirname, "../..");
 const fixturesPath = join(import.meta.dirname, "docline.fixtures.json");
