@@ -3,8 +3,8 @@
 // tuples of [text, kind]).
 //
 // Rules (mirrors the prototype's hand-authored kind arrays exactly — see
-// tests/unit/docline.fixtures.json, extracted verbatim from the 4 fixture
-// project docs + 7 personnel role docs):
+// common/tests/unit/docline.fixtures.json, extracted verbatim from the 4
+// fixture project docs + 7 personnel role docs):
 //   - a line starting with one or more "#" followed by a space -> "h"
 //     (both "# Title" and "## Section" headings).
 //   - project docs only: the single line immediately following a

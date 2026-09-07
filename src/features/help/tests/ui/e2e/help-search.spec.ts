@@ -3,7 +3,7 @@
 // opening from multiple contexts, the gating rules (editor/grep/Cmdline/
 // status-bar prompt/boot all block it), the empty-query command listing, fuzzy
 // filtering + fuzzy canaries mirroring the pure unit-test canaries in
-// tests/unit/helpSearch.test.ts, Enter's two behaviors (executes a command,
+// ../../unit/help-search.test.ts, Enter's two behaviors (executes a command,
 // no-ops on a keymap row), Esc, and window-chrome close-on-switch. The
 // sibling Cmdline suite (cmdline.spec.ts) covers the regression that `?`
 // still types literally into an already-open grep query / Cmdline input.
@@ -255,7 +255,7 @@ test.describe("HelpSearch: Enter behavior", () => {
     await page.keyboard.press("?");
     await page.keyboard.type("kil");
     // Every result for "kil" is a keymap row (no command name/description
-    // contains it — see tests/unit/helpSearch.test.ts's own canary), so the
+    // contains it — see ../../unit/help-search.test.ts's own canary), so the
     // top (default-selected) row is guaranteed to be one.
     await expect(results(page).first()).toHaveAttribute("data-kind", "keymap");
     await page.keyboard.press("Enter");

@@ -6,17 +6,16 @@
 // re-typed literals) so this test fails the moment a content file's body
 // stops matching the pinned kinds.
 //
-// tests/unit/docline.fixtures.json holds the expected kind arrays and color
-// maps (the project-doc entries extracted verbatim from the prototype's
-// Component class; the personnel-doc entries regenerated from
-// classifyDoc() itself against the real files). Run via
-// `pnpm test:unit` / `node --test`.
+// docline.fixtures.json (this same folder) holds the expected kind arrays
+// and color maps (the project-doc entries extracted verbatim from the
+// prototype's Component class; the personnel-doc entries regenerated from
+// classifyDoc() itself against the real files). Run via `pnpm test:unit`.
 import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { classifyDoc, docColors, xpColors } from "../../src/common/lib/docline";
+import { classifyDoc, docColors, xpColors } from "../../../src/common/lib/docline";
 
-const ROOT = join(import.meta.dirname, "../..");
+const ROOT = join(import.meta.dirname, "../../..");
 const fixturesPath = join(import.meta.dirname, "docline.fixtures.json");
 const expected = JSON.parse(readFileSync(fixturesPath, "utf8")) as {
   docColors: Record<string, string>;

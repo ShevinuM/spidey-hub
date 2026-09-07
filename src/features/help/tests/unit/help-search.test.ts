@@ -15,7 +15,7 @@ import {
   type CommandSource,
   type HelpSectionSource,
   type ShellHelpRowSource,
-} from "../../src/features/help/lib/help-search";
+} from "../../lib/help-search";
 
 const commands: CommandSource[] = [
   { name: "dashboard", aliases: ["home"], description: "jump to the dashboard", action: "view:home" },
