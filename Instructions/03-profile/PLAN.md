@@ -1,6 +1,6 @@
 # Phase 03 — profile
 
-> **Status: planned, not started. Blocked on phase 01 (and 02 if ordered first).** Binding decisions: `Instructions/00-phases.md`. This phase additionally **settles D21** (snapshot-path mechanics) for every later feature phase if phase 02 hasn't already.
+> **Status: approved for execution 2026-09-08. Phases 01–02 closed.** Binding decisions: `Instructions/00-phases.md`. **D21 is already settled** — phase 02 ran first and recorded the snapshot-path mechanics in `Instructions/01-pre-phase/recipe-feature-map.md` (§ "D21 snapshot-path decision"). This phase REUSES that shape verbatim (architecture R003); it does not re-derive it.
 
 ## Context
 
@@ -23,7 +23,7 @@ The smallest feature migrated end-to-end — proving the per-feature loop: specs
 
 ## Steps (the per-feature loop — never fuse steps)
 
-- [ ] **1. Port specs + goldens.** Spec verbatim (import paths only). Seed goldens byte-identical (`cp`, then `cmp` each against v1). Create the visual spec from the v1 pipeline slice (D5). **Settle D21**: pick projects/template so seeded goldens are found and compared unmodified; record the shape in `Instructions/01-pre-phase/recipe-feature-map.md`. Add project entries; shrink `legacy`.
+- [ ] **1. Port specs + goldens.** Spec verbatim (import paths only; strip `.ts` extensions per D23(d)/FX.1). Seed goldens byte-identical (`cp`, then `cmp` each against v1). Create the visual spec from the v1 pipeline slice (D5). **Reuse D21 verbatim** as recorded in `Instructions/01-pre-phase/recipe-feature-map.md`: per-project `snapshotPathTemplate` with the viewport hardcoded from the `viewports` array entry (never `{projectName}`), goldens at `src/features/profile/tests/ui/visual/goldens/<viewport>/` (feature tests nest under `src/features/<f>/tests/`, unlike common's top-level `common/tests/`). Add `profile`/`profile-visual-<viewport>` project entries; shrink `legacy` (filter profile-owned recipes out of the legacy identical.spec via the same set-filter mechanism phase 02 used).
   *Verify (D20):* real build → `--project=profile` + `--project=legacy` green against un-moved source; fixture build → `--project=profile-visual` green; `cmp` clean.
 - [ ] **2. Move source** per table (D15/D16); update imports + any literal-path assertions (D8); delete originals.
   *Verify:* `test ! -e src/components/Profile.svelte`; `grep -rn "lib/net\b\|components/Profile" src tests` shows only new paths.
