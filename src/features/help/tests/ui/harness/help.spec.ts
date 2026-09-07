@@ -26,11 +26,11 @@ test.describe("Help harness: mounts standalone with seeded fixture props", () =>
 
     await expect(help.title).toHaveText("Need some help?");
     await expect(help.rows.first()).toBeVisible();
-    const rowCount = await help.rows.count();
-    expect(rowCount).toBeGreaterThan(0);
 
-    const tabCount = await help.scopeTabs.count();
-    expect(tabCount).toBeGreaterThan(1); // "All bindings" plus at least one real scope
+    // At least "All bindings" plus one real scope tab — a web-first proof
+    // (nth(1) resolving/visible) rather than a once-read count, since a
+    // fresh mount's tab list can still be settling.
+    await expect(help.scopeTabs.nth(1)).toBeVisible();
   });
 
   test("? opens the search palette via the harness's own keydown routing", async ({ page }) => {
