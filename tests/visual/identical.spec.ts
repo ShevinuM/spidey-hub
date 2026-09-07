@@ -53,12 +53,22 @@ import { captureBootState, captureState } from "../../common/tests/ui/support/pi
 // common/tests/ui/visual/ (common-visual-<viewport> projects) against its
 // own goldens/ tree. Phase 03 (profile) similarly owns "07-profile", now run
 // under src/features/profile/tests/ui/visual/ (profile-visual-<viewport>
-// projects). Both are excluded here to keep every recipe captured exactly
-// once (00-phases.md D21). As later phases move their own recipes out,
-// SPLIT_OWNED_RECIPE_NAMES grows the same way (renamed from
-// COMMON_OWNED_RECIPE_NAMES now that more than one context's own recipes
-// are filtered out here).
-const SPLIT_OWNED_RECIPE_NAMES = new Set(["06-editor", "15-cmdline", "18-split", "19-choose-tree", "07-profile"]);
+// projects). Phase 04 (help) owns "11-help" (extraRecipes) and
+// "20-help-search" (iteration3Recipes), now run under
+// src/features/help/tests/ui/visual/ (help-visual-<viewport> projects). All
+// are excluded here to keep every recipe captured exactly once (00-phases.md
+// D21). As later phases move their own recipes out, SPLIT_OWNED_RECIPE_NAMES
+// grows the same way (renamed from COMMON_OWNED_RECIPE_NAMES now that more
+// than one context's own recipes are filtered out here).
+const SPLIT_OWNED_RECIPE_NAMES = new Set([
+  "06-editor",
+  "15-cmdline",
+  "18-split",
+  "19-choose-tree",
+  "07-profile",
+  "11-help",
+  "20-help-search",
+]);
 const keyRecipes = [...recipes, ...extraRecipes, ...cmdlineRecipes, ...iteration3Recipes, ...notificationsRecipes].filter(
   (recipe) => !SPLIT_OWNED_RECIPE_NAMES.has(recipe.name),
 );

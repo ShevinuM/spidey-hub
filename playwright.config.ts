@@ -165,6 +165,35 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
+    // `help` (D20): the 3 specs (help.spec.ts, help-layout.spec.ts,
+    // help-search.spec.ts) phase 04 ported out of `legacy` — one project per
+    // viewport, same reasoning as `profile-<viewport>` above.
+    ...viewports.map((viewport) => ({
+      name: `help-${viewport.name}`,
+      testDir: "./src/features/help/tests/ui/e2e",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+      },
+    })),
+    // `help-visual` (D21): the 2 recipes phase 04 owns per
+    // Instructions/01-pre-phase/recipe-feature-map.md ("11-help",
+    // "20-help-search"), moved out of the viewport-named visual projects
+    // above (and out of tests/visual/identical.spec.ts's
+    // SPLIT_OWNED_RECIPE_NAMES filter). Reuses common's/profile's split-project
+    // shape verbatim (D21(a)): its own `snapshotPathTemplate` with the
+    // viewport hardcoded as a literal, not derived from `{projectName}`.
+    ...viewports.map((viewport) => ({
+      name: `help-visual-${viewport.name}`,
+      testDir: "./src/features/help/tests/ui/visual",
+      snapshotPathTemplate: `src/features/help/tests/ui/visual/goldens/${viewport.name}/{arg}{ext}`,
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+      },
+    })),
   ],
   webServer: [
     {

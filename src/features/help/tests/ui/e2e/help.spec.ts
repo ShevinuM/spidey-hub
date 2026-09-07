@@ -3,21 +3,21 @@
 // the dashboard menu's Help row (its hotkey column shows the live `Ctrl-b 5`
 // binding, not a bare letter — there is no bare-key dashboard hotkey; a bare
 // `?` opens the site-wide HelpSearch palette instead, see
-// tests/e2e/help-search.spec.ts). Content is asserted against the real
+// help-search.spec.ts in this same folder). Content is asserted against the real
 // src/data/help.yaml chrome + src/content/help/*.md scopes (read directly,
 // same pattern as grep.spec.ts's real-index comparisons) so this suite can
 // never drift from the actual copy.
-import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
-// This spec's `context` fixture (imported from ./fixtures.ts, not raw
-// "@playwright/test") pre-seeds the boot-seen sessionStorage flag before
-// every navigation, so BootSequence.svelte's unskippable sequence never
-// runs for these tests.
+import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
+// This spec's `context` fixture (imported from common/tests/ui/support/fixtures,
+// not raw "@playwright/test") pre-seeds the boot-seen sessionStorage flag
+// before every navigation, so BootSequence.svelte's unskippable sequence
+// never runs for these tests.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
-import { readContentDir } from "../../common/tests/ui/support/content-fixtures.ts";
+import { readContentDir } from "../../../../../../common/tests/ui/support/content-fixtures";
 
-const ROOT = join(import.meta.dirname, "../..");
+const ROOT = join(import.meta.dirname, "../../../../../..");
 
 interface HelpRow {
   name: string;
