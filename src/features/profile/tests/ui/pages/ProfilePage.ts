@@ -31,12 +31,11 @@ export class ProfilePage {
     return this.page.getByTestId("profile-contact-link");
   }
 
-  /** Each of the 60 SIGNAL bars is an unmarked `<div>` — there's no stable
-   * accessible role/text/testid for any ONE bar, only for the container
-   * (`playwright.md` R001's rank-3 fallback: identify the container by
-   * testid, then narrow structurally from there). */
+  /** Each of the 60 SIGNAL bars carries its own `data-testid`
+   * (`signal-meter-bar`, on `Meter.svelte`) — `getByTestId` matches all 60,
+   * with no CSS/structural narrowing needed to reach them. */
   get meterBars() {
-    return this.page.getByTestId("signal-meter-bars").locator("> div");
+    return this.page.getByTestId("signal-meter-bar");
   }
 
   get statusBarWindows() {

@@ -126,7 +126,10 @@
   style="flex:1;min-width:0;height:26px;display:flex;align-items: flex-end;gap:2px;overflow: hidden"
 >
   {#each bars as i (i)}
-    <div style="flex:1;min-width:0;height:8%;border-radius:1px;background:#2a5f7a"></div>
+    <div
+      data-testid="signal-meter-bar"
+      style="flex:1;min-width:0;height:8%;border-radius:1px;background:#2a5f7a"
+    ></div>
   {/each}
 </div>
 <span
