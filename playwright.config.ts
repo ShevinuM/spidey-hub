@@ -119,6 +119,37 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
+    // `profile` (D20): the 1 spec (profile.spec.ts) phase 03 ported out of
+    // `legacy` — one project per viewport, same reasoning as `common-<viewport>`
+    // above.
+    ...viewports.map((viewport) => ({
+      name: `profile-${viewport.name}`,
+      testDir: "./src/features/profile/tests/ui/e2e",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+      },
+    })),
+    // `profile-visual` (D21): the 1 recipe phase 03 owns per
+    // Instructions/01-pre-phase/recipe-feature-map.md ("07-profile"), moved
+    // out of the viewport-named visual projects above (and out of
+    // tests/visual/identical.spec.ts's SPLIT_OWNED_RECIPE_NAMES filter).
+    // Reuses common's split-project shape verbatim (D21(a)): its own
+    // `snapshotPathTemplate` with the viewport hardcoded as a literal, not
+    // derived from `{projectName}` — only the path prefix differs, since
+    // feature tests nest under `src/features/<f>/tests/` rather than
+    // common's top-level `common/tests/`.
+    ...viewports.map((viewport) => ({
+      name: `profile-visual-${viewport.name}`,
+      testDir: "./src/features/profile/tests/ui/visual",
+      snapshotPathTemplate: `src/features/profile/tests/ui/visual/goldens/${viewport.name}/{arg}{ext}`,
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+      },
+    })),
   ],
   webServer: [
     {

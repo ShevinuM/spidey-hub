@@ -51,12 +51,16 @@ import { captureBootState, captureState } from "../../common/tests/ui/support/pi
 // "06-editor" (recipes), "15-cmdline" (cmdlineRecipes), "18-split" and
 // "19-choose-tree" (iteration3Recipes) — and now runs them itself under
 // common/tests/ui/visual/ (common-visual-<viewport> projects) against its
-// own goldens/ tree, so they're excluded here to keep every recipe captured
-// exactly once (00-phases.md D21). As later phases move their own recipes
-// out, COMMON_OWNED_RECIPE_NAMES grows the same way.
-const COMMON_OWNED_RECIPE_NAMES = new Set(["06-editor", "15-cmdline", "18-split", "19-choose-tree"]);
+// own goldens/ tree. Phase 03 (profile) similarly owns "07-profile", now run
+// under src/features/profile/tests/ui/visual/ (profile-visual-<viewport>
+// projects). Both are excluded here to keep every recipe captured exactly
+// once (00-phases.md D21). As later phases move their own recipes out,
+// SPLIT_OWNED_RECIPE_NAMES grows the same way (renamed from
+// COMMON_OWNED_RECIPE_NAMES now that more than one context's own recipes
+// are filtered out here).
+const SPLIT_OWNED_RECIPE_NAMES = new Set(["06-editor", "15-cmdline", "18-split", "19-choose-tree", "07-profile"]);
 const keyRecipes = [...recipes, ...extraRecipes, ...cmdlineRecipes, ...iteration3Recipes, ...notificationsRecipes].filter(
-  (recipe) => !COMMON_OWNED_RECIPE_NAMES.has(recipe.name),
+  (recipe) => !SPLIT_OWNED_RECIPE_NAMES.has(recipe.name),
 );
 
 // Visual-regression harness policy: start maxDiffPixels: 0; if
