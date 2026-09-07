@@ -1,4 +1,5 @@
 import { expect, type Page } from "@playwright/test";
+import { StatusBarPage } from "../../../../../../common/tests/ui/pages/StatusBarPage";
 
 /**
  * Page object for the help feature's harness mount (`HelpView.svelte` +
@@ -9,9 +10,16 @@ import { expect, type Page } from "@playwright/test";
  * convention) — currently consumed only by the harness suite
  * (`tests/ui/harness/`), since the e2e suite's `help*.spec.ts` files are
  * verbatim-ported specs exempt from the page-object convention.
+ *
+ * Kernel-chrome locators (the status bar, etc.) are never redefined here —
+ * `e2e-testing.md` R005 — this composes the shared `StatusBarPage` instead.
  */
 export class HelpPage {
-  constructor(private readonly page: Page) {}
+  readonly statusBar: StatusBarPage;
+
+  constructor(private readonly page: Page) {
+    this.statusBar = new StatusBarPage(page);
+  }
 
   /** Navigates straight to the standalone harness route — no kernel, no
    * boot sequence, but this feature's harness DOES need a real hydration
@@ -19,7 +27,7 @@ export class HelpPage {
    * the server-rendered HTML (content included) is present before any JS
    * runs, so a keypress sent right after `goto()` could race
    * `HelpHarness.svelte`'s `<svelte:window>` listener attaching. Waits for
-   * its `data-ready` flag (flipped by an `$effect`, which only ever runs
+   * its `data-ready` flag (flipped by an `onMount`, which only ever runs
    * post-mount) rather than any content locator, which would resolve
    * immediately from the static markup alone. */
   async openHarness() {
@@ -37,10 +45,6 @@ export class HelpPage {
 
   get scopeTabs() {
     return this.page.getByTestId("help-scope-tab");
-  }
-
-  get statusBarWindows() {
-    return this.page.getByTestId("status-bar-windows");
   }
 
   get searchOverlay() {

@@ -43,6 +43,6 @@ test.describe("Profile harness: mounts standalone with seeded fixture props", ()
   test("no Terminal kernel chrome mounts alongside it (no status bar, no window switching)", async ({ page }) => {
     const profile = new ProfilePage(page);
     await profile.openHarness();
-    await expect(profile.statusBarWindows).toHaveCount(0);
+    await expect(profile.statusBar.windows).toHaveCount(0);
   });
 });

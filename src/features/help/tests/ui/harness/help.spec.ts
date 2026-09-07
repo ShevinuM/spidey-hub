@@ -88,6 +88,6 @@ test.describe("Help harness: mounts standalone with seeded fixture props", () =>
   test("no Terminal kernel chrome mounts alongside it (no status bar, no window switching)", async ({ page }) => {
     const help = new HelpPage(page);
     await help.openHarness();
-    await expect(help.statusBarWindows).toHaveCount(0);
+    await expect(help.statusBar.windows).toHaveCount(0);
   });
 });

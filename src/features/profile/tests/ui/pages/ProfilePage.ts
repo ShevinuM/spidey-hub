@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import { StatusBarPage } from "../../../../../../common/tests/ui/pages/StatusBarPage";
 
 /**
  * Page object for Profile.svelte (`e2e-testing.md` R003/R004: specs call
@@ -8,9 +9,16 @@ import type { Page } from "@playwright/test";
  * convention) — currently consumed only by the harness suite
  * (`tests/ui/harness/`), since the e2e suite's `profile.spec.ts` is a
  * verbatim-ported spec exempt from the page-object convention.
+ *
+ * Kernel-chrome locators (the status bar, etc.) are never redefined here —
+ * `e2e-testing.md` R005 — this composes the shared `StatusBarPage` instead.
  */
 export class ProfilePage {
-  constructor(private readonly page: Page) {}
+  readonly statusBar: StatusBarPage;
+
+  constructor(private readonly page: Page) {
+    this.statusBar = new StatusBarPage(page);
+  }
 
   /** Navigates straight to the standalone harness route — no kernel, no
    * boot sequence, so no readiness wait is needed beyond the dossier
@@ -36,10 +44,6 @@ export class ProfilePage {
    * with no CSS/structural narrowing needed to reach them. */
   get meterBars() {
     return this.page.getByTestId("signal-meter-bar");
-  }
-
-  get statusBarWindows() {
-    return this.page.getByTestId("status-bar-windows");
   }
 
   /** The first meter bar's live `style.height`, sampled once — callers
