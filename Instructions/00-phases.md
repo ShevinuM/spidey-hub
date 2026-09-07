@@ -50,6 +50,8 @@
 
 ## Deferred (doc-practice R008)
 
+- **D11 fuzzysort swap (reverted out of phase 04, 2026-09-08):** fuzzysort's continuous scorer structurally reorders the golden query's tied results (`kill-pane` above `kill-window`, `0.8836` vs `0.8656` on bare labels — not tunable), so the swap failed `20-help-search`'s zero-churn gate at both viewports and was fully reverted per D11's own contract. Lands only with a deliberate rebaseline of `20-help-search`'s goldens (both viewports) in the post-migration rebaseline pass — not via a cleverer config.
+- **Harness dead-chunk cleanup (orchestrator ruling 2026-09-08, phase-04 close):** a harness-only wrapper island leaves an unreferenced `_astro/<X>Harness.<hash>.js` chunk (~1 KB) in the real build even though `dist/harness/` route output is absent. Ruled harmless for the migration — the D24 contract ("zero harness pages in a real build; the fixture flag never leaks") holds: no page, no route, no fixture data, just a dead unreferenced chunk inherent to how Astro bundles islands. An env-gated-island cleanup joins the post-migration hardening pass; phases 05–11 may ship the same dead chunk without a new ruling.
 - `toHaveScreenshot` convergence + full R005 rebaseline (post-migration, deliberate change).
 - POM/locator refactor of ported specs (test-setup.md step 5) — tracked per-feature exemption; closed per feature in a follow-up pass after phase 11, not inside migration phases.
 - Boundary fitness test in `tests/audits/` (architecture R009) + testid prefix audit (files-and-naming R014) — follow-up pass after phase 11.
