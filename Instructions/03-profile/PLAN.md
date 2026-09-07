@@ -55,4 +55,27 @@ Loop verified 1–6; verifier PASS + auditor clean on `src/features/profile` (D2
 
 ## Results
 
-(executor fills in — including the D21 shape chosen)
+All 6 steps complete and green at the final commit; see each step's own *Result* line above for detail. Summary for the orchestrator:
+
+**Commits (local, `frontend-rewrite`, in order):**
+1. `6f712ea` — step 1: port `profile.spec.ts` + goldens + new visual spec/projects to `src/features/profile`.
+2. `8aa41ad` — step 2: move `Profile.svelte`/`net.ts`/`resume.ts`/profile content to their v2 homes.
+3. `2f89e11` — step 3: record the full-gate re-verification.
+4. `f5e8100` — step 4: record golden-parity verification.
+5. `c77777b` — step 5: move `net.test.ts` to `src/features/profile/tests/unit`.
+6. `5f6bf80` — step 6: add the `profile-harness` route/spec/project, settling D24's mechanism.
+
+**D21 shape reused (not re-derived):** `profile-visual-<viewport>` projects each carry their own `snapshotPathTemplate` with the viewport hardcoded as a literal (never `{projectName}`), goldens at `src/features/profile/tests/ui/visual/goldens/<viewport>/` — same shape phase 02 settled, only the path prefix differs since feature tests nest under `src/features/<f>/tests/` (map file already anticipated this).
+
+**D16 rule-of-three verdict:** `resume.ts` → `src/common/lib/resume.ts`. Grepped real consumers (not comment mentions): exactly 2 — `Profile.svelte`'s `downloadResume` import and `src/bootstrap/terminalState.svelte.ts`'s `case "resume": downloadResume()` (the `:resume`/`:cv` cmdline dispatch the map file's D16 note anticipated as a second "cmdline" consumer — it lives in bootstrap's terminalState, not a separate `Cmdline.svelte`, but is the same behavior). ≥2 consumers in different contexts → promoted to `common/lib/`, matching the map file's own prediction.
+
+**D24 harness mechanism settled** (full record in `Instructions/01-pre-phase/recipe-feature-map.md`'s new "D24 feature harness mechanism" section): one shared dynamic route `src/pages/harness/[feature].astro`, `getStaticPaths` → `[]` unless `PORTFOLIO_FIXTURES=1`; imports `bootstrap/Layout.astro` but not `Terminal.svelte`; mounts the feature's own top-level component directly with `client:load` and fixture props via a small per-feature switch (not a registry — none is possible until phase 11); harness specs in `<feature>/tests/ui/harness/` under a `<feature>-harness` project (fixture build, one project at the primary viewport, no goldens). Checklist entries landed in the harness commit: `testing/README.md` R011 (placement), `e2e-testing.md` R018 (what a harness spec may/may not assert).
+
+**Two common→feature edges, mechanical-only, flagged for the auditor (same channel phase 02 used for its own PaneTree finding):**
+- `src/common/components/Meter.svelte` now imports `../../features/profile/lib/net` directly (net.ts's only consumer).
+- `src/common/components/PaneTree.svelte` (already flagged by phase 02's audit for importing then-transient feature components) now imports `../../features/profile/components/Profile.svelte` — a real bounded context, not the transient `src/components/` tree D23(c) literally names.
+Both are R004 violations (`common/` depending on a feature) that were structurally inevitable the moment any single feature actually left the legacy tree while `PaneTree`/`Meter` still render feature components directly with no bootstrap-level injection mechanism — introducing one now would be an uninstructed R008 redesign, out of this phase's scope. Only import paths were updated (move, don't rewrite); dependency direction is unchanged from before the move. Needs an orchestrator ruling at audit time: extend D23(c) to cover "a common component reaching into any feature that still lacks the bootstrap-injection mechanism, until phase 11 completes the split" (recommended, since this exact edge will recur for every one of phases 04–11 whose feature component is one of `PaneTree`'s 6 imports or `Meter`'s consumer), or track it as a deferred item.
+
+**Judgment calls (each preceded by an `advisor()` consult):** resume.ts's D16 promotion; the two common→feature edges (mechanical-only, flag-don't-fix); the harness route's `bootstrap/Layout.astro`-not-`Terminal.svelte` shape and its declared exception to D10's "pages import only from bootstrap"; the `SPLIT_OWNED_RECIPE_NAMES` rename (truthful, since the legacy filter now excludes more than one context's recipes).
+
+**Nothing deferred or left red.** Zero golden churn (42 PNGs before and after, just redistributed). No POM refactor, no behavior change beyond the sanctioned D11-style harness addition (which is new code, not a behavior change to anything existing), no golden regeneration. Ready for verifier/auditor.
