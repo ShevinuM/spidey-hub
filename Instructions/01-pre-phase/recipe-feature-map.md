@@ -88,6 +88,10 @@ This reproduces `.../goldens/<viewport>/<recipe>.png` byte-identically (verified
 
 `07-profile` (the 1 recipe this map assigns to phase 03) moved out of `tests/visual/identical.spec.ts`'s `keyRecipes` into a new `src/features/profile/tests/ui/visual/identical.spec.ts`, run by the `profile-visual-<viewport>` projects — same mechanism as phase 02's split, reused verbatim per D21(a). The legacy exclusion set (`tests/visual/identical.spec.ts`) was renamed `COMMON_OWNED_RECIPE_NAMES` → `SPLIT_OWNED_RECIPE_NAMES` in this phase, since it now filters out more than one context's own recipes (a truthful rename, not a behavior change) — later phases should keep growing this same renamed set.
 
+### Recipe split executed in phase 04
+
+`11-help`/`20-help-search` (the 2 recipes this map assigns to phase 04) moved out of `tests/visual/identical.spec.ts`'s `keyRecipes` into a new `src/features/help/tests/ui/visual/identical.spec.ts`, run by the `help-visual-<viewport>` projects — same mechanism as phases 02/03, reused verbatim per D21(a). Unlike phase 03, these two recipes live in two different `recipes.ts` arrays (`"11-help"` in `extraRecipes`, `"20-help-search"` in `iteration3Recipes`), so the new spec imports and filters both arrays rather than one. `SPLIT_OWNED_RECIPE_NAMES` grew both names in the same change.
+
 ## D24 feature harness mechanism (settled by phase 03, 2026-09-08)
 
 Phase 03 (profile) is the first feature phase, so it settles D24's mechanism here, once, for phases 04–11 to reuse verbatim (00-phases.md D24, testing/README.md R011, e2e-testing.md R018).
