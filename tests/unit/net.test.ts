@@ -1,4 +1,4 @@
-// Unit tests for src/lib/net.ts's live meter (SIGNAL row)
+// Unit tests for src/features/profile/lib/net.ts's live meter (SIGNAL row)
 // — locks in the README's math verbatim (q/lag/hue/bar-height formulas,
 // the Resource Timing throughput sum, the netStats fallback chain, and the
 // readout format) independent of any DOM/rAF plumbing, which
@@ -15,7 +15,7 @@ import {
   netStats,
   qFromDown,
   smoothRtt,
-} from "../../src/lib/net";
+} from "../../src/features/profile/lib/net";
 
 test("computeThroughputMbps: sums transferSize>2000 && duration>1 entries, floors at 0.2 Mb/s, null when none qualify", () => {
   expect(computeThroughputMbps([])).toBe(null);

@@ -232,7 +232,7 @@ export interface TrackerData {
 export const getTracker = (): TrackerData => loadYaml<TrackerData>("tracker.yaml");
 
 // ---------------------------------------------------------------------------
-// src/content/profile/*.md
+// src/features/profile/content/*.md
 // ---------------------------------------------------------------------------
 
 export interface ProfileField {

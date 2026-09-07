@@ -29,7 +29,7 @@
     qFromDown,
     smoothRtt,
     type NetConnectionLike,
-  } from "../../lib/net";
+  } from "../../features/profile/lib/net";
 
   interface Props {
     initialReadout: string;

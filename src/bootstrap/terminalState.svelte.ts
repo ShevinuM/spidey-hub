@@ -50,7 +50,7 @@ import { resolvePageEpoch } from "../common/lib/clock";
 import { getPasteBuffer } from "../common/lib/paste-buffer";
 import { getActivePasteTarget } from "../common/lib/paste-targets";
 import { parseInput, parseTmuxCommand, resolveCommand } from "../common/lib/cmdline";
-import { downloadResume } from "../lib/resume";
+import { downloadResume } from "../common/lib/resume";
 
 /** Mirrors Cmdline.svelte's own `CmdlineMode` export structurally — a plain
  * .ts module can't import a named type from a .svelte file under `tsc`

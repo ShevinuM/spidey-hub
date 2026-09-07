@@ -90,7 +90,7 @@ const profileFieldSchema = z.object({
 const profile = defineCollection({
   loader: glob({
     pattern: "*.md",
-    base: "src/content/profile",
+    base: "src/features/profile/content",
     generateId: ({ entry }) => entry.replace(/\.md$/, ""),
   }),
   schema: z.object({

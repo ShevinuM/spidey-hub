@@ -39,7 +39,7 @@
   import Dashboard from "../../components/Dashboard.svelte";
   import Repositories from "../../components/repositories/Repositories.svelte";
   import EmploymentRecords from "../../components/employment-records/EmploymentRecords.svelte";
-  import Profile from "../../components/Profile.svelte";
+  import Profile from "../../features/profile/components/Profile.svelte";
   import HelpView from "../../components/HelpView.svelte";
   import Shell from "../../components/Shell.svelte";
   import { viewIdToProgram } from "../lib/views";
