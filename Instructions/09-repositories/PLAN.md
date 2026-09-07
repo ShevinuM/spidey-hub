@@ -1,6 +1,7 @@
 # Phase 09 — repositories
 
 > **Status: planned, not started. Blocked on phase 08.** Binding decisions: `Instructions/00-phases.md`. Largest feature phase.
+> Carried-in item (phase-04 close audit, 2026-09-08): `common/tests/ui/pages/TerminalPage.ts:7` names a `RepositoriesPage` that doesn't exist yet — a pre-migration forward reference. This phase's page-object step should create it there (closing the reference) or, if no page object is warranted, strip the mention in the same change (comments.md R003).
 
 ## Context
 
