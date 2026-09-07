@@ -150,6 +150,21 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
+    // `profile-harness` (D24): the feature-harness mechanism phase 03
+    // settles for every later feature phase (04-11) to reuse verbatim.
+    // Fixture-build-only (the route's own `getStaticPaths` returns `[]`
+    // otherwise); functional assertions only (mount + core interactions),
+    // no goldens — so one project at the primary viewport suffices, same
+    // as `smoke` above, not a per-viewport pair.
+    {
+      name: "profile-harness",
+      testDir: "./src/features/profile/tests/ui/harness",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewports[0].width, height: viewports[0].height },
+        deviceScaleFactor: 1,
+      },
+    },
   ],
   webServer: [
     {

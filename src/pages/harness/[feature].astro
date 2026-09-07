@@ -1,0 +1,56 @@
+---
+// Feature harness route (00-phases.md D24) — settled once here by phase 03
+// (profile), reused verbatim by every later feature phase (04-11): a
+// fixture-build-only route that mounts just ONE feature's own top-level
+// component with seeded fixture props, no Terminal kernel, no tmux chrome.
+// Isolates a feature's own tests from the kernel entirely — a failing
+// `<feature>-harness` spec proves that feature itself is broken,
+// independent of everything else.
+//
+// Uses `Layout` (global CSS/fonts + the mobile-block chrome every route
+// page shares) directly, NOT `Terminal.svelte` — Terminal is the kernel
+// composition itself (tmux engine, status bar, pane tree, window
+// switching), which this route deliberately excludes. This makes the route
+// a page importing a feature component directly rather than routing
+// through `bootstrap/Terminal.svelte`; D24's own wording sanctions exactly
+// this as the harness mechanism, so it's a declared exception to "pages
+// import only from bootstrap" (00-phases.md D10), not a violation of it.
+//
+// getStaticPaths returns [] unless PORTFOLIO_FIXTURES=1 (toolchain R010 —
+// the fixture flag never leaks): in a real build this route generates ZERO
+// pages, so `dist/` never carries any `harness/` output at all, not merely
+// a hidden one.
+//
+// Per-feature component + prop assembly lives in this one file as a small
+// switch — each later feature phase adds its own `feature === "<name>"`
+// branch here (plain conditionals, not a registry/plugin system: D1's
+// bounded-context split still isn't complete until phase 11, so there's no
+// mechanism yet to discover features generically; this file is the one
+// place still allowed to know about all of them, same as
+// `bootstrap/Terminal.svelte`). Content collections already fixture-switch
+// themselves per-feature (D7) where that phase's move table calls for it;
+// `profile` isn't fixture-switched at all (its content is identical in
+// both build modes), so `getCollection("profile")` needs no extra handling
+// here.
+import Layout from "../../bootstrap/Layout.astro";
+import Profile from "../../features/profile/components/Profile.svelte";
+import { getCollection } from "astro:content";
+import { buildProfile } from "../../common/lib/data";
+
+export async function getStaticPaths() {
+  if (process.env.PORTFOLIO_FIXTURES !== "1") return [];
+  return [{ params: { feature: "profile" } }];
+}
+
+const { feature } = Astro.params;
+
+const profile = feature === "profile" ? buildProfile((await getCollection("profile"))[0]) : undefined;
+---
+
+<Layout title={`Harness: ${feature} — shevinum.dev`}>
+  {
+    feature === "profile" && profile !== undefined && (
+      <Profile client:load profile={profile} isFocused={true} />
+    )
+  }
+</Layout>
