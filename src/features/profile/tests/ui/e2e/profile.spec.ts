@@ -4,8 +4,8 @@
 //
 // Uses real timers throughout (no `page.clock.install`): the live meter's
 // rAF loop and 2500ms probe interval are exactly the thing under test here,
-// and the visual suite (tests/visual/identical.spec.ts) already covers the
-// pixel-frozen path via the faked clock + SIGNAL-row mask.
+// and src/features/profile/tests/ui/visual/identical.spec.ts already covers
+// the pixel-frozen path via the faked clock + SIGNAL-row mask.
 import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
 // This spec's `context` fixture (imported
 // from common/tests/ui/support/fixtures, not raw "@playwright/test")
