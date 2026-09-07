@@ -194,6 +194,19 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
+    // `help-harness` (D24): help's own harness route + spec, reusing
+    // phase 03's settled mechanism verbatim. Fixture-build-only; functional
+    // assertions only (mount + core interactions), no goldens — one project
+    // at the primary viewport, same as `profile-harness` above.
+    {
+      name: "help-harness",
+      testDir: "./src/features/help/tests/ui/harness",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewports[0].width, height: viewports[0].height },
+        deviceScaleFactor: 1,
+      },
+    },
   ],
   webServer: [
     {

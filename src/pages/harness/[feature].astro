@@ -34,23 +34,33 @@
 // here.
 import Layout from "../../bootstrap/Layout.astro";
 import Profile from "../../features/profile/components/Profile.svelte";
+import HelpHarness from "../../features/help/tests/ui/harness/HelpHarness.svelte";
 import { getCollection } from "astro:content";
-import { buildProfile } from "../../common/lib/data";
+import { buildProfile, buildHelp, getHelpSearch, getCmdline, getShell } from "../../common/lib/data";
 
 export async function getStaticPaths() {
   if (process.env.PORTFOLIO_FIXTURES !== "1") return [];
-  return [{ params: { feature: "profile" } }];
+  return [{ params: { feature: "profile" } }, { params: { feature: "help" } }];
 }
 
 const { feature } = Astro.params;
 
 const profile = feature === "profile" ? buildProfile((await getCollection("profile"))[0]) : undefined;
+const help = feature === "help" ? buildHelp(await getCollection("help")) : undefined;
+const helpSearch = feature === "help" ? getHelpSearch() : undefined;
+const cmdline = feature === "help" ? getCmdline() : undefined;
+const shell = feature === "help" ? getShell() : undefined;
 ---
 
 <Layout title={`Harness: ${feature} — shevinum.dev`}>
   {
     feature === "profile" && profile !== undefined && (
       <Profile client:load profile={profile} isFocused={true} />
+    )
+  }
+  {
+    feature === "help" && help !== undefined && helpSearch !== undefined && cmdline !== undefined && shell !== undefined && (
+      <HelpHarness client:load {help} {helpSearch} {cmdline} {shell} />
     )
   }
 </Layout>
