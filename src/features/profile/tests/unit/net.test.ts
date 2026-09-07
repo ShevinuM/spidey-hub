@@ -2,7 +2,8 @@
 // — locks in the README's math verbatim (q/lag/hue/bar-height formulas,
 // the Resource Timing throughput sum, the netStats fallback chain, and the
 // readout format) independent of any DOM/rAF plumbing, which
-// tests/e2e/profile.spec.ts covers separately against a live page.
+// src/features/profile/tests/ui/e2e/profile.spec.ts covers separately
+// against a live page.
 import { expect, test } from "vitest";
 import {
   barBackground,
@@ -15,7 +16,7 @@ import {
   netStats,
   qFromDown,
   smoothRtt,
-} from "../../src/features/profile/lib/net";
+} from "../../lib/net";
 
 test("computeThroughputMbps: sums transferSize>2000 && duration>1 entries, floors at 0.2 Mb/s, null when none qualify", () => {
   expect(computeThroughputMbps([])).toBe(null);
