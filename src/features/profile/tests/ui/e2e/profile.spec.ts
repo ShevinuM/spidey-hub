@@ -8,11 +8,11 @@
 // pixel-frozen path via the faked clock + SIGNAL-row mask.
 import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
 // This spec's `context` fixture (imported
-// from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
-// sessionStorage flag before every navigation, so BootSequence.svelte's
-// ~4.6s unskippable sequence never runs for these tests — see that
-// file's header comment for why this is a context-fixture override
-// rather than a per-goto-helper change.
+// from common/tests/ui/support/fixtures, not raw "@playwright/test")
+// pre-seeds the boot-seen sessionStorage flag before every navigation, so
+// BootSequence.svelte's ~4.6s unskippable sequence never runs for these
+// tests — see that file's header comment for why this is a context-fixture
+// override rather than a per-goto-helper change.
 
 const STATUS_BAR = '[data-testid="status-bar-windows"]';
 
