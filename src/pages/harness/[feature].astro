@@ -35,12 +35,13 @@
 import Layout from "../../bootstrap/Layout.astro";
 import Profile from "../../features/profile/components/Profile.svelte";
 import HelpHarness from "../../features/help/tests/ui/harness/HelpHarness.svelte";
+import BootSequence from "../../features/boot/components/BootSequence.svelte";
 import { getCollection } from "astro:content";
-import { buildProfile, buildHelp, getHelpSearch, getCmdline, getShell } from "../../common/lib/data";
+import { buildProfile, buildHelp, buildBoot, getHelpSearch, getCmdline, getShell } from "../../common/lib/data";
 
 export async function getStaticPaths() {
   if (process.env.PORTFOLIO_FIXTURES !== "1") return [];
-  return [{ params: { feature: "profile" } }, { params: { feature: "help" } }];
+  return [{ params: { feature: "profile" } }, { params: { feature: "help" } }, { params: { feature: "boot" } }];
 }
 
 const { feature } = Astro.params;
@@ -50,6 +51,7 @@ const help = feature === "help" ? buildHelp(await getCollection("help")) : undef
 const helpSearch = feature === "help" ? getHelpSearch() : undefined;
 const cmdline = feature === "help" ? getCmdline() : undefined;
 const shell = feature === "help" ? getShell() : undefined;
+const boot = feature === "boot" ? buildBoot(await getCollection("boot")) : undefined;
 ---
 
 <Layout title={`Harness: ${feature} — shevinum.dev`}>
@@ -62,5 +64,17 @@ const shell = feature === "help" ? getShell() : undefined;
     feature === "help" && help !== undefined && helpSearch !== undefined && cmdline !== undefined && shell !== undefined && (
       <HelpHarness client:load {help} {helpSearch} {cmdline} {shell} />
     )
+  }
+  {
+    // Mounted directly (no wrapper): BootSequence is already boot's own
+    // orchestrator component (self-contained phase state machine, its own
+    // `$effect` starting the run once `desktopMode` is true), and this
+    // harness's assertions (mount, phase/progress advancing under a
+    // driven clock, reaching "ready") never need `onReady`/`bind:this` —
+    // Terminal.svelte's own routing of those is not what's under test
+    // here. `desktopMode={true}` is required: the component's `$effect`
+    // gates `run()` on it, exactly like every other timer/listener in the
+    // app (see BootSequence.svelte's own header comment).
+    feature === "boot" && boot !== undefined && <BootSequence client:load {boot} desktopMode={true} />
   }
 </Layout>
