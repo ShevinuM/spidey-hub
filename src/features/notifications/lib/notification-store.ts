@@ -123,7 +123,7 @@ export function serializeState(state: NotificationState): string {
 const EMPTY_STATE: NotificationState = { items: [] };
 
 /** Best-effort localStorage read — same guarded try/catch contract as
- * src/lib/bootState.ts (private-browsing/storage-disabled environments
+ * src/features/boot/lib/boot-state.ts (private-browsing/storage-disabled environments
  * throw on access, not just on write). Corrupted or missing storage falls
  * back to an empty state rather than throwing. */
 export function loadState(): NotificationState {
@@ -140,7 +140,7 @@ export function saveState(state: NotificationState): void {
     if (typeof localStorage === "undefined") return;
     localStorage.setItem(NOTIFICATIONS_STORAGE_KEY, serializeState(state));
   } catch {
-    // best-effort — same contract as loadState()/bootState.ts
+    // best-effort — same contract as loadState()/boot-state.ts
   }
 }
 
