@@ -36,12 +36,18 @@ import Layout from "../../bootstrap/Layout.astro";
 import Profile from "../../features/profile/components/Profile.svelte";
 import HelpHarness from "../../features/help/tests/ui/harness/HelpHarness.svelte";
 import BootSequence from "../../features/boot/components/BootSequence.svelte";
+import NotificationsHarness from "../../features/notifications/tests/ui/harness/NotificationsHarness.svelte";
 import { getCollection } from "astro:content";
-import { buildProfile, buildHelp, buildBoot, getHelpSearch, getCmdline, getShell } from "../../common/lib/data";
+import { buildProfile, buildHelp, buildBoot, buildNotifications, getHelpSearch, getCmdline, getShell } from "../../common/lib/data";
 
 export async function getStaticPaths() {
   if (process.env.PORTFOLIO_FIXTURES !== "1") return [];
-  return [{ params: { feature: "profile" } }, { params: { feature: "help" } }, { params: { feature: "boot" } }];
+  return [
+    { params: { feature: "profile" } },
+    { params: { feature: "help" } },
+    { params: { feature: "boot" } },
+    { params: { feature: "notifications" } },
+  ];
 }
 
 const { feature } = Astro.params;
@@ -52,6 +58,7 @@ const helpSearch = feature === "help" ? getHelpSearch() : undefined;
 const cmdline = feature === "help" ? getCmdline() : undefined;
 const shell = feature === "help" ? getShell() : undefined;
 const boot = feature === "boot" ? buildBoot(await getCollection("boot")) : undefined;
+const notifications = feature === "notifications" ? buildNotifications(await getCollection("notifications")) : undefined;
 ---
 
 <Layout title={`Harness: ${feature} — shevinum.dev`}>
@@ -76,5 +83,15 @@ const boot = feature === "boot" ? buildBoot(await getCollection("boot")) : undef
     // gates `run()` on it, exactly like every other timer/listener in the
     // app (see BootSequence.svelte's own header comment).
     feature === "boot" && boot !== undefined && <BootSequence client:load {boot} desktopMode={true} />
+  }
+  {
+    // Wrapped (not mounted directly): Notifications.svelte itself attaches
+    // no keydown listener of its own — Terminal.svelte owns the window
+    // listener and routes `n`/Esc into its exported `handleKey()` — so this
+    // harness needs NotificationsHarness.svelte to reproduce that one piece
+    // of cross-component routing (see its own header comment, including why
+    // it hardcodes `fixtureMode={false}` rather than deriving it from
+    // `PORTFOLIO_FIXTURES` the way every real page does).
+    feature === "notifications" && notifications !== undefined && <NotificationsHarness client:load {notifications} />
   }
 </Layout>
