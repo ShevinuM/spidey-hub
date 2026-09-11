@@ -29,7 +29,7 @@ import helpRaw from "../../features/help/content/help.yaml?raw";
 import bootRaw from "../../features/boot/content/boot.yaml?raw";
 import cmdlineRaw from "../content/cmdline.yaml?raw";
 import helpsearchRaw from "../../features/help/content/helpsearch.yaml?raw";
-import notificationsRaw from "../../data/notifications.yaml?raw";
+import notificationsRaw from "../../features/notifications/content/notifications.yaml?raw";
 import shellRaw from "../../data/shell.yaml?raw";
 import choosetreeRaw from "../content/choosetree.yaml?raw";
 
@@ -126,10 +126,10 @@ export interface DashboardData {
 export const getDashboard = (): DashboardData => loadYaml<DashboardData>("dashboard.yaml");
 
 // ---------------------------------------------------------------------------
-// notifications.yaml (chrome) + src/content/notifications/*.md (pool)
+// notifications.yaml (chrome) + src/features/notifications/content/*.md (pool)
 // ---------------------------------------------------------------------------
 
-/** A notification pool entry (src/lib/notificationStore.ts's `PoolEntry`,
+/** A notification pool entry (src/features/notifications/lib/notification-store.ts's `PoolEntry`,
  * re-declared here rather than imported so this build-time loader stays
  * framework/runtime agnostic — same convention every other *Data interface
  * in this file follows). */
@@ -143,7 +143,7 @@ export interface NotificationPoolEntry {
 
 /** Builds the pool from the `notifications` content collection, sorted by
  * each entry's frontmatter `order` — the pool's array position feeds the
- * seeded per-visit pick (src/lib/notificationStore.ts's `pickRandomUnseen`),
+ * seeded per-visit pick (src/features/notifications/lib/notification-store.ts's `pickRandomUnseen`),
  * so this order must stay stable across a rebuild even though the loader's
  * own directory-read order isn't guaranteed to be. */
 export const buildNotificationPool = (

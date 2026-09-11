@@ -17,7 +17,7 @@
 // boot.spec.ts's own "outro bloom" test.
 import { expect, test, type Page } from "@playwright/test";
 import { BOOT_SEEN_STORAGE_KEY } from "../../../../boot/lib/boot-state";
-import { TOAST_DURATION_MS } from "../../../../../lib/notificationStore";
+import { TOAST_DURATION_MS } from "../../../lib/notification-store";
 
 // Hand-mirrored from src/data/boot.yaml / BootSequence.svelte, same
 // convention boot.spec.ts already uses (no runtime import of the yaml is
@@ -71,7 +71,7 @@ async function hasLiveDrainingToast(page: Page): Promise<boolean> {
 
 test.describe("cold boot: toasts survive the boot overlay", () => {
   // Severity (and therefore duration) is drawn randomly per visit
-  // (src/lib/notificationStore.ts's `injectVisit`/`pickRandomUnseen`, no
+  // (src/features/notifications/lib/notification-store.ts's `injectVisit`/`pickRandomUnseen`, no
   // seed pre-set here on purpose) — 5 independent runs cover the info/warn/
   // alert mix rather than pinning one lucky draw.
   for (let i = 1; i <= 5; i++) {
@@ -86,7 +86,7 @@ test.describe("cold boot: toasts survive the boot overlay", () => {
       await expect(page.locator(BOOT_SEQUENCE)).toHaveCount(0);
 
       // A fresh visit always injects 2 unseen pool entries (30 real
-      // src/content/notifications entries, never exhausted on a first
+      // src/features/notifications/content entries, never exhausted on a first
       // visit), so both toasts should now be visible and freshly armed.
       await expect(toasts(page)).toHaveCount(2);
       await expect.poll(() => hasLiveDrainingToast(page)).toBe(true);

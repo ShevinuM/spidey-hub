@@ -160,7 +160,7 @@ const help = defineCollection({
 const notifications = defineCollection({
   loader: glob({
     pattern: "*.md",
-    base: "src/content/notifications",
+    base: "src/features/notifications/content",
     generateId: ({ entry }) => entry.replace(/\.md$/, ""),
   }),
   schema: z.object({

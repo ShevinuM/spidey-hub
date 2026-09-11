@@ -22,7 +22,7 @@
 // instead of this module — it exists to exercise the real (non-skipped)
 // boot sequence.
 //
-// Also pre-seeds two src/lib/notificationStore.ts sessionStorage overrides
+// Also pre-seeds two src/features/notifications/lib/notification-store.ts sessionStorage overrides
 // so every test importing this module gets deterministic notification
 // behavior without sleeping through real severity timers:
 //   - NOTIFICATIONS_INJECT_SEED_STORAGE_KEY pins WHICH 2 unseen pool entries
@@ -38,7 +38,7 @@
 //     duration. `E2E_TOAST_DURATION_SCALE` is exported for the same reason.
 import { test as base, expect, type Page, type BrowserContext } from "@playwright/test";
 import { BOOT_SEEN_STORAGE_KEY } from "../../../../src/features/boot/lib/boot-state";
-import { NOTIFICATIONS_INJECT_SEED_STORAGE_KEY, TOAST_DURATION_SCALE_STORAGE_KEY } from "../../../../src/lib/notificationStore";
+import { NOTIFICATIONS_INJECT_SEED_STORAGE_KEY, TOAST_DURATION_SCALE_STORAGE_KEY } from "../../../../src/features/notifications/lib/notification-store";
 
 export const E2E_NOTIFICATIONS_INJECT_SEED = 424242;
 // 0.3 keeps even the shortest (info, 3s) severity's scaled duration (900ms)

@@ -21,7 +21,7 @@ import {
 } from "../../lib/repoTree";
 import { fetchLiveCommits } from "../../lib/githubCommits";
 import { fetchCommitTree, fetchCommitFileContent } from "../../lib/githubTrees";
-import { agoLabel } from "../../lib/notificationStore";
+import { agoLabel } from "../../features/notifications/lib/notification-store";
 
 // Mirrors Editor.svelte's own `EditorLine` export structurally — a plain
 // .ts module can't import a named type from a .svelte file under `tsc`

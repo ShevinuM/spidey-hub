@@ -1,9 +1,9 @@
 # Signal inbox bell/panel/toast chrome (`ui`). The notification pool that
-# src/lib/notificationStore.ts injects 2 unseen entries from per visit is
-# content now, in src/content/notifications/*.md (one file per
+# src/features/notifications/lib/notification-store.ts injects 2 unseen entries from per visit is
+# content now, in src/features/notifications/content/*.md (one file per
 # notification, frontmatter sev/title/src/order, body = the message text).
 # `sev` is one of alert|warn|info (drives the row/toast color + glyph, see
-# notificationStore.ts's SEVERITY_META — not repeated here since it's a
+# notification-store.ts's SEVERITY_META — not repeated here since it's a
 # fixed 3-way enum, not editable prose).
 
 ui:

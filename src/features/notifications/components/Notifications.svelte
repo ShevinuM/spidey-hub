@@ -6,7 +6,7 @@
   // toasts) survives a view switch away and back rather than resetting.
   //
   // State lives in localStorage (`NOTIFICATIONS_STORAGE_KEY`,
-  // src/lib/notificationStore.ts) — this component owns the ONE `$state`
+  // src/features/notifications/lib/notification-store.ts) — this component owns the ONE `$state`
   // array wrapping that module's pure transitions; every mutation re-derives
   // through `mutate()` below and persists immediately.
   //
@@ -14,8 +14,8 @@
   // as spam, since real persistence needs a way to move an item into
   // web·trap); the footer hint drops the mockup's unwired "x dismiss" (this
   // build's dismissal is a per-row button, not a bare key).
-  import type { NotificationsData } from "../../common/lib/data";
-  import type { ViewId } from "../../common/lib/views";
+  import type { NotificationsData } from "../../../common/lib/data";
+  import type { ViewId } from "../../../common/lib/views";
   import { NotificationsState } from "./notificationsState.svelte";
   import NotificationBell from "./NotificationBell.svelte";
   import NotificationsPanel from "./NotificationsPanel.svelte";

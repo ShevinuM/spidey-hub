@@ -1,6 +1,6 @@
 // Pure notification-state logic (no Svelte runes, no DOM/localStorage
 // access except inside the explicitly-guarded load/save wrappers) — same
-// split src/lib/notifications.ts established for the old toast picker:
+// split src/features/notifications/lib/toast-seed.ts established for the old toast picker:
 // this file is importable from `node --test` (which cannot compile runes)
 // and from Playwright specs that need to compute expected state themselves.
 // Notifications.svelte owns the ONLY `$state` wrapping these functions —
@@ -10,7 +10,7 @@ export type NotificationSeverity = "alert" | "warn" | "info";
 export type NotificationFolder = "inbox" | "archive" | "spam";
 
 /** A pool entry (built from the `notifications` content collection,
- * src/content/notifications/*.md) — content only, no per-instance state
+ * src/features/notifications/content/*.md) — content only, no per-instance state
  * yet (that's added at injection time). */
 export interface PoolEntry {
   id: string;
@@ -53,7 +53,7 @@ export const TOAST_HOVER_MIN_REMAINDER_MS = 400;
 /** sessionStorage override for e2e: a multiplier applied to every toast's
  * duration (e.g. 0.02 turns a 10s alert into 200ms) so specs never sleep
  * through the real severity timers. Read once at toast-spawn time, same
- * best-effort contract as src/lib/notifications.ts's old toast-seed key. */
+ * best-effort contract as src/features/notifications/lib/toast-seed.ts's old toast-seed key. */
 export const TOAST_DURATION_SCALE_STORAGE_KEY = "edith:notifications-toast-scale";
 
 /** sessionStorage override for e2e: a numeric seed pinning WHICH unseen pool
@@ -99,7 +99,7 @@ function isNotificationItem(v: unknown): v is NotificationItem {
 /** Parse a raw localStorage string into a valid state, or `null` if it's
  * missing/unparseable/shape-invalid — pure (no storage access), so
  * unit-testable without a DOM/localStorage shim, same convention as
- * src/lib/notifications.ts's `parseToastSeed`. A `null` return is the
+ * src/features/notifications/lib/toast-seed.ts's `parseToastSeed`. A `null` return is the
  * caller's cue to fall back to an empty state (corrupted storage resets
  * gracefully rather than throwing). */
 export function parseStoredState(raw: string | null | undefined): NotificationState | null {
@@ -145,7 +145,7 @@ export function saveState(state: NotificationState): void {
 }
 
 // ---------------------------------------------------------------------------
-// mulberry32 (public-domain PRNG, same algorithm src/lib/notifications.ts
+// mulberry32 (public-domain PRNG, same algorithm src/features/notifications/lib/toast-seed.ts
 // used for the old toast pick) — deterministic when seeded, good enough for
 // picking pool entries, not cryptographic.
 // ---------------------------------------------------------------------------

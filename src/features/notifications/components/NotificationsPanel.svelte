@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { NotificationsState } from "./notificationsState.svelte";
-  import { dismiss, markAllRead, markSpam, toggleRead } from "../../lib/notificationStore";
+  import { dismiss, markAllRead, markSpam, toggleRead } from "../lib/notification-store";
 
   interface Props {
     state: NotificationsState;

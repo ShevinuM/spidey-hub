@@ -50,7 +50,7 @@
   import StatusBar from "../common/components/StatusBar.svelte";
   import PaneTree from "../common/components/PaneTree.svelte";
   import Shell from "../components/Shell.svelte";
-  import Notifications from "../components/notifications/Notifications.svelte";
+  import Notifications from "../features/notifications/components/Notifications.svelte";
   import GrepOverlay from "../components/grep-overlay/GrepOverlay.svelte";
   import CopyMode from "../common/components/CopyMode.svelte";
   import ChooseTree from "../common/components/ChooseTree.svelte";

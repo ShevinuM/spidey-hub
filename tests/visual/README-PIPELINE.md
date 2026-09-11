@@ -108,7 +108,7 @@ different command line, an extra status-box row).
    (and Toasts stays mounted) even once its running PROGRAM is a shell
    (e.g. `16-shell`, reached via `:q`), so any recipe that ever touches
    window 0 needs this pin. **Toast auto-dismiss update**: Toasts now auto-dismiss
-   after `TOAST_AUTO_DISMISS_MS` (4000ms, `src/lib/notifications.ts`), and
+   after `TOAST_AUTO_DISMISS_MS` (4000ms, `src/features/notifications/lib/toast-seed.ts`), and
    the pipeline's total fake-clock advance is `2 * RUN_FOR_MS` (10000ms,
    see step 6 below) — comfortably past that window. So the seed no longer
    controls what's *visible* in any committed golden (every capture now

@@ -433,13 +433,13 @@ export const RUN_FOR_MS = 5000;
 
 /**
  * The dashboard's seeded 2-of-pool
- * toast pick (src/lib/notifications.ts's
+ * toast pick (src/features/notifications/lib/toast-seed.ts's
  * `resolveToastSeed()`/`pickToastPair()`) reads `Date.now()` in prod, which
  * would make every recipe that ever touches the dashboard window (its `id`
  * stays "dashboard" — and Toasts stays visible — even once its PROGRAM is
  * `shell`, e.g. "16-shell") pick a different, non-deterministic pair every
  * capture. `pipeline.mjs` pre-seeds `TOAST_SEED_STORAGE_KEY`
- * (src/lib/notifications.ts) with this fixed value via `addInitScript`,
+ * (src/features/notifications/lib/toast-seed.ts) with this fixed value via `addInitScript`,
  * mirroring tests/e2e/fixtures.ts's own `E2E_TOAST_SEED` pattern (a
  * different arbitrary constant — the two suites don't share fixtures, so
  * there is no requirement the values match, only that each is fixed).

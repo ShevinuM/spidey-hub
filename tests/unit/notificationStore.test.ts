@@ -1,4 +1,4 @@
-// Unit tests for src/lib/notificationStore.ts — pure state-transition logic
+// Unit tests for src/features/notifications/lib/notification-store.ts — pure state-transition logic
 // only (no DOM/localStorage/sessionStorage shim needed for most of these;
 // the load/save wrappers are exercised separately with a minimal
 // localStorage stub).
@@ -28,7 +28,7 @@ import {
   type NotificationItem,
   type NotificationState,
   type PoolEntry,
-} from "../../src/lib/notificationStore";
+} from "../../src/features/notifications/lib/notification-store";
 
 const POOL: PoolEntry[] = Array.from({ length: 12 }, (_, i) => ({
   id: `pool-${i}`,

@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { NotificationsState } from "./notificationsState.svelte";
-  import { SEVERITY_META } from "../../lib/notificationStore";
-  import { STATUS_BAR_HEIGHT_PX } from "../../common/lib/layout";
+  import { SEVERITY_META } from "../lib/notification-store";
+  import { STATUS_BAR_HEIGHT_PX } from "../../../common/lib/layout";
 
   interface Props {
     state: NotificationsState;

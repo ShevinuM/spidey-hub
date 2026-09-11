@@ -51,7 +51,7 @@ export function msUntilNextMinute(d: Date): number {
 // epoch, resolved once
 // per page load/reboot, rather than calling `Date.now()` repeatedly at
 // render time. Same sessionStorage-override-with-Date.now()-fallback shape
-// as src/lib/notificationStore.ts's NOTIFICATIONS_INJECT_SEED_STORAGE_KEY/
+// as src/features/notifications/lib/notification-store.ts's NOTIFICATIONS_INJECT_SEED_STORAGE_KEY/
 // resolveInjectRand() and src/lib/bootState.ts's BOOT_SEEN_STORAGE_KEY — a
 // test fixture pins the key, production falls through to the real clock.
 // ---------------------------------------------------------------------------
@@ -64,7 +64,7 @@ export const CLOCK_EPOCH_STORAGE_KEY = "edith:clock-epoch";
 
 /** Parse a raw sessionStorage string into a valid epoch-ms number, or null if
  * missing/unparseable — pure, no storage access, unit-testable without a
- * DOM/sessionStorage shim (mirrors src/lib/notificationStore.ts's
+ * DOM/sessionStorage shim (mirrors src/features/notifications/lib/notification-store.ts's
  * parseInjectSeed shape). */
 export function parseClockEpoch(raw: string | null | undefined): number | null {
   if (raw === null || raw === undefined || raw === "") return null;

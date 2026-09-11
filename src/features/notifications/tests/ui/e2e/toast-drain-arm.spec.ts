@@ -31,7 +31,7 @@
 // to observe real-time behavior across the real boot gap.
 import { expect, test, type Page } from "@playwright/test";
 import { BOOT_SEEN_STORAGE_KEY } from "../../../../boot/lib/boot-state";
-import { TOAST_DURATION_MS, type NotificationSeverity } from "../../../../../lib/notificationStore";
+import { TOAST_DURATION_MS, type NotificationSeverity } from "../../../lib/notification-store";
 
 const BOOT_SEQUENCE = '[data-testid="boot-sequence"]';
 
@@ -117,7 +117,7 @@ test.describe("cold boot: the whole toast reveal (entrance + drain) starts when 
     const revealed = await captureRevealMoment(page);
 
     // A fresh visit always injects 2 unseen pool entries (30 real
-    // src/content/notifications entries, never exhausted on a first
+    // src/features/notifications/content entries, never exhausted on a first
     // visit), so both toasts should be visible right at reveal.
     expect(revealed.length).toBe(2);
 

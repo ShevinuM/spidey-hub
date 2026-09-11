@@ -1,6 +1,6 @@
 // Behavioral e2e suite for the signal-inbox bell/panel/toast system
 // (src/components/Notifications.svelte, backed by
-// src/lib/notificationStore.ts) — Mockup B, dashboard-view only. Covers:
+// src/features/notifications/lib/notification-store.ts) — Mockup B, dashboard-view only. Covers:
 // badge/toast injection on a fresh visit, open/close via bell click/n/Esc,
 // tab switching (including the alerts-tab derived filter), read/unread
 // toggling, dismiss semantics per folder, mark-as-spam, mark-all-read,
@@ -10,7 +10,7 @@
 // through the real severity timers.
 import { join } from "node:path";
 import { expect, test, E2E_NOTIFICATIONS_INJECT_SEED, E2E_TOAST_DURATION_SCALE, type Page } from "../../../../../../common/tests/ui/support/fixtures";
-import { mulberry32, pickRandomUnseen, TOAST_DURATION_MS, type NotificationSeverity, type PoolEntry } from "../../../../../lib/notificationStore";
+import { mulberry32, pickRandomUnseen, TOAST_DURATION_MS, type NotificationSeverity, type PoolEntry } from "../../../lib/notification-store";
 import { readContentDir } from "../../../../../../common/tests/ui/support/content-fixtures";
 
 const ROOT = join(import.meta.dirname, "../../../../../..");
@@ -22,12 +22,12 @@ interface NotificationFrontmatter {
   order: number;
 }
 
-/** Reads the real `notifications` content collection (src/content/
- * notifications/*.md), sorted by frontmatter `order` — the same order
+/** Reads the real `notifications` content collection (src/features/
+ * notifications/content/*.md), sorted by frontmatter `order` — the same order
  * src/common/lib/data.ts's `buildNotificationPool` reconstructs at build time, so
  * this suite's seeded pick expectations match the real site. */
 function loadPool(): PoolEntry[] {
-  const entries = readContentDir<NotificationFrontmatter>(join(ROOT, "src/content/notifications"));
+  const entries = readContentDir<NotificationFrontmatter>(join(ROOT, "src/features/notifications/content"));
   return entries
     .slice()
     .sort((a, b) => a.data.order - b.data.order)
