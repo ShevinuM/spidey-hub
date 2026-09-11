@@ -250,6 +250,50 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
+    // `notifications` (D20): the 3 specs (notifications.spec.ts,
+    // notifications-boot.spec.ts, toast-drain-arm.spec.ts) phase 06 ported
+    // out of `legacy` — one project per viewport, same reasoning as
+    // `boot-<viewport>` above.
+    ...viewports.map((viewport) => ({
+      name: `notifications-${viewport.name}`,
+      testDir: "./src/features/notifications/tests/ui/e2e",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+      },
+    })),
+    // `notifications-visual` (D21): the 1 recipe phase 06 owns
+    // ("21-notifications-panel-open"), moved out of the viewport-named
+    // visual projects above (and out of tests/visual/identical.spec.ts's
+    // SPLIT_OWNED_RECIPE_NAMES filter). Reuses common's/profile's/help's/
+    // boot's split-project shape verbatim (D21(a)): its own
+    // `snapshotPathTemplate` with the viewport hardcoded as a literal, not
+    // derived from `{projectName}`.
+    ...viewports.map((viewport) => ({
+      name: `notifications-visual-${viewport.name}`,
+      testDir: "./src/features/notifications/tests/ui/visual",
+      snapshotPathTemplate: `src/features/notifications/tests/ui/visual/goldens/${viewport.name}/{arg}{ext}`,
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+      },
+    })),
+    // `notifications-harness` (D24): notifications' own harness route +
+    // spec, reusing phase 03's settled mechanism verbatim. Fixture-build-only;
+    // functional assertions only (mount + core interactions), no goldens —
+    // one project at the primary viewport, same as
+    // `profile-harness`/`help-harness`/`boot-harness` above.
+    {
+      name: "notifications-harness",
+      testDir: "./src/features/notifications/tests/ui/harness",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewports[0].width, height: viewports[0].height },
+        deviceScaleFactor: 1,
+      },
+    },
   ],
   webServer: [
     {

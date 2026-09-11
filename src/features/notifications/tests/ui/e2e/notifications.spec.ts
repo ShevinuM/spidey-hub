@@ -9,11 +9,11 @@
 // shortened test-duration hook (tests/e2e/fixtures.ts) rather than sleeping
 // through the real severity timers.
 import { join } from "node:path";
-import { expect, test, E2E_NOTIFICATIONS_INJECT_SEED, E2E_TOAST_DURATION_SCALE, type Page } from "../../common/tests/ui/support/fixtures.ts";
-import { mulberry32, pickRandomUnseen, TOAST_DURATION_MS, type NotificationSeverity, type PoolEntry } from "../../src/lib/notificationStore.ts";
-import { readContentDir } from "../../common/tests/ui/support/content-fixtures.ts";
+import { expect, test, E2E_NOTIFICATIONS_INJECT_SEED, E2E_TOAST_DURATION_SCALE, type Page } from "../../../../../../common/tests/ui/support/fixtures";
+import { mulberry32, pickRandomUnseen, TOAST_DURATION_MS, type NotificationSeverity, type PoolEntry } from "../../../../../lib/notificationStore";
+import { readContentDir } from "../../../../../../common/tests/ui/support/content-fixtures";
 
-const ROOT = join(import.meta.dirname, "../..");
+const ROOT = join(import.meta.dirname, "../../../../../..");
 
 interface NotificationFrontmatter {
   sev: PoolEntry["sev"];

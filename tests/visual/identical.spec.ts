@@ -60,7 +60,10 @@ import { captureBootState, captureState } from "../../common/tests/ui/support/pi
 // run under src/features/boot/tests/ui/visual/ (boot-visual-<viewport>
 // projects) — this filter is applied to the boot describe block below too,
 // not just `keyRecipes`, since bootRecipes is captured via its own separate
-// loop, not folded into the standard-recipe union. All
+// loop, not folded into the standard-recipe union. Phase 06 (notifications)
+// owns "21-notifications-panel-open" (notificationsRecipes' one entry), now
+// run under src/features/notifications/tests/ui/visual/
+// (notifications-visual-<viewport> projects). All
 // are excluded here to keep every recipe captured exactly once (00-phases.md
 // D21). As later phases move their own recipes out, SPLIT_OWNED_RECIPE_NAMES
 // grows the same way (renamed from COMMON_OWNED_RECIPE_NAMES now that more
@@ -75,6 +78,7 @@ const SPLIT_OWNED_RECIPE_NAMES = new Set([
   "20-help-search",
   "13-boot-mid",
   "14-boot-ready",
+  "21-notifications-panel-open",
 ]);
 const keyRecipes = [...recipes, ...extraRecipes, ...cmdlineRecipes, ...iteration3Recipes, ...notificationsRecipes].filter(
   (recipe) => !SPLIT_OWNED_RECIPE_NAMES.has(recipe.name),
