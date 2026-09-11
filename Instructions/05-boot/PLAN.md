@@ -209,11 +209,38 @@ Verify that relative depth with `node -e "…path.relative…"`; do not guess it
 
 ## Results
 
-**Status: all 7 steps complete, all gates green.** Four commits on `frontend-rewrite`:
+**Status: all 7 steps complete, verifier PASS, auditor fix round complete, all gates green.** Ten commits on `frontend-rewrite`:
 1. `47c75cd` — Port boot's e2e/visual specs and goldens into src/features/boot
 2. `82fa00d` — Move boot's source and content into src/features/boot, repointing every importer
 3. `e30b05e` — Move boot's unit test into src/features/boot
 4. `d9dec83` — Add boot's feature harness route, page object, and spec
+5. `edff902` — Record phase 05 results and correct the phases index push-status claim
+6. `5f02a1b` — Fix self-referential commit count and e2e-doc visual-row asymmetry
+7. `82b2bc9` — Fix BootPage member order, locator, and wait-naming audit findings
+8. `42ecd81` — Rewrite cold-boot.spec.ts header without a v1 plan-doc reference
+9. `12c39ec` — Add missing unit tests for boot-state.ts
+
+### Auditor fix round (5 genuine findings ruled in-scope; 5 fixed, 0 remaining)
+The auditor found 21 violations total (9 already D23-exempt, 12 flagged genuine of which the orchestrator ruled 7 exempt — recorded by the orchestrator directly in `Instructions/00-phases.md`'s D23 clause — and 5 required fixes). All 5 fixed:
+
+1. **`classes.md` R011 (member ordering), `BootPage.ts`** — reordered to constructor → getters (`bootSequence`/`bootOutro`/`pct`/`phase`) → behavior methods (`openHarnessAndAwaitBootRunning`/`advanceTo`). Pure reordering, no logic change. Commit `82b2bc9`.
+2. **`playwright.md` R002/R003/R005 + `e2e-testing.md` R003, `boot.spec.ts` (harness)** — the `page.evaluate()`/`document.querySelector()` triple-read was replaced with a plain `getAttribute()` call on `boot.bootSequence` (a testid-based locator, not CSS) to derive the expected pct/phase, followed by web-first `expect(boot.pct).toHaveText(...)`/`expect(boot.phase).toHaveText(...)` assertions through the page object. No CSS selectors remain in this file. Commit `82b2bc9`.
+3. **`e2e-testing.md` R007, `BootPage.openHarness()`** — renamed to `openHarnessAndAwaitBootRunning()` (option: state the outcome in the name), keeping the `expect(...).toHaveAttribute(...)` implementation: a CSS-free equivalent of the ported `freshBoot()`'s combined `[data-testid=…][data-boot-running=…]` `.waitFor()` doesn't exist without reintroducing a banned selector (R002 applies to authored code, unlike the exempt ported spec), so the assertion-based wait was kept and the method renamed instead, per the fix's own second acceptable option. Commit `82b2bc9`.
+4. **`comments.md` R008, `cold-boot.spec.ts` header** — rewrote the "PLAN.md Phase 7.2"/"PLAN.md F1's defect 1" references to describe the spec's own coverage in its own terms (still-untested surfaces, the bell/senseRing ring regression fixed by commit `b885c18`), with no v1 plan/phase identifiers. Comment text only. Commit `42ecd81`.
+5. **`unit-testing.md` R002/R003, missing `boot-state.ts` coverage** — added `src/features/boot/tests/unit/boot-state.test.ts` (7 tests): the SSR/undefined-`sessionStorage` path (both functions), the throwing-storage path (both functions), the mark→has round trip, the exact storage key written, and the "any value other than the literal `\"1\"` reads as not-played" edge. `boot-state.ts` itself untouched (additive only). Followed `tests/unit/notificationStore.test.ts`'s `withLocalStorage`-stub convention, adapted for `sessionStorage` — Node's own built-in `sessionStorage` global (confirmed present in this Node 26 runtime) is never relied on; every test installs/removes its own explicit stub via `globalThis` and restores the original property descriptor in `afterEach`, so the suite is deterministic regardless of Node version/environment. Commit `12c39ec`.
+
+Also fixed, not part of the 5 but caught by the advisor before the phase-05 record was final: a self-referential commit count in `Instructions/00-phases.md` (corrected in `5f02a1b`, phrased to name itself so it can't go stale the same way), and an asymmetric `boot-visual-*` row that had leaked into `docs/testing/e2e/running-tests.md` (removed in the same commit — visual rows live only in the visual doc, matching common/profile/help).
+
+**Not touched, per the coordinator's explicit instruction:** `Instructions/00-phases.md`'s D23 clause itself — the orchestrator is recording the three new/extended rulings (playwright.md R007–R011 scope clarification for D23(a); files-and-naming R013 batching exemption extending D23(e); the new "visual-coverage gaps are a rebaseline decision" Deferred item) there directly.
+
+### Re-verification after the fix round
+- `pnpm check` → 0 errors (123 files checked, up from 122 — the new unit test file).
+- `pnpm lint` → exit 0.
+- `pnpm test:unit` → **346 passed, 20 files** (up from 339/19 — the 7 new `boot-state.test.ts` tests; this increase is expected and correct, not a regression signal).
+- D20(a) real build → `1012 passed` (unchanged from before the fix round — none of the 5 fixes touch e2e-project-visible behavior).
+- D20(b) fixture build → `65 passed` (`--project=boot-harness` re-run 3× clean beforehand to confirm the rewritten web-first assertions introduce no flake).
+- Golden churn: `diff -rq` against v1 → only `Only in …` lines, zero `differ` lines; all 4 boot goldens still byte-identical to v1. 42 PNGs total, unchanged.
+- Per-commit index discipline: each of the three fix commits was generated and diffed against its own tree in isolation (uncommitted later changes stashed first, per Mechanics 8), confirming each commit's `fs-index.json`/`grep-index.json` delta contains only that commit's own edited/added files. Live-data drift (`contributions.json`, `commits/daily-tech-digest.json`, `file-icons.json`) reverted before every commit.
 
 ### Files moved (move table, all confirmed gone from old paths)
 - `src/components/BootSequence.svelte` → `src/features/boot/components/BootSequence.svelte`
