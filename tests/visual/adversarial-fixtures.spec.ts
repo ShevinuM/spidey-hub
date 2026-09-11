@@ -21,7 +21,7 @@
 //     with a `ready`, zero-file index (fixtures/repos/webbing-lab.json) and
 //     no commits snapshot — the empty-repository path.
 import { expect, test, type Page } from "@playwright/test";
-import { BOOT_SEEN_STORAGE_KEY } from "../../src/lib/bootState.ts";
+import { BOOT_SEEN_STORAGE_KEY } from "../../src/features/boot/lib/boot-state.ts";
 
 /** Same boot-skip contract tests/visual/pipeline.mjs's `captureState()`
  * uses (pre-seed via `addInitScript`, before any navigation) — this file

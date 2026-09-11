@@ -17,7 +17,7 @@ import {
   progress,
   spinnerFrame,
   statusRowValue,
-} from "../../src/lib/boot";
+} from "../../src/features/boot/lib/boot";
 import type { BootData, BootLogEntry, BootStatusRow } from "../../src/common/lib/data";
 
 const PHASE_LABELS: BootData["phaseLabels"] = {

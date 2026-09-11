@@ -13,7 +13,7 @@
 // exponent, the jitter divisor, or the threshold constants; they were
 // tuned by eye against the reference screenshots.
 
-import type { BootData, BootLogEntry, BootStatusRow } from "../common/lib/data";
+import type { BootData, BootLogEntry, BootStatusRow } from "../../../common/lib/data";
 
 /** `Component.progress()` (line 369-371): 0..1 linear elapsed fraction,
  * clamped at 1 once `elapsedMs` reaches (or exceeds, from the hard-stop

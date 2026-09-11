@@ -174,7 +174,7 @@ const notifications = defineCollection({
 const boot = defineCollection({
   loader: glob({
     pattern: "*.md",
-    base: "src/content/boot",
+    base: "src/features/boot/content",
     generateId: ({ entry }) => entry.replace(/\.md$/, ""),
   }),
   schema: z.object({

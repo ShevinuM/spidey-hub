@@ -7,7 +7,7 @@
 # geometry inline, only textual content here) — everything below is either
 # text a viewer actually reads or a config knob the mock exposed as an
 # editable prop (bootMs/coreTint/showBootLog). The boot log's own text
-# (label/val) has moved to src/content/boot/log.md — `log:` below keeps
+# (label/val) has moved to src/features/boot/content/log.md — `log:` below keeps
 # only that row's timing/tag, joined to the content file by `id`.
 
 bootMs: 4600
@@ -26,7 +26,7 @@ handshake:
   label: "e.d.i.t.h core handshake ....... "
   ready: "OK · 0.94 / 0.91"
   # The mock appends 1-3 "." to this while negotiating (Component.
-  # renderVals()'s `handshake`, src/lib/boot.ts's handshakeText()).
+  # renderVals()'s `handshake`, src/features/boot/lib/boot.ts's handshakeText()).
   negotiating: "negotiating"
 
 phaseLabels:
@@ -53,7 +53,7 @@ compass:
 # including) the 16-char padded value, so the box's fixed-width alignment
 # is exactly the mock's own ASCII art, unchanged by any of this file's
 # other content. `threshold`/`onlineText` feed
-# src/lib/boot.ts's statusRowValue().
+# src/features/boot/lib/boot.ts's statusRowValue().
 statusBox:
   top: "┌─ e.d.i.t.h ───────────────────────┐"
   bottom: "└───────────────────────────────────┘"
@@ -80,7 +80,7 @@ bootLogTitle: "── boot log ────────────────�
 # Boot log timing/tag config, in display order. `threshold` is the 0..1
 # progress fraction at which the row becomes visible; `tag` picks the
 # row's glyph/color. The row's actual text (label/val) is content now, in
-# src/content/boot/log.md, matched to a row here by `id`. src/lib/boot.ts's
+# src/features/boot/content/log.md, matched to a row here by `id`. src/features/boot/lib/boot.ts's
 # logRows() keeps only the rows reached so far, most-recent-last, capped to
 # the last 5.
 log:

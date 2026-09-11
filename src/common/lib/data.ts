@@ -26,7 +26,7 @@ import repositoriesRaw from "../../data/repositories.yaml?raw";
 import grepRaw from "../../data/grep.yaml?raw";
 import personnelRaw from "../../data/personnel.yaml?raw";
 import helpRaw from "../../features/help/content/help.yaml?raw";
-import bootRaw from "../../data/boot.yaml?raw";
+import bootRaw from "../../features/boot/content/boot.yaml?raw";
 import cmdlineRaw from "../content/cmdline.yaml?raw";
 import helpsearchRaw from "../../features/help/content/helpsearch.yaml?raw";
 import notificationsRaw from "../../data/notifications.yaml?raw";

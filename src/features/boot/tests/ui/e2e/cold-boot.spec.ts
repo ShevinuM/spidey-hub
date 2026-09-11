@@ -21,7 +21,7 @@
 // never runs during every OTHER spec's tests.
 import { expect, test, type Page } from "@playwright/test";
 
-// Hand-mirrored from src/data/boot.yaml / BootSequence.svelte — same
+// Hand-mirrored from src/features/boot/content/boot.yaml / BootSequence.svelte — same
 // convention boot.spec.ts and notifications-boot.spec.ts already use (no
 // runtime import of the yaml is possible from a Playwright-only module).
 const BOOT_MS = 4600;

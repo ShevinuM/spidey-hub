@@ -54,7 +54,7 @@
   import GrepOverlay from "../components/grep-overlay/GrepOverlay.svelte";
   import CopyMode from "../common/components/CopyMode.svelte";
   import ChooseTree from "../common/components/ChooseTree.svelte";
-  import BootSequence from "../components/BootSequence.svelte";
+  import BootSequence from "../features/boot/components/BootSequence.svelte";
   import Cmdline from "../common/components/Cmdline.svelte";
   import HelpSearch from "../features/help/components/HelpSearch.svelte";
 

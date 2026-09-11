@@ -37,7 +37,7 @@
 //     auto-dismissal in well under a second instead of waiting out the real
 //     duration. `E2E_TOAST_DURATION_SCALE` is exported for the same reason.
 import { test as base, expect, type Page, type BrowserContext } from "@playwright/test";
-import { BOOT_SEEN_STORAGE_KEY } from "../../../../src/lib/bootState";
+import { BOOT_SEEN_STORAGE_KEY } from "../../../../src/features/boot/lib/boot-state";
 import { NOTIFICATIONS_INJECT_SEED_STORAGE_KEY, TOAST_DURATION_SCALE_STORAGE_KEY } from "../../../../src/lib/notificationStore";
 
 export const E2E_NOTIFICATIONS_INJECT_SEED = 424242;

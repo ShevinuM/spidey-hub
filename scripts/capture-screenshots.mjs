@@ -21,7 +21,7 @@ import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { serveStatic } from "../common/tests/ui/support/static-server.mjs";
-import { BOOT_SEEN_STORAGE_KEY } from "../src/lib/bootState.ts";
+import { BOOT_SEEN_STORAGE_KEY } from "../src/features/boot/lib/boot-state.ts";
 import { recipes, extraRecipes, iteration3Recipes } from "../common/tests/ui/support/recipes.ts";
 import { pickPort } from "./lib/freePort.ts";
 

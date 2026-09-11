@@ -30,7 +30,7 @@
 // does not scale toast durations either, for the same reason: the point is
 // to observe real-time behavior across the real boot gap.
 import { expect, test, type Page } from "@playwright/test";
-import { BOOT_SEEN_STORAGE_KEY } from "../../src/lib/bootState.ts";
+import { BOOT_SEEN_STORAGE_KEY } from "../../src/features/boot/lib/boot-state.ts";
 import { TOAST_DURATION_MS, type NotificationSeverity } from "../../src/lib/notificationStore.ts";
 
 const BOOT_SEQUENCE = '[data-testid="boot-sequence"]';

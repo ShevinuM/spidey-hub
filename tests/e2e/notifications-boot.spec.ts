@@ -16,7 +16,7 @@
 // wall-clock time and the boot phase transition is deterministic, matching
 // boot.spec.ts's own "outro bloom" test.
 import { expect, test, type Page } from "@playwright/test";
-import { BOOT_SEEN_STORAGE_KEY } from "../../src/lib/bootState.ts";
+import { BOOT_SEEN_STORAGE_KEY } from "../../src/features/boot/lib/boot-state.ts";
 import { TOAST_DURATION_MS } from "../../src/lib/notificationStore.ts";
 
 // Hand-mirrored from src/data/boot.yaml / BootSequence.svelte, same

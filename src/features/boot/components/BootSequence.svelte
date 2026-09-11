@@ -5,10 +5,11 @@
   // 167-276) and the `Component` class (lines 283-442) — every color,
   // geometry value, keyframe name/duration/delay, and text string below is
   // transcribed from that file; timing/progress/log MATH is factored out to
-  // src/lib/boot.ts (kept pure so tests/unit/boot.test.ts can spot-check
+  // src/features/boot/lib/boot.ts (kept pure so
+  // src/features/boot/tests/unit/boot.test.ts can spot-check
   // the formulas without a browser), and every piece of on-screen TEXT
-  // comes from the `BootData` built from src/data/boot.yaml's timing/tag
-  // config plus the boot log's text in src/content/boot/log.md — this file
+  // comes from the `BootData` built from src/features/boot/content/boot.yaml's timing/tag
+  // config plus the boot log's text in src/features/boot/content/log.md — this file
   // renders geometry + data, never hardcodes copy.
   //
   // Always mounted by Terminal.svelte (same convention as GrepOverlay/
@@ -29,7 +30,7 @@
   // mock's own z-index:30, which never had to coexist with this app's
   // other overlay layers.
   //
-  // Session-once behavior (see src/lib/bootState.ts): a genuine
+  // Session-once behavior (see src/features/boot/lib/boot-state.ts): a genuine
   // (non-skipped) boot marks the sessionStorage flag the moment it STARTS,
   // not when it finishes, so
   // reloading mid-boot can't be used to replay the full sequence
@@ -47,7 +48,7 @@
   // frame of the boot overlay on a skip; "skips it" is judged functionally
   // (no 4.6s wait, no timers run), not frame-perfectly.
   import { untrack } from "svelte";
-  import type { BootData, BootStatusRow } from "../common/lib/data";
+  import type { BootData, BootStatusRow } from "../../../common/lib/data";
   import {
     bootDuration,
     handshakeText,
@@ -58,7 +59,7 @@
     progress as computeProgress,
     statusRowValue,
   } from "../lib/boot";
-  import { hasBootPlayed, markBootPlayed } from "../lib/bootState";
+  import { hasBootPlayed, markBootPlayed } from "../lib/boot-state";
 
   interface Props {
     boot: BootData;

@@ -12,17 +12,17 @@
 // that component's header comment) specifically so it is controllable this
 // way.
 //
-// pct/phase expectations are computed via src/lib/boot.ts's own pure
+// pct/phase expectations are computed via src/features/boot/lib/boot.ts's own pure
 // functions rather than hardcoded numbers, so a future tuning of the
 // easing/threshold constants only requires updating that one module (and
 // tests/unit/boot.test.ts) — this suite would keep passing against a
 // deliberate change, and fail loudly against an accidental one (a typo'd
 // threshold here would silently duplicate the bug it's supposed to catch).
 import { expect, test, type Page } from "@playwright/test";
-import { pct, phaseLabel, progress } from "../../../../../lib/boot";
-import { BOOT_SEEN_STORAGE_KEY } from "../../../../../lib/bootState";
+import { pct, phaseLabel, progress } from "../../../lib/boot";
+import { BOOT_SEEN_STORAGE_KEY } from "../../../lib/boot-state";
 
-// Must match src/data/boot.yaml's bootMs / phaseLabels — no runtime import
+// Must match src/features/boot/content/boot.yaml's bootMs / phaseLabels — no runtime import
 // of that file is possible here (its `?raw` imports are Vite-only syntax,
 // see src/common/lib/data.ts), so these are the same kind of hand-mirrored
 // literal every other e2e spec already uses for its view's yaml copy
@@ -100,7 +100,7 @@ test.describe("fresh boot", () => {
     await expect(page.locator(BOOT_SEQUENCE)).toBeVisible();
   });
 
-  test("pct and phase track elapsed time against src/lib/boot.ts's own formula", async ({ page }) => {
+  test("pct and phase track elapsed time against src/features/boot/lib/boot.ts's own formula", async ({ page }) => {
     // Deliberately NO `page.clock` here, unlike every other test in this
     // file. Empirically measured (isolated repro against a bare
     // `setInterval` in the page, outside any app code — not guesswork,
