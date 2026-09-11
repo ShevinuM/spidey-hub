@@ -28,7 +28,7 @@ import {
   type NotificationItem,
   type NotificationState,
   type PoolEntry,
-} from "../../src/features/notifications/lib/notification-store";
+} from "../../lib/notification-store";
 
 const POOL: PoolEntry[] = Array.from({ length: 12 }, (_, i) => ({
   id: `pool-${i}`,

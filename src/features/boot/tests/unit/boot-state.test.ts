@@ -2,7 +2,7 @@
 // "has the boot sequence played this session" flag. Pure Vitest, no DOM: the
 // module reads/writes a real `sessionStorage` global (present as a built-in
 // in this Node runtime, unlike `localStorage`'s absence — see
-// tests/unit/notificationStore.test.ts's own `withLocalStorage` stub for the
+// src/features/notifications/tests/unit/notification-store.test.ts's own `withLocalStorage` stub for the
 // sibling convention this mirrors), so every test below installs its own
 // explicit stub via `globalThis` rather than relying on whatever storage
 // state Node happens to provide, keeping each case deterministic and
