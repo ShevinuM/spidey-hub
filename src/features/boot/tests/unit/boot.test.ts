@@ -1,9 +1,9 @@
-// Unit tests for the pure boot-sequence math (src/lib/boot.ts). Boot
+// Unit tests for the pure boot-sequence math (src/features/boot/lib/boot.ts). Boot
 // timings/text are spot-checked against the mock source line-by-line.
 // Every assertion below reproduces a value computed
 // by hand from the mock's own `Component.pct()/progress()/renderVals()`
 // formulas (Boot Sequence.dc.html lines 369-437) — this is the guard
-// against a transcription slip in src/lib/boot.ts, independent of
+// against a transcription slip in src/features/boot/lib/boot.ts, independent of
 // BootSequence.svelte or any browser.
 import { expect, test } from "vitest";
 import {
@@ -17,8 +17,8 @@ import {
   progress,
   spinnerFrame,
   statusRowValue,
-} from "../../src/features/boot/lib/boot";
-import type { BootData, BootLogEntry, BootStatusRow } from "../../src/common/lib/data";
+} from "../../lib/boot";
+import type { BootData, BootLogEntry, BootStatusRow } from "../../../../common/lib/data";
 
 const PHASE_LABELS: BootData["phaseLabels"] = {
   init: "INIT",
