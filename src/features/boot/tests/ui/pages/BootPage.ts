@@ -34,18 +34,39 @@ export class BootPage {
     this.t0 = new Date(CLOCK_TIME).getTime();
   }
 
+  get bootSequence() {
+    return this.page.getByTestId("boot-sequence");
+  }
+
+  get bootOutro() {
+    return this.page.getByTestId("boot-outro");
+  }
+
+  get pct() {
+    return this.page.getByTestId("boot-pct");
+  }
+
+  get phase() {
+    return this.page.getByTestId("boot-phase");
+  }
+
   /** Installs the fake clock pinned to `CLOCK_TIME` BEFORE navigating (same
-   * ordering as `captureBootState()`), then waits for
-   * `data-boot-running="true"` — flipped synchronously inside
-   * BootSequence.svelte's own `run()`, the same marker
-   * `captureBootState()` waits on, and the harness-hydration-race
-   * equivalent of `ProfilePage`'s/`HelpPage`'s own `data-*-ready` waits
-   * (BootSequence already ships a purpose-built one; no separate wrapper
-   * element is needed). No boot-seen sessionStorage pre-seed — this page
-   * object is only ever used with the raw `@playwright/test` import (never
-   * the shared `context` fixture), so a genuine, unskipped boot always
-   * plays. */
-  async openHarness() {
+   * ordering as `captureBootState()`), then awaits `data-boot-running`
+   * becoming `"true"` — flipped synchronously inside BootSequence.svelte's
+   * own `run()`, the same marker `captureBootState()` waits on, and the
+   * harness-hydration-race equivalent of `ProfilePage`'s/`HelpPage`'s own
+   * `data-*-ready` waits (BootSequence already ships a purpose-built one;
+   * no separate wrapper element is needed). Named for the outcome it
+   * awaits (`e2e-testing.md` R007) rather than a bare `openHarness`, since
+   * the wait is a real assertion (`toHaveAttribute`, not `.waitFor()` —
+   * there is no CSS-free way to combine the testid with a specific
+   * attribute VALUE the way the ported `boot.spec.ts`'s own `freshBoot()`
+   * does via a raw `[data-testid=…][data-boot-running=…]` selector, which
+   * `playwright.md` R002 forbids for authored code). No boot-seen
+   * sessionStorage pre-seed — this page object is only ever used with the
+   * raw `@playwright/test` import (never the shared `context` fixture), so
+   * a genuine, unskipped boot always plays. */
+  async openHarnessAndAwaitBootRunning() {
     await this.page.clock.install({ time: CLOCK_TIME });
     await this.page.clock.pauseAt(this.t0);
     await this.page.goto("/harness/boot");
@@ -62,21 +83,5 @@ export class BootPage {
       await this.page.clock.pauseAt(this.t0 + BOOT_HARD_STOP_MS + 10);
     }
     await this.page.clock.pauseAt(this.t0 + offsetMs);
-  }
-
-  get bootSequence() {
-    return this.page.getByTestId("boot-sequence");
-  }
-
-  get bootOutro() {
-    return this.page.getByTestId("boot-outro");
-  }
-
-  get pct() {
-    return this.page.getByTestId("boot-pct");
-  }
-
-  get phase() {
-    return this.page.getByTestId("boot-phase");
   }
 }

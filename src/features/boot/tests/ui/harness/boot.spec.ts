@@ -39,7 +39,7 @@ const PHASE_LABELS = { init: "INIT", scan: "SCAN", link: "LINK", lock: "LOCK", r
 test.describe("Boot harness: mounts standalone with seeded fixture props", () => {
   test("a genuine boot starts immediately — no kernel required", async ({ page }) => {
     const boot = new BootPage(page);
-    await boot.openHarness();
+    await boot.openHarnessAndAwaitBootRunning();
 
     await expect(boot.bootSequence).toBeVisible();
     await expect(boot.pct).toBeVisible();
@@ -48,32 +48,35 @@ test.describe("Boot harness: mounts standalone with seeded fixture props", () =>
 
   test("pct/phase advance under the driven clock, tracking src/features/boot/lib/boot.ts's own formula", async ({ page }) => {
     const boot = new BootPage(page);
-    await boot.openHarness();
+    await boot.openHarnessAndAwaitBootRunning();
 
     await boot.advanceTo(2000);
 
-    // A single evaluate() reads elapsed/pct/phase from one consistent DOM
-    // snapshot, same convention as boot.spec.ts's own intermediate-value
-    // test, so the values being compared are never read at different
-    // instants relative to each other.
-    const observed = await page.evaluate(() => ({
-      elapsed: Number(document.querySelector('[data-testid="boot-sequence"]')?.getAttribute("data-elapsed")),
-      pctText: document.querySelector('[data-testid="boot-pct"]')?.textContent ?? null,
-      phaseText: document.querySelector('[data-testid="boot-phase"]')?.textContent ?? null,
-    }));
+    // Unlike the ported e2e boot.spec.ts's own equivalent test (which reads
+    // via a single page.evaluate() because its clock keeps ticking in real
+    // time between reads), advanceTo() here leaves the fake clock PAUSED —
+    // the DOM is static once pauseAt() resolves, so a plain locator read
+    // and separate web-first assertions carry no race between them.
+    // `getAttribute()` is a one-shot read (not a polling assertion), used
+    // only to derive the expected pct/phase from the same formula
+    // src/features/boot/lib/boot.ts uses; the actual assertions below are
+    // web-first through BootPage's own getters (`e2e-testing.md` R003,
+    // `playwright.md` R002/R005 — no CSS selectors, no raw `page.locator`).
+    const elapsedAttr = await boot.bootSequence.getAttribute("data-elapsed");
+    const elapsed = Number(elapsedAttr);
 
-    expect(observed.elapsed).toBeGreaterThan(0);
-    expect(observed.elapsed).toBeLessThan(BOOT_MS);
+    expect(elapsed).toBeGreaterThan(0);
+    expect(elapsed).toBeLessThan(BOOT_MS);
 
-    const expectedPct = pct(observed.elapsed, BOOT_MS);
+    const expectedPct = pct(elapsed, BOOT_MS);
     const expectedPhase = phaseLabel(expectedPct, PHASE_LABELS);
-    expect(observed.pctText).toBe(`${expectedPct}%`);
-    expect(observed.phaseText).toBe(expectedPhase);
+    await expect(boot.pct).toHaveText(`${expectedPct}%`);
+    await expect(boot.phase).toHaveText(expectedPhase);
   });
 
   test("reaches 100%/READY and shows the outro bloom once the hard-stop timeout has fired", async ({ page }) => {
     const boot = new BootPage(page);
-    await boot.openHarness();
+    await boot.openHarnessAndAwaitBootRunning();
 
     await boot.advanceTo(BOOT_HARD_STOP_MS + 10);
 
@@ -85,7 +88,7 @@ test.describe("Boot harness: mounts standalone with seeded fixture props", () =>
 
   test("unmounts once the outro hold clears — no infinite overlay", async ({ page }) => {
     const boot = new BootPage(page);
-    await boot.openHarness();
+    await boot.openHarnessAndAwaitBootRunning();
 
     await boot.advanceTo(BOOT_HARD_STOP_MS + 10 + BOOT_OUT_MS + 200);
 
@@ -94,7 +97,7 @@ test.describe("Boot harness: mounts standalone with seeded fixture props", () =>
 
   test("no Terminal kernel chrome mounts alongside it (no status bar, no window switching)", async ({ page }) => {
     const boot = new BootPage(page);
-    await boot.openHarness();
+    await boot.openHarnessAndAwaitBootRunning();
     await expect(boot.statusBar.windows).toHaveCount(0);
   });
 });
