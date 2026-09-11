@@ -209,7 +209,7 @@ Verify that relative depth with `node -e "…path.relative…"`; do not guess it
 
 ## Results
 
-**Status: all 7 steps complete, verifier PASS, auditor fix round complete, all gates green.** Ten commits on `frontend-rewrite`:
+**Status: all 7 steps complete, verifier PASS (twice), both auditor fix rounds complete, all gates green. Phase closed.** Eleven commits on `frontend-rewrite`:
 1. `47c75cd` — Port boot's e2e/visual specs and goldens into src/features/boot
 2. `82fa00d` — Move boot's source and content into src/features/boot, repointing every importer
 3. `e30b05e` — Move boot's unit test into src/features/boot
@@ -219,6 +219,8 @@ Verify that relative depth with `node -e "…path.relative…"`; do not guess it
 7. `82b2bc9` — Fix BootPage member order, locator, and wait-naming audit findings
 8. `42ecd81` — Rewrite cold-boot.spec.ts header without a v1 plan-doc reference
 9. `12c39ec` — Add missing unit tests for boot-state.ts
+10. `401044d` — Record phase 05 auditor fix-round results
+11. (this fix round's commit) — Add banner comments to BootPage.ts and drop cold-boot.spec.ts's second plan reference
 
 ### Auditor fix round (5 genuine findings ruled in-scope; 5 fixed, 0 remaining)
 The auditor found 21 violations total (9 already D23-exempt, 12 flagged genuine of which the orchestrator ruled 7 exempt — recorded by the orchestrator directly in `Instructions/00-phases.md`'s D23 clause — and 5 required fixes). All 5 fixed:
@@ -311,4 +313,12 @@ All of the above resolve as **plain string matches only** — no broken imports 
 ### Notes
 - `Instructions/00-phases.md`'s stale "77 local commits, nothing pushed" status line corrected to reflect verified reality (`git ls-remote --heads origin frontend-rewrite`, origin at `57287a1`). First correction attempt (commit `edff902`) stated a count that its own commit immediately invalidated (self-reference bug caught by the advisor); fixed in a follow-up commit with the count taken *after* that commit landed, phrased to name itself explicitly so it can't silently go stale the same way again. Final state: 85 local commits, 8 ahead of origin, nothing pushed by this phase.
 - `docs/testing/e2e/running-tests.md` briefly gained a `boot-visual-*` row that `common`/`profile`/`help` don't carry there (their visual rows live only in `docs/testing/visual/running-tests.md`) — an asymmetry the advisor flagged before this phase closed. Removed in the same follow-up commit; the e2e doc now matches the established per-feature shape exactly, and `boot-visual-*` is documented only in the visual doc.
-- Verifier/auditor loop (acceptance criterion 8) was not run by the executor — reporting back to the orchestrator per the standard execute→verify handoff.
+- Verifier PASS was confirmed twice (1012 e2e / 65 visual / `boot-harness` stable across repeated runs both times, zero golden churn both times). The auditor's first re-audit found 21 violations (9 already D23-exempt, 12 genuine of which the orchestrator ruled 7 exempt — recorded directly in `Instructions/00-phases.md`'s D23 clause — and 5 required fixes, all addressed in commits `82b2bc9`/`42ecd81`/`12c39ec`). A second re-audit found the first round's 2 comment/structure fixes only partially complete (see below); both now fully closed.
+
+### Second auditor fix round (2 partial findings, both closed)
+1. **`classes.md` R011, second clause — `BootPage.ts`.** Member *ordering* (fixed in round one) was correct, but the rule also requires a short banner comment grouping getters separately from behavior methods when a class has both. Checked `common/tests/ui/pages/TerminalPage.ts` and `src/features/help/tests/ui/pages/HelpPage.ts` first, per instruction — neither uses a banner convention (both just rely on member order plus per-member doc comments), so no existing style to match; added the minimal `// --- getters ---` / `// --- behavior methods ---` form as directed. Structure-only, zero logic change.
+2. **`comments.md` R008 — second `cold-boot.spec.ts` plan reference.** The header rewrite (round one) was clean, but a second citation survived in the file body at the animation-check comment: `(PLAN.md F1)`. Rewrote in the spec's own terms — `getComputedStyle().animationName` reports a dead keyframe reference exactly like a live one because it returns the declared name regardless of whether it resolves to a registered `@keyframes` rule (the same insight `common/tests/ui/e2e/animations.spec.ts`'s own header already explains, cited instead of the external plan). Comment text only — confirmed via `git diff` that no assertion, locator, or test logic changed; the `BOOT_SEQUENCE`/`BELL`/`SENSE_RING` raw-selector constants and `terminalReady()` (both triaged D23(a) ported-spec exemptions) were untouched.
+
+Swept all of `src/features/boot/` afterward for any remaining `PLAN.md`/`Phase N`/`F<n>`/`G<n>`-style plan citations (`grep -rniE "plan\.md|defect [0-9]|phase [0-9]|\bf[0-9]+('s)?\b|\bg[0-9]+('s)?\b"`): zero hits. Nothing else to fix.
+
+**Re-verification after the second fix round:** `pnpm check` → 0 errors (123 files). `pnpm lint` → exit 0. `pnpm test:unit` → 346 passed, 20 files (unchanged, as expected — no test logic touched). `dist/index.html` checked for `data-fixture-mode="true"` before running the harness gate (per the coordinator's environment note about a concurrent build); confirmed fresh. `--project=boot-harness` → 5 passed. Full D20 suite not re-run, per the coordinator's instruction (comment-only edits, verifier already proved it green at `401044d`).

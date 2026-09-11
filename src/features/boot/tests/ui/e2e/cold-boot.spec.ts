@@ -71,7 +71,10 @@ test.describe("cold boot: unread bell + senseRing ring", () => {
       await expect(ring).toBeVisible();
 
       // `getComputedStyle().animationName` reports a dead reference as a
-      // non-"none" string just as readily as a live one (PLAN.md F1) — the
+      // non-"none" string just as readily as a live one — it returns the
+      // declared keyframe name whether or not that name actually resolves
+      // to a registered `@keyframes` rule (same insight
+      // common/tests/ui/e2e/animations.spec.ts's own header explains). The
       // discriminating check is `getAnimations().length > 0`, safe here
       // specifically because `senseRing` is declared `infinite`
       // (tests/e2e/animations.spec.ts's header comment on why this check

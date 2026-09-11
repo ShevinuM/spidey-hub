@@ -34,6 +34,8 @@ export class BootPage {
     this.t0 = new Date(CLOCK_TIME).getTime();
   }
 
+  // --- getters ---
+
   get bootSequence() {
     return this.page.getByTestId("boot-sequence");
   }
@@ -49,6 +51,8 @@ export class BootPage {
   get phase() {
     return this.page.getByTestId("boot-phase");
   }
+
+  // --- behavior methods ---
 
   /** Installs the fake clock pinned to `CLOCK_TIME` BEFORE navigating (same
    * ordering as `captureBootState()`), then awaits `data-boot-running`
