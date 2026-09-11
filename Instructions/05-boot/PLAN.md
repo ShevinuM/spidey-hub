@@ -1,36 +1,211 @@
 # Phase 05 — boot
 
-> **Status: planned, not started. Blocked on phase 04.** Binding decisions: `Instructions/00-phases.md`.
+> **Status: planned, not started.** Phase 04 is closed, so this phase is unblocked. Binding decisions: `Instructions/00-phases.md` (the only cross-phase document this plan may read). This plan is self-contained: every mechanism it needs is stated here verbatim, so the executor never reads another phase's folder.
 
 ## Context
 
-`src/features/boot`. Out-of-context wiring: project entries, legacy fallout — **notably `common/tests/ui/support/` fixtures import `BOOT_SEEN_STORAGE_KEY` from `bootState.ts`**; that import path updates in the same change (D8/legacy-fallout rule). `content.config.ts` pointer for `content/boot`; `boot.yaml` per D17.
+**`src/features/boot`** — does not exist yet; this phase creates it. Everything below is scoped to it except the declared out-of-context wiring.
+
+**Declared out-of-context wiring** (mechanical only — D24's closing clause; no behavioral edits outside the context, ever):
+
+| file | why |
+|---|---|
+| `playwright.config.ts` | three project entries (§Mechanics 3) |
+| `package.json` | `test:e2e` / `test:visual` explicit lists |
+| `src/content.config.ts` | `boot` collection `base:` pointer (D22) |
+| `src/common/lib/data.ts:29` | `boot.yaml` `?raw` import re-point (D17) |
+| `src/pages/harness/[feature].astro` | one `boot` branch (D24) |
+| `src/bootstrap/Terminal.svelte:57` | import path for `BootSequence.svelte` |
+| **`common/tests/ui/support/pipeline.mjs:42`** | `BOOT_SEEN_STORAGE_KEY` import — **see ruling R1; the single easiest thing in this phase to miss, and it silently breaks every visual golden capture** |
+| `common/tests/ui/support/fixtures.ts:40` | same key |
+| `common/tests/ui/e2e/animations.spec.ts:26` | same key |
+| `tests/visual/adversarial-fixtures.spec.ts:24` | same key |
+| `tests/e2e/notifications-boot.spec.ts:19` | same key (spec stays in `legacy`; phase 06 relocates it) |
+| `tests/e2e/toast-drain-arm.spec.ts:33` | same key (spec stays in `legacy`; phase 06 relocates it) |
+| `tests/visual/identical.spec.ts` | `SPLIT_OWNED_RECIPE_NAMES` gains both boot recipes |
+| `docs/testing/{e2e,visual}/running-tests.md` | project rows (doc-practice, same commit) |
+| `tests/visual/goldens/<vp>/1{3,4}-boot-*.png` | deleted after the copies are verified |
 
 ## Objective
 
-Boot sequence + boot state migrated verbatim and green; `cold-boot.spec.ts`'s real-boot path (it deliberately bypasses the shared fixture) still exercised.
+The boot sequence and boot state live in `src/features/boot/`, moved verbatim, with `boot.spec.ts`, `cold-boot.spec.ts`, the unit test, and both boot goldens green at both viewports with zero churn; `cold-boot.spec.ts`'s genuine unskipped-boot path still exercised; and a `boot-harness` route mounting `BootSequence` with no Terminal kernel.
 
-## Background — move table
+## Background — verified inventory
 
-| v1 | v2 |
-|---|---|
-| `src/components/BootSequence.svelte` | `src/features/boot/components/BootSequence.svelte` |
-| `src/lib/boot.ts`, `src/lib/bootState.ts` | `src/features/boot/lib/boot.ts`, `boot-state.ts` (D15) |
-| `src/content/boot/`, `src/data/boot.yaml` | `src/features/boot/content/` |
-| specs `boot, cold-boot`; unit `boot.test.ts` | `tests/ui/e2e/`; `tests/unit/` |
-| boot-mapped goldens (per recipe map) | `tests/ui/visual/goldens/<viewport>/` |
+Every path below was verified on disk. **Do not re-derive; do verify before editing.**
 
-Note: `boot.spec.ts` imports raw `@playwright/test` (not the shared fixture) on purpose — port that behavior untouched.
+### Move table
+
+| from | to | lines |
+|---|---|---|
+| `src/components/BootSequence.svelte` | `src/features/boot/components/BootSequence.svelte` | 420 |
+| `src/lib/boot.ts` | `src/features/boot/lib/boot.ts` | 148 |
+| `src/lib/bootState.ts` | `src/features/boot/lib/boot-state.ts` (D15 kebab-case) | 38 |
+| `src/content/boot/log.md` | `src/features/boot/content/log.md` | 1 file |
+| `src/data/boot.yaml` | `src/features/boot/content/boot.yaml` | 157 |
+| `tests/e2e/boot.spec.ts` | `src/features/boot/tests/ui/e2e/boot.spec.ts` | 319 |
+| `tests/e2e/cold-boot.spec.ts` | `src/features/boot/tests/ui/e2e/cold-boot.spec.ts` | 103 |
+| `tests/unit/boot.test.ts` | `src/features/boot/tests/unit/boot.test.ts` | 213 |
+| `tests/visual/goldens/<vp>/13-boot-mid.png` | `src/features/boot/tests/ui/visual/goldens/<vp>/` | 2 files |
+| `tests/visual/goldens/<vp>/14-boot-ready.png` | `src/features/boot/tests/ui/visual/goldens/<vp>/` | 2 files |
+
+**Not boot's, despite the name — do not touch:** `src/bootstrap/` is the Terminal kernel bootstrap (a different concept that merely shares the word), and `src/features/help/content/boot.md` is help's copy *about* booting.
+
+### Orchestrator rulings (do not re-litigate — architecture R003)
+
+- **R1 — `pipeline.mjs`'s storage-key import is declared, mandatory, and easy to miss.** `common/tests/ui/support/pipeline.mjs:42` reads `import { BOOT_SEEN_STORAGE_KEY } from "../../../../src/lib/bootState.ts";`. It must be repointed **in the same change as the move**. `pipeline.mjs` runs under bare Node, so its import **keeps the explicit `.ts` extension** — D23(d): Node's ESM resolver requires it, and that is not an R014 violation. Neither phase 03 nor 04 hit this edge (neither moved a storage-key module), so there is no prior instance to copy; get it right here. If it is missed, every visual golden capture breaks at once.
+- **R2 — `buildBoot` stays in `src/common/lib/data.ts`.** It lives at lines 500–589 and is called by all six `src/pages/*.astro` files. The shared data layer is common's, not boot's — identical to how `buildProfile`/`buildHelp` stayed put in phases 03/04. Only the `?raw` yaml import at line 29 (registered in the `RAW` map at line 44) is repointed. **No page file is edited by this phase.**
+- **R3 — no fixture switch.** D7's fixture-split mapping names only repositories, employment, dashboard, grep and shell-fs. Boot is absent, so `content.config.ts` gets a plain `base:` re-point with **no** `useFixtures` ternary and `build:fixtures` gains **no** new `cp` clause.
+- **R4 — the two boot-adjacent notification specs stay in `legacy` this phase.** `tests/e2e/notifications-boot.spec.ts` and `tests/e2e/toast-drain-arm.spec.ts` import `BOOT_SEEN_STORAGE_KEY` but primarily test notification/toast behavior, so they belong to phase 06 and relocate there. This phase gives each a **path-only** import update in place. Do not move them.
+- **R5 — no library-swap step.** Nothing in `00-phases.md` gives this phase an analog of phase 04's D11 fuzzysort step. This is the 5-step loop plus the harness, and nothing else.
+- **R6 — fix four stale comments in the same change** (precedent: commit `57287a1`). (a) `cold-boot.spec.ts`'s header cites a shared fixture at `tests/e2e/fixtures.ts`, which does not exist — the real path is `common/tests/ui/support/fixtures.ts`. (b) `src/lib/boot.ts` carries a comment citing `src/lib/vim.ts` / `src/lib/pasteBuffer.ts`, both long since relocated to `src/common/engines/vim/vim.ts` and `src/common/lib/paste-buffer.ts`. (c) `boot.spec.ts:25` and (d) `cold-boot.spec.ts:24` both cite `src/data/boot.yaml`, which this phase moves to `src/features/boot/content/boot.yaml`. Comment text only — zero behavior change. **Note on (c)/(d):** both specs deliberately *hand-mirror* `bootMs`/`phaseLabels` rather than importing them at runtime ("no runtime import", `boot.spec.ts:25`). That duplication is pre-existing and intentional — update the comment path, never convert the constants to an import.
+
+### Boot's capture path is structurally different from every other feature's
+
+**This is the part a copy-paste of phase 03/04 gets wrong.** `common/tests/ui/support/recipes.ts` defines a separate type at lines 213–219 — `BootRecipe` has **only** `name` and `clockOffsetMs`; it has no `actions` and no `check` field, and is not a `Recipe` with an extra field:
+
+```ts
+export interface BootRecipe {
+  name: string;
+  clockOffsetMs: number;
+}
+```
+
+Both boot recipes live in the `bootRecipes` array (lines 232–250): `{ name: "13-boot-mid", clockOffsetMs: 2000 }` and `{ name: "14-boot-ready", clockOffsetMs: BOOT_HARD_STOP_MS + 10 + BOOT_OUT_MS + 200 }` (= 5630, since `BOOT_HARD_STOP_MS` = 4660 and `BOOT_OUT_MS` = 760).
+
+They are captured by a **separate function**, `captureBootState()` (`pipeline.mjs` lines 293–337), not by a branch inside `captureState()`. Differences that matter:
+
+- It calls `page.clock.install({ time: CLOCK_TIME })` and then **`page.clock.pauseAt(t0)` before `page.goto()`** — boot's `pct`/phase/log/handshake math reads exact elapsed milliseconds, and 27–61 ms of wall-clock jitter is fatal to determinism here (harmless for every other recipe).
+- It replays **no actions** and runs **no `check`** — there are none to run.
+- For `clockOffsetMs > BOOT_HARD_STOP_MS` it uses a **two-stage `pauseAt`**: first `t0 + BOOT_HARD_STOP_MS + 10` so `finish()`'s outro `setTimeout` is actually *scheduled*, then the final offset. `pauseAt()` only fires timers that already existed when it was called. `14-boot-ready` takes this path; `13-boot-mid` does not.
+- It aborts `**/api.github.com/**` and passes **no `mask`** to `page.screenshot` (`captureState()` masks the SIGNAL row).
+- It deliberately does **not** pre-seed `BOOT_SEEN_STORAGE_KEY` — the opposite of `captureState()` — because a boot golden's entire point is a genuine, unskipped boot. It *does* pre-seed `TOAST_SEED_STORAGE_KEY`, since `14-boot-ready` lands on the post-outro dashboard.
+
+**Consequence for step 1:** before writing `src/features/boot/tests/ui/visual/identical.spec.ts`, read `tests/visual/identical.spec.ts` and find how it dispatches `bootRecipes` → `captureBootState()` versus ordinary recipes → `captureState()`. Carry that branch across verbatim. A boot visual spec built on the profile/help template will call the wrong capture function and produce non-deterministic goldens.
+
+### Fixture-vs-raw import split (port behavior untouched)
+
+Both of this phase's specs deliberately use **raw `@playwright/test`**, and each says so in its own header:
+
+- `boot.spec.ts:20` — "every other spec's shared `context` fixture pre-seeds the boot-seen sessionStorage flag specifically so boot never runs during THEIR tests; this file exists to exercise the real thing."
+- `cold-boot.spec.ts:21` — same reason.
+
+Preserve that. Do **not** normalize either onto the shared fixture — doing so would silently skip the very boot they exist to test.
+
+### Other verified facts
+
+- `BootSequence.svelte` has exactly one importer: `src/bootstrap/Terminal.svelte:57`, used at line 975 as `<BootSequence bind:this={bootRef} {boot} {desktopMode} onReady={onBootReady} />`. Many other files *mention* it in comments only — do not mistake those for imports.
+- `src/lib/boot.ts` importers: `BootSequence.svelte:60`, `tests/unit/boot.test.ts:20`, `tests/e2e/boot.spec.ts:22`.
+- `src/lib/bootState.ts` importers: `BootSequence.svelte:61` plus the six out-of-context sites in the wiring table.
+- `src/content/boot/` holds exactly one file, `log.md` (12 frontmatter `entries`). `boot.yaml` holds timing/tag data joined to it **by `id`**; `buildBoot` throws at build time on a mismatch in either direction (lines 581 and 586). A dropped or renamed file breaks the build loudly, not silently.
+- `src/content.config.ts` lines 174–189 define the `boot` collection (`base: "src/content/boot"`), exported at line 197.
+- `vitest.config.ts` already globs `src/features/*/tests/unit/**/*.test.ts`. **No `vitest.config.ts` change is needed.**
+- v1 drift: **none boot-specific.** `bootState.ts`, `src/content/boot/`, `boot.yaml` and `cold-boot.spec.ts` are byte-identical to v1's working tree. The few differences in `BootSequence.svelte`, `boot.ts`, `boot.spec.ts` and `boot.test.ts` are consequences of *already-completed* v2 work (the `data.ts` → `common/lib/data.ts` move, the vim/paste-buffer relocations, the node:test → vitest switch). Nothing to reconcile.
+
+## Mechanics (settled by phases 02–04; reuse verbatim, do not redesign — architecture R003)
+
+**1. D21(a) snapshot paths.** The root `snapshotPathTemplate` stays `"tests/visual/goldens/{projectName}/{arg}{ext}"`. Every split visual project carries its **own** template with the viewport as a **literal**, never `{projectName}`.
+
+**2. Project naming.** A Playwright project is 1:1 with one `use` config, so each tier emits **two** entries via `viewports.map(...)`. **There is no bare alias and no glob** — `--project=boot` and `--project="*-visual"` both error. Always the two explicit flags.
+
+**3. The three project entries this phase adds** to `playwright.config.ts`, appended after the `help-harness` entry:
+
+```ts
+...viewports.map((viewport) => ({
+  name: `boot-${viewport.name}`,
+  testDir: "./src/features/boot/tests/ui/e2e",
+  use: { ...devices["Desktop Chrome"], viewport: { width: viewport.width, height: viewport.height }, deviceScaleFactor: 1 },
+})),
+...viewports.map((viewport) => ({
+  name: `boot-visual-${viewport.name}`,
+  testDir: "./src/features/boot/tests/ui/visual",
+  snapshotPathTemplate: `src/features/boot/tests/ui/visual/goldens/${viewport.name}/{arg}{ext}`,
+  use: { ...devices["Desktop Chrome"], viewport: { width: viewport.width, height: viewport.height }, deviceScaleFactor: 1 },
+})),
+{
+  name: "boot-harness",
+  testDir: "./src/features/boot/tests/ui/harness",
+  use: { ...devices["Desktop Chrome"], viewport: { width: viewports[0].width, height: viewports[0].height }, deviceScaleFactor: 1 },
+},
+```
+
+**4. D24 harness route.** `src/pages/harness/[feature].astro` is one shared dynamic route gated by `if (process.env.PORTFOLIO_FIXTURES !== "1") return [];` in `getStaticPaths`. Add a `boot` entry to (a) the `getStaticPaths` array, (b) a `const boot = feature === "boot" ? buildBoot(await getCollection("boot")) : undefined;` line, (c) a conditional block mounting `BootSequence` directly with `client:load`. `BootSequence` is boot's own orchestrator component, so a wrapper is needed **only** if `onReady`/`bind:this` routing that `Terminal.svelte` normally owns must be reproduced — if so, put it at `src/features/boot/tests/ui/harness/BootHarness.svelte` (test support, never in the feature's real `components/`) and render `onReady`'s firing into a `data-testid` stand-in element rather than skipping the assertion.
+
+**5. Harness hydration race — required.** Whenever the harness ships `client:load`, the server-rendered HTML exists before hydration, so a spec that waits on a content locator races the listener attaching. Render an `onMount`-flipped element and wait on **that**: `<div data-testid="boot-harness-ready" data-ready={ready}></div>`. Boot is time-driven, so the harness spec must also drive `page.clock` itself rather than waiting on wall-clock — mirror `captureBootState()`'s install-then-`pauseAt`-before-`goto` ordering.
+
+**6. Page objects.** `src/features/boot/tests/ui/pages/BootPage.ts`, a sibling of `e2e/`/`visual/`/`harness/`. A feature page object **may not** redefine kernel-chrome locators — compose the shared class:
+
+```ts
+import { StatusBarPage } from "../../../../../../common/tests/ui/pages/StatusBarPage";
+```
+
+Verify that relative depth with `node -e "…path.relative…"`; do not guess it.
+
+**7. Locators.** `playwright.md` R002 bans CSS selectors unconditionally, even scoped off a resolved testid. If a repeated element needs narrowing, add a real `data-testid` to the markup (attribute-only, zero pixel change, goldens re-verified in the same change — D24's sanctioned mechanical edit).
+
+**8. Per-commit index self-consistency (toolchain R012).** If this phase's edits span multiple commits, run `pnpm generate` **per commit against that commit's own tree** (stash uncommitted files first) and diff `public/generated/{grep-index,fs-index}.json` **programmatically** — both are single-line JSON, so `git diff` alone is useless. Revert unrelated live-data drift (`contributions.json`, `commits/daily-tech-digest.json`, `file-icons.json`) with `git checkout --` before committing. Note `scripts/generate.mjs` walks only `["src","scripts","tests"]`, so files under `common/tests/` legitimately drop out of both indexes.
 
 ## Steps
 
-- [ ] **1–5.** The per-feature loop exactly as `Instructions/03-profile/PLAN.md` defines it, with this phase's table; D21 mechanics reused verbatim. The shared-support-fixture import update is part of step 2's same-change fallout.
-- [ ] **6. Feature harness (D24).** Reuse phase 03's mechanism: harness route mounting `BootSequence` with seeded fixture props; specs in `tests/ui/harness/`, project `boot-harness` (fixture build).
-  *Verify:* fixture build → `--project=boot-harness` green; real build → no `harness/` output in `dist/`.
+- [ ] **1. Port specs + goldens.**
+  `git mv` both specs into `src/features/boot/tests/ui/e2e/`. They import raw `@playwright/test`, so there is no shared-fixture path to repoint — but fix each spec's `ROOT = join(import.meta.dirname, …)` constant to the new depth, and **strip `.ts` extensions** from their `src/lib/*` imports (D23(d): a feature phase's spec-port step MUST strip them). Verify depth with `path.relative`, never by counting by eye. Apply R6's `cold-boot.spec.ts` comment fix. Leave the `src/lib/boot*` import targets alone for now — step 2 moves those modules; they must be green at the end of step 2, not this one.
+  Create `src/features/boot/tests/ui/visual/identical.spec.ts`, carrying across the `bootRecipes` → `captureBootState()` branch from `tests/visual/identical.spec.ts` (§Background) and filtering to a `BOOT_OWNED_RECIPE_NAMES` set of both recipes.
+  `cp` all four goldens into `src/features/boot/tests/ui/visual/goldens/<vp>/`; `cmp` each against the pre-move copy **and** against v1's at `/Users/shev/Development/spidey-hub/tests/visual/goldens/`; then delete the originals. Add both recipe names to `tests/visual/identical.spec.ts`'s `SPLIT_OWNED_RECIPE_NAMES` and update its header comment.
+  Add the three project entries (§Mechanics 3); extend `package.json`'s `test:e2e` with `--project=boot-1512x945 --project=boot-1920x1080` and `test:visual` with the new `identical.spec.ts` path **only**. The harness spec path is added in step 6, when the spec exists — Playwright exits 1 on a path that resolves to no tests, so adding it here reds this step's own gate. (The `boot-harness` *project entry* is fine to add now; an empty `testDir` is not an error, an unmatched spec path is.) Sweep `docs/testing/{e2e,visual}/running-tests.md` in this same commit: add rows matching the existing `common`/`profile`/`help` rows' shape exactly (concrete prose naming the real spec files), remove `boot` from the "remaining features" parenthetical in **both** files, and extend each header's "so far" list to include `boot`. **Verify every project name against real `playwright test --list` output before writing any row** — phase 03 shipped fabricated bare-alias rows twice.
+  *Verify:* `pnpm build` then `E2E_EXPECT_FIXTURES=0 playwright test --project=smoke --project=legacy-1512x945 --project=legacy-1920x1080 --project=common-1512x945 --project=common-1920x1080 --project=profile-1512x945 --project=profile-1920x1080 --project=help-1512x945 --project=help-1920x1080 --project=boot-1512x945 --project=boot-1920x1080` → all green. Then `pnpm build:fixtures` and the `test:visual` spec list including the new `identical.spec.ts` → all green, both boot goldens matching. `playwright test --list` names all three new projects.
+
+- [ ] **2. Move source; update every importer; delete originals.**
+  `git mv` `BootSequence.svelte`, `boot.ts`, `bootState.ts` → `lib/boot-state.ts`, `log.md`, and `boot.yaml` per the move table. Apply R6's `boot.ts` comment fix.
+  Repoint **every** importer in §Context's wiring table. Work down that table literally and tick each one off — `pipeline.mjs:42` (R1, keeps its `.ts` extension) is the one that silently breaks all visual capture if missed.
+  Update `content.config.ts`'s `base:` to `src/features/boot/content` (no fixture switch — R3) and `src/common/lib/data.ts:29`'s `?raw` import (R2 — `buildBoot` itself does not move, and no page file is touched).
+  `pnpm generate`; diff both indexes programmatically.
+  *Verify:*
+  ```bash
+  test ! -e src/components/BootSequence.svelte
+  test ! -e src/lib/boot.ts && test ! -e src/lib/bootState.ts
+  test ! -d src/content/boot && test ! -e src/data/boot.yaml
+  grep -rn "lib/boot\b\|lib/bootState\|components/BootSequence\|data/boot\.yaml\|content/boot" src tests common scripts
+  ```
+  The grep must return **only** intentionally-updated lines — no stale residue. Comment-only mentions of `BootSequence.svelte` in other files are expected and are not stale imports; leave them unless R6 names them. Record every legacy→feature edge in Results for the auditor, naming the D23(c) exemption.
+
+- [ ] **3. Full gate, from the clean committed tree.** Not folded into step 2's commit.
+  *Verify:* `pnpm check` → 0 errors. `pnpm lint` → exit 0. `pnpm test:unit` → count unchanged from before this phase. D20 (a) real build → every project above green. D20 (b) fixture build → every `*-visual` + legacy visual + the **two existing** harness specs (`profile`, `help`) green. Boot's own harness does not exist yet — it lands in step 6 and is gated there. `public/generated/*` unchanged by this step. These runs auto-background past the 120s foreground default — monitor to completion, never sleep-poll.
+
+- [ ] **4. Golden parity — zero churn.**
+  *Verify:* `diff -rq tests/visual/goldens /Users/shev/Development/spidey-hub/tests/visual/goldens` shows **only** `Only in …` lines for every recipe split out by phases 02–05 — never a `differ` line. `cmp` each of this phase's four goldens against v1's byte-for-byte. Total PNGs stay 21 recipes × 2 viewports = 42, redistributed. **No `--update-snapshots`, ever (D5).**
+
+- [ ] **5. Move the unit test.**
+  `git mv tests/unit/boot.test.ts src/features/boot/tests/unit/boot.test.ts`; fix its `src/lib/boot` import and its `src/common/lib/data` type import to the new depths.
+  *Verify:* `pnpm test:unit` → same N/N passed, same M/M files as before (pure relocation).
+
+- [ ] **6. Feature harness (D24).**
+  Add the `boot` branch to `src/pages/harness/[feature].astro` (§Mechanics 4), the ready-element and clock control (§Mechanics 5), and a spec at `src/features/boot/tests/ui/harness/boot.spec.ts` asserting mount plus boot's core behavior — the sequence runs and reaches ready under driven clock time, with phase/progress advancing. Assert kernel-free isolation via the composed `StatusBarPage`: `expect(boot.statusBar.windows).toHaveCount(0)`. No goldens (D24(b)).
+  Now that the spec exists, append its path to `package.json`'s `test:visual` (deferred from step 1).
+  *Verify:* fixture build → `--project=boot-harness` green, and `pnpm test:visual` green as a whole with the new path in it. Real build → `test ! -d dist/harness` **and** `grep -rl "BootHarness" dist --include="*.html"` empty. A bare `find dist -iname "*harness*"` will still match a dead ~1 KB JS chunk if a wrapper component was used — that is expected and ruled harmless (`00-phases.md`, Deferred), **not** a failure.
+
+- [ ] **7. Record and close.** Fill in Results: every file moved, every importer updated (the wiring table ticked off one by one), the D23 edges flagged for the auditor, gate outputs, and which harness shape was used. Commit to `frontend-rewrite` — single-line imperative, **no body, no trailer** (toolchain R011), one reviewable unit per commit (R012).
+  **Also correct one stale claim in `Instructions/00-phases.md`'s status line in this same edit:** it reads "77 local commits on `frontend-rewrite`, nothing pushed." `origin/frontend-rewrite` is in fact at the same SHA as local `HEAD` (verified with `git ls-remote --heads origin`), so the branch **is** pushed. Re-verify with `git ls-remote` before writing, then state the true position and update the commit count. This corrects the record only — **do not push anything** in this phase.
 
 ## Acceptance criteria
 
-Loop + harness verified; verifier PASS + auditor clean on `src/features/boot` (D23); commit per 00-phases.md. Stop: no boot-timing/behavior changes; no golden regeneration.
+1. Every file in the move table is at its new path; `src/components/BootSequence.svelte`, `src/lib/boot.ts`, `src/lib/bootState.ts`, `src/content/boot/` and `src/data/boot.yaml` no longer exist.
+2. Every importer in the wiring table resolves — in particular `pipeline.mjs:42`, verified by visual capture still working, not by inspection alone.
+3. `pnpm check` 0 errors, `pnpm lint` 0 findings, `pnpm test:unit` count unchanged.
+4. D20 both invocations green, including `boot-{1512x945,1920x1080}`, `boot-visual-*`, and `boot-harness`.
+5. Zero golden churn; 42 PNGs total; `13-boot-mid` and `14-boot-ready` byte-identical to v1 at both viewports.
+6. Both specs still import raw `@playwright/test` and still exercise a genuine unskipped boot.
+7. Real build emits no `dist/harness/` directory and no HTML reference to a harness component.
+8. Verifier PASS **and** auditor clean on `src/features/boot` (D23 exemptions recorded with the exemption named).
+9. Results filled in; no `(executor fills in)` placeholder.
+
+## Stop conditions
+
+- **No boot-timing or behavior changes.** Not `bootMs`, not the hard-stop slack, not the outro hold, not the phase formulas. If a golden goes red, the move is wrong — never the golden.
+- **No rewriting moved code**, no splitting `BootSequence.svelte` (files-and-naming R002/R010/R012 on a relocated single-file view is a recorded D23(e) exemption, not a task), no normalizing either spec onto the shared fixture.
+- **No golden regeneration**, no `--update-snapshots`.
+- **Do not move** `notifications-boot.spec.ts` or `toast-drain-arm.spec.ts` (R4) — path-only updates.
+- **No behavioral edits outside the context** — path and comment updates only.
+- If a step turns out to rest on a false assumption, **stop and report** rather than redesigning; the orchestrator updates this plan.
 
 ## Results
 
