@@ -220,7 +220,7 @@ Verify that relative depth with `node -e "…path.relative…"`; do not guess it
 8. `42ecd81` — Rewrite cold-boot.spec.ts header without a v1 plan-doc reference
 9. `12c39ec` — Add missing unit tests for boot-state.ts
 10. `401044d` — Record phase 05 auditor fix-round results
-11. (this fix round's commit) — Add banner comments to BootPage.ts and drop cold-boot.spec.ts's second plan reference
+11. `c4c432d` — Add BootPage banner comments and drop cold-boot.spec.ts's second plan reference
 
 ### Auditor fix round (5 genuine findings ruled in-scope; 5 fixed, 0 remaining)
 The auditor found 21 violations total (9 already D23-exempt, 12 flagged genuine of which the orchestrator ruled 7 exempt — recorded by the orchestrator directly in `Instructions/00-phases.md`'s D23 clause — and 5 required fixes). All 5 fixed:
