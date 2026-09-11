@@ -6,6 +6,8 @@
 
 The repo's history. Runs only when the developer asks, and only over closed phases.
 
+**Two landing mechanisms now exist; the choice is the developer's at ship time (D25).** (a) The cherry-pick pass below — closed-phase commits replayed onto `main`, oldest first, conflicts surfaced here. (b) Squash-merging phase 04b's stack PRs bottom-up, giving `main` one commit per phase, with `gh stack sync` restacking after each merge; the per-phase conflicts are then already resolved on the `stack/*` branches instead of being met here. They are alternatives, not steps of one plan — do not run both over the same phases. If (b) is chosen, this plan's steps 4–5 (verify `main` whole; red `main` = FAIL fixed on `frontend-rewrite`, never patched on `main`) still apply after the last PR merges.
+
 ## Objective
 
 Every closed phase's `frontend-rewrite` commits land on `main`, oldest first, with `main` verified whole.
