@@ -173,7 +173,8 @@ Verify that relative depth with `node -e "…path.relative…"`; do not guess it
   Now that the spec exists, append its path to `package.json`'s `test:visual` (deferred from step 1).
   *Verify:* fixture build → `--project=notifications-harness` green, and `pnpm test:visual` green as a whole with the new path in it. Real build → `test ! -d dist/harness` **and** `grep -rl "NotificationsHarness" dist --include="*.html"` empty. A bare `find dist -iname "*harness*"` will still match a dead ~1 KB JS chunk if a wrapper component was used — that is expected and ruled harmless (`00-phases.md`, Deferred), **not** a failure.
 
-- [ ] **7. Record and close.** Fill in Results: every file moved, every importer updated, the D16/D23 edges flagged for the auditor, gate outputs, and which harness shape was used. Commit to `frontend-rewrite` — single-line imperative, **no body, no trailer** (toolchain R011), one reviewable unit per commit (R012).
+- [ ] **7. Record and close.** First run the plan-citation sweep over this phase's own context — `grep -rniE "plan\.md|phase [0-9]|defect [0-9]|\b[fg][0-9]+\b" src/features/notifications` — and rewrite any hit in the file's own terms (comment text only; a ported spec's logic is untouchable). v1's specs cite v1 planning docs that do not exist here, which comments.md R008 forbids; phase 05 hit this twice and the second instance cost a whole extra fix round. Catch it before the auditor does.
+  Then fill in Results: every file moved, every importer updated, the D16/D23 edges flagged for the auditor, gate outputs, and which harness shape was used. Commit to `frontend-rewrite` — single-line imperative, **no body, no trailer** (toolchain R011), one reviewable unit per commit (R012).
 
 ## Acceptance criteria
 
