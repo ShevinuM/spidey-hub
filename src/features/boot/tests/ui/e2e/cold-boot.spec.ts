@@ -1,19 +1,20 @@
-// Cold-boot coverage for the surfaces PLAN.md Phase 7.2 calls out as still
-// untested from both directions even after tests/e2e/notifications-boot.spec.ts
-// landed: `common/tests/ui/support/fixtures.ts`'s shared `context` fixture pre-seeds the
-// boot-seen sessionStorage flag for every spec except `boot.spec.ts`, and
-// `boot.spec.ts` itself never mentions notifications — so a real first-time
-// visitor's bell/ring state and the dashboard's basic first-paint chrome
-// were never exercised together with a genuine (non-skipped) boot.
+// Cold-boot coverage for the surfaces still untested from both directions
+// even with tests/e2e/notifications-boot.spec.ts in place:
+// `common/tests/ui/support/fixtures.ts`'s shared `context` fixture pre-seeds
+// the boot-seen sessionStorage flag for every spec except `boot.spec.ts`,
+// and `boot.spec.ts` itself never mentions notifications — so a real
+// first-time visitor's bell/ring state and the dashboard's basic
+// first-paint chrome were never exercised together with a genuine
+// (non-skipped) boot.
 //
 // Deliberately does NOT re-cover notifications-boot.spec.ts's own subject
 // (a toast surviving the boot overlay) — see that file for the toast/drain
 // assertions. This file covers the OTHER cold-boot surfaces: the unread
-// bell + its `senseRing` ring (PLAN.md F1's defect 1 — the ring was
-// entirely dead until `b885c18`, and nothing here would have caught a
-// regression back to that state without this spec), and first-paint
-// sanity (boot actually clears, and the dashboard chrome it hands off to
-// is real, not a blank/broken frame).
+// bell + its `senseRing` ring (the ring was entirely dead until commit
+// `b885c18` fixed it, and nothing else in this suite would catch a
+// regression back to that state), and first-paint sanity (boot actually
+// clears, and the dashboard chrome it hands off to is real, not a
+// blank/broken frame).
 //
 // Deliberately imports the RAW `@playwright/test` (not ./fixtures.ts),
 // same reason boot.spec.ts and notifications-boot.spec.ts do: the shared
