@@ -120,6 +120,8 @@ All four break on the move (path **and** filename change). Each is repointed; no
 <div data-testid="notifications-harness-ready" data-ready={ready}></div>
 ```
 
+**5b. Harness assertions are web-first — do not copy the ported specs' reads.** Phase 05 lost a fix round to this. A verbatim-ported spec may read values non-retryingly (`textContent()`, `page.evaluate()`) because it races a *live* clock and has a real justification for doing so. A harness spec does not inherit that justification: its clock is driven and paused, so the DOM is static when read and there is no race to guard against. Assert through the page object with `await expect(pageObject.x).toHaveText(...)` / `.toHaveAttribute(...)`. **`playwright.md` R002 bans CSS selectors unconditionally — that includes `document.querySelector` inside `page.evaluate()`**, which is the exact shape phase 05's harness spec got wrong. The one sanctioned non-retrying read is deriving an *expected value* to feed a web-first assertion (e.g. `getAttribute()` on a testid locator when asserting a numeric range, for which no web-first form exists) — never as the assertion itself.
+
 **6. Page objects.** `src/features/notifications/tests/ui/pages/NotificationsPage.ts`, a sibling of `e2e/`/`visual/`/`harness/`. A feature page object **may not** redefine kernel-chrome locators — compose the shared class:
 
 ```ts
