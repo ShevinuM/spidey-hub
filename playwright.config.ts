@@ -207,6 +207,49 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
+    // `boot` (D20): the 2 specs (boot.spec.ts, cold-boot.spec.ts) phase 05
+    // ported out of `legacy` — one project per viewport, same reasoning as
+    // `help-<viewport>` above.
+    ...viewports.map((viewport) => ({
+      name: `boot-${viewport.name}`,
+      testDir: "./src/features/boot/tests/ui/e2e",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+      },
+    })),
+    // `boot-visual` (D21): the 2 recipes phase 05 owns per
+    // Instructions/01-pre-phase/recipe-feature-map.md ("13-boot-mid",
+    // "14-boot-ready"), moved out of the viewport-named visual projects above
+    // (and out of tests/visual/identical.spec.ts's SPLIT_OWNED_RECIPE_NAMES
+    // filter). Reuses common's/profile's/help's split-project shape verbatim
+    // (D21(a)): its own `snapshotPathTemplate` with the viewport hardcoded as
+    // a literal, not derived from `{projectName}`.
+    ...viewports.map((viewport) => ({
+      name: `boot-visual-${viewport.name}`,
+      testDir: "./src/features/boot/tests/ui/visual",
+      snapshotPathTemplate: `src/features/boot/tests/ui/visual/goldens/${viewport.name}/{arg}{ext}`,
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+      },
+    })),
+    // `boot-harness` (D24): boot's own harness route + spec, reusing
+    // phase 03's settled mechanism verbatim. Fixture-build-only; functional
+    // assertions only (mount + core interactions), no goldens — one project
+    // at the primary viewport, same as `profile-harness`/`help-harness`
+    // above.
+    {
+      name: "boot-harness",
+      testDir: "./src/features/boot/tests/ui/harness",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewports[0].width, height: viewports[0].height },
+        deviceScaleFactor: 1,
+      },
+    },
   ],
   webServer: [
     {

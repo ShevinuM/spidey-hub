@@ -19,8 +19,8 @@
 // deliberate change, and fail loudly against an accidental one (a typo'd
 // threshold here would silently duplicate the bug it's supposed to catch).
 import { expect, test, type Page } from "@playwright/test";
-import { pct, phaseLabel, progress } from "../../src/lib/boot.ts";
-import { BOOT_SEEN_STORAGE_KEY } from "../../src/lib/bootState.ts";
+import { pct, phaseLabel, progress } from "../../../../../lib/boot";
+import { BOOT_SEEN_STORAGE_KEY } from "../../../../../lib/bootState";
 
 // Must match src/data/boot.yaml's bootMs / phaseLabels — no runtime import
 // of that file is possible here (its `?raw` imports are Vite-only syntax,

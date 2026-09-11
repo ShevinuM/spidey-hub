@@ -55,7 +55,12 @@ import { captureBootState, captureState } from "../../common/tests/ui/support/pi
 // under src/features/profile/tests/ui/visual/ (profile-visual-<viewport>
 // projects). Phase 04 (help) owns "11-help" (extraRecipes) and
 // "20-help-search" (iteration3Recipes), now run under
-// src/features/help/tests/ui/visual/ (help-visual-<viewport> projects). All
+// src/features/help/tests/ui/visual/ (help-visual-<viewport> projects).
+// Phase 05 (boot) owns "13-boot-mid" and "14-boot-ready" (bootRecipes), now
+// run under src/features/boot/tests/ui/visual/ (boot-visual-<viewport>
+// projects) — this filter is applied to the boot describe block below too,
+// not just `keyRecipes`, since bootRecipes is captured via its own separate
+// loop, not folded into the standard-recipe union. All
 // are excluded here to keep every recipe captured exactly once (00-phases.md
 // D21). As later phases move their own recipes out, SPLIT_OWNED_RECIPE_NAMES
 // grows the same way (renamed from COMMON_OWNED_RECIPE_NAMES now that more
@@ -68,6 +73,8 @@ const SPLIT_OWNED_RECIPE_NAMES = new Set([
   "07-profile",
   "11-help",
   "20-help-search",
+  "13-boot-mid",
+  "14-boot-ready",
 ]);
 const keyRecipes = [...recipes, ...extraRecipes, ...cmdlineRecipes, ...iteration3Recipes, ...notificationsRecipes].filter(
   (recipe) => !SPLIT_OWNED_RECIPE_NAMES.has(recipe.name),
@@ -117,7 +124,7 @@ test.describe("visual: implementation vs goldens", () => {
 // still-running, elapsed-time-driven overlay that the other 13 recipes
 // (all captured at a settled, boot-already-skipped view) never hit.
 test.describe("visual: boot sequence vs goldens", () => {
-  for (const bootRecipe of bootRecipes) {
+  for (const bootRecipe of bootRecipes.filter((recipe) => !SPLIT_OWNED_RECIPE_NAMES.has(recipe.name))) {
     test(bootRecipe.name, async ({ page, baseURL }) => {
       const png = await captureBootState(page, baseURL ?? "http://localhost:4322", bootRecipe);
       expect(png).toMatchSnapshot({

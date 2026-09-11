@@ -1,6 +1,6 @@
 // Cold-boot coverage for the surfaces PLAN.md Phase 7.2 calls out as still
 // untested from both directions even after tests/e2e/notifications-boot.spec.ts
-// landed: `tests/e2e/fixtures.ts`'s shared `context` fixture pre-seeds the
+// landed: `common/tests/ui/support/fixtures.ts`'s shared `context` fixture pre-seeds the
 // boot-seen sessionStorage flag for every spec except `boot.spec.ts`, and
 // `boot.spec.ts` itself never mentions notifications — so a real first-time
 // visitor's bell/ring state and the dashboard's basic first-paint chrome
