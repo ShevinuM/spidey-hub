@@ -26,8 +26,9 @@
 // "derive the expectation from the real source" convention the ported e2e
 // suite and repositories' own harness spec use), not hardcoded, so a
 // future fixture edit doesn't silently desync this suite from the truth
-// it's supposed to check. Assertions are web-first throughout (Mechanics
-// 5b, playwright.md R002) — no CSS-selector reads (including inside
+// it's supposed to check. Assertions are web-first throughout, since a
+// harness spec has no live clock to race the way a ported spec might
+// (playwright.md R002) — no CSS-selector reads (including inside
 // `page.evaluate()`), only page-object locators built from testids and
 // visible text; the one non-retrying read anywhere in this file is
 // `readFileSync`ing the fixture to derive an expected value, never used as
@@ -61,9 +62,9 @@ test.describe("Grep harness: mounts standalone with seeded fixture props", () =>
     const emptyHits = search(FIXTURE, "");
     await expect(grep.counter).toHaveText(formatCount(emptyHits, FIXTURE, ""));
     // The list pane measures its own rendered height and shows at least 4
-    // rows (grepOverlayState.svelte.ts's own `Math.max(4, ...)` floor) —
-    // never asserted as an exact row count, since taller viewports render
-    // more (Mechanics 6).
+    // rows (grepOverlayState.svelte.ts's own `Math.max(4, ...)` floor), so
+    // the row count is a lower bound, not an equality — taller viewports
+    // render more.
     await expect(grep.rows.nth(3)).toBeVisible();
   });
 

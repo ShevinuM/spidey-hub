@@ -158,7 +158,7 @@ const grep = feature === "grep" ? getGrep() : undefined;
     // GrepHarness.svelte to reproduce that one piece of cross-component
     // routing (see its own header comment, including why `onNavigate` is a
     // no-op here). Grep has no content collection — its yaml is a plain
-    // `?raw` data file (R2) — so `getGrep()` alone is enough.
+    // `?raw` data file — so `getGrep()` alone is enough.
     feature === "grep" && grep !== undefined && <GrepHarness client:load {grep} />
   }
 </Layout>

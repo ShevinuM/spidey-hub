@@ -436,8 +436,8 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
-    // `grep` (D20): grep.spec.ts phase 10 ported out of `legacy` — one
-    // project per viewport, same reasoning as `employment-<viewport>`/
+    // `grep`: grep.spec.ts ported out of `legacy` — one project per
+    // viewport, same reasoning as `employment-<viewport>`/
     // `repositories-<viewport>` above.
     ...viewports.map((viewport) => ({
       name: `grep-${viewport.name}`,
@@ -448,13 +448,16 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `grep-visual` (D21): the 2 recipes phase 10 owns ("09-grep-empty",
+    // `grep-visual`: the 2 recipes grep owns ("09-grep-empty",
     // "10-grep-query"), moved out of the viewport-named visual projects
     // above (and out of tests/visual/identical.spec.ts's
-    // SPLIT_OWNED_RECIPE_NAMES filter). Reuses common's/profile's/help's/
-    // boot's/notifications'/dashboard's/employment's/repositories' split-
-    // project shape verbatim (D21(a)): its own `snapshotPathTemplate` with
-    // the viewport hardcoded as a literal, not derived from `{projectName}`.
+    // SPLIT_OWNED_RECIPE_NAMES filter). Same split-project shape as
+    // common's/profile's/help's/boot's/notifications'/dashboard's/
+    // employment's/repositories' entries above: its own
+    // `snapshotPathTemplate` hardcodes the viewport as a literal rather
+    // than deriving it from `{projectName}`, because each viewport's
+    // goldens must resolve to their own fixed directory regardless of
+    // which project name renders them.
     ...viewports.map((viewport) => ({
       name: `grep-visual-${viewport.name}`,
       testDir: "./src/features/grep/tests/ui/visual",
@@ -465,10 +468,10 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `grep-harness` (D24): grep's own harness route + spec, reusing phase
-    // 03's settled mechanism verbatim. Fixture-build-only; functional
-    // assertions only (mount + core interactions), no goldens — one project
-    // at the primary viewport, same as
+    // `grep-harness`: grep's own harness route + spec, reusing the same
+    // harness mechanism as every other feature's. Fixture-build-only;
+    // functional assertions only (mount + core interactions), no goldens —
+    // one project at the primary viewport, same as
     // `profile-harness`/`help-harness`/`boot-harness`/
     // `notifications-harness`/`dashboard-harness`/`employment-harness`/
     // `repositories-harness` above.

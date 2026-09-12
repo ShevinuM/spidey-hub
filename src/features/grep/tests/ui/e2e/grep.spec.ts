@@ -337,7 +337,7 @@ test.describe("Grep overlay", () => {
   ];
 
   for (const vp of EXTRA_VIEWPORTS) {
-    test.describe(`right preview pane labels are never clipped by an ancestor (item #14 fix) — ${vp.width}x${vp.height}@${vp.deviceScaleFactor}x`, () => {
+    test.describe(`right preview pane labels are never clipped by an ancestor — ${vp.width}x${vp.height}@${vp.deviceScaleFactor}x`, () => {
       test.use({ viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: vp.deviceScaleFactor });
 
       test("grep-file / grep-file-pos fully contained in every clipping ancestor", async ({ page }) => {
