@@ -1,4 +1,4 @@
-// Unit tests for src/lib/repoTree.ts's repo browsing.
+// Unit tests for src/common/lib/repo-tree.ts's repo browsing.
 // Exercised against the real generated index for one of the 8 submodules
 // (public/generated/repos/daily-tech-digest.json — has genuine nested
 // subdirectories, unlike transcript-tts which is flat at the root) so the
@@ -17,9 +17,9 @@ import {
   flattenVisible,
   type RepoFile,
   type RepoIndex,
-} from "../../src/lib/repoTree";
+} from "../../../src/common/lib/repo-tree";
 
-const ROOT = join(import.meta.dirname, "../..");
+const ROOT = join(import.meta.dirname, "../../..");
 const dailyTechDigest = JSON.parse(
   readFileSync(join(ROOT, "public/generated/repos/daily-tech-digest.json"), "utf8"),
 ) as RepoIndex;

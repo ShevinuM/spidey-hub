@@ -1,9 +1,9 @@
-// Unit tests for src/lib/highlight.ts's generate-time token pipeline. Uses
+// Unit tests for src/common/lib/highlight.ts's generate-time token pipeline. Uses
 // small inline fixture snippets (not repos/ content — the submodules can
 // move/change independently of this test) so determinism, the palette
 // round-trip, and the size-cap fallback are each pinned to a stable input.
 import { expect, test } from "vitest";
-import { PaletteBuilder, tokenizeFile, tokenLineText } from "../../src/lib/highlight";
+import { PaletteBuilder, tokenizeFile, tokenLineText } from "../../../src/common/lib/highlight";
 
 const TS_SNIPPET = `import { readFileSync } from "node:fs";
 
