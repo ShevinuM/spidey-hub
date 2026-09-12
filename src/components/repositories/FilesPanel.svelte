@@ -10,7 +10,7 @@
   // selecting a row never shifts its text 2px to the right.
   import type { RepositoriesData } from "../../common/lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
-  import { iconSvgForPath } from "../../lib/fileIcons";
+  import { iconSvgForPath } from "../../common/lib/file-icons";
   import RepositoriesPanel from "./RepositoriesPanel.svelte";
 
   interface Props {

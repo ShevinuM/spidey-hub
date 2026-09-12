@@ -9,7 +9,7 @@
 import type { GrepData } from "../../common/lib/data";
 import { search, formatCount, type RepoFile } from "../../lib/grep";
 import { pushPasteTarget, removePasteTarget } from "../../common/lib/paste-targets";
-import { iconSvgForPath } from "../../lib/fileIcons";
+import { iconSvgForPath } from "../../common/lib/file-icons";
 
 const INDEX_PATH = "/generated/grep-index.json";
 const PASTE_TARGET_ID = "grep-query";

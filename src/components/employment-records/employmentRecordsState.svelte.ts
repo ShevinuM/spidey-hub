@@ -7,7 +7,7 @@
 import type { CollectionEntry } from "astro:content";
 import type { PersonnelData } from "../../common/lib/data";
 import { classifyBody, colorFor } from "../../common/lib/docline";
-import { iconSvgForPath } from "../../lib/fileIcons";
+import { iconSvgForPath } from "../../common/lib/file-icons";
 
 export type RoleEntry = CollectionEntry<"personnel">;
 

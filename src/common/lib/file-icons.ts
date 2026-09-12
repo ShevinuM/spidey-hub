@@ -3,7 +3,7 @@
 // only the icons this site actually shows, never material-file-icons'
 // full set. Folder/caret glyphs are drawn inline by each caller and never
 // go through this lookup.
-import fileIcons from "../generated/file-icons.json";
+import fileIcons from "../../generated/file-icons.json";
 
 /** Exact filename match wins (some names carry their own icon distinct from
  * a generic same-extension file, e.g. "package.json" vs any other ".json");
