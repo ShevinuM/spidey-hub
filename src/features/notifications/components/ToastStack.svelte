@@ -87,7 +87,7 @@
       animation: none !important;
     }
   }
-  /* PLAN.md Phase 5b: a toast can mount well before it is actually VISIBLE
+  /* A toast can mount well before it is actually VISIBLE
      — BootSequence.svelte's opaque ~5.36s overlay covers the whole screen
      on a cold visit, but `state.toasts` (hence this `{#each}`) is populated
      at mount regardless. Without this, `toastIn`/`strand` (one-shot

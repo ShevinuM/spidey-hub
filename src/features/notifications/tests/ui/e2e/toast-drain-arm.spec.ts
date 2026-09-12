@@ -1,8 +1,7 @@
-// Regression test for PLAN.md Phase 5b (widened mid-task by the
-// orchestrator from "just the drain bar" to the whole toast reveal
-// lifecycle — see the commit this test ships with): `toastIn` (entrance),
-// `strand` (the little vertical tick above a toast), and `drain` (the
-// countdown bar) all start their CSS animation the instant the toast div
+// Regression test covering the whole toast reveal lifecycle, not just the
+// drain bar: `toastIn` (entrance), `strand` (the little vertical tick
+// above a toast), and `drain` (the countdown bar) all start their CSS
+// animation the instant the toast div
 // MOUNTS, not when it actually becomes VISIBLE. A toast injected on a cold
 // visit mounts well before BootSequence.svelte's opaque ~5.36s overlay
 // (`bootMs` 4600 + `OUT_MS` 760) lifts, so by reveal time:
@@ -46,9 +45,9 @@ interface RevealSample {
    * 1 means "full, not yet drained", 0 means "fully drained". */
   drainFrac: number;
   /** `getComputedTiming().progress` of the toast's own `toastIn` entrance
-   * animation (`-global-toastIn`, so the literal `animationName` — Phase 1
-   * made it global specifically so the inline `animation:` reference in
-   * this component's markup resolves), or `null` if the browser reports no
+   * animation (`-global-toastIn`, so the literal `animationName` — declared
+   * `-global-` specifically so the inline `animation:` reference in this
+   * component's markup resolves), or `null` if the browser reports no
    * such animation on the element at all (never started). `both` fill mode
    * means a FINISHED entrance animation is still "in effect" and still
    * returned here, at progress 1 — this is what lets the assertion tell

@@ -1,4 +1,4 @@
-// Regression suite for the boot/toast race (PLAN.md Phase 5, F2): a toast
+// Regression suite for the boot/toast race: a toast
 // spawned on a fresh visit used to arm its auto-dismiss countdown the
 // instant it mounted, with no awareness that BootSequence.svelte's opaque
 // ~5.36s overlay (src/data/boot.yaml's `bootMs` + BootSequence's own
@@ -50,11 +50,11 @@ async function freshBoot(page: Page, path = "/") {
  * animating with progress still under 1 — i.e. the toast is not merely
  * present in the DOM but genuinely mid-countdown, not a bar that happened
  * to render on the very frame it finished. `getAnimations()` (not
- * `animationName`) is deliberate: PLAN.md's F1 finding is that a dead
- * keyframe still reports a non-"none" `animationName` while resolving to no
- * animation at all — `drain` is declared inside ToastStack's own `<style>`
- * block (Svelte rewrites both sides), so it is one of the animations F1
- * confirms actually runs, making this a reliable liveness check here. */
+ * `animationName`) is deliberate: a dead keyframe reference can still
+ * report a non-"none" `animationName` while resolving to no animation at
+ * all — `drain` is declared inside ToastStack's own `<style>` block
+ * (Svelte rewrites both sides), so it is confirmed to actually run, making
+ * this a reliable liveness check here. */
 async function hasLiveDrainingToast(page: Page): Promise<boolean> {
   return page.evaluate(() => {
     const bars = document.querySelectorAll('[data-testid="toast"] .eh-toast-drain');

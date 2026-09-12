@@ -252,15 +252,14 @@ test.describe("signal inbox: dismiss semantics per folder", () => {
     await expect(tab(page, "spam")).toContainText("0");
   });
 
-  // Phase 7b.2 (PLAN.md): the zero-notification state can't live in the
-  // fixture dataset (it would collide with the toast-bearing visual
-  // recipes seeded by TOAST_SEED — see recipes.ts's own comment on
-  // notificationStore's `buildFixtureState()`), so it's reached here
-  // instead, as a dismiss-all interaction against the two items a fresh
-  // visit always injects. Dismissing FROM the inbox only archives (see
-  // "dismissing an inbox item archives it" above), which is enough to
-  // empty the inbox tab itself and surface `notifications-empty` — no
-  // need to delete outright.
+  // The zero-notification state can't live in the fixture dataset (it
+  // would collide with the toast-bearing visual recipes seeded by
+  // TOAST_SEED — see recipes.ts's own comment on notification-store's
+  // `buildFixtureState()`), so it's reached here instead, as a dismiss-all
+  // interaction against the two items a fresh visit always injects.
+  // Dismissing FROM the inbox only archives (see "dismissing an inbox item
+  // archives it" above), which is enough to empty the inbox tab itself and
+  // surface `notifications-empty` — no need to delete outright.
   test("dismissing every inbox item surfaces the zero-notification empty state", async ({ page }) => {
     await gotoReady(page, "/");
     await bell(page).click();
@@ -379,25 +378,24 @@ test.describe("signal inbox: reboot", () => {
   });
 });
 
-// PLAN.md Phase 7.3: the row-list body already declares `overflow-y:auto`
+// The row-list body already declares `overflow-y:auto`
 // (NotificationsPanel.svelte's `[flex:1;min-height:120px;overflow-y:auto]`
-// div), but — like every other iteration-6 panel before Phase 3 fixed
-// them — that declaration had never been asserted, so a future regression
-// back to bare `overflow:hidden` would ship silently.
+// div), but that declaration had never been asserted, so a future
+// regression back to bare `overflow:hidden` would ship silently.
 //
 // `overflowY === "auto"` alone is not the falsifiable signal here (a CSS
 // property can be correctly declared and still fail to scroll for other
 // reasons); pairing it with an actual wheel-driven `scrollTop` move is
-// what the PLAN's own "verifier notes" warn is required — a container
-// assertion alone can pass vacuously. `scrollHeight > clientHeight` is
-// deliberately NOT asserted on its own either: it's true regardless of
-// whether `overflow-y` is `auto` or `hidden` (it measures content, not
-// scrollability), so a broken `overflow:hidden` panel would still pass it.
+// required — a container assertion alone can pass vacuously.
+// `scrollHeight > clientHeight` is deliberately NOT asserted on its own
+// either: it's true regardless of whether `overflow-y` is `auto` or
+// `hidden` (it measures content, not scrollability), so a broken
+// `overflow:hidden` panel would still pass it.
 //
 // Forces overflow the same way tests/e2e/employment.spec.ts's scroll
-// coverage does (PLAN.md Phase 3's "verifier notes" #5): shrinks the
-// viewport rather than adding fixture data, since Phase 7b.2 (not yet
-// landed) owns adding adversarial fixture content. Measured empirically
+// coverage does: shrinks the viewport rather than adding fixture data —
+// this suite's real pool is a fixed, curated set with no adversarial
+// (deliberately long) entries. Measured empirically
 // against the real pool (a fresh visit always injects exactly 2 unseen
 // entries): at 1470x340 the row body's `min-height:120px` floor holds
 // `clientHeight` at 120px while the 2 real rows need ~150-165px, a stable,
