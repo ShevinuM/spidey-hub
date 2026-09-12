@@ -29,8 +29,9 @@ const TTL_MS = 10 * 60 * 1000;
 const TREE_CACHE_PREFIX = "repositories:tree:";
 const CONTENT_CACHE_PREFIX = "repositories:content:";
 /** "ShevinuM" — see the matching NOTE in github-commits.ts (fixture repos
- * referenced by fixtures/commits/*.json don't exist on GitHub at all; a tree
- * fetch for them fails closed, same as any other API failure). */
+ * referenced by src/features/repositories/tests/ui/support/commits/*.json
+ * don't exist on GitHub at all; a tree fetch for them fails closed, same as
+ * any other API failure). */
 const GITHUB_OWNER = "ShevinuM";
 /** Matches scripts/generate.mjs's own SIZE_CAP — files bigger than this are
  * treated as "too large to preview" rather than fetched in full. */

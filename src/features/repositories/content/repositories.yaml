@@ -90,7 +90,7 @@ repoBrowser:
 
 # Panel [1]'s virtual "all-projects" row: every
 # project's .md doc in one browsable tree (public/generated/repos/all-projects.json,
-# emitted by scripts/generate.mjs from src/content/repositories/*.md — see that
+# emitted by scripts/generate.mjs from src/features/repositories/content/repositories/*.md — see that
 # script's own comment). Not a real git remote: no branch to track, no
 # commits (see panels.commits.localOnlyText above).
 allProjects:

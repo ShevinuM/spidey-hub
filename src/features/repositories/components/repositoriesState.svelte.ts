@@ -120,8 +120,9 @@ export class RepositoriesState {
     // contributions step). public/generated/contributions.json, not a
     // build-time import — same runtime-fetch reasoning as the repo indexes
     // below (an Astro island can't read it during SSR, and build:fixtures
-    // overlays fixtures/contributions.json onto the dist copy AFTER the
-    // build, so only a runtime fetch ever sees the fixture version). No
+    // overlays src/features/repositories/tests/ui/support/contributions.json
+    // onto the dist copy AFTER the build, so only a runtime fetch ever sees
+    // the fixture version). No
     // reactive dependency is read inside, so this effect runs exactly once
     // on mount without needing `untrack()`. A 404/parse failure (e.g. a
     // fresh checkout before `pnpm generate` has ever run) leaves the grid

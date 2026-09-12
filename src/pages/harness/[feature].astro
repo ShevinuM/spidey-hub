@@ -39,8 +39,10 @@ import BootSequence from "../../features/boot/components/BootSequence.svelte";
 import NotificationsHarness from "../../features/notifications/tests/ui/harness/NotificationsHarness.svelte";
 import DashboardHarness from "../../features/dashboard/tests/ui/harness/DashboardHarness.svelte";
 import EmploymentHarness from "../../features/employment/tests/ui/harness/EmploymentHarness.svelte";
+import RepositoriesHarness from "../../features/repositories/tests/ui/harness/RepositoriesHarness.svelte";
 import { getCollection } from "astro:content";
-import { buildProfile, buildHelp, buildBoot, buildNotifications, getHelpSearch, getCmdline, getShell, getDashboard, getPersonnel } from "../../common/lib/data";
+import { buildProfile, buildHelp, buildBoot, buildNotifications, getHelpSearch, getCmdline, getShell, getDashboard, getPersonnel, getRepositories } from "../../common/lib/data";
+import { getCommitsByRepo } from "../../common/lib/commits";
 
 export async function getStaticPaths() {
   if (process.env.PORTFOLIO_FIXTURES !== "1") return [];
@@ -51,6 +53,7 @@ export async function getStaticPaths() {
     { params: { feature: "notifications" } },
     { params: { feature: "dashboard" } },
     { params: { feature: "employment" } },
+    { params: { feature: "repositories" } },
   ];
 }
 
@@ -66,6 +69,9 @@ const notifications = feature === "notifications" ? buildNotifications(await get
 const dashboard = feature === "dashboard" ? getDashboard() : undefined;
 const personnel = feature === "employment" ? getPersonnel() : undefined;
 const personnelEntries = feature === "employment" ? await getCollection("personnel") : undefined;
+const repositories = feature === "repositories" ? getRepositories() : undefined;
+const projects = feature === "repositories" ? await getCollection("repositories") : undefined;
+const commitsByRepo = feature === "repositories" && projects ? getCommitsByRepo(projects) : undefined;
 ---
 
 <Layout title={`Harness: ${feature} — shevinum.dev`}>
@@ -124,5 +130,21 @@ const personnelEntries = feature === "employment" ? await getCollection("personn
     feature === "employment" &&
       personnel !== undefined &&
       personnelEntries !== undefined && <EmploymentHarness client:load {personnel} {personnelEntries} />
+  }
+  {
+    // Wrapped (not mounted directly): Repositories.svelte itself attaches
+    // no keydown listener of its own — Terminal.svelte/PaneTree.svelte own
+    // the generic per-pane-ref keydown delegation that routes into its
+    // exported `handleKey()` — so this harness needs
+    // RepositoriesHarness.svelte to reproduce that one piece of
+    // cross-component routing (see its own header comment). The
+    // `repositories` collection fixture-switches itself under
+    // PORTFOLIO_FIXTURES=1 (content.config.ts's own `base:` ternary), so no
+    // special fixture handling is needed here beyond the three data
+    // fetches above.
+    feature === "repositories" &&
+      repositories !== undefined &&
+      projects !== undefined &&
+      commitsByRepo !== undefined && <RepositoriesHarness client:load {repositories} {projects} {commitsByRepo} />
   }
 </Layout>
