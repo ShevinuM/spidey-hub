@@ -21,11 +21,11 @@
 // content edit doesn't silently desync this suite from the truth it's
 // supposed to check.
 import type { Locator } from "@playwright/test";
-import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
+import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-const ROOT = join(import.meta.dirname, "../..");
+const ROOT = join(import.meta.dirname, "../../../../../..");
 const PERSONNEL_DIR = join(ROOT, "src/content/personnel");
 
 // Matches tests/e2e/nav.spec.ts's/sessions.spec.ts's own CLOCK_TIME literal —

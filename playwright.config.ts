@@ -344,6 +344,52 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
+    // `employment` (D20): the 2 specs (employment.spec.ts,
+    // employment-layout.spec.ts) phase 08 ported out of `legacy` — one
+    // project per viewport, same reasoning as `notifications-<viewport>`/
+    // `dashboard-<viewport>` above.
+    ...viewports.map((viewport) => ({
+      name: `employment-${viewport.name}`,
+      testDir: "./src/features/employment/tests/ui/e2e",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+      },
+    })),
+    // `employment-visual` (D21): the 2 recipes phase 08 owns
+    // ("04-employment-l0", "05-employment-l1"), moved out of the
+    // viewport-named visual projects above (and out of
+    // tests/visual/identical.spec.ts's SPLIT_OWNED_RECIPE_NAMES filter).
+    // Reuses common's/profile's/help's/boot's/notifications'/dashboard's
+    // split-project shape verbatim (D21(a)): its own `snapshotPathTemplate`
+    // with the viewport hardcoded as a literal, not derived from
+    // `{projectName}`.
+    ...viewports.map((viewport) => ({
+      name: `employment-visual-${viewport.name}`,
+      testDir: "./src/features/employment/tests/ui/visual",
+      snapshotPathTemplate: `src/features/employment/tests/ui/visual/goldens/${viewport.name}/{arg}{ext}`,
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+      },
+    })),
+    // `employment-harness` (D24): employment's own harness route + spec,
+    // reusing phase 03's settled mechanism verbatim. Fixture-build-only;
+    // functional assertions only (mount + core interactions), no goldens —
+    // one project at the primary viewport, same as
+    // `profile-harness`/`help-harness`/`boot-harness`/
+    // `notifications-harness`/`dashboard-harness` above.
+    {
+      name: "employment-harness",
+      testDir: "./src/features/employment/tests/ui/harness",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewports[0].width, height: viewports[0].height },
+        deviceScaleFactor: 1,
+      },
+    },
   ],
   webServer: [
     {

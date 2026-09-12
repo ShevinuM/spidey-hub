@@ -71,7 +71,9 @@ import { captureBootState, captureState } from "../../common/tests/ui/support/pi
 // common/components/Wallpaper.svelte, which paints it on every view), so it
 // joined common/tests/ui/visual/'s own goldens/ tree instead
 // (common-visual-<viewport> projects) rather than a dashboard-visual one.
-// All
+// Phase 08 (employment) owns "04-employment-l0" and "05-employment-l1"
+// (recipes), now run under src/features/employment/tests/ui/visual/
+// (employment-visual-<viewport> projects). All
 // are excluded here to keep every recipe captured exactly once (00-phases.md
 // D21). As later phases move their own recipes out, SPLIT_OWNED_RECIPE_NAMES
 // grows the same way (renamed from COMMON_OWNED_RECIPE_NAMES now that more
@@ -89,6 +91,8 @@ const SPLIT_OWNED_RECIPE_NAMES = new Set([
   "01-dashboard",
   "08-tracker",
   "21-notifications-panel-open",
+  "04-employment-l0",
+  "05-employment-l1",
 ]);
 const keyRecipes = [...recipes, ...extraRecipes, ...cmdlineRecipes, ...iteration3Recipes, ...notificationsRecipes].filter(
   (recipe) => !SPLIT_OWNED_RECIPE_NAMES.has(recipe.name),

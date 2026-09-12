@@ -15,9 +15,9 @@
 // overflow.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
+import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
 
-const ROOT = join(import.meta.dirname, "../..");
+const ROOT = join(import.meta.dirname, "../../../../../..");
 const PERSONNEL_DIR = join(ROOT, "src/content/personnel");
 const PERSONNEL_YAML = readFileSync(join(ROOT, "src/data/personnel.yaml"), "utf8");
 
