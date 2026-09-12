@@ -262,10 +262,10 @@ test.describe("Grep overlay", () => {
     await expect(page.locator('[data-testid="editor-mode"]')).toHaveText("NORMAL");
   });
 
-  // The Employment `f`-filter this test covered no longer exists (Decision
-  // 7, PLAN.md — dropped along with drill-down/`../` in the v2 rebuild).
-  // Employment's own "editor gets
-  // first refusal over grep" coverage is the test immediately above.
+  // The Employment `f`-filter this test covered no longer exists (dropped
+  // along with drill-down/`../` in the v2 rebuild). Employment's own
+  // "editor gets first refusal over grep" coverage is the test
+  // immediately above.
 
   test("overlay list row count matches this viewport's own computed fit", async ({ page }) => {
     await gotoReady(page, "/");
