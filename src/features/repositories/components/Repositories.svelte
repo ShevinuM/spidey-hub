@@ -21,7 +21,7 @@
   //     repo comes from panel [1]'s own selection state, never from
   //     whatever panel [2]/[0] happen to be browsing. Commit rows are
   //     not `<a target="_blank">`: click/Enter fetches that commit's
-  //     tree (src/lib/githubTrees.ts) into panel [2] instead, with a
+  //     tree (src/features/repositories/lib/github-trees.ts) into panel [2] instead, with a
   //     lazygit-style braille spinner on the panel [1] repo row while any
   //     fetch for that repo is in flight; `o` opens the commit on GitHub
   //     (the only surviving external-link path, documented in the Help
@@ -35,9 +35,9 @@
   // fallback (removed sitewide) — this is what lets the file editor get
   // first refusal over GrepOverlay while it's open.
   import type { CollectionEntry } from "astro:content";
-  import type { RepositoriesData } from "../../common/lib/data";
-  import type { Commit } from "../../common/lib/commits";
-  import Editor from "../../common/components/editor/Editor.svelte";
+  import type { RepositoriesData } from "../../../common/lib/data";
+  import type { Commit } from "../../../common/lib/commits";
+  import Editor from "../../../common/components/editor/Editor.svelte";
   import { RepositoriesState } from "./repositoriesState.svelte";
   import StatusPanel from "./StatusPanel.svelte";
   import FilesPanel from "./FilesPanel.svelte";

@@ -37,7 +37,7 @@
   import type { Commit } from "../lib/commits";
   import type { SessionRosterEntry, ShellMode } from "../../lib/shell";
   import Dashboard from "../../features/dashboard/components/Dashboard.svelte";
-  import Repositories from "../../components/repositories/Repositories.svelte";
+  import Repositories from "../../features/repositories/components/Repositories.svelte";
   import EmploymentRecords from "../../features/employment/components/EmploymentRecords.svelte";
   import Profile from "../../features/profile/components/Profile.svelte";
   import HelpView from "../../features/help/components/HelpView.svelte";

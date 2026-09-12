@@ -1,4 +1,4 @@
-// Client-side commit-tree browsing. Mirrors src/lib/githubCommits.ts's shape
+// Client-side commit-tree browsing. Mirrors github-commits.ts's shape
 // (unauthenticated GitHub REST, sessionStorage cache with a 10min TTL,
 // null-on-any-failure — never throws) but for two different endpoints:
 // listing a commit's files (Git Trees API) and reading one file's content at
@@ -28,7 +28,7 @@
 const TTL_MS = 10 * 60 * 1000;
 const TREE_CACHE_PREFIX = "repositories:tree:";
 const CONTENT_CACHE_PREFIX = "repositories:content:";
-/** "ShevinuM" — see the matching NOTE in githubCommits.ts (fixture repos
+/** "ShevinuM" — see the matching NOTE in github-commits.ts (fixture repos
  * referenced by fixtures/commits/*.json don't exist on GitHub at all; a tree
  * fetch for them fails closed, same as any other API failure). */
 const GITHUB_OWNER = "ShevinuM";
@@ -61,7 +61,7 @@ function writeCache<T>(key: string, value: T): void {
     sessionStorage.setItem(key, JSON.stringify(entry));
   } catch {
     // sessionStorage unavailable/full — not fatal, just uncached this session
-    // (mirrors githubCommits.ts's writeCache).
+    // (mirrors github-commits.ts's writeCache).
   }
 }
 

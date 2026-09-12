@@ -9,7 +9,7 @@
   // list's and the files tree's): a horizontal red fade only, no left
   // accent bar — the mockup never gives commit rows one, selected or not,
   // so there is no alignment shift to guard against here.
-  import type { RepositoriesData } from "../../common/lib/data";
+  import type { RepositoriesData } from "../../../common/lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
   import RepositoriesPanel from "./RepositoriesPanel.svelte";
 

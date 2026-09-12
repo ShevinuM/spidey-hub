@@ -24,7 +24,7 @@
 //     committed snapshot is kept untouched and a warning is printed. Each
 //     entry also carries the full 40-char `sha` alongside the pre-existing
 //     `sha8`, needed to fetch a commit's tree via
-//     GitHub's Git Trees API (src/lib/githubTrees.ts).
+//     GitHub's Git Trees API (src/features/repositories/lib/github-trees.ts).
 //  4. public/generated/contributions.json — a year of GitHub contribution
 //     levels (0-4 per day) powering the Repositories Status pane's
 //     contribution grid. GraphQL when GITHUB_TOKEN is set, else scrape the
@@ -33,7 +33,7 @@
 //     commit snapshots). Lives in public/generated/ (not src/generated/)
 //     because — like grep-index.json/fs-index.json/repos/*.json — it is
 //     fetched client-side at runtime rather than statically imported at
-//     build time; see src/components/repositories/repositoriesState.svelte.ts.
+//     build time; see src/features/repositories/components/repositoriesState.svelte.ts.
 //
 // Run via `pnpm generate` (also wired to predev/prebuild).
 

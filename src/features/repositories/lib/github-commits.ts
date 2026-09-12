@@ -10,7 +10,7 @@
 // browser tab session doesn't re-fetch needlessly. A failed fetch (offline,
 // rate-limited, aborted by a test's route handler) resolves to `null` —
 // callers keep whatever snapshot/committed data they already had, silently.
-import type { Commit } from "../common/lib/commits";
+import type { Commit } from "../../../common/lib/commits";
 
 const TTL_MS = 10 * 60 * 1000;
 const CACHE_PREFIX = "repositories:commits:";
@@ -56,7 +56,7 @@ function readCache(repoName: string): Commit[] | null {
     if (Date.now() - entry.ts > TTL_MS) return null;
     // A cached entry that predates the `sha` field only carries `sha8` —
     // stale shape. Treat it as a miss so the page re-fetches instead of
-    // silently handing githubTrees.ts commits it can't resolve a tree ref
+    // silently handing github-trees.ts commits it can't resolve a tree ref
     // for.
     if (!entry.commits.every((c) => typeof c.sha === "string" && c.sha.length > 0)) return null;
     return entry.commits;

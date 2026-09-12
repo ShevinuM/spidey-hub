@@ -13,7 +13,7 @@
   // "connected" pulse matching the site's own always-online narrative
   // conventions elsewhere (boot sequence, dashboard's "synced N/N panes"
   // footer).
-  import type { RepositoriesData } from "../../common/lib/data";
+  import type { RepositoriesData } from "../../../common/lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
   import RepositoriesPanel from "./RepositoriesPanel.svelte";
 

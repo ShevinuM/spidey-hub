@@ -1,8 +1,8 @@
-// Unit tests for src/lib/githubTrees.ts: tree mapping, base64 decode incl.
+// Unit tests for src/features/repositories/lib/github-trees.ts: tree mapping, base64 decode incl.
 // multibyte, cache TTL, null-on-failure. Follows the same style as
-// tests/unit/githubCommits.test.ts: pure/cache logic is exercised directly
+// github-commits.test.ts: pure/cache logic is exercised directly
 // here; the live fetch/DOM integration is covered end-to-end by
-// tests/e2e/repositories.spec.ts's mocked-route tests.
+// src/features/repositories/tests/ui/e2e/repositories.spec.ts's mocked-route tests.
 import { expect, test } from "vitest";
 import {
   mapTreeResponse,
@@ -13,7 +13,7 @@ import {
   setCachedTree,
   treeCacheKey,
   contentCacheKey,
-} from "../../src/lib/githubTrees";
+} from "../../lib/github-trees";
 
 test("mapTreeResponse keeps only blob entries and their paths", () => {
   const api = {
@@ -57,7 +57,7 @@ test("tree cache: a fresh entry is returned, an expired one is treated as a miss
   expect(getCachedTree("transcript-tts", "deadbeef")).toEqual(["a.py", "b.py"]);
 
   // Manually backdate the cache entry past the 10min TTL and confirm the
-  // read now misses (same mechanism githubCommits.ts's own cache uses).
+  // read now misses (same mechanism github-commits.ts's own cache uses).
   const key = treeCacheKey("transcript-tts", "deadbeef");
   const raw = sessionStorage.getItem(key);
   expect(raw).toBeTruthy();

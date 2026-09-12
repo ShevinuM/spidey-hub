@@ -5,10 +5,10 @@
 // moved verbatim from the original monolith — no reactivity, timing, or
 // behavior change.
 import type { CollectionEntry } from "astro:content";
-import type { RepositoriesData } from "../../common/lib/data";
-import type { Commit } from "../../common/lib/commits";
+import type { RepositoriesData } from "../../../common/lib/data";
+import type { Commit } from "../../../common/lib/commits";
 import { untrack } from "svelte";
-import { classifyBody, classifyDoc, colorFor, docColors } from "../../common/lib/docline";
+import { classifyBody, classifyDoc, colorFor, docColors } from "../../../common/lib/docline";
 import {
   findFile,
   buildTree,
@@ -18,10 +18,10 @@ import {
   type RepoIndex,
   type FlatTreeRow,
   type TokenSpan,
-} from "../../common/lib/repo-tree";
-import { fetchLiveCommits } from "../../lib/githubCommits";
-import { fetchCommitTree, fetchCommitFileContent } from "../../lib/githubTrees";
-import { agoLabel } from "../../common/lib/ago-label";
+} from "../../../common/lib/repo-tree";
+import { fetchLiveCommits } from "../lib/github-commits";
+import { fetchCommitTree, fetchCommitFileContent } from "../lib/github-trees";
+import { agoLabel } from "../../../common/lib/ago-label";
 
 // Mirrors Editor.svelte's own `EditorLine` export structurally — a plain
 // .ts module can't import a named type from a .svelte file under `tsc`

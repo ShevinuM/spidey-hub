@@ -38,11 +38,11 @@ const FIXTURE_GLOB = import.meta.glob("../../../fixtures/commits/*.json", {
 const USE_FIXTURES = process.env.PORTFOLIO_FIXTURES === "1";
 
 export interface Commit {
-  /** Full 40-char commit sha, needed by src/lib/githubTrees.ts to fetch a
+  /** Full 40-char commit sha, needed by src/features/repositories/lib/github-trees.ts to fetch a
    * commit's tree/file contents. Optional: fixture snapshots
    * (fixtures/commits/*.json, extracted verbatim from Homepage.dc.html and
    * never re-fetched) only ever carry `sha8`. Callers needing a tree ref
-   * fall back to `sha8` when this is absent (see githubTrees.ts's
+   * fall back to `sha8` when this is absent (see github-trees.ts's
    * ref-candidate list). */
   sha?: string;
   sha8: string;
@@ -91,7 +91,7 @@ export function getCommits(repoName: string): Commit[] {
  * Svelte island never imports this module itself (browser code can't read
  * `process.env` or use this module's `import.meta.glob` results). Repositories.svelte
  * renders this synchronously on first paint, then overlays the client-side
- * live refresh (src/lib/githubCommits.ts) on top of it per project/repo.
+ * live refresh (src/features/repositories/lib/github-commits.ts) on top of it per project/repo.
  */
 export function getCommitsByRepo(
   projects: { data: { repos: { name: string }[] } }[],

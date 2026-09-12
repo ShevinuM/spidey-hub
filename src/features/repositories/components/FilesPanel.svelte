@@ -8,9 +8,9 @@
   // accent bar + a horizontal blue fade. Every row — selected or not —
   // carries the same 2px `border-left` (transparent when unselected) so
   // selecting a row never shifts its text 2px to the right.
-  import type { RepositoriesData } from "../../common/lib/data";
+  import type { RepositoriesData } from "../../../common/lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
-  import { iconSvgForPath } from "../../common/lib/file-icons";
+  import { iconSvgForPath } from "../../../common/lib/file-icons";
   import RepositoriesPanel from "./RepositoriesPanel.svelte";
 
   interface Props {
