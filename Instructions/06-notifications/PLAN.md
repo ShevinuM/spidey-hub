@@ -136,7 +136,7 @@ Verify that relative depth with `node -e "…path.relative…"`; do not guess it
 
 ## Steps
 
-- [ ] **1. Port specs + goldens.**
+- [x] **1. Port specs + goldens.**
   `git mv` the three specs into `src/features/notifications/tests/ui/e2e/`. Repoint `fixtures`/`content-fixtures` imports to `../../../../../../common/tests/ui/support/{fixtures,content-fixtures}` — **extensionless** (D23(d): a feature phase's spec-port step MUST strip `.ts`) — after verifying the depth with `path.relative`. Fix each spec's `ROOT = join(import.meta.dirname, …)` constant to the new depth. Leave the store imports pointing at `src/lib/notificationStore.ts` for now (step 2 moves the module); they must be green at the end of step 2, not this one.
   Create `src/features/notifications/tests/ui/visual/identical.spec.ts`, modeled on `common/tests/ui/visual/identical.spec.ts`'s shape, importing whichever recipe array(s) own `21-notifications-panel-open` and filtering to a `NOTIFICATIONS_OWNED_RECIPE_NAMES` set.
   `cp` both goldens into `src/features/notifications/tests/ui/visual/goldens/<vp>/`; `cmp` each against the pre-move copy **and** against v1's copy at `/Users/shev/Development/spidey-hub/tests/visual/goldens/`; then delete the originals from `tests/visual/goldens/`. Add the recipe name to `tests/visual/identical.spec.ts`'s `SPLIT_OWNED_RECIPE_NAMES` and update its header comment.
@@ -144,7 +144,7 @@ Verify that relative depth with `node -e "…path.relative…"`; do not guess it
   Add the three project entries (§Mechanics 3); extend `package.json`'s `test:e2e` with `--project=notifications-1512x945 --project=notifications-1920x1080` and `test:visual` with the new `identical.spec.ts` path **only**. The harness spec path is added in step 6, when the spec exists — Playwright exits 1 on a path that resolves to no tests, so adding it here reds this step's own gate. (The `notifications-harness` *project entry* is fine to add now; an empty `testDir` is not an error, an unmatched spec path is.) Sweep `docs/testing/{e2e,visual}/running-tests.md` in this same commit — read the existing `profile`/`help` rows and match their format exactly; **verify every project name against real `playwright test --list` output before writing any row** (phase 03 shipped fabricated bare-alias rows twice).
   *Verify:* `pnpm build` then `E2E_EXPECT_FIXTURES=0 playwright test --project=smoke --project=legacy-1512x945 --project=legacy-1920x1080 --project=common-1512x945 --project=common-1920x1080 --project=profile-1512x945 --project=profile-1920x1080 --project=help-1512x945 --project=help-1920x1080 --project=boot-1512x945 --project=boot-1920x1080 --project=notifications-1512x945 --project=notifications-1920x1080` → all green. Then `pnpm build:fixtures` and the `test:visual` spec list including the new `identical.spec.ts` → all green. `playwright test --list` names all three new projects.
 
-- [ ] **2. Move source; update every importer; delete originals.**
+- [x] **2. Move source; update every importer; delete originals.**
   `git mv` all five component files, `notificationStore.ts` → `lib/notification-store.ts`, `notifications.ts` → `lib/toast-seed.ts` (R1, including its stale-comment fix), the 30 content docs, and `notifications.yaml`.
   Repoint **every** importer listed in §Context's wiring table plus the four test imports in §Background. The two easily-missed ones are `common/tests/ui/e2e/animations.spec.ts:27` and `common/tests/ui/support/pipeline.mjs:43`. `pipeline.mjs` runs under bare Node, so its import **keeps** its explicit `.ts` extension (D23(d): not a violation — Node's ESM resolver requires it).
   Update `content.config.ts`'s `base:` to `src/features/notifications/content` (no fixture switch — R3) and `src/common/lib/data.ts`'s `?raw` yaml import.
@@ -160,22 +160,22 @@ Verify that relative depth with `node -e "…path.relative…"`; do not guess it
   ```
   The grep must return **only** intentionally-updated lines — no stale residue. Record every legacy→feature edge in Results for the auditor, naming the D23(c) exemption.
 
-- [ ] **3. Full gate, from the clean committed tree.** Not folded into step 2's commit.
+- [x] **3. Full gate, from the clean committed tree.** Not folded into step 2's commit.
   *Verify:* `pnpm check` → 0 errors. `pnpm lint` → exit 0. `pnpm test:unit` → count unchanged from before this phase. D20 (a) real build → every project above green. D20 (b) fixture build → every `*-visual` + legacy visual + the **three existing** harness specs (`profile`, `help`, `boot`) green. Notifications' own harness does not exist yet — it lands in step 6 and is gated there. `public/generated/*` unchanged by this step. These runs auto-background past the 120s foreground default — monitor to completion, never sleep-poll.
 
-- [ ] **4. Golden parity — zero churn.**
+- [x] **4. Golden parity — zero churn.**
   *Verify:* `diff -rq tests/visual/goldens /Users/shev/Development/spidey-hub/tests/visual/goldens` shows **only** `Only in …` lines for every recipe split out by phases 02–06 — never a `differ` line. `cmp` each of this phase's two goldens against v1's byte-for-byte. Total PNGs stay 21 recipes × 2 viewports = 42, redistributed. **No `--update-snapshots`, ever (D5).**
 
-- [ ] **5. Move the unit test.**
+- [x] **5. Move the unit test.**
   `git mv tests/unit/notificationStore.test.ts src/features/notifications/tests/unit/notification-store.test.ts`; fix its 20-symbol import to the new location.
   *Verify:* `pnpm test:unit` → same N/N passed, same M/M files as before (pure relocation).
 
-- [ ] **6. Feature harness (D24).**
+- [x] **6. Feature harness (D24).**
   Add the `notifications` branch to `src/pages/harness/[feature].astro` (§Mechanics 4), the ready-element (§Mechanics 5), and specs at `src/features/notifications/tests/ui/harness/notifications.spec.ts` asserting mount plus the system's core interactions — bell badge, panel open via `n`, toast appearance/dismiss. Assert kernel-free isolation via the composed `StatusBarPage`: `expect(page.statusBar.windows).toHaveCount(0)`. No goldens (D24(b)).
   Now that the spec exists, append its path to `package.json`'s `test:visual` (deferred from step 1).
   *Verify:* fixture build → `--project=notifications-harness` green, and `pnpm test:visual` green as a whole with the new path in it. Real build → `test ! -d dist/harness` **and** `grep -rl "NotificationsHarness" dist --include="*.html"` empty. A bare `find dist -iname "*harness*"` will still match a dead ~1 KB JS chunk if a wrapper component was used — that is expected and ruled harmless (`00-phases.md`, Deferred), **not** a failure.
 
-- [ ] **7. Record and close.** First run the plan-citation sweep over this phase's own context — `grep -rniE "plan\.md|phase [0-9]|defect [0-9]|\b[fg][0-9]+\b" src/features/notifications` — and rewrite any hit in the file's own terms (comment text only; a ported spec's logic is untouchable). v1's specs cite v1 planning docs that do not exist here, which comments.md R008 forbids; phase 05 hit this twice and the second instance cost a whole extra fix round. Catch it before the auditor does.
+- [x] **7. Record and close.** First run the plan-citation sweep over this phase's own context — `grep -rniE "plan\.md|phase [0-9]|defect [0-9]|\b[fg][0-9]+\b" src/features/notifications` — and rewrite any hit in the file's own terms (comment text only; a ported spec's logic is untouchable). v1's specs cite v1 planning docs that do not exist here, which comments.md R008 forbids; phase 05 hit this twice and the second instance cost a whole extra fix round. Catch it before the auditor does.
   Then fill in Results: every file moved, every importer updated, the D16/D23 edges flagged for the auditor, gate outputs, and which harness shape was used. Commit to `frontend-rewrite` — single-line imperative, **no body, no trailer** (toolchain R011), one reviewable unit per commit (R012).
 
 ## Acceptance criteria
@@ -199,4 +199,70 @@ Verify that relative depth with `node -e "…path.relative…"`; do not guess it
 
 ## Results
 
-(executor fills in)
+**Commits (in order):**
+- `05489ec` — Port notifications' e2e/visual specs and goldens into src/features/notifications (step 1)
+- `950f692` — Move notifications source into src/features/notifications and repoint every importer (step 2)
+- `008eb60` — Fix stale bootState.ts comment references in notification-store (fallout of step 2)
+- `81132cc` — Regenerate fs/grep indexes for the bootState.ts comment fix
+- `87f2831` — Move notification-store unit test into src/features/notifications (step 5, plus the sibling stale-comment fix in `src/features/boot/tests/unit/boot-state.test.ts`, an out-of-context file)
+- `bea71f7` — Regenerate fs/grep indexes for the notification-store test move (step 5's own index self-consistency, run against step 5's committed tree per Mechanics 8)
+- `2ba56e3` — Add the notifications feature harness route, wrapper, page object and spec (step 6, includes its own index regen)
+- `5cacf40` — Strip stale plan/phase citations from notifications comments (step 7 sweep, includes its own index regen)
+
+**Files moved (move table, all verified absent at old path / present at new path):**
+- `src/components/notifications/{Notifications,NotificationBell,NotificationsPanel,ToastStack}.svelte` → `src/features/notifications/components/`
+- `src/components/notifications/notificationsState.svelte.ts` → `src/features/notifications/components/notificationsState.svelte.ts`
+- `src/lib/notificationStore.ts` → `src/features/notifications/lib/notification-store.ts`
+- `src/lib/notifications.ts` → `src/features/notifications/lib/toast-seed.ts` (R1 rename; its header comment's stale `tests/visual/pipeline.mjs` reference corrected to `common/tests/ui/support/pipeline.mjs` in the same change)
+- `src/content/notifications/` (30 `.md`) → `src/features/notifications/content/`
+- `src/data/notifications.yaml` → `src/features/notifications/content/notifications.yaml`
+- `tests/e2e/notifications.spec.ts`, `notifications-boot.spec.ts`, `toast-drain-arm.spec.ts` → `src/features/notifications/tests/ui/e2e/`
+- `tests/unit/notificationStore.test.ts` → `src/features/notifications/tests/unit/notification-store.test.ts`
+- `tests/visual/goldens/{1512x945,1920x1080}/21-notifications-panel-open.png` → `src/features/notifications/tests/ui/visual/goldens/<vp>/` (byte-identical copies verified via `cmp` against both the pre-move copy and v1's own goldens, then originals deleted)
+- `src/components/notifications/` no longer exists (all five files moved out, directory removed).
+
+**Files added (new, not moves):**
+- `src/features/notifications/tests/ui/visual/identical.spec.ts` (`NOTIFICATIONS_OWNED_RECIPE_NAMES` filter)
+- `src/features/notifications/tests/ui/harness/NotificationsHarness.svelte` — harness-only wrapper (test tree, not `components/`); reproduces Terminal.svelte's `n`/Esc keydown delegation into `Notifications.svelte`'s exported `handleKey()`, since `Notifications.svelte` itself attaches no listener of its own (Terminal.svelte:362/851 own that). Hardcodes `view="home"` and `fixtureMode={false}` — a deliberate divergence from every real page's `notificationsFixtureMode = process.env.PORTFOLIO_FIXTURES === "1"` derivation, documented in its own header comment: this harness route only ever builds under `PORTFOLIO_FIXTURES=1`, so mirroring that derivation would always disable toast injection (`NotificationsState`'s `onMount` short-circuits to `buildFixtureState()` whenever `fixtureMode` is true, skipping `injectVisit`/`spawnToast` entirely) — making the required "toast appearance and dismiss" assertions impossible. Same reasoning precedent as the boot harness spec's own documented divergence.
+- `src/features/notifications/tests/ui/harness/notifications.spec.ts` — 4 tests: mount + bell badge + toast count on a fresh mount; `n` opens/closes the panel via the harness's own routing; both toasts auto-dismiss on their own (duration bound derived from `TOAST_DURATION_MS.alert` × `E2E_TOAST_DURATION_SCALE`, no literal); no kernel chrome (`statusBar.windows` count 0). Imports the shared `common/tests/ui/support/fixtures.ts` (not raw `@playwright/test`, unlike help/boot's harness specs) because it needs that fixture's injection-seed + duration-scale sessionStorage seeding — reusing it avoids a second copy of that mechanism.
+- `src/features/notifications/tests/ui/pages/NotificationsPage.ts` — composes `common/tests/ui/pages/StatusBarPage` (depth verified via `node -e "…path.relative…"`: `../../../../../../common/tests/ui/pages/StatusBarPage`), never redefines kernel-chrome locators.
+
+**Every importer repointed:**
+- `playwright.config.ts` — three project entries added (`notifications-{1512x945,1920x1080}`, `notifications-visual-{1512x945,1920x1080}`, `notifications-harness`)
+- `package.json` — `test:e2e` gained the two `notifications-*` project flags; `test:visual` gained `identical.spec.ts` (step 1) then `harness/notifications.spec.ts` (step 6, deferred as planned)
+- `src/content.config.ts` — `notifications` collection `base:` → `src/features/notifications/content` (plain re-point, no fixture ternary — R3)
+- `src/common/lib/data.ts` — `notifications.yaml` `?raw` import re-pointed
+- `src/pages/harness/[feature].astro` — new `notifications` branch: `getStaticPaths` entry, `const notifications = feature === "notifications" ? buildNotifications(await getCollection("notifications")) : undefined`, and the template block mounting `NotificationsHarness`
+- `src/bootstrap/Terminal.svelte:53` — `Notifications.svelte` import path
+- `common/tests/ui/support/fixtures.ts:41` — the two storage-key imports
+- `common/tests/ui/e2e/animations.spec.ts:27` — same two storage keys (the easily-missed second importer)
+- `common/tests/ui/support/pipeline.mjs:43` — `TOAST_SEED_STORAGE_KEY` import, kept its explicit `.ts` extension (D23(d) exemption — bare-Node ESM resolution requires it)
+- `tests/visual/identical.spec.ts` — `SPLIT_OWNED_RECIPE_NAMES` gained `21-notifications-panel-open`; header comment updated
+- `docs/testing/{e2e,visual}/running-tests.md` — project rows added, verified against real `playwright test --list` output
+- `src/components/repositories/repositoriesState.svelte.ts:24` — `agoLabel` import path-updated only (R2)
+- All four test files' seed/timing imports (`notifications.spec.ts`, `notifications-boot.spec.ts`, `toast-drain-arm.spec.ts`, `notification-store.test.ts`) repointed to the moved store; no constant duplicated.
+- `notifications.spec.ts`'s literal `readContentDir` path and its doc-comment (D8 same-change update, not a behavior change).
+
+**D23/D16 edges recorded for the auditor:**
+- **D23(c) exemption** — `src/components/repositories/repositoriesState.svelte.ts` (legacy tree) imports `agoLabel` from `src/features/notifications/lib/notification-store.ts` (this phase's context). Per ruling R2, `agoLabel` stays inside the 431-line module being moved verbatim (D16's rule-of-three governs modules, not functions within one); the import is path-updated only, no re-export shim, no stub. The dependency direction (legacy → feature) pre-existed the move and lands in the transient legacy tree, not this phase's context. Phase 09 decides whether a date-formatting module promotes to `common/lib/` once repositories sits in its real context.
+- **D23(a)** — `src/features/notifications/tests/ui/e2e/{notifications-boot,toast-drain-arm}.spec.ts` import `BOOT_SEEN_STORAGE_KEY` from `src/features/boot/lib/boot-state` — a notifications-tests → boot-lib edge, a verbatim-ported spec's pre-existing import, re-depthed (not introduced) by this phase's move.
+- **D23(d)** exemptions: `common/tests/ui/support/pipeline.mjs`'s `.ts`-suffixed import (bare-Node ESM requirement, not a violation); the three ported e2e specs' extensionless re-point to `common/tests/ui/support/{fixtures,content-fixtures}`.
+- Out-of-context file touched beyond the plan's declared wiring table: `src/features/boot/tests/unit/boot-state.test.ts` (phase 05's tree) — one-line comment fix repointing its stale `tests/unit/notificationStore.test.ts` reference to the new `src/features/notifications/tests/unit/notification-store.test.ts` path, fallout of step 5's move (same class of fix as R1's own stale-comment correction), bundled into step 5's commit (`87f2831`).
+
+**Harness shape used:** wrapper (`NotificationsHarness.svelte`), not direct mount — confirmed necessary because `Notifications.svelte` exports `handleKey()` for a caller to route into but attaches no listener of its own; `Terminal.svelte:362/851` is the caller in the real app. The wrapper reproduces only that one piece of routing, per §Mechanics 4's "only if actually needed" clause.
+
+**Plan-citation sweep (step 7):** rewrote 8 comment-text hits (PLAN.md/Phase/F1/F2 citations) across `notifications.spec.ts` (2 blocks), `notifications-boot.spec.ts` (2), `toast-drain-arm.spec.ts` (2), and `ToastStack.svelte` (1) — comment text only, no ported spec's assertions/logic touched. Re-swept after the edits: zero hits remain in `src/features/notifications`.
+
+**Gate outputs:**
+- `pnpm check` → 0 errors, 0 warnings (10 pre-existing warnings unrelated to this phase), 96 hints. Re-verified after step 5, step 6, and the step 7 sweep — 0 errors each time.
+- `pnpm lint` → exit 0 (oxlint), re-verified after every step.
+- `pnpm test:unit` → **346 passed / 20 files**, unchanged before/after step 5's relocation and after step 7's comment sweep.
+- D20(a) real build (orchestrator-run): 1012 passed across `smoke`, `legacy-*`, `common-*`, `profile-*`, `help-*`, `boot-*`, `notifications-{1512x945,1920x1080}`.
+- D20(b) fixture build (orchestrator-run): 65 passed at the step-3 gate, across every `*-visual` project + the three then-existing harness specs (`profile`, `help`, `boot`), notifications-visual green at both viewports. **Re-run after step 6 landed the harness: 69 passed** — the same 65 plus notifications' own 4 harness tests, which is the authoritative final figure.
+- `--project=notifications-harness` in isolation (orchestrator-run, twice): **4 passed** both times (5.0s each) — stable, not a single lucky run.
+- `--project=notifications-harness` (this executor, single project run per the orchestrator's fast-command allowance): **4 passed** — mount/badge/toast-count, `n` open/close, both-toasts-auto-dismiss, no-kernel-chrome.
+- Golden parity (orchestrator-verified): 0 `differ` lines, 42 PNGs total, `21-notifications-panel-open` byte-identical to v1 at both viewports.
+- Real build (`pnpm build`) after the harness landed: `test ! -d dist/harness` passes; `grep -rl "NotificationsHarness" dist --include="*.html"` empty. `find dist -iname "*harness*"` matches only `dist/_astro/NotificationsHarness.B7AyLPd5.js` (and `HelpHarness.*.js`) — the pre-ruled-harmless dead JS chunk from using a wrapper, not an HTML reference.
+- `pnpm generate` run and both indexes diffed programmatically after every commit that touched files under `src/`/`tests`/`scripts` (steps 5, 6, 7); each diff was additive/subtractive only for the exact paths that moved or changed, no stray residue. Live-data drift (`public/generated/contributions.json`, `src/generated/commits/daily-tech-digest.json`, `src/generated/file-icons.json`) discarded with `git checkout --` before every commit.
+
+**Deviations from the plan:** none. Step 5's index regen was executed as a dedicated follow-up commit (`bea71f7`) rather than folded into `87f2831`, matching the existing `008eb60`/`81132cc` fix-then-regenerate precedent already on this branch, since the move commit had already landed before the index gap was noticed.
