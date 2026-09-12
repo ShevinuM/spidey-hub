@@ -41,7 +41,10 @@ export default defineConfig({
   projects: [
     // Root smoke tier (e2e-testing.md R016/R017): broad, shallow,
     // whole-app health checks — the pre-merge gate. Runs at the same
-    // primary viewport/device config as the legacy e2e projects below.
+    // primary viewport/device config as every context/feature project
+    // below (the `legacy` project this comment used to point at emptied
+    // and was deleted in phase 11 — every spec it held is now ported into
+    // its own context/feature project).
     {
       name: "smoke",
       testDir: "./tests/ui/smoke",
@@ -51,26 +54,6 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
-    // `legacy` (D6): v1's entire bulk-imported tests/e2e/ spec set, pinned
-    // as-is — one project per viewport, preserving v1's current behavior of
-    // running every e2e spec at BOTH viewports (empirically 1006 tests =
-    // ~503 specs x 2), not a single collapsed viewport. Each phase moves its
-    // own specs out of this project into its own `<context>`/`<feature>`
-    // project entry (architecture R002); `legacy` is deleted once it empties
-    // (phase 11). Named `legacy-<viewport>` rather than a single bare
-    // `legacy` — Playwright projects are 1:1 with one `use` config, so two
-    // viewports can't share one project name; `--project=legacy-1512x945
-    // --project=legacy-1920x1080` is the two-project equivalent of a single
-    // `--project=legacy` invocation.
-    ...viewports.map((viewport) => ({
-      name: `legacy-${viewport.name}`,
-      testDir: "./tests/e2e",
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: viewport.width, height: viewport.height },
-        deviceScaleFactor: 1,
-      },
-    })),
     // Visual-regression harness (unchanged names/config — see the
     // `snapshotPathTemplate` comment above: `{projectName}` must stay
     // exactly the viewport name for the existing goldens to resolve; D21
