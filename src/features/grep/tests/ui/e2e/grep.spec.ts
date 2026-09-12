@@ -10,7 +10,7 @@
 // port the component itself uses (src/lib/grep.ts, already unit-tested in
 // tests/unit/grep.test.ts) — never hardcoded — so this suite can't drift
 // from the index's real contents as the site's own source grows.
-import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
+import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
 // This spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's
@@ -19,9 +19,9 @@ import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.
 // rather than a per-goto-helper change.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { search, formatCount, type RepoFile } from "../../src/lib/grep.ts";
+import { search, formatCount, type RepoFile } from "../../../../../lib/grep";
 
-const ROOT = join(import.meta.dirname, "../..");
+const ROOT = join(import.meta.dirname, "../../../../../..");
 
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);
@@ -131,18 +131,27 @@ test.describe("Grep overlay", () => {
     // CopyMode.svelte's data-copy-source contract doc), which would
     // otherwise win the path-substring-vs-content-hit race for
     // `rows(page).first()` depending on alphabetical file order. Prefixed
-    // with "src/" (not just "components/...") since phase 02 (00-phases.md)
-    // moved several kernel components under `src/common/components/`,
-    // whose own relative imports of this file (e.g. PaneTree.svelte's
-    // `../../features/repositories/components/Repositories.svelte`) now also contain
-    // the un-prefixed fragment as file CONTENT — a second, competing hit
-    // that (per this file's own scoring: path-hit-then-content-hit, in file
-    // order) can win the race depending on where `common/` sorts relative
-    // to `components/`. Only the real file's own PATH is ever prefixed with
-    // "src/" — a relative import literal never spells that out — so this
-    // fragment stays unique to it.
-    await page.keyboard.type("src/features/repositories/components/Repositories.svelte");
-    await expect(rows(page).first()).toHaveAttribute("data-path", "src/features/repositories/components/Repositories.svelte");
+    // with "src/" (not just "components/..."): every indexed path begins
+    // with "src/", because kernel components live under
+    // `src/common/components/`, whose own relative imports of this file
+    // (e.g. PaneTree.svelte's `../../features/repositories/components/
+    // Repositories.svelte`) now also contain the un-prefixed fragment as
+    // file CONTENT — a second, competing hit that (per this file's own
+    // scoring: path-hit-then-content-hit, in file order) can win the race
+    // depending on where `common/` sorts relative to `components/`. Only
+    // the real file's own PATH is ever prefixed with "src/" — a relative
+    // import literal never spells that out — so this fragment stays
+    // unique to it.
+    //
+    // Assembled at RUN TIME rather than written verbatim on any line here,
+    // for the same reason the very next test builds a run-time
+    // `nonceQuery`: this spec's own source is itself indexed
+    // (`scripts/generate.mjs` walks `tests/**`), so a literal copy of this
+    // query would let this file's own content out-rank the real component
+    // it's asserting about.
+    const REPOSITORIES_PATH = ["src", "features", "repositories", "components", "Repositories.svelte"].join("/");
+    await page.keyboard.type(REPOSITORIES_PATH);
+    await expect(rows(page).first()).toHaveAttribute("data-path", REPOSITORIES_PATH);
     await page.keyboard.press("Enter");
     await expect(overlay(page)).not.toBeVisible();
     await expect(page.locator('[data-testid="repositories-panel-2"]')).toBeVisible();
