@@ -484,6 +484,23 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
+    // `shell-fs-harness` (D24): shell-fs's own harness route + spec,
+    // reusing the same harness mechanism as every other feature's.
+    // Fixture-build-only; functional assertions only (mount + core pane-
+    // mode interactions), no goldens — one project at the primary
+    // viewport, same as
+    // `profile-harness`/`help-harness`/`boot-harness`/
+    // `notifications-harness`/`dashboard-harness`/`employment-harness`/
+    // `repositories-harness`/`grep-harness` above.
+    {
+      name: "shell-fs-harness",
+      testDir: "./src/features/shell-fs/tests/ui/harness",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewports[0].width, height: viewports[0].height },
+        deviceScaleFactor: 1,
+      },
+    },
     // `shell-fs`: shell.spec.ts ported out of `legacy` — one project per
     // viewport, same reasoning as `employment-<viewport>`/
     // `repositories-<viewport>`/`grep-<viewport>` above.

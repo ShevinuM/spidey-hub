@@ -41,6 +41,7 @@ import DashboardHarness from "../../features/dashboard/tests/ui/harness/Dashboar
 import EmploymentHarness from "../../features/employment/tests/ui/harness/EmploymentHarness.svelte";
 import RepositoriesHarness from "../../features/repositories/tests/ui/harness/RepositoriesHarness.svelte";
 import GrepHarness from "../../features/grep/tests/ui/harness/GrepHarness.svelte";
+import ShellFsHarness from "../../features/shell-fs/tests/ui/harness/ShellFsHarness.svelte";
 import { getCollection } from "astro:content";
 import { buildProfile, buildHelp, buildBoot, buildNotifications, getHelpSearch, getCmdline, getShell, getDashboard, getPersonnel, getRepositories, getGrep } from "../../common/lib/data";
 import { getCommitsByRepo } from "../../common/lib/commits";
@@ -56,6 +57,7 @@ export async function getStaticPaths() {
     { params: { feature: "employment" } },
     { params: { feature: "repositories" } },
     { params: { feature: "grep" } },
+    { params: { feature: "shell-fs" } },
   ];
 }
 
@@ -75,6 +77,11 @@ const repositories = feature === "repositories" ? getRepositories() : undefined;
 const projects = feature === "repositories" ? await getCollection("repositories") : undefined;
 const commitsByRepo = feature === "repositories" && projects ? getCommitsByRepo(projects) : undefined;
 const grep = feature === "grep" ? getGrep() : undefined;
+// Named `shellFs`, not `shell`: `const shell` above already names help's
+// own `getShell()` result (help's harness consumes `ShellData` for its
+// Cmdline-adjacent labels) — reusing that name here would be a duplicate
+// `const` and fail to compile.
+const shellFs = feature === "shell-fs" ? getShell() : undefined;
 ---
 
 <Layout title={`Harness: ${feature} — shevinum.dev`}>
@@ -160,5 +167,17 @@ const grep = feature === "grep" ? getGrep() : undefined;
     // no-op here). Grep has no content collection — its yaml is a plain
     // `?raw` data file — so `getGrep()` alone is enough.
     feature === "grep" && grep !== undefined && <GrepHarness client:load {grep} />
+  }
+  {
+    // Wrapped (not mounted directly): Shell.svelte itself attaches no
+    // keydown listener of its own — Terminal.svelte/PaneTree.svelte own the
+    // generic per-pane-ref keydown delegation that routes into its exported
+    // `handleKey()` — so this harness needs ShellFsHarness.svelte to
+    // reproduce that one piece of cross-component routing (see its own
+    // header comment, including why it only ever mounts a PANE-mode
+    // instance, never the host shell). Shell has no content collection —
+    // its yaml is a plain `?raw` data file — so `getShell()` alone is
+    // enough, same as grep's `getGrep()` above.
+    feature === "shell-fs" && shellFs !== undefined && <ShellFsHarness client:load shell={shellFs} />
   }
 </Layout>
