@@ -1,8 +1,8 @@
 # In-window shell — a program's
 # `:q` drops its pane back to this; the detached, fullscreen HOST shell
 # reuses the exact same component/data. Every user-visible shell
-# string lives here (content-purity rule) — src/lib/shell.ts only ever does
-# substitution/formatting, never holds copy of its own.
+# string lives here (content-purity rule) — src/common/lib/shell.ts only
+# ever does substitution/formatting, never holds copy of its own.
 
 prompt:
   # Pane-mode prompt (a program's `:q` shell, one per window/pane) —
@@ -53,7 +53,7 @@ host:
   # command line shows) to launch the site, which is what silently attached
   # THIS client (the browser tab) to the session — everything the user has
   # been looking at since is that attachment. `{session}` is substituted
-  # with the real default session name (src/lib/shell.ts's
+  # with the real default session name (src/common/lib/shell.ts's
   # `seedHostNarrative()`) — never hardcoded twice.
   narrative:
     - text: "E.D.I.T.H shell · zsh 5.9 · session {session}"

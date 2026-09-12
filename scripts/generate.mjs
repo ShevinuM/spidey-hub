@@ -313,9 +313,10 @@ function generateGrepIndex() {
 // 2b. Shell fs-index (public/generated/fs-index.json) — the generated
 //     filesystem the in-window shell's cd/ls/tree/cat walk. A FLAT
 //     `{path, size?}[]` list (same shape
-//     convention as the grep/repo indexes' own `{path, lines}[]` — src/lib/
-//     shell.ts derives directory structure from path prefixes, exactly like
-//     src/common/lib/repo-tree.ts's listDir already does for a single repo).
+//     convention as the grep/repo indexes' own `{path, lines}[]` —
+//     src/common/lib/shell.ts derives directory structure from path
+//     prefixes, exactly like src/common/lib/repo-tree.ts's listDir already
+//     does for a single repo).
 //
 // Same skip list as the grep walker, PLUS `public/generated` itself
 // (this file's own output directory — including it would make fs-index.json

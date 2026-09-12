@@ -234,8 +234,9 @@ test("killWindow on the active LAST window wraps to the first remaining window",
 });
 
 test("killWindow reproduces the exact 'kill down to one' sequence byte-for-byte", () => {
-  // Mirrors tests/e2e/tmux.spec.ts's "killing every window down to the last
-  // one is refused" sequence: always kill whatever is CURRENTLY active.
+  // Mirrors common/tests/ui/e2e/tmux.spec.ts's "killing every window down to
+  // the last one is refused" sequence: always kill whatever is CURRENTLY
+  // active.
   const session = freshSession();
   const survivors: string[] = [];
   for (let i = 0; i < 5; i++) {

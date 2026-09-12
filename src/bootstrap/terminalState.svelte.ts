@@ -711,10 +711,11 @@ export class TerminalState {
   }
 
   /** Ctrl-b ] — inserts the shared paste buffer
-   * into whichever text input is currently registered (src/lib/
-   * pasteTargets.ts) — the grep query, the personnel filter, the rename
-   * prompt, or the editor's in-buffer search. A transient status message
-   * covers both "nothing is listening" and "nothing's been yanked yet". */
+   * into whichever text input is currently registered
+   * (src/common/lib/paste-targets.ts) — the grep query, the personnel
+   * filter, the rename prompt, or the editor's in-buffer search. A
+   * transient status message covers both "nothing is listening" and
+   * "nothing's been yanked yet". */
   pasteFromBuffer(): void {
     const target = getActivePasteTarget();
     const buffer = getPasteBuffer();
