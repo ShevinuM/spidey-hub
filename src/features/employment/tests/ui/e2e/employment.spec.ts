@@ -338,7 +338,7 @@ test.describe("Employment: preview body", () => {
   });
 });
 
-test.describe("Employment: corner sigils (Decision 10 — enabled)", () => {
+test.describe("Employment: corner sigils", () => {
   test("all four corner sigil glyphs render", async ({ page }) => {
     await openEmployment(page);
     for (const color of ["red", "blue", "teal", "gold"]) {

@@ -1,9 +1,8 @@
 // EmploymentRecordsState — the Employment Records (flat list + service
-// timeline) view's reactive core. Rebuilt from scratch for v2 (Decision 12
-// in PLAN.md): the old drill-down browser this replaced has no reactive
-// core worth relocating — E1-E3 are a genuine rebuild in the target
-// folder+state-class pattern established by RepositoriesState/
-// NotificationsState, not a port.
+// timeline) view's reactive core. Built from scratch in the folder +
+// state-class pattern established by RepositoriesState/NotificationsState,
+// not ported: the old drill-down browser this replaced had no reactive
+// core worth relocating.
 import type { CollectionEntry } from "astro:content";
 import type { PersonnelData } from "../../../common/lib/data";
 import { classifyBody, colorFor } from "../../../common/lib/docline";
@@ -50,10 +49,9 @@ function splitDates(dates: string): [string, string] {
 }
 
 /** Inclusive month count between two {y,m} pairs, e.g. May 2024 -> Aug 2026
- * (now) = 28mo. Verified against every duration in the mockup's RECORDS
- * mock data (UI-Mockups/builds-page-design-review/Personnel.dc.html) at its
- * authored "now" of 2026-08-15 (tests/visual/recipes.ts CLOCK_TIME): all six
- * durations match this formula exactly. */
+ * (now) = 28mo. Verified against all six real records' durations at the
+ * frozen "now" of 2026-08-15 (tests/visual/recipes.ts CLOCK_TIME): every one
+ * matches this formula exactly. */
 function monthsBetween(start: { y: number; m: number }, end: { y: number; m: number }): number {
   return (end.y - start.y) * 12 + (end.m - start.m) + 1;
 }
@@ -97,8 +95,9 @@ interface DocLineView {
  * rather than being cut off — every character stays visible regardless of
  * how long the source line is.
  *
- * `overflow-wrap:anywhere`, NOT `break-word` (Phase 7b.2 fix, found via the
- * adversarial 400-char-unbroken-line fixture): `break-word` only affects
+ * `overflow-wrap:anywhere`, NOT `break-word` (found via the adversarial
+ * 400-char-unbroken-line fixture, tests/visual/adversarial-fixtures.spec.ts):
+ * `break-word` only affects
  * where a browser is willing to break a line during layout — it does NOT
  * reduce the element's min-content contribution to an ancestor flex
  * container's intrinsic size. A single unbroken (no-space) run long enough
@@ -140,11 +139,10 @@ export class EmploymentRecordsState {
    * flat would double-count that position's own overlapping date ranges on
    * both the row list and the timeline, and the sub-role docs have no
    * standalone display name (every leaf is literally `role.md`). This
-   * reading is what makes the mockup's flat SIX-record list (and its
-   * derived index stats) match the real collection exactly — see
-   * docs/changes/employment-records-v2.md for the full rationale. One
-   * consequence, called out there too: the three sub-role docs are not
-   * reachable from this page now that drill-down is gone. */
+   * reading is what makes the flat record list (and its derived index
+   * stats) match the real collection's six org-level positions exactly.
+   * One consequence: the three sub-role docs are not reachable from this
+   * page now that drill-down is gone. */
   readonly records: EmploymentRow[] = $derived.by(() => {
     const now = new Date();
     const personnel = this.personnelFn();
@@ -210,17 +208,17 @@ export class EmploymentRecordsState {
 
   // ---------------------------------------------------------------------
   // Embedded editor — Enter opens the selected record's role.md in the
-  // shared vim-lite Editor.svelte, same as the old drill-down browser did
-  // (Decision 7 in PLAN.md drops the `f` filter/drill-down/`../`, not the
-  // editor: "j/k/enter selection stays" — Enter's existing "open in the
-  // editor" behavior is what stays, reached in one press now instead of a
-  // chain of drill-down Enters). "Harmless-open" (E1) describes WHY this is
-  // safe to leave in — the buffer is always readonly, so opening it can
-  // never lose the live preview/timeline sync — not that Enter does
-  // nothing. Editor.svelte is entry-point-agnostic (tests/e2e/editor-vim.spec.ts
-  // parametrizes its own suite over this page and Repositories'), so this
-  // mirrors RepositoriesState's editorFile/editorRef/closeEditor shape
-  // exactly, minus the async fetch (a role doc is already fully loaded).
+  // shared vim-lite Editor.svelte, same as the old drill-down browser did:
+  // the `f` filter/drill-down/`../` are gone ("j/k/enter selection stays"),
+  // but Enter's existing "open in the editor" behavior stays, reached in
+  // one press now instead of a chain of drill-down Enters. "Harmless-open"
+  // describes WHY this is safe to leave in — the buffer is always
+  // readonly, so opening it can never lose the live preview/timeline sync
+  // — not that Enter does nothing. Editor.svelte is entry-point-agnostic
+  // (common/tests/ui/e2e/editor-vim.spec.ts parametrizes its own suite over
+  // this page and Repositories'), so this mirrors RepositoriesState's
+  // editorFile/editorRef/closeEditor shape exactly, minus the async fetch
+  // (a role doc is already fully loaded).
   // ---------------------------------------------------------------------
 
   editorOpen = $state(false);

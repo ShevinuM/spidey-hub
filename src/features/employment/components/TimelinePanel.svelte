@@ -1,19 +1,15 @@
 <script lang="ts">
   // Middle column: vertical service-history timeline hanging off a
   // spiderweb glyph, one node per record (newest at the top, oldest = 1).
-  // Layout/values verbatim from UI-Mockups/builds-page-design-review/
-  // Personnel.dc.html's MIDDLE column (lines 102-130). Only four of the
-  // mockup's seven keyframes are live here (`spin`/`rspin`/`spark`/`dash`) —
-  // `pls`/`blink`/`webglow` are dead in the source file itself (Personnel-
-  // Panel-Changes.md's animation inventory) and are not ported.
+  // Only four keyframes are live here (`spin`/`rspin`/`spark`/`dash`) —
+  // `pls`/`blink`/`webglow` are not implemented.
   //
-  // All four infinite keyframe animations run live in every build,
-  // fixture included (Phase 7b.1) — golden determinism comes from
-  // Playwright's capture-time `animations:"disabled"` alone, not from a
-  // fixtureMode gate. The continuous *transitions* (marker/ring/dot easing
-  // on selection change) are unrelated either way: they only ever fire on
-  // a selection change, and fixture/golden captures never trigger one
-  // mid-capture.
+  // All four infinite keyframe animations run live in every build, fixture
+  // included — golden determinism comes from Playwright's capture-time
+  // `animations:"disabled"` alone, not from a fixtureMode gate. The
+  // continuous *transitions* (marker/ring/dot easing on selection change)
+  // are unrelated either way: they only ever fire on a selection change,
+  // and fixture/golden captures never trigger one mid-capture.
   import type { EmploymentRecordsState } from "./employmentRecordsState.svelte";
 
   interface Props {

@@ -1,16 +1,13 @@
-# Employment Records (flat list + service timeline) view copy.
-# Source: UI-Mockups/builds-page-design-review/Personnel.dc.html +
-# Personnel-Panel-Changes.md (iteration 6 rebuild — see
-# docs/changes/employment-records-v2.md for the full diff against the old
-# drill-down browser this replaced).
+# Employment Records (flat list + service timeline) view copy. This page
+# replaced an older hierarchical drill-down file browser.
 
 breadcrumb: "~/employment-records"
 
 # 2-3 char org tag shown in each row's dim column. Not mechanically
 # derivable from the personnel collection's org directory slug
-# ("memorial-university" is not "mem" in the mockup, it's "mun") — hand
-# authored here, keyed by the collection's top-level directory segment
-# (src/content/personnel/<key>/...).
+# ("memorial-university" is "mun", not "mem") — hand authored here, keyed
+# by the collection's top-level directory segment
+# (src/features/employment/content/personnel/<key>/...).
 orgTags:
   enaimco: ena
   memorial-university: mun
@@ -40,14 +37,13 @@ badge:
 previewLineCountTemplate: "{n} lines"
 
 # Enter opens the selected record's role.md in the shared vim-lite editor
-# (Decision 7: "j/k/enter selection stays" — the filter/drill-down/`../` are
-# what's dropped, not Enter's existing open-in-editor behavior). Mirrors
+# ("j/k/enter selection stays" — the filter/drill-down/`../` are what's
+# dropped, not Enter's existing open-in-editor behavior). Mirrors
 # repositories.yaml's `editor:` block field-for-field (EditorLabels requires
 # every field for Editor.svelte's shared status line); defined independently
 # here since this file has no dependency on repositories.yaml. The role doc
 # pane never scrolls past one screen in practice, so topLabel/bottomLabel/
-# percentTemplate only ever render "Top" here, same as before this page's v2
-# rebuild.
+# percentTemplate only ever render "Top" here.
 editor:
   modeLabel: "NORMAL"
   modeVisualLabel: "VISUAL"
