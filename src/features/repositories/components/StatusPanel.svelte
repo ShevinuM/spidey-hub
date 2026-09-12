@@ -1,7 +1,8 @@
 <script lang="ts">
-  // Panel [0]: Status — a full-width bar above the two-column row (UI v2;
-  // Builds-Panel-Changes.md). Left cluster: "{prefix} {arrow} {N} repos"
-  // (N = the real repo count, Decision 4). Middle: the GitHub-contribution
+  // Panel [0]: Status — a full-width bar above the two-column row (UI v2's
+  // own panel layout). Left cluster: "{prefix} {arrow} {N} repos" (N = the
+  // real repo count, counted across every project, not the prototype's
+  // fixed number). Middle: the GitHub-contribution
   // grid — 52 columns x 7 rows of cells colored from `state.contributionLevels`
   // (oldest-first, populated by repositoriesState.svelte.ts's mount fetch of
   // public/generated/contributions.json; empty array renders zero cells,
@@ -25,8 +26,8 @@
 
   const { repositories, state, isFocused }: Props = $props();
 
-  // Mockup's verbatim 5-level palette (Builds.dc.html `LEVELS`) — index 0-4
-  // maps 1:1 to contributions.json's `level` field.
+  // Verbatim 5-level contribution palette — index 0-4 maps 1:1 to
+  // contributions.json's `level` field.
   const CONTRIB_LEVEL_COLORS = [
     "rgba(196,216,232,.07)",
     "rgba(224,69,60,.24)",

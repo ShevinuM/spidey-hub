@@ -3,9 +3,9 @@
   // folder+state-class relocation refactor. Pure relocation: same DOM,
   // testids, classes, and inline styles as the original inline markup.
   //
-  // Selection highlight (mockup Builds.dc.html:174, the "2 · Files" panel's
-  // BLUE variant — distinct from the repo list's red one): a 2px left
-  // accent bar + a horizontal blue fade. Every row — selected or not —
+  // Selection highlight: the "2 · Files" panel's own BLUE variant —
+  // distinct from the repo list's red one — a 2px left accent bar + a
+  // horizontal blue fade. Every row — selected or not —
   // carries the same 2px `border-left` (transparent when unselected) so
   // selecting a row never shifts its text 2px to the right.
   import type { RepositoriesData } from "../../../common/lib/data";

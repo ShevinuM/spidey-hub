@@ -3,8 +3,7 @@
 // goldens stay pixel-stable; this file proves the ADVERSARIAL fixture added
 // alongside them actually exercises the defect class it exists to catch —
 // a tidy, fixed-length fixture dataset could pass every golden while a
-// panel silently failed to scroll or clipped a long line (see
-// docs/architecture.md's "Blind spots" section). No PNG comparisons here,
+// panel silently failed to scroll or clipped a long line. No PNG comparisons here,
 // so this file has no `tests/ui/visual/goldens/` entries of its own — it's
 // wired into `pnpm test:visual` in package.json purely so it always runs
 // against the fixture build, same port-4322 server (playwright.config.ts)
@@ -25,7 +24,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { BOOT_SEEN_STORAGE_KEY } from "../../../../boot/lib/boot-state";
 
-/** Same boot-skip contract tests/visual/pipeline.mjs's `captureState()`
+/** Same boot-skip contract common/tests/ui/support/pipeline.mjs's `captureState()`
  * uses (pre-seed via `addInitScript`, before any navigation) — this file
  * has no golden/clock determinism needs, only the boot-skip. */
 async function gotoReady(page: Page, path: string): Promise<string[]> {
@@ -34,7 +33,7 @@ async function gotoReady(page: Page, path: string): Promise<string[]> {
       try {
         sessionStorage.setItem(key, "1");
       } catch {
-        // best-effort, same contract as src/lib/bootState.ts
+        // best-effort, same contract as src/features/boot/lib/boot-state.ts
       }
     },
     BOOT_SEEN_STORAGE_KEY,

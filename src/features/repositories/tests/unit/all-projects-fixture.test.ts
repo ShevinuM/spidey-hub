@@ -47,7 +47,8 @@ interface RepoIndex {
  * scripts/generate.mjs is a standalone script with real filesystem/network
  * side effects throughout, not a module built to be imported by tests — see
  * this repo's existing precedent of hand-mirroring constants/logic across
- * the fixture/real boundary (e.g. tests/e2e/boot.spec.ts's BOOT_MS). */
+ * the fixture/real boundary (e.g. src/features/boot/tests/ui/e2e/boot.spec.ts's
+ * BOOT_MS). */
 function buildAllProjectsIndex(srcDir: string): RepoIndex {
   const files: RepoFile[] = [];
   for (const entry of readdirSync(srcDir)) {

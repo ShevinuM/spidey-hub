@@ -1,6 +1,6 @@
 <script lang="ts">
   // Shared panel chrome (bordered box + top-straddling PanelBadge) for the
-  // five Repositories panels. UI v2 (Builds-Panel-Changes.md): every panel's
+  // five Repositories panels. UI v2: every panel's
   // OLD corner-bracket floating title ("─[N]─Label") is replaced by the
   // shared PanelBadge pill straddling the panel's own top border,
   // left-aligned, reading "[{n}] <spider glyph> {label}" — same badge, same

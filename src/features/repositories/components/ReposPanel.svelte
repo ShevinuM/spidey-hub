@@ -4,9 +4,9 @@
   // relocation: same DOM, testids, classes, and inline styles as the
   // original inline markup.
   //
-  // Selection highlight (mockup Builds.dc.html:94, the "1 · Repositories"
-  // panel's red variant): a 2px left accent bar + a horizontal red fade,
-  // not a flat fill. Every row — selected or not — carries the same 2px
+  // Selection highlight: the "1 · Repositories" panel's own red variant —
+  // a 2px left accent bar + a horizontal red fade, not a flat fill. Every
+  // row — selected or not — carries the same 2px
   // `border-left` (transparent when unselected) so selecting a row never
   // shifts its text 2px to the right.
   import type { RepositoriesData } from "../../../common/lib/data";

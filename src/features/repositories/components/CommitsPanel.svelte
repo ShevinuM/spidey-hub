@@ -4,11 +4,10 @@
   // relocation: same DOM, testids, classes, and inline styles as the
   // original inline markup.
   //
-  // Selection highlight (mockup Builds.dc.html:236, the "4 · Commits"
-  // panel's own red variant — a THIRD gradient distinct from both the repo
-  // list's and the files tree's): a horizontal red fade only, no left
-  // accent bar — the mockup never gives commit rows one, selected or not,
-  // so there is no alignment shift to guard against here.
+  // Selection highlight: the "4 · Commits" panel's own red variant — a
+  // THIRD gradient distinct from both the repo list's and the files tree's
+  // — a horizontal red fade only, no left accent bar, so there is no
+  // alignment shift to guard against here.
   import type { RepositoriesData } from "../../../common/lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
   import RepositoriesPanel from "./RepositoriesPanel.svelte";
@@ -47,10 +46,10 @@
         <div style="color:rgba(196,216,232,.5)">{repositories.panels.commits.localOnlyText}</div>
         <div style="color:rgba(196,216,232,.35)">{repositories.allProjects.description}</div>
       {:else}
-        <!-- Spine graph (Decision 3): a plain vertical line + one node per
-             REAL visible commit row below — deliberately NOT the mockup's
-             fake merge/branch topology (curved forks, HEAD/tag pills), which
-             has no basis in our actual commit data. Lives in the SAME
+        <!-- Spine graph: a plain vertical line + one node per REAL visible
+             commit row below — deliberately not a fake merge/branch topology
+             (curved forks, HEAD/tag pills), which would have no basis in our
+             actual commit data. Lives in the SAME
              scrolling container as the rows (not a sibling positioned
              outside it) so the graph scrolls in lockstep with them instead
              of drifting once the list is taller than the panel. -->

@@ -23,7 +23,7 @@ async function gotoReady(page: Page, path: string) {
   await page.locator('[data-terminal-ready="true"]').waitFor({ state: "attached" });
 }
 
-/** Mirrors tests/e2e/repositories.spec.ts's own helper: clicking a panel [1]
+/** Mirrors src/features/repositories/tests/ui/e2e/repositories.spec.ts's own helper: clicking a panel [1]
  * repo row both selects it and loads its working tree into panel [2]. */
 async function openRepoTree(page: Page, repoName: string) {
   await page.locator(`[data-testid="repositories-repo-row"][data-repo-name="${repoName}"]`).click();

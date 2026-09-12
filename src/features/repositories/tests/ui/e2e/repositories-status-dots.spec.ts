@@ -2,8 +2,8 @@
 // aligned like in the mock." Reference: the user's screenshot
 // (~/Desktop/Screenshot 2026-08-21 at 2.54.30 AM.png), showing the repo-list
 // status dot sitting in its own fixed, right-aligned column (so every row's
-// dot lines up vertically). (Builds-Panel-Changes.md:39-40 covers the dot's
-// pulse timing, not this column layout.)
+// dot lines up vertically). This covers only the column-alignment layout,
+// not the dot's pulse timing.
 //
 // Before the 856f455 fix, ReposPanel.svelte appended the dot inline
 // immediately after the variable-length "{repo.key} {repo.branch}" text, so
