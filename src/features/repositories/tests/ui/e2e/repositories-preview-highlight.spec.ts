@@ -9,14 +9,14 @@
 //
 // Exercised against REAL (non-fixture) content: `pnpm generate` tokenizes
 // every text file under the actual git-submodule checkouts in `repos/`,
-// regardless of PORTFOLIO_FIXTURES (see src/lib/highlight.ts +
+// regardless of PORTFOLIO_FIXTURES (see src/common/lib/highlight.ts +
 // scripts/generate.mjs's generateRepoIndexes(), which has no fixture branch
 // at all) — so a real repo file already gives real, multi-colour tokens
 // without inventing fixture data that would have to live inside a vendored
 // submodule checkout. Trees/Trie/word_search_ii.java
 // (Data-Structures-And-Algorithms) is that file: real Java keyword/type/
 // comment tokens (multiple palette colours) on line 31 alone.
-import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
+import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
 
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);

@@ -10,14 +10,14 @@
 //
 // Exercised against REAL (non-fixture) content — `pnpm generate` walks the
 // actual git-submodule checkouts under `repos/` regardless of
-// PORTFOLIO_FIXTURES (src/lib/highlight.ts + scripts/generate.mjs's
+// PORTFOLIO_FIXTURES (src/common/lib/highlight.ts + scripts/generate.mjs's
 // generateRepoIndexes() has no fixture branch at all), so a real repo file
 // already gives a genuinely long unbroken line without inventing fixture
 // data that would have to live inside a vendored submodule checkout.
 // Trees/Trie/word_search_ii.java (Data-Structures-And-Algorithms) is that
 // file: 113 lines (enough to overflow vertically) with a real 574-character
 // javadoc line at line 33 (enough to overflow horizontally without the fix).
-import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
+import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
 
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);

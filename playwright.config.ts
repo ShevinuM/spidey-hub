@@ -390,6 +390,52 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
+    // `repositories` (D20): the 4 specs (repositories.spec.ts,
+    // repositories-preview-highlight.spec.ts, repositories-preview-scroll.spec.ts,
+    // repositories-status-dots.spec.ts) phase 09 ported out of `legacy` — one
+    // project per viewport, same reasoning as `employment-<viewport>` above.
+    ...viewports.map((viewport) => ({
+      name: `repositories-${viewport.name}`,
+      testDir: "./src/features/repositories/tests/ui/e2e",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+      },
+    })),
+    // `repositories-visual` (D21): the 3 recipes phase 09 owns
+    // ("02-repositories", "03-repositories-arrow", "12-all-projects"), moved
+    // out of the viewport-named visual projects above (and out of
+    // tests/visual/identical.spec.ts's SPLIT_OWNED_RECIPE_NAMES filter).
+    // Reuses common's/profile's/help's/boot's/notifications'/dashboard's/
+    // employment's split-project shape verbatim (D21(a)): its own
+    // `snapshotPathTemplate` with the viewport hardcoded as a literal, not
+    // derived from `{projectName}`.
+    ...viewports.map((viewport) => ({
+      name: `repositories-visual-${viewport.name}`,
+      testDir: "./src/features/repositories/tests/ui/visual",
+      snapshotPathTemplate: `src/features/repositories/tests/ui/visual/goldens/${viewport.name}/{arg}{ext}`,
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+      },
+    })),
+    // `repositories-harness` (D24): repositories' own harness route + spec,
+    // reusing phase 03's settled mechanism verbatim. Fixture-build-only;
+    // functional assertions only (mount + core interactions), no goldens —
+    // one project at the primary viewport, same as
+    // `profile-harness`/`help-harness`/`boot-harness`/
+    // `notifications-harness`/`dashboard-harness`/`employment-harness` above.
+    {
+      name: "repositories-harness",
+      testDir: "./src/features/repositories/tests/ui/harness",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewports[0].width, height: viewports[0].height },
+        deviceScaleFactor: 1,
+      },
+    },
   ],
   webServer: [
     {
