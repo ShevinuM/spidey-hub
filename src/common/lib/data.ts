@@ -20,7 +20,7 @@
 import YAML from "yaml";
 import type { CollectionEntry } from "astro:content";
 import siteRaw from "../content/site.yaml?raw";
-import dashboardRaw from "../../data/dashboard.yaml?raw";
+import dashboardRaw from "../../features/dashboard/content/dashboard.yaml?raw";
 import trackerRaw from "../../data/tracker.yaml?raw";
 import repositoriesRaw from "../../data/repositories.yaml?raw";
 import grepRaw from "../../data/grep.yaml?raw";

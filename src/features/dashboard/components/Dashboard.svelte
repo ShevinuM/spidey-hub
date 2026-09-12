@@ -1,8 +1,8 @@
 <script lang="ts">
   // Home/dashboard card (design/Homepage.dc.html lines 142-169).
-  import type { DashboardData } from "../common/lib/data";
-  import type { ViewId } from "../common/lib/views";
-  import { menuIdToView, viewToTmuxBinding } from "../common/lib/views";
+  import type { DashboardData } from "../../../common/lib/data";
+  import type { ViewId } from "../../../common/lib/views";
+  import { menuIdToView, viewToTmuxBinding } from "../../../common/lib/views";
   import { wordmarkChars } from "../lib/wordmark";
 
   interface Props {

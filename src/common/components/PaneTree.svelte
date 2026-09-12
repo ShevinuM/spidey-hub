@@ -36,7 +36,7 @@
   import type { CollectionEntry } from "astro:content";
   import type { Commit } from "../../lib/commits";
   import type { SessionRosterEntry, ShellMode } from "../../lib/shell";
-  import Dashboard from "../../components/Dashboard.svelte";
+  import Dashboard from "../../features/dashboard/components/Dashboard.svelte";
   import Repositories from "../../components/repositories/Repositories.svelte";
   import EmploymentRecords from "../../components/employment-records/EmploymentRecords.svelte";
   import Profile from "../../features/profile/components/Profile.svelte";
