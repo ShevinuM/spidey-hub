@@ -1,11 +1,11 @@
-// Behavioral e2e safety net for Dashboard.svelte (PLAN.md Phase A) — the
+// Behavioral e2e safety net for Dashboard.svelte — the
 // dashboard previously had only incidental coverage (nav.spec.ts's rename +
 // footer-pane-count describe block). Scope: the menu's labels/icons/key-hint
 // column against src/data/dashboard.yaml (asserted as current truth —
 // "Employment Records" included), click AND keyboard (Enter/Space)
 // navigation from every row, the synced-panes footer line, and wordmark
 // presence/label.
-import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
+import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
 
 async function gotoReady(page: Page, path = "/") {
   await page.goto(path);

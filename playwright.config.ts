@@ -294,6 +294,53 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
+    // `dashboard` (D20): the 1 spec (dashboard.spec.ts) phase 07 ported out
+    // of `legacy` — one project per viewport, same reasoning as
+    // `notifications-<viewport>` above.
+    ...viewports.map((viewport) => ({
+      name: `dashboard-${viewport.name}`,
+      testDir: "./src/features/dashboard/tests/ui/e2e",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+      },
+    })),
+    // `dashboard-visual` (D21): the 1 recipe phase 07 owns ("01-dashboard"),
+    // moved out of the viewport-named visual projects above (and out of
+    // tests/visual/identical.spec.ts's SPLIT_OWNED_RECIPE_NAMES filter).
+    // Reuses common's/profile's/help's/boot's/notifications' split-project
+    // shape verbatim (D21(a)): its own `snapshotPathTemplate` with the
+    // viewport hardcoded as a literal, not derived from `{projectName}`.
+    // "08-tracker" (also owned by this phase's original goal line) is NOT
+    // here — phase-07 R1 ruled it common's; it moved into
+    // common/tests/ui/visual/ instead, under the existing
+    // `common-visual-<viewport>` projects.
+    ...viewports.map((viewport) => ({
+      name: `dashboard-visual-${viewport.name}`,
+      testDir: "./src/features/dashboard/tests/ui/visual",
+      snapshotPathTemplate: `src/features/dashboard/tests/ui/visual/goldens/${viewport.name}/{arg}{ext}`,
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+      },
+    })),
+    // `dashboard-harness` (D24): dashboard's own harness route + spec,
+    // reusing phase 03's settled mechanism verbatim. Fixture-build-only;
+    // functional assertions only (mount + core interactions), no goldens —
+    // one project at the primary viewport, same as
+    // `profile-harness`/`help-harness`/`boot-harness`/
+    // `notifications-harness` above.
+    {
+      name: "dashboard-harness",
+      testDir: "./src/features/dashboard/tests/ui/harness",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewports[0].width, height: viewports[0].height },
+        deviceScaleFactor: 1,
+      },
+    },
   ],
   webServer: [
     {
