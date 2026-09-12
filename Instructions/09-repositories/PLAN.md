@@ -1,6 +1,7 @@
 # Phase 09 — repositories
 
 > **Status: planned, not started. Blocked on phase 08.** Binding decisions: `Instructions/00-phases.md`. Largest feature phase.
+> Carried-in item (phase-07 close, 2026-09-12): a single `legacy-1512x945 › repositories.spec.ts` failure surfaced once during phase 07's execution and did **not** reproduce in the verifier's subsequent clean 1012-pass real-build run. Phase 07's diff touches zero repositories-tree files, and its only shared-file change (`data.ts`'s `?raw` repoints) would fail deterministically rather than intermittently — so it is not attributable to phase 07, but it was logged rather than declared cleared. **This phase should watch for it**: if `repositories.spec.ts` proves genuinely flaky once repositories sits in its own context, root-cause it here rather than re-deferring.
 > Carried-in item (phase-04 close audit, 2026-09-08): `common/tests/ui/pages/TerminalPage.ts:7` names a `RepositoriesPage` that doesn't exist yet — a pre-migration forward reference. This phase's page-object step should create it there (closing the reference) or, if no page object is warranted, strip the mention in the same change (comments.md R003).
 
 ## Context
