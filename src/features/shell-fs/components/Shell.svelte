@@ -9,9 +9,9 @@
   // launching, are all live in host mode via `onAttach`/`onCreateAndAttach`/
   // `onAttachView` below.
   //
-  // Owns exactly the stateful/effectful half of the split with src/lib/
-  // shell.ts: keydown handling, the lazy fetch+cache of the generated fs/
-  // grep/repo indexes (src/lib/shellIndex.ts), scroll-to-bottom, and
+  // Owns exactly the stateful/effectful half of the split with
+  // src/common/lib/shell.ts: keydown handling, the lazy fetch+cache of the generated fs/
+  // grep/repo indexes (src/features/shell-fs/lib/shell-index.ts), scroll-to-bottom, and
   // dispatching a resolved `ShellEffect` (launch/exit-pane/reboot) to
   // Terminal.svelte via props — shell.ts's own `runCommand` never touches
   // the DOM, fetch, or tmux.ts directly.
@@ -24,8 +24,8 @@
   // (auto-scroll) only reads `pane.shell.lines.length` and writes to a DOM
   // node's `scrollTop` — never back into `pane.shell` — so there is no
   // read-then-write-the-same-$state loop.
-  import type { ShellData } from "../common/lib/data";
-  import type { Pane } from "../common/engines/tmux/tmux";
+  import type { ShellData } from "../../../common/lib/data";
+  import type { Pane } from "../../../common/engines/tmux/tmux";
   import {
     backspace,
     formatPrompt,
@@ -40,13 +40,13 @@
     type ShellEffect,
     type ShellMode,
     type FsEntry,
-  } from "../common/lib/shell";
-  import { loadFsIndex, loadGrepFiles, loadRepoIndex } from "../lib/shellIndex";
-  import { repoFileText, type TokenSpan } from "../common/lib/repo-tree";
-  import { pushPasteTarget, removePasteTarget } from "../common/lib/paste-targets";
-  import { resolvePageEpoch } from "../common/lib/clock";
-  import { classifyDoc, colorFor, docColors } from "../common/lib/docline";
-  import Editor, { type EditorLine } from "../common/components/editor/Editor.svelte";
+  } from "../../../common/lib/shell";
+  import { loadFsIndex, loadGrepFiles, loadRepoIndex } from "../lib/shell-index";
+  import { repoFileText, type TokenSpan } from "../../../common/lib/repo-tree";
+  import { pushPasteTarget, removePasteTarget } from "../../../common/lib/paste-targets";
+  import { resolvePageEpoch } from "../../../common/lib/clock";
+  import { classifyDoc, colorFor, docColors } from "../../../common/lib/docline";
+  import Editor, { type EditorLine } from "../../../common/components/editor/Editor.svelte";
 
   interface Props {
     shell: ShellData;

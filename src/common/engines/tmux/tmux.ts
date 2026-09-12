@@ -150,7 +150,7 @@ export interface Client {
   /** The detached HOST shell's own pane, deliberately modeled as a REAL
    * `Pane` (not a bare `ShellState`) living directly on the client rather
    * than inside any session/window: this is what lets
-   * src/components/Shell.svelte mount it with its existing `pane: Pane`
+   * src/features/shell-fs/components/Shell.svelte mount it with its existing `pane: Pane`
    * prop contract unchanged (the exact same `pane.shell = {...}`
    * write-through Svelte reactivity every other pane already relies on).
    * `program` is always "shell" here (never read meaningfully; kept only

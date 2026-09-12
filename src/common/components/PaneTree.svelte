@@ -41,7 +41,7 @@
   import EmploymentRecords from "../../features/employment/components/EmploymentRecords.svelte";
   import Profile from "../../features/profile/components/Profile.svelte";
   import HelpView from "../../features/help/components/HelpView.svelte";
-  import Shell from "../../components/Shell.svelte";
+  import Shell from "../../features/shell-fs/components/Shell.svelte";
   import { viewIdToProgram } from "../lib/views";
 
   interface Props {

@@ -1,5 +1,5 @@
 // Pure line-parser/builtins/fs-navigation logic for the in-window shell —
-// src/components/Shell.svelte owns the stateful/effectful parts (keydown
+// src/features/shell-fs/components/Shell.svelte owns the stateful/effectful parts (keydown
 // handling, the lazy fetch+cache of the generated fs/grep/repo indexes,
 // calling into src/common/engines/tmux/tmux.ts to launch/exit a program or reboot the
 // client), exactly the same split src/common/lib/cmdline.ts already uses for

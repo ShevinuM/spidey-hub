@@ -1,5 +1,5 @@
 // Behavioral e2e suite for detach/sessions — `Ctrl-b d` detach to the
-// fullscreen HOST shell (src/components/Shell.svelte,
+// fullscreen HOST shell (src/features/shell-fs/components/Shell.svelte,
 // `mode: "host"`) over the dimmed radar, its `tmux ls`/`new [-s name]`/
 // `a [-t name]`/`edith`/`open <view>` builtins, the kill-cascade rules that
 // destroy a session outright once its last window dies, and the host `exit`

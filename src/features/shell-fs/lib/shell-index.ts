@@ -1,5 +1,5 @@
 // Impure fetch+cache boundary for the shell's generated indexes — `cat`
-// resolves content lazily (lazy fetch, cache). src/lib/shell.ts stays a
+// resolves content lazily (lazy fetch, cache). src/common/lib/shell.ts stays a
 // pure, zero-fetch module (see
 // its own header comment); every actual `fetch()` call lives here instead,
 // exactly the same split GrepOverlay.svelte/Repositories.svelte already use for
@@ -13,8 +13,8 @@
 // switching away and back) reuses the same settled promise — a genuine
 // singleton cache for the lifetime of the page, matching GrepOverlay's own
 // "fetched once, kept forever" contract.
-import type { FsEntry } from "../common/lib/shell.ts";
-import type { RepoFile, RepoIndex } from "../common/lib/repo-tree";
+import type { FsEntry } from "../../../common/lib/shell.ts";
+import type { RepoFile, RepoIndex } from "../../../common/lib/repo-tree";
 
 export type { RepoFile };
 

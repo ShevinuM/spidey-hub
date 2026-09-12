@@ -49,7 +49,7 @@
   import Wallpaper from "../common/components/Wallpaper.svelte";
   import StatusBar from "../common/components/StatusBar.svelte";
   import PaneTree from "../common/components/PaneTree.svelte";
-  import Shell from "../components/Shell.svelte";
+  import Shell from "../features/shell-fs/components/Shell.svelte";
   import Notifications from "../features/notifications/components/Notifications.svelte";
   import GrepOverlay from "../features/grep/components/GrepOverlay.svelte";
   import CopyMode from "../common/components/CopyMode.svelte";
@@ -329,7 +329,7 @@
 
   // Mobile-block JS guard: listeners/timers only attach while the viewport
   // is desktop-sized with a fine pointer — the JS half of the guard whose
-  // CSS half lives in Shell.astro (see that file's own comment); the
+  // CSS half lives in Layout.astro (see that file's own comment); the
   // mobile-block card itself is server-rendered there, not by this
   // component. Kept reactive to live resizes.
   let desktopMode = $state(false);

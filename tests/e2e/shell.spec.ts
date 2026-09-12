@@ -1,4 +1,4 @@
-// Behavioral e2e suite for the in-window shell — src/components/Shell.svelte,
+// Behavioral e2e suite for the in-window shell — src/features/shell-fs/components/Shell.svelte,
 // driven through Terminal.svelte exactly like every other program ref.
 // Covers: `:q` dropping a pane's program to a shell with live window
 // auto-rename,
