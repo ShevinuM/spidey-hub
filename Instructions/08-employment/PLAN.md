@@ -244,13 +244,14 @@ Verify that relative depth with `node -e "…path.relative…"`; do not guess it
 
 ## Results
 
-**Status: closed 2026-09-12.** Executed as five commits on `frontend-rewrite`:
+**Status: executed 2026-09-12, all 7 steps complete, all gates green on the final committed tree — pending verifier/auditor review before phase close.** Six commits on `frontend-rewrite`:
 
 1. `f3e96ab` — Port employment's e2e specs and goldens into src/features/employment
 2. `dd7ed5b` — Promote fileIcons.ts to common/lib/file-icons.ts
 3. `62b3366` — Move employment components and personnel content into src/features/employment
 4. `7e94a52` — Add the employment feature harness route, wrapper, page object and spec
-5. (this commit) — Sweep stale v1 citations and close phase 08
+5. `6562382` — Strip stale v1 process citations from employment's comments
+6. `b12c97c` — Record phase 08 results and close the employment plan (this Results section's first draft; corrected below by the commit that lands after this one, since that draft undercounted the commit list and overstated one gate run)
 
 ### Files moved (move table, all verbatim except path-only import repoints)
 
@@ -303,13 +304,13 @@ Post-step-3 sweep (`grep -rn "content/personnel\|employment-records" src common 
 
 ### Gate results (actual numbers observed)
 
-- `pnpm check` → 0 errors (every run, steps 2/3/4/7).
+- `pnpm check` → 0 errors, every run (steps 2, 3, 4, 7, and the final post-sweep re-check).
 - `pnpm lint` → exit 0.
-- `pnpm test:unit` → **346 passed / 20 files**, unchanged throughout (confirms breaks #1/#2 fixed with no new/missing unit tests).
-- D20(a) real build (`smoke` + `legacy-*` + `common-*` + `profile-*` + `help-*` + `boot-*` + `notifications-*` + `dashboard-*` + `employment-{1512x945,1920x1080}`) → **1012 passed**, run three times (step 1, step 4, step 7 post-sweep), all green. One transient 6-failure `legacy-*`/`repositories.spec.ts` run occurred mid-phase, root-caused to the executor's own build/revert-drift ordering (dist built against fresh live commit JSON, then that file reverted before the spec read it from disk) — not a real regression; a clean rebuild + rerun confirmed 12/12 passing and the full 1012 passed immediately after.
-- D20(b) fixture build + `pnpm test:visual` → **73 passed** (step 1/4, before the harness existed) → **79 passed** (step 6/7, with `employment-harness`'s 6 tests added), including `adversarial-fixtures.spec.ts` (R2 gate) green throughout.
-- `--project=employment-harness` alone → 6/6 passed.
-- Real build dist checks → `test ! -d dist/harness` true; `grep -rl "employment-harness-ready" dist --include="*.html"` empty (exit 1); a dead ~1 KB `EmploymentHarness.<hash>.js` chunk present in `dist/_astro/` (pre-ruled harmless, Deferred).
+- `pnpm test:unit` → **346 passed / 20 files**, unchanged throughout, including the final run on the fully-committed tree (confirms breaks #1/#2 fixed with no new/missing unit tests).
+- D20(a) real build (`smoke` + `legacy-*` + `common-*` + `profile-*` + `help-*` + `boot-*` + `notifications-*` + `dashboard-*` + `employment-{1512x945,1920x1080}`, 16 projects) → **1012 passed**, run at step 1, step 4, and — the run that matters, since it covers commit `6562382`'s index-content churn — **again from the fully-committed tree after the citation-sweep commits**, all green. (Step 7's own post-sweep spot-check ran the two `employment-*` projects only, 44/44 — that was not a substitute for the full 1012-test run, which is the one recorded here.) One transient 6-failure `legacy-*`/`repositories.spec.ts` run occurred mid-phase, root-caused to the executor's own build/revert-drift ordering (dist built against fresh live commit JSON, then that file reverted before the spec read it from disk) — not a real regression; a clean rebuild + rerun confirmed 12/12 passing and the full 1012 passed immediately after, and again on every later full run.
+- D20(b) fixture build + `pnpm test:visual` → **73 passed** (step 1/4, before the harness existed) → **79 passed** (step 6, step 7's employment-only spot-check, and again as a full run from the fully-committed tree after the citation-sweep commits), including `adversarial-fixtures.spec.ts` (R2 gate) green throughout.
+- `--project=employment-harness` alone → 6/6 passed (step 6 and step 7's spot-check).
+- Real build dist checks, re-run against the final committed tree: `test ! -d dist/harness` true; `grep -rl "employment-harness-ready" dist --include="*.html"` empty (exit 1); a dead ~1 KB `EmploymentHarness.<hash>.js` chunk present in `dist/_astro/` (pre-ruled harmless, Deferred).
 
 ### Harness shape used
 
