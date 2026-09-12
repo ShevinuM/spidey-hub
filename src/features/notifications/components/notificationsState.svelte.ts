@@ -9,8 +9,8 @@
 import { onDestroy, onMount } from "svelte";
 import type { NotificationsData } from "../../../common/lib/data";
 import type { ViewId } from "../../../common/lib/views";
+import { agoLabel } from "../../../common/lib/ago-label";
 import {
-  agoLabel,
   alertItems,
   buildFixtureState,
   folderItems,
