@@ -40,8 +40,9 @@ import NotificationsHarness from "../../features/notifications/tests/ui/harness/
 import DashboardHarness from "../../features/dashboard/tests/ui/harness/DashboardHarness.svelte";
 import EmploymentHarness from "../../features/employment/tests/ui/harness/EmploymentHarness.svelte";
 import RepositoriesHarness from "../../features/repositories/tests/ui/harness/RepositoriesHarness.svelte";
+import GrepHarness from "../../features/grep/tests/ui/harness/GrepHarness.svelte";
 import { getCollection } from "astro:content";
-import { buildProfile, buildHelp, buildBoot, buildNotifications, getHelpSearch, getCmdline, getShell, getDashboard, getPersonnel, getRepositories } from "../../common/lib/data";
+import { buildProfile, buildHelp, buildBoot, buildNotifications, getHelpSearch, getCmdline, getShell, getDashboard, getPersonnel, getRepositories, getGrep } from "../../common/lib/data";
 import { getCommitsByRepo } from "../../common/lib/commits";
 
 export async function getStaticPaths() {
@@ -54,6 +55,7 @@ export async function getStaticPaths() {
     { params: { feature: "dashboard" } },
     { params: { feature: "employment" } },
     { params: { feature: "repositories" } },
+    { params: { feature: "grep" } },
   ];
 }
 
@@ -72,6 +74,7 @@ const personnelEntries = feature === "employment" ? await getCollection("personn
 const repositories = feature === "repositories" ? getRepositories() : undefined;
 const projects = feature === "repositories" ? await getCollection("repositories") : undefined;
 const commitsByRepo = feature === "repositories" && projects ? getCommitsByRepo(projects) : undefined;
+const grep = feature === "grep" ? getGrep() : undefined;
 ---
 
 <Layout title={`Harness: ${feature} — shevinum.dev`}>
@@ -146,5 +149,16 @@ const commitsByRepo = feature === "repositories" && projects ? getCommitsByRepo(
       repositories !== undefined &&
       projects !== undefined &&
       commitsByRepo !== undefined && <RepositoriesHarness client:load {repositories} {projects} {commitsByRepo} />
+  }
+  {
+    // Wrapped (not mounted directly): GrepOverlay.svelte itself attaches
+    // no keydown listener of its own — Terminal.svelte owns the sole
+    // window keydown listener and calls its exported `handleKey()` first,
+    // unconditionally, on every keydown — so this harness needs
+    // GrepHarness.svelte to reproduce that one piece of cross-component
+    // routing (see its own header comment, including why `onNavigate` is a
+    // no-op here). Grep has no content collection — its yaml is a plain
+    // `?raw` data file (R2) — so `getGrep()` alone is enough.
+    feature === "grep" && grep !== undefined && <GrepHarness client:load {grep} />
   }
 </Layout>
