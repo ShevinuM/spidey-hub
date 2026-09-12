@@ -5,7 +5,7 @@
 // this file proves the operations themselves are correct independent of
 // that wrapping).
 import { expect, test } from "vitest";
-import { createShellState } from "../../../src/lib/shell";
+import { createShellState } from "../../../src/common/lib/shell";
 import {
   activeSessionOf,
   activeWindowOf,

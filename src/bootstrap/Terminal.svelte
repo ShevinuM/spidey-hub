@@ -44,7 +44,7 @@
   import type { ViewId } from "../common/lib/views";
   import { pathToView, viewIdToProgram } from "../common/lib/views";
   import type { PaneDirection } from "../common/engines/tmux/tmux";
-  import type { ShellMode } from "../lib/shell";
+  import type { ShellMode } from "../common/lib/shell";
   import { TerminalState, DEFAULT_SESSION_NAME } from "./terminalState.svelte";
   import Wallpaper from "../common/components/Wallpaper.svelte";
   import StatusBar from "../common/components/StatusBar.svelte";

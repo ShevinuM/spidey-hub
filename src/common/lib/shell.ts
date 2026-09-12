@@ -12,8 +12,8 @@
 // (`mode: "host"`) without rework — every function below already takes
 // `mode` where it matters (the prompt, and the `tmux` builtin's
 // nesting-refusal rule).
-import type { ShellData } from "../common/lib/data";
-import { formatCtime } from "../common/lib/clock";
+import type { ShellData } from "./data";
+import { formatCtime } from "./clock";
 
 // ---------------------------------------------------------------------
 // State

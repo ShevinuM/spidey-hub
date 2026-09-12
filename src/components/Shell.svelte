@@ -40,7 +40,7 @@
     type ShellEffect,
     type ShellMode,
     type FsEntry,
-  } from "../lib/shell";
+  } from "../common/lib/shell";
   import { loadFsIndex, loadGrepFiles, loadRepoIndex } from "../lib/shellIndex";
   import { repoFileText, type TokenSpan } from "../common/lib/repo-tree";
   import { pushPasteTarget, removePasteTarget } from "../common/lib/paste-targets";

@@ -164,7 +164,7 @@ export function parseExCommand(cmd: string): ExCommand {
 
 /** The 7 preset names `select-layout` accepts. Deliberately its OWN small
  * literal list, not an import of
- * src/common/engines/tmux/tmux.ts's `LAYOUT_NAMES` — mirrors src/lib/shell.ts's documented
+ * src/common/engines/tmux/tmux.ts's `LAYOUT_NAMES` — mirrors src/common/lib/shell.ts's documented
  * decoupling convention (that file's own `pickMostRecentUnattached` comment:
  * these small pure modules stay independent of tmux.ts's shape, duplicating
  * a short constant rather than adding a cross-module dependency). */

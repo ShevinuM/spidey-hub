@@ -44,8 +44,8 @@ import {
   splitPane,
   windowOfPane,
 } from "../common/engines/tmux/tmux";
-import type { SessionRosterEntry, ShellLineKind } from "../lib/shell";
-import { seedHostNarrative } from "../lib/shell";
+import type { SessionRosterEntry, ShellLineKind } from "../common/lib/shell";
+import { seedHostNarrative } from "../common/lib/shell";
 import { resolvePageEpoch } from "../common/lib/clock";
 import { getPasteBuffer } from "../common/lib/paste-buffer";
 import { getActivePasteTarget } from "../common/lib/paste-targets";
@@ -253,7 +253,7 @@ export class TerminalState {
   });
 
   /** Every session the client
-   * currently knows about, in the exact shape src/lib/shell.ts's
+   * currently knows about, in the exact shape src/common/lib/shell.ts's
    * `RunContext.sessions` wants — computed fresh on every keystroke/render
    * so `tmux ls`/`new`/`a`/`attach`'s validation always sees the live
    * roster. Threaded to BOTH pane-mode Shell instances (via PaneTree) and

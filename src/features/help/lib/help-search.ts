@@ -18,7 +18,7 @@
 //   - "keymap" entries: every row of every help scope (src/features/help/
 //     content/*.md, one file per scope), PLUS every row of src/data/shell.yaml's
 //     own `help.rows` (the in-window shell's `cd`/`ls`/`cat`/.../
-//     `neofetch`/`sudo`/... — see src/lib/shell.ts's `runCommand` "help"
+//     `neofetch`/`sudo`/... — see src/common/lib/shell.ts's `runCommand` "help"
 //     case, which prints this exact same list inside the shell itself) —
 //     INFORMATIONAL ONLY (Enter no-ops; see HelpSearch.svelte), same shape
 //     as a help row (`{label, description}`), sourced from shell.yaml

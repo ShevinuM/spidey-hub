@@ -27,7 +27,7 @@ import {
   type RunContext,
   type SessionRosterEntry,
   type ShellState,
-} from "../../src/lib/shell";
+} from "../../src/common/lib/shell";
 import type { ShellData } from "../../src/common/lib/data";
 import { formatCtime } from "../../src/common/lib/clock";
 

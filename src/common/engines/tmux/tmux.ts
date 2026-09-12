@@ -13,7 +13,7 @@
 // is byte-for-byte reproducible and every id is stable within a given tree
 // shape.
 
-import { createShellState, type ShellLine, type ShellState } from "../../../lib/shell";
+import { createShellState, type ShellLine, type ShellState } from "../../lib/shell";
 
 /** A pane's currently-running program. "shell" is the in-window shell a
  * program's `:q` drops back to (real tmux's own semantics: a pane's default
@@ -785,7 +785,7 @@ export function detachClient(client: Client): void {
  * program in yet). Does NOT attach on its own; the caller pairs this with
  * `attachSession()` immediately after, matching real tmux's combined
  * create-and-attach. `name` must already be validated (non-duplicate) by
- * the caller (src/lib/shell.ts's own `runCommand` — duplicate-name
+ * the caller (src/common/lib/shell.ts's own `runCommand` — duplicate-name
  * rejection needs the exact `duplicate session: {name}` string, which lives
  * in shell.yaml, not here). */
 export function createSession(client: Client, name: string, epoch: number): Session {

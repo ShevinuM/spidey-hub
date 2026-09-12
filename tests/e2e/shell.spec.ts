@@ -14,7 +14,7 @@ import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
-import { listDir, renderTree, type FsEntry } from "../../src/lib/shell.ts";
+import { listDir, renderTree, type FsEntry } from "../../src/common/lib/shell";
 
 const ROOT = join(import.meta.dirname, "../..");
 

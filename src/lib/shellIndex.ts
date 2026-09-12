@@ -13,7 +13,7 @@
 // switching away and back) reuses the same settled promise — a genuine
 // singleton cache for the lifetime of the page, matching GrepOverlay's own
 // "fetched once, kept forever" contract.
-import type { FsEntry } from "./shell.ts";
+import type { FsEntry } from "../common/lib/shell.ts";
 import type { RepoFile, RepoIndex } from "../common/lib/repo-tree";
 
 export type { RepoFile };
