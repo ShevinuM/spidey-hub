@@ -38,8 +38,9 @@ import HelpHarness from "../../features/help/tests/ui/harness/HelpHarness.svelte
 import BootSequence from "../../features/boot/components/BootSequence.svelte";
 import NotificationsHarness from "../../features/notifications/tests/ui/harness/NotificationsHarness.svelte";
 import DashboardHarness from "../../features/dashboard/tests/ui/harness/DashboardHarness.svelte";
+import EmploymentHarness from "../../features/employment/tests/ui/harness/EmploymentHarness.svelte";
 import { getCollection } from "astro:content";
-import { buildProfile, buildHelp, buildBoot, buildNotifications, getHelpSearch, getCmdline, getShell, getDashboard } from "../../common/lib/data";
+import { buildProfile, buildHelp, buildBoot, buildNotifications, getHelpSearch, getCmdline, getShell, getDashboard, getPersonnel } from "../../common/lib/data";
 
 export async function getStaticPaths() {
   if (process.env.PORTFOLIO_FIXTURES !== "1") return [];
@@ -49,6 +50,7 @@ export async function getStaticPaths() {
     { params: { feature: "boot" } },
     { params: { feature: "notifications" } },
     { params: { feature: "dashboard" } },
+    { params: { feature: "employment" } },
   ];
 }
 
@@ -62,6 +64,8 @@ const shell = feature === "help" ? getShell() : undefined;
 const boot = feature === "boot" ? buildBoot(await getCollection("boot")) : undefined;
 const notifications = feature === "notifications" ? buildNotifications(await getCollection("notifications")) : undefined;
 const dashboard = feature === "dashboard" ? getDashboard() : undefined;
+const personnel = feature === "employment" ? getPersonnel() : undefined;
+const personnelEntries = feature === "employment" ? await getCollection("personnel") : undefined;
 ---
 
 <Layout title={`Harness: ${feature} — shevinum.dev`}>
@@ -106,5 +110,19 @@ const dashboard = feature === "dashboard" ? getDashboard() : undefined;
     // synthetic isFocused/windowNumbers/paneCount/onSelect props a
     // kernel-free mount has no live tmux state to derive them from.
     feature === "dashboard" && dashboard !== undefined && <DashboardHarness client:load {dashboard} />
+  }
+  {
+    // Wrapped (not mounted directly): EmploymentRecords.svelte itself
+    // attaches no keydown listener of its own — Terminal.svelte/
+    // PaneTree.svelte own the generic per-pane-ref keydown delegation that
+    // routes into its exported `handleKey()` — so this harness needs
+    // EmploymentHarness.svelte to reproduce that one piece of
+    // cross-component routing (see its own header comment). The `personnel`
+    // collection fixture-switches itself under PORTFOLIO_FIXTURES=1
+    // (content.config.ts's own `base:` ternary), so no special fixture
+    // handling is needed here beyond the two data fetches above.
+    feature === "employment" &&
+      personnel !== undefined &&
+      personnelEntries !== undefined && <EmploymentHarness client:load {personnel} {personnelEntries} />
   }
 </Layout>
