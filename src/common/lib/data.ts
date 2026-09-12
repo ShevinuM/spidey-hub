@@ -4,7 +4,7 @@
 // props; Svelte islands never read the filesystem themselves. Kernel-owned
 // yaml (site/cmdline/choosetree/tracker) lives in `src/common/content/`; a feature
 // with its own bounded context keeps its yaml beside its own content (e.g.
-// `src/features/help/content/help.yaml`); every other feature's yaml still
+// `src/features/help/content/help.yaml`); only `shell.yaml` still
 // lives in `src/data/` — every one of these is read from its own explicit
 // `?raw` import below, one per file, not a glob.
 //
@@ -23,7 +23,7 @@ import siteRaw from "../content/site.yaml?raw";
 import dashboardRaw from "../../features/dashboard/content/dashboard.yaml?raw";
 import trackerRaw from "../content/tracker.yaml?raw";
 import repositoriesRaw from "../../features/repositories/content/repositories.yaml?raw";
-import grepRaw from "../../data/grep.yaml?raw";
+import grepRaw from "../../features/grep/content/grep.yaml?raw";
 import personnelRaw from "../../features/employment/content/personnel.yaml?raw";
 import helpRaw from "../../features/help/content/help.yaml?raw";
 import bootRaw from "../../features/boot/content/boot.yaml?raw";

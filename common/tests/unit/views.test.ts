@@ -92,7 +92,7 @@ test("variable-depth personnel content paths (path-derived tree) route to employ
 });
 
 test("fixture-only legacy paths (all under src/) never route via the bare-word fallback", () => {
-  // fixtures/grep-index.json's own paths, gated out because they live
+  // src/features/grep/tests/ui/support/grep-index.json's own paths, gated out because they live
   // under src/ — the real rules above own that prefix unconditionally, so
   // these fall through to null rather than the prototype's original
   // bare-word regex (which has zero test coverage anyway — the visual

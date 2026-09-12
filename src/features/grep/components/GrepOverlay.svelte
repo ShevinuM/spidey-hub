@@ -34,7 +34,7 @@
   // swapped, not the path itself: `pnpm generate` writes the real 71-file
   // site-source index there for a normal build, while `pnpm build:fixtures`
   // (package.json) overwrites the built copy with the fixture's verbatim
-  // 24-file prototype snapshot (`cp fixtures/grep-index.json
+  // 24-file prototype snapshot (`cp src/features/grep/tests/ui/support/grep-index.json
   // dist/generated/grep-index.json`) as its very last step. This means the
   // exact same JS bundle runs in both goldens and production — only the
   // JSON payload differs — at the cost of `astro dev` with

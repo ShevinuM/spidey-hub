@@ -113,7 +113,7 @@ export function viewToTmuxBinding(view: ViewId, windowNumbers: Record<string, nu
  * generate.mjs actually produces, so they can only ever match the specific
  * components/content directories named above, not an incidental substring.
  *
- * The prototype's own fixture-style paths (fixtures/grep-index.json, used
+ * The prototype's own fixture-style paths (src/features/grep/tests/ui/support/grep-index.json, used
  * only by the visual-regression recipes, which never press Enter — see
  * that file's own paths: src/pages/xp.astro, src/pages/projects.astro,
  * src/components/Tracker.svelte, src/components/Radar.svelte, src/content/

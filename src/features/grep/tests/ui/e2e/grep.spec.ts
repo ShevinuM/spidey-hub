@@ -8,7 +8,7 @@
 // numeric assertion below (file counts, hit counts, counter text) is
 // computed from that file at test time via the same `search`/`formatCount`
 // port the component itself uses (src/features/grep/lib/grep.ts, already unit-tested in
-// tests/unit/grep.test.ts) — never hardcoded — so this suite can't drift
+// src/features/grep/tests/unit/grep.test.ts) — never hardcoded — so this suite can't drift
 // from the index's real contents as the site's own source grows.
 import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
 // This spec's `context` fixture (imported
