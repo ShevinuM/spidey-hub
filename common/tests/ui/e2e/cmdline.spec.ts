@@ -22,7 +22,7 @@ import { expect, test, type Page } from "../support/fixtures";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
-import { search, formatCount, type RepoFile } from "../../../../src/lib/grep";
+import { search, formatCount, type RepoFile } from "../../../../src/features/grep/lib/grep";
 
 const ROOT = join(import.meta.dirname, "../../../..");
 

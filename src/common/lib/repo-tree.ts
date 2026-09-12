@@ -46,7 +46,7 @@ export interface TreeEntry {
   type: TreeEntryType;
   /** Segment name only (no slashes), e.g. "lib" or "grep.ts". */
   name: string;
-  /** Full posix path from the repo root, e.g. "src/lib" or "src/lib/grep.ts". */
+  /** Full posix path from the repo root, e.g. "src/lib" or "src/features/grep/lib/grep.ts". */
   path: string;
 }
 

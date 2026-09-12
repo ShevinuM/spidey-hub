@@ -7,7 +7,7 @@
 // file here reflects exactly what the served `dist/` copy contains. Every
 // numeric assertion below (file counts, hit counts, counter text) is
 // computed from that file at test time via the same `search`/`formatCount`
-// port the component itself uses (src/lib/grep.ts, already unit-tested in
+// port the component itself uses (src/features/grep/lib/grep.ts, already unit-tested in
 // tests/unit/grep.test.ts) — never hardcoded — so this suite can't drift
 // from the index's real contents as the site's own source grows.
 import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
@@ -19,7 +19,7 @@ import { expect, test, type Page } from "../../../../../../common/tests/ui/suppo
 // rather than a per-goto-helper change.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { search, formatCount, type RepoFile } from "../../../../../lib/grep";
+import { search, formatCount, type RepoFile } from "../../../lib/grep";
 
 const ROOT = join(import.meta.dirname, "../../../../../..");
 
@@ -75,12 +75,12 @@ test.describe("Grep overlay", () => {
     await expect(page.locator('[data-testid="profile-signal-row"]')).toBeVisible();
   });
 
-  test("typing filters the results — 'grep.ts' finds src/lib/grep.ts by path", async ({ page }) => {
+  test("typing filters the results — 'grep.ts' finds src/features/grep/lib/grep.ts by path", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
     await page.keyboard.type("grep.ts");
     await expect(queryText(page)).toContainText("grep.ts");
-    await expect(rowByPath(page, "src/lib/grep.ts")).toBeVisible();
+    await expect(rowByPath(page, "src/features/grep/lib/grep.ts")).toBeVisible();
   });
 
   test("counter format for a live query matches the real index (hits/totalLines)", async ({ page }) => {

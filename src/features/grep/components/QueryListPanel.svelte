@@ -1,9 +1,6 @@
 <script lang="ts">
-  // Left pane: query prompt + result list — moved out of GrepOverlay.svelte
-  // during the folder+state-class relocation refactor. Pure relocation:
-  // same DOM, testids, classes, and inline styles as the original inline
-  // markup.
-  import type { GrepData } from "../../common/lib/data";
+  // Left pane: query prompt + result list.
+  import type { GrepData } from "../../../common/lib/data";
   import type { GrepOverlayState, Row } from "./grepOverlayState.svelte";
 
   interface Props {

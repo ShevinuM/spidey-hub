@@ -1,8 +1,5 @@
 <script lang="ts">
-  // Right pane: matched-file preview — moved out of GrepOverlay.svelte
-  // during the folder+state-class relocation refactor. Pure relocation:
-  // same DOM, testids, classes, and inline styles as the original inline
-  // markup.
+  // Right pane: matched-file preview.
   import type { GrepOverlayState } from "./grepOverlayState.svelte";
 
   interface Props {

@@ -66,7 +66,7 @@ export function parseLine(line: string): ParsedLine {
 
 // ---------------------------------------------------------------------
 // fs-index navigation — a FLAT {path, size?}[] list (same shape convention
-// as src/common/lib/repo-tree.ts's RepoFile / src/lib/grep.ts's RepoFile: this
+// as src/common/lib/repo-tree.ts's RepoFile / src/features/grep/lib/grep.ts's RepoFile: this
 // module stays a zero-Svelte-dependency pure module, so it declares its own
 // structurally-equivalent type rather than importing theirs). `size` is
 // absent for `repos/*` entries — those subtrees are paths only, taken from
