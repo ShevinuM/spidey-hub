@@ -22,7 +22,7 @@
 // hazard this repo's test-infra rules exist to prevent; both halves keep
 // their own copy.
 import { expect, test, type Page } from "@playwright/test";
-import { BOOT_SEEN_STORAGE_KEY } from "../../../../boot/lib/boot-state";
+import { BOOT_SEEN_STORAGE_KEY } from "../../../../../../common/tests/ui/support/fixtures";
 
 /** Same boot-skip contract common/tests/ui/support/pipeline.mjs's `captureState()`
  * uses (pre-seed via `addInitScript`, before any navigation) — this file

@@ -127,7 +127,7 @@ filePreview:
 # for personnel role docs); every
 # caller passes its own labels object sourced from its own data file. This is
 # the Repositories caller's copy of those literal strings — identical wording to
-# personnel.yaml's `editor:` section (src/data/personnel.yaml) because both
+# personnel.yaml's `editor:` section (src/features/employment/content/personnel.yaml) because both
 # reproduce the same prototype markup (Homepage.dc.html lines 317-336:
 # "NORMAL", "⑂ main"), not because the two data files share storage.
 #

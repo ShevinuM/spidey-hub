@@ -74,3 +74,7 @@ export const test = base.extend<{ context: BrowserContext }>({
 });
 
 export { expect, type Page, type BrowserContext };
+// Re-exported so specs that need only the boot-skip sessionStorage key (not
+// this module's wrapped `test`/`context`) can import it through this
+// common/ surface instead of reaching into a feature's own lib directly.
+export { BOOT_SEEN_STORAGE_KEY };
