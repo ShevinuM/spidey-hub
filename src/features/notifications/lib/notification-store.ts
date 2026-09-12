@@ -162,10 +162,10 @@ export function mulberry32(seed: number): () => number {
 
 // ---------------------------------------------------------------------------
 // Injection: each visit injects up to 2 unseen pool entries, chosen
-// randomly by id. Once every pool entry has been seen (Decision 6), a visit
-// instead re-circulates the single oldest archived (never spam-folder)
-// entry back to the inbox as a fresh unread item — only once the archive is
-// ALSO empty (or holds spam only) does a visit inject nothing.
+// randomly by id. Once every pool entry has been seen, a visit instead
+// re-circulates the single oldest archived (never spam-folder) entry back
+// to the inbox as a fresh unread item — only once the archive is ALSO
+// empty (or holds spam only) does a visit inject nothing.
 // ---------------------------------------------------------------------------
 
 /** Picks up to `count` entries from `pool` whose `id` isn't in `seenIds`,
@@ -195,8 +195,9 @@ export function pickRandomUnseen(
  * the archive is empty — spam-folder items are never candidates, so a
  * spam-only archive also returns `null`. Ties broken by array order (the
  * first item at the minimum `ts` wins), so the result is deterministic for
- * a given input. Used by `injectVisit`'s pool-exhaustion re-circulation
- * (Decision 6). */
+ * a given input. Used by `injectVisit`'s pool-exhaustion fallback: once
+ * every pool entry has been seen, this entry is what gets recirculated
+ * back to the inbox instead of a fresh pick. */
 export function oldestArchivedEntry(items: readonly NotificationItem[]): NotificationItem | null {
   let oldest: NotificationItem | null = null;
   for (const i of items) {
@@ -212,9 +213,9 @@ export function oldestArchivedEntry(items: readonly NotificationItem[]): Notific
  * never for anything already in `state`).
  *
  * Once every pool entry has already been seen, this instead re-circulates
- * (Decision 6) the single oldest archived entry: it's moved back to the
- * inbox, marked unread, restamped `now`, and returned in `injected` exactly
- * like a fresh pool pick — so the caller spawns a toast for it too. Spam-
+ * the single oldest archived entry: it's moved back to the inbox, marked
+ * unread, restamped `now`, and returned in `injected` exactly like a fresh
+ * pool pick — so the caller spawns a toast for it too. Spam-
  * folder entries are never eligible, so a spam-only (or empty) archive
  * falls through to the final no-op case: `state` unchanged, `injected: []`. */
 export function injectVisit(

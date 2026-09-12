@@ -5,8 +5,9 @@
 // `OUT_MS`) was still hiding it — an info (3s) or warn (5s) toast could
 // fully expire before the visitor ever saw the dashboard.
 //
-// Deliberately imports the RAW `@playwright/test` (not ./fixtures.ts), same
-// reason tests/e2e/boot.spec.ts does: the shared `context` fixture
+// Deliberately imports the RAW `@playwright/test` (not
+// common/tests/ui/support/fixtures.ts), same reason
+// src/features/boot/tests/ui/e2e/boot.spec.ts does: the shared `context` fixture
 // pre-seeds the boot-seen sessionStorage flag for every other spec
 // specifically so boot never runs during THEIR tests — this file exists to
 // exercise the real first-visit interaction between boot and toasts, which

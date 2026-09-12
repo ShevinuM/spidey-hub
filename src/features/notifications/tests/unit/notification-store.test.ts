@@ -177,7 +177,9 @@ test("injectVisit: never re-injects an id already present in state", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Decision 6: pool-exhaustion re-circulation
+// Pool-exhaustion re-circulation: once every pool entry has been seen,
+// injectVisit revives the oldest archived (non-spam) entry back to the
+// inbox instead of picking a fresh one from the pool.
 // ---------------------------------------------------------------------------
 
 test("oldestArchivedEntry: returns null when nothing is archived", () => {

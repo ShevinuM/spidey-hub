@@ -1,13 +1,13 @@
 // Behavioral e2e suite for the signal-inbox bell/panel/toast system
-// (src/components/Notifications.svelte, backed by
+// (src/features/notifications/components/Notifications.svelte, backed by
 // src/features/notifications/lib/notification-store.ts) — Mockup B, dashboard-view only. Covers:
 // badge/toast injection on a fresh visit, open/close via bell click/n/Esc,
 // tab switching (including the alerts-tab derived filter), read/unread
 // toggling, dismiss semantics per folder, mark-as-spam, mark-all-read,
 // read/unread/spam/archive persistence ACROSS RELOAD via localStorage, the
 // 2-new-per-visit pool injection, and toast auto-dismiss/hover-pause via the
-// shortened test-duration hook (tests/e2e/fixtures.ts) rather than sleeping
-// through the real severity timers.
+// shortened test-duration hook (common/tests/ui/support/fixtures.ts) rather
+// than sleeping through the real severity timers.
 import { join } from "node:path";
 import { expect, test, E2E_NOTIFICATIONS_INJECT_SEED, E2E_TOAST_DURATION_SCALE, type Page } from "../../../../../../common/tests/ui/support/fixtures";
 import { mulberry32, pickRandomUnseen, TOAST_DURATION_MS, type NotificationSeverity, type PoolEntry } from "../../../lib/notification-store";
@@ -38,8 +38,8 @@ const POOL = loadPool();
 
 /** What the FIRST visit injects, computed the exact same way
  * injectVisit()/pickRandomUnseen() does, against the fixed seed
- * tests/e2e/fixtures.ts pre-seeds for every test in this file — no
- * notification copy is hardcoded here (content-purity), same convention the
+ * common/tests/ui/support/fixtures.ts pre-seeds for every test in this file —
+ * no notification copy is hardcoded here (content-purity), same convention the
  * old toast spec followed. */
 const [firstA, firstB] = pickRandomUnseen(POOL, new Set(), 2, mulberry32(E2E_NOTIFICATIONS_INJECT_SEED));
 
@@ -327,7 +327,7 @@ test.describe("signal inbox: toast auto-dismiss + hover-pause", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  // tests/e2e/fixtures.ts pre-seeds a duration-scale override
+  // common/tests/ui/support/fixtures.ts pre-seeds a duration-scale override
   // (E2E_TOAST_DURATION_SCALE) so even the longest (alert, 10s) severity
   // timer resolves in a few seconds — no sleeping through the real
   // durations, and no page.clock (CSS `drain` runs on real wall-clock time,

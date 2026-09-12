@@ -39,11 +39,8 @@
 </div>
 
 <style>
-  /* -global- keeps this keyframe resolvable from the inline `animation:`
-     reference above: Svelte scopes a plain `@keyframes` declared in a
-     component <style> block by renaming it, but never rewrites an
-     `animation:` value written in markup, so the inline reference would
-     otherwise point at a name that no longer exists. */
+  /* Why -global- is needed here: see NotificationsPanel.svelte's
+     "-global- keeps this keyframe resolvable..." comment. */
   @keyframes -global-senseRing {
     0% {
       transform: scale(0.7);
@@ -59,13 +56,9 @@
       animation: none !important;
     }
   }
-  /* Base declarations for properties a :hover rule below also sets are kept
-     out of each element's inline `style` on purpose — an inline style
-     declaration always wins the cascade over a stylesheet rule for the same
-     property (short of `!important`), so a hover rule can only ever take
-     effect on a property the inline style never touches. This mirrors the
-     row/tab hover convention already used in Repositories.svelte, Dashboard.svelte
-     and EmploymentRecords.svelte. */
+  /* Why hover-only properties are kept out of the inline `style` above: see
+     NotificationsPanel.svelte's "Base declarations for properties a :hover
+     rule below also sets..." comment. */
   .eh-bell {
     background: rgba(13, 15, 18, 0.85);
     border: 1px solid rgba(229, 72, 77, 0.45);

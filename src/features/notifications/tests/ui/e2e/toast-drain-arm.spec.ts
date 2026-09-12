@@ -12,8 +12,10 @@
 //     info 3000ms shortest) is fully or mostly drained, sometimes to 0%,
 //     well before the visitor can look at it.
 //
-// Deliberately imports the RAW `@playwright/test` (not ./fixtures.ts), same
-// reason tests/e2e/boot.spec.ts and tests/e2e/notifications-boot.spec.ts
+// Deliberately imports the RAW `@playwright/test` (not
+// common/tests/ui/support/fixtures.ts), same reason
+// src/features/boot/tests/ui/e2e/boot.spec.ts and
+// src/features/notifications/tests/ui/e2e/notifications-boot.spec.ts
 // do: the shared `context` fixture pre-seeds the boot-seen sessionStorage
 // flag for every other spec specifically so boot never runs during THEIR
 // tests — this file needs the real, unskipped boot.
