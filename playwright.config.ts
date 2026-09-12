@@ -484,6 +484,38 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
+    // `shell-fs`: shell.spec.ts ported out of `legacy` — one project per
+    // viewport, same reasoning as `employment-<viewport>`/
+    // `repositories-<viewport>`/`grep-<viewport>` above.
+    ...viewports.map((viewport) => ({
+      name: `shell-fs-${viewport.name}`,
+      testDir: "./src/features/shell-fs/tests/ui/e2e",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+      },
+    })),
+    // `shell-fs-visual`: the 2 recipes shell-fs owns ("16-shell",
+    // "17-host-shell"), moved out of the viewport-named visual projects
+    // above (and out of tests/visual/identical.spec.ts's
+    // SPLIT_OWNED_RECIPE_NAMES filter). Same split-project shape as
+    // common's/profile's/help's/boot's/notifications'/dashboard's/
+    // employment's/repositories'/grep's entries above: its own
+    // `snapshotPathTemplate` hardcodes the viewport as a literal rather
+    // than deriving it from `{projectName}`, because each viewport's
+    // goldens must resolve to their own fixed directory regardless of
+    // which project name renders them.
+    ...viewports.map((viewport) => ({
+      name: `shell-fs-visual-${viewport.name}`,
+      testDir: "./src/features/shell-fs/tests/ui/visual",
+      snapshotPathTemplate: `src/features/shell-fs/tests/ui/visual/goldens/${viewport.name}/{arg}{ext}`,
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: 1,
+      },
+    })),
   ],
   webServer: [
     {

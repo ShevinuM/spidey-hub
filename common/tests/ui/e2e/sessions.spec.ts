@@ -3,7 +3,7 @@
 // `mode: "host"`) over the dimmed radar, its `tmux ls`/`new [-s name]`/
 // `a [-t name]`/`edith`/`open <view>` builtins, the kill-cascade rules that
 // destroy a session outright once its last window dies, and the host `exit`
-// (`logout` + reload). Companion to tests/e2e/shell.spec.ts (the in-window
+// (`logout` + reload). Companion to src/features/shell-fs/tests/ui/e2e/shell.spec.ts (the in-window
 // shell) and common/tests/ui/e2e/tmux.spec.ts (the prefix state machine, including its
 // own updated "w/0 still go home, d now detaches" and "[exited]" cascade
 // coverage) — this file is the one that actually exercises SESSIONS.

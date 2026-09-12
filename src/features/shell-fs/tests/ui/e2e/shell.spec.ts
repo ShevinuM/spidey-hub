@@ -10,13 +10,13 @@
 // reboot's factory-reset of BOTH the tmux client and every pane's shell
 // buffer, and the window-chrome delegation contract ("?"/":" type into a
 // focused shell instead of opening HelpSearch/Cmdline/Grep).
-import { expect, test, type Page } from "../../common/tests/ui/support/fixtures.ts";
+import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
-import { listDir, renderTree, type FsEntry } from "../../src/common/lib/shell";
+import { listDir, renderTree, type FsEntry } from "../../../../../common/lib/shell";
 
-const ROOT = join(import.meta.dirname, "../..");
+const ROOT = join(import.meta.dirname, "../../../../../..");
 
 // Reboot replays the real (unskippable) boot sequence with real wall-clock
 // timers — a MANUAL trigger independent of the boot-seen sessionStorage flag
@@ -405,7 +405,7 @@ test.describe("reboot factory-resets the tmux client AND every pane's shell stat
   });
 
   // The old amber toast system's "reboot clears in-memory dismissals" case
-  // is retired along with it — see tests/e2e/notifications.spec.ts's own
+  // is retired along with it — see src/features/notifications/tests/ui/e2e/notifications.spec.ts's own
   // reboot-closes-the-panel coverage for the Mockup-B replacement.
 });
 

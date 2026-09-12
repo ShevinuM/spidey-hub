@@ -104,6 +104,8 @@ const SPLIT_OWNED_RECIPE_NAMES = new Set([
   "12-all-projects",
   "09-grep-empty",
   "10-grep-query",
+  "16-shell",
+  "17-host-shell",
 ]);
 const keyRecipes = [...recipes, ...extraRecipes, ...cmdlineRecipes, ...iteration3Recipes, ...notificationsRecipes].filter(
   (recipe) => !SPLIT_OWNED_RECIPE_NAMES.has(recipe.name),

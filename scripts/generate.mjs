@@ -344,7 +344,7 @@ const FS_INDEX_SKIP_DIRS = new Set([
 
 const FS_INDEX_SKIP_FILES = new Set([".DS_Store"]);
 
-const FS_INDEX_SUBDIRS = ["src", "public", "fixtures", "scripts", "tests"];
+const FS_INDEX_SUBDIRS = ["src", "public", "scripts", "tests"];
 
 /**
  * Recursively walks `dir`, pushing {path, size} entries (path relative to
