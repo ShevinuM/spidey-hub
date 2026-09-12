@@ -42,9 +42,7 @@ export default defineConfig({
     // Root smoke tier (e2e-testing.md R016/R017): broad, shallow,
     // whole-app health checks — the pre-merge gate. Runs at the same
     // primary viewport/device config as every context/feature project
-    // below (the `legacy` project this comment used to point at emptied
-    // and was deleted in phase 11 — every spec it held is now ported into
-    // its own context/feature project).
+    // below.
     {
       name: "smoke",
       testDir: "./tests/ui/smoke",
@@ -68,8 +66,8 @@ export default defineConfig({
       },
     })),
     // `common` (D10/D20): the 12 kernel+editor specs phase 02 ported out of
-    // `legacy` — one project per viewport, same reasoning as `legacy-<viewport>`
-    // above (a Playwright project is 1:1 with one `use` config, so two
+    // `legacy` — one project per viewport, same reasoning as `common-visual-<viewport>`
+    // below (a Playwright project is 1:1 with one `use` config, so two
     // viewports can't share one project name).
     ...viewports.map((viewport) => ({
       name: `common-${viewport.name}`,

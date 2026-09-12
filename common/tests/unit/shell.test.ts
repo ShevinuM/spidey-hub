@@ -27,9 +27,9 @@ import {
   type RunContext,
   type SessionRosterEntry,
   type ShellState,
-} from "../../../../common/lib/shell";
-import type { ShellData } from "../../../../common/lib/data";
-import { formatCtime } from "../../../../common/lib/clock";
+} from "../../../src/common/lib/shell";
+import type { ShellData } from "../../../src/common/lib/data";
+import { formatCtime } from "../../../src/common/lib/clock";
 
 const FS: FsEntry[] = [
   { path: "package.json", size: 100 },
