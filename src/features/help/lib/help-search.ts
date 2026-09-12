@@ -16,7 +16,7 @@
 //     (site-mode `:q`/cmdline `q` exits the active pane's program to a
 //     shell — it does not kill the window), same as every other command.
 //   - "keymap" entries: every row of every help scope (src/features/help/
-//     content/*.md, one file per scope), PLUS every row of src/data/shell.yaml's
+//     content/*.md, one file per scope), PLUS every row of src/features/shell-fs/content/shell.yaml's
 //     own `help.rows` (the in-window shell's `cd`/`ls`/`cat`/.../
 //     `neofetch`/`sudo`/... — see src/common/lib/shell.ts's `runCommand` "help"
 //     case, which prints this exact same list inside the shell itself) —

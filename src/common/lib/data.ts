@@ -4,15 +4,15 @@
 // props; Svelte islands never read the filesystem themselves. Kernel-owned
 // yaml (site/cmdline/choosetree/tracker) lives in `src/common/content/`; a feature
 // with its own bounded context keeps its yaml beside its own content (e.g.
-// `src/features/help/content/help.yaml`); only `shell.yaml` still
-// lives in `src/data/` — every one of these is read from its own explicit
+// `src/features/help/content/help.yaml`, `src/features/shell-fs/content/shell.yaml`)
+// — every one of these is read from its own explicit
 // `?raw` import below, one per file, not a glob.
 //
 // Each file is a static `?raw` import (inlined as a string by Vite at
 // build time) rather than a runtime `node:fs` read relative to
 // `import.meta.url`: Astro's static build bundles this module into
-// `dist/.prerender/chunks/`, which moves it well away from `src/data/` on
-// disk, so a `readFileSync(dirname(import.meta.url) + "../data/...")` path
+// `dist/.prerender/chunks/`, which moves it well away from `src/features/*/content/` on
+// disk, so a `readFileSync(dirname(import.meta.url) + "../features/.../content/...")` path
 // resolves under `dist/` and 404s (ENOENT) exactly once real pages start
 // calling these getters. `?raw` imports have no such problem: Vite resolves
 // and inlines the file content at the *import's* location during bundling,
@@ -30,7 +30,7 @@ import bootRaw from "../../features/boot/content/boot.yaml?raw";
 import cmdlineRaw from "../content/cmdline.yaml?raw";
 import helpsearchRaw from "../../features/help/content/helpsearch.yaml?raw";
 import notificationsRaw from "../../features/notifications/content/notifications.yaml?raw";
-import shellRaw from "../../data/shell.yaml?raw";
+import shellRaw from "../../features/shell-fs/content/shell.yaml?raw";
 import choosetreeRaw from "../content/choosetree.yaml?raw";
 
 const RAW: Record<string, string> = {

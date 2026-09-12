@@ -46,7 +46,7 @@ interface ShellYaml {
 }
 
 function loadShellYaml(): ShellYaml {
-  return YAML.parse(readFileSync(join(ROOT, "src/data/shell.yaml"), "utf8")) as ShellYaml;
+  return YAML.parse(readFileSync(join(ROOT, "src/features/shell-fs/content/shell.yaml"), "utf8")) as ShellYaml;
 }
 
 function loadFsIndex(): FsEntry[] {

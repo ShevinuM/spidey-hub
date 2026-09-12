@@ -1,9 +1,9 @@
 // Unit tests for the pure shell parser/builtins/fs-navigation logic
-// — src/lib/shell.ts. No DOM, no fetch: a
+// — src/common/lib/shell.ts. No DOM, no fetch: a
 // small fixture fs index + a hand-built ShellData-shaped fixture (same
 // "structurally equivalent fixture, not the real yaml" convention
 // tests/unit/cmdline.test.ts already uses) stand in for the generated
-// index and src/data/shell.yaml.
+// index and src/features/shell-fs/content/shell.yaml.
 import { expect, test } from "vitest";
 import {
   backspace,

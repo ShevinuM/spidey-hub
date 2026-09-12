@@ -4,7 +4,7 @@
 // `a [-t name]`/`edith`/`open <view>` builtins, the kill-cascade rules that
 // destroy a session outright once its last window dies, and the host `exit`
 // (`logout` + reload). Companion to tests/e2e/shell.spec.ts (the in-window
-// shell) and tests/e2e/tmux.spec.ts (the prefix state machine, including its
+// shell) and common/tests/ui/e2e/tmux.spec.ts (the prefix state machine, including its
 // own updated "w/0 still go home, d now detaches" and "[exited]" cascade
 // coverage) — this file is the one that actually exercises SESSIONS.
 import { expect, test, type Page } from "../support/fixtures";
@@ -28,7 +28,7 @@ interface ShellYaml {
 }
 
 function loadShellYaml(): ShellYaml {
-  return YAML.parse(readFileSync(join(ROOT, "src/data/shell.yaml"), "utf8")) as ShellYaml;
+  return YAML.parse(readFileSync(join(ROOT, "src/features/shell-fs/content/shell.yaml"), "utf8")) as ShellYaml;
 }
 
 const shellYaml = loadShellYaml();
