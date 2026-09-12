@@ -37,8 +37,9 @@ import Profile from "../../features/profile/components/Profile.svelte";
 import HelpHarness from "../../features/help/tests/ui/harness/HelpHarness.svelte";
 import BootSequence from "../../features/boot/components/BootSequence.svelte";
 import NotificationsHarness from "../../features/notifications/tests/ui/harness/NotificationsHarness.svelte";
+import DashboardHarness from "../../features/dashboard/tests/ui/harness/DashboardHarness.svelte";
 import { getCollection } from "astro:content";
-import { buildProfile, buildHelp, buildBoot, buildNotifications, getHelpSearch, getCmdline, getShell } from "../../common/lib/data";
+import { buildProfile, buildHelp, buildBoot, buildNotifications, getHelpSearch, getCmdline, getShell, getDashboard } from "../../common/lib/data";
 
 export async function getStaticPaths() {
   if (process.env.PORTFOLIO_FIXTURES !== "1") return [];
@@ -47,6 +48,7 @@ export async function getStaticPaths() {
     { params: { feature: "help" } },
     { params: { feature: "boot" } },
     { params: { feature: "notifications" } },
+    { params: { feature: "dashboard" } },
   ];
 }
 
@@ -59,6 +61,7 @@ const cmdline = feature === "help" ? getCmdline() : undefined;
 const shell = feature === "help" ? getShell() : undefined;
 const boot = feature === "boot" ? buildBoot(await getCollection("boot")) : undefined;
 const notifications = feature === "notifications" ? buildNotifications(await getCollection("notifications")) : undefined;
+const dashboard = feature === "dashboard" ? getDashboard() : undefined;
 ---
 
 <Layout title={`Harness: ${feature} — shevinum.dev`}>
@@ -93,5 +96,15 @@ const notifications = feature === "notifications" ? buildNotifications(await get
     // it hardcodes `fixtureMode={false}` rather than deriving it from
     // `PORTFOLIO_FIXTURES` the way every real page does).
     feature === "notifications" && notifications !== undefined && <NotificationsHarness client:load {notifications} />
+  }
+  {
+    // Wrapped (not mounted directly, despite Dashboard.svelte being a real,
+    // already-shipping component PaneTree.svelte mounts directly elsewhere)
+    // — see DashboardHarness.svelte's own header comment: the wrapper
+    // exists solely to supply the onMount-flipped hydration-ready marker
+    // this `.astro` frontmatter cannot express itself, and to hold the
+    // synthetic isFocused/windowNumbers/paneCount/onSelect props a
+    // kernel-free mount has no live tmux state to derive them from.
+    feature === "dashboard" && dashboard !== undefined && <DashboardHarness client:load {dashboard} />
   }
 </Layout>
