@@ -327,3 +327,13 @@ Repo-wide total unchanged at **21 recipes × 2 viewports = 42 PNGs**: root **14*
 ### Deviations from the plan
 
 None. Steps executed in the specified order (fileIcons promotion before the employment move); mechanics reused verbatim; no stop condition was triggered.
+
+### Post-close audit fix round (2026-09-12)
+
+The auditor raised three findings; the orchestrator ruled two exempt and one required a fix:
+
+- **Fixed — comments.md R003, 7 stale-path citations** (comment text only, no logic/assertion changes, verified against real targets before writing): `employment-layout.spec.ts:38` (`src/data/personnel.yaml` → `src/features/employment/content/personnel.yaml`), `employmentRecordsState.svelte.ts:114` (`src/content/personnel/` → `src/features/employment/content/personnel/`), `employment.spec.ts:31` (`tests/e2e/nav.spec.ts`/`sessions.spec.ts` → `common/tests/ui/e2e/...`), `employment.spec.ts:32`, `employmentRecordsState.svelte.ts:33`, `employmentRecordsState.svelte.ts:53` (all three `tests/visual/recipes.ts` → `common/tests/ui/support/recipes.ts`), `identical.spec.ts:29` (`tests/visual/capture-goldens.mjs` → `common/tests/ui/support/capture-goldens.mjs`, this file being authored this phase with no verbatim-port defense). Two of the seven (hits 5/6) had survived the step-7 citation-sweep commit (`6562382`) despite that commit hand-editing the same paragraphs — a lesson for later phases: re-read every path a comment block mentions when rewriting it, not just the clause motivating the edit. Re-verified after the fix: both citation sweeps clean, `pnpm check` 0 errors, `pnpm test:unit` 346/20 unchanged. Long e2e/visual gates were not re-run for this round (comment-only edits, and the orchestrator was running them concurrently against the same tree).
+- **Ruled exempt (D23) — classes.md R002 on `handleKey(e): boolean`.** The boolean return is the kernel's delegation contract (`Terminal.svelte`'s `if (ref.handleKey(e)) return` at lines 72/188/204/216, meaning "I consumed this key"); void would break keydown routing for every pane program. Not touched.
+- **Ruled exempt (D23) — files-and-naming R011 on the pure helpers living inside `employmentRecordsState.svelte.ts`** (`parseMonthYear`, `splitDates`, `monthsBetween`, `dirSegmentsOf`). Extracting them is the split the stop conditions forbid; deferred to the post-migration hardening pass alongside the unit tests that extraction would then make possible. Not touched.
+
+Commit for this round: single-line imperative, no body, no trailer, comment-only diff.

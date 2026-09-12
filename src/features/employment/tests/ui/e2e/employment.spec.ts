@@ -28,10 +28,11 @@ import { join } from "node:path";
 const ROOT = join(import.meta.dirname, "../../../../../..");
 const PERSONNEL_DIR = join(ROOT, "src/features/employment/content/personnel");
 
-// Matches tests/e2e/nav.spec.ts's/sessions.spec.ts's own CLOCK_TIME literal —
-// the visual suite's frozen "now" (tests/visual/recipes.ts). Not installed by
-// every test below (most don't care about live durations), only the ones
-// that assert index/timeline values computed against "now".
+// Matches common/tests/ui/e2e/nav.spec.ts's/sessions.spec.ts's own CLOCK_TIME
+// literal — the visual suite's frozen "now"
+// (common/tests/ui/support/recipes.ts). Not installed by every test below
+// (most don't care about live durations), only the ones that assert
+// index/timeline values computed against "now".
 const CLOCK_TIME = "2026-08-15T23:34:00";
 
 async function gotoReady(page: Page, path: string) {

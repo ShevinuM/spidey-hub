@@ -26,9 +26,9 @@ const keyRecipes = recipes.filter((recipe) => EMPLOYMENT_OWNED_RECIPE_NAMES.has(
 test.describe("visual (employment): implementation vs goldens", () => {
   test.beforeEach(async ({ page }) => {
     // Same network-determinism rule as tests/visual/identical.spec.ts /
-    // tests/visual/capture-goldens.mjs: the commit-refresh island fires a
-    // fetch on Repositories mount, and fixture repos must not depend on
-    // api.github.com 404-ing by luck.
+    // common/tests/ui/support/capture-goldens.mjs: the commit-refresh
+    // island fires a fetch on Repositories mount, and fixture repos must
+    // not depend on api.github.com 404-ing by luck.
     await page.route("**/api.github.com/**", (route) => route.abort());
   });
 

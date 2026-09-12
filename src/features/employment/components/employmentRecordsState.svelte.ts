@@ -30,8 +30,9 @@ const MONTH_NUM: Record<string, number> = {
  * via `new Date()` internally) purely so the one call site below can pass
  * a single shared instant for both halves of every record. Read at
  * component-mount time in the browser, so Playwright's `page.clock.install`
- * (tests/visual/recipes.ts CLOCK_TIME) freezes it for goldens the same way
- * it freezes the status-bar clock — this module never imports src/common/lib/clock.ts
+ * (common/tests/ui/support/recipes.ts CLOCK_TIME) freezes it for goldens
+ * the same way it freezes the status-bar clock — this module never
+ * imports src/common/lib/clock.ts
  * itself (that module's frozen epoch is for the tmux/session layer only),
  * but relies on the same underlying `Date` override. */
 function parseMonthYear(raw: string, now: Date): { y: number; m: number } {
@@ -50,8 +51,8 @@ function splitDates(dates: string): [string, string] {
 
 /** Inclusive month count between two {y,m} pairs, e.g. May 2024 -> Aug 2026
  * (now) = 28mo. Verified against all six real records' durations at the
- * frozen "now" of 2026-08-15 (tests/visual/recipes.ts CLOCK_TIME): every one
- * matches this formula exactly. */
+ * frozen "now" of 2026-08-15 (common/tests/ui/support/recipes.ts
+ * CLOCK_TIME): every one matches this formula exactly. */
 function monthsBetween(start: { y: number; m: number }, end: { y: number; m: number }): number {
   return (end.y - start.y) * 12 + (end.m - start.m) + 1;
 }
@@ -111,9 +112,9 @@ interface DocLineView {
 const DOC_LINE_WRAP_STYLE = "white-space:normal;overflow-wrap:anywhere;min-width:0";
 
 /** Every role file's own directory path relative to
- * `src/content/personnel/`, case-preserved (same `entry.id`-is-the-real-path
- * convention content.config.ts documents for this collection) minus the
- * trailing `role.md` segment. */
+ * `src/features/employment/content/personnel/`, case-preserved (same
+ * `entry.id`-is-the-real-path convention content.config.ts documents for
+ * this collection) minus the trailing `role.md` segment. */
 function dirSegmentsOf(entry: RoleEntry): string[] {
   return entry.id.split("/").slice(0, -1);
 }

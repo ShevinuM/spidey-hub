@@ -35,9 +35,10 @@ async function openEmployment(page: Page) {
   await expect(page.locator('[data-testid="employment-row"]').first()).toBeVisible();
 }
 
-/** `orgTags` in src/data/personnel.yaml is hand-authored (not mechanically
- * derivable from the directory slug — that file's own header comment), so
- * this reads it back rather than hardcoding "ena"/"mun" here. */
+/** `orgTags` in src/features/employment/content/personnel.yaml is
+ * hand-authored (not mechanically derivable from the directory slug —
+ * that file's own header comment), so this reads it back rather than
+ * hardcoding "ena"/"mun" here. */
 function orgTagFor(org: string): string {
   const re = new RegExp(`^\\s*${org}:\\s*(\\S+)`, "m");
   return re.exec(PERSONNEL_YAML)?.[1] ?? org.slice(0, 3);
