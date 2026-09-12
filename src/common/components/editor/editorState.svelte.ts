@@ -21,7 +21,7 @@ import { setPasteBuffer, writeToSystemClipboard, type PasteBufferKind } from "..
 import { pushPasteTarget, removePasteTarget } from "../../lib/paste-targets";
 import { lineText } from "./editor-render";
 import type { EditorLabels } from "../../lib/data";
-import type { TokenSpan } from "../../../lib/repoTree";
+import type { TokenSpan } from "../../lib/repo-tree";
 
 // Mirrors Editor.svelte's own `EditorLine` export structurally — a plain
 // .ts module can't import a named type from a .svelte file under `tsc`

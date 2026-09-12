@@ -34,7 +34,7 @@
     ShellData,
   } from "../lib/data";
   import type { CollectionEntry } from "astro:content";
-  import type { Commit } from "../../lib/commits";
+  import type { Commit } from "../lib/commits";
   import type { SessionRosterEntry, ShellMode } from "../../lib/shell";
   import Dashboard from "../../features/dashboard/components/Dashboard.svelte";
   import Repositories from "../../components/repositories/Repositories.svelte";

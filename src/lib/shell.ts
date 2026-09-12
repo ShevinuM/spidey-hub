@@ -66,7 +66,7 @@ export function parseLine(line: string): ParsedLine {
 
 // ---------------------------------------------------------------------
 // fs-index navigation — a FLAT {path, size?}[] list (same shape convention
-// as src/lib/repoTree.ts's RepoFile / src/lib/grep.ts's RepoFile: this
+// as src/common/lib/repo-tree.ts's RepoFile / src/lib/grep.ts's RepoFile: this
 // module stays a zero-Svelte-dependency pure module, so it declares its own
 // structurally-equivalent type rather than importing theirs). `size` is
 // absent for `repos/*` entries — those subtrees are paths only, taken from
@@ -120,7 +120,7 @@ export interface DirEntry {
 }
 
 /** Immediate children of `segments`, directories before files, then
- * case-insensitive name — same convention as src/lib/repoTree.ts's
+ * case-insensitive name — same convention as src/common/lib/repo-tree.ts's
  * `listDir` (ported locally rather than imported — see file header). */
 export function listDir(entries: FsEntry[], segments: string[]): DirEntry[] {
   const prefix = segments.length === 0 ? "" : `${joinPath(segments)}/`;
@@ -272,7 +272,7 @@ export interface SessionSummary {
  * Deliberately its own type (not a re-export of tmux.ts's `Session`) —
  * shell.ts stays a zero-Svelte/zero-tmux.ts-dependency pure module (same
  * "structurally equivalent, not imported" convention `FsEntry` already
- * documents against repoTree.ts/grep.ts) — the (impure) caller builds one
+ * documents against repo-tree.ts/grep.ts) — the (impure) caller builds one
  * of these per live `Session` on every keystroke. */
 export interface SessionRosterEntry {
   id: string;

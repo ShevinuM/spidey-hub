@@ -36,7 +36,7 @@
   // first refusal over GrepOverlay while it's open.
   import type { CollectionEntry } from "astro:content";
   import type { RepositoriesData } from "../../common/lib/data";
-  import type { Commit } from "../../lib/commits";
+  import type { Commit } from "../../common/lib/commits";
   import Editor from "../../common/components/editor/Editor.svelte";
   import { RepositoriesState } from "./repositoriesState.svelte";
   import StatusPanel from "./StatusPanel.svelte";

@@ -42,7 +42,7 @@
     type FsEntry,
   } from "../lib/shell";
   import { loadFsIndex, loadGrepFiles, loadRepoIndex } from "../lib/shellIndex";
-  import { repoFileText, type TokenSpan } from "../lib/repoTree";
+  import { repoFileText, type TokenSpan } from "../common/lib/repo-tree";
   import { pushPasteTarget, removePasteTarget } from "../common/lib/paste-targets";
   import { resolvePageEpoch } from "../common/lib/clock";
   import { classifyDoc, colorFor, docColors } from "../common/lib/docline";

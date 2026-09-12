@@ -6,7 +6,7 @@
 // behavior change.
 import type { CollectionEntry } from "astro:content";
 import type { RepositoriesData } from "../../common/lib/data";
-import type { Commit } from "../../lib/commits";
+import type { Commit } from "../../common/lib/commits";
 import { untrack } from "svelte";
 import { classifyBody, classifyDoc, colorFor, docColors } from "../../common/lib/docline";
 import {
@@ -18,7 +18,7 @@ import {
   type RepoIndex,
   type FlatTreeRow,
   type TokenSpan,
-} from "../../lib/repoTree";
+} from "../../common/lib/repo-tree";
 import { fetchLiveCommits } from "../../lib/githubCommits";
 import { fetchCommitTree, fetchCommitFileContent } from "../../lib/githubTrees";
 import { agoLabel } from "../../common/lib/ago-label";

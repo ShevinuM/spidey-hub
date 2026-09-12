@@ -10,7 +10,7 @@
 // browser tab session doesn't re-fetch needlessly. A failed fetch (offline,
 // rate-limited, aborted by a test's route handler) resolves to `null` —
 // callers keep whatever snapshot/committed data they already had, silently.
-import type { Commit } from "./commits";
+import type { Commit } from "../common/lib/commits";
 
 const TTL_MS = 10 * 60 * 1000;
 const CACHE_PREFIX = "repositories:commits:";

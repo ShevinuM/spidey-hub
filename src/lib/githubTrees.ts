@@ -18,7 +18,7 @@
 // BOTH "blob" (file) and "tree" (dir) entries with full paths (verified
 // against a repo with subdirectories, daily-tech-digest); this module keeps
 // only the blobs — directories are re-synthesized from file-path prefixes by
-// ../lib/repoTree.ts's listDir(), exactly like the existing working-tree
+// ../common/lib/repo-tree.ts's listDir(), exactly like the existing working-tree
 // indexes, so one rendering path in Repositories.svelte serves both tree sources.
 // `truncated: true` (a repo too large for one recursive listing) is not
 // handled — none of the three tracked repos are anywhere near GitHub's

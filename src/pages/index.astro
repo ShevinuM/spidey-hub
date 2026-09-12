@@ -8,7 +8,7 @@ import Layout from "../bootstrap/Layout.astro";
 import Terminal from "../bootstrap/Terminal.svelte";
 import { getCollection } from "astro:content";
 import { getSite, getDashboard, getTracker, getRepositories, getPersonnel, getGrep, getCmdline, getHelpSearch, getShell, getChooseTree, buildProfile, buildHelp, buildNotifications, buildBoot } from "../common/lib/data";
-import { getCommitsByRepo } from "../lib/commits";
+import { getCommitsByRepo } from "../common/lib/commits";
 
 const site = getSite();
 const dashboard = getDashboard();

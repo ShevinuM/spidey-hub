@@ -68,7 +68,7 @@
     wordForward,
   } from "../../engines/vim/vim";
   import { parseExCommand } from "../../lib/cmdline";
-  import type { TokenSpan } from "../../../lib/repoTree";
+  import type { TokenSpan } from "../../lib/repo-tree";
   import { EditorState } from "./editorState.svelte";
   import EditorBuffer from "./EditorBuffer.svelte";
   import EditorStatusLine from "./EditorStatusLine.svelte";

@@ -4,7 +4,7 @@
 // `pnpm build:fixtures` / the visual-regression harness) it loads the 4
 // sample projects extracted verbatim from Homepage.dc.html instead of the 3
 // real ones, so 100% pixel comparisons against the prototype's goldens are
-// possible. See src/lib/commits.ts for how the
+// possible. See src/common/lib/commits.ts for how the
 // matching per-repo commit snapshots are resolved the same way.
 //
 // `personnel` IS fixture-switched (Phase 7b.2), the same way `repositories`

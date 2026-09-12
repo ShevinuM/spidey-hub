@@ -48,7 +48,7 @@ import {
 import { join, relative, extname, basename, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getIcon, defaultIcon } from "material-file-icons";
-import { tokenizeFile, PaletteBuilder } from "../src/lib/highlight.ts";
+import { tokenizeFile, PaletteBuilder } from "../src/common/lib/highlight.ts";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const SIZE_CAP = 200 * 1024; // 200KB
@@ -230,7 +230,7 @@ async function generateRepoIndexes() {
  * case-preserving rule content.config.ts's generateId uses), lines = the raw
  * file text (frontmatter included — this is a literal file snapshot, not a
  * parsed content-collection entry) split on "\n". Same {name, files} shape
- * as generateRepoIndexes() so src/lib/repoTree.ts's listDir/findFile and the
+ * as generateRepoIndexes() so src/common/lib/repo-tree.ts's listDir/findFile and the
  * Repositories component's existing fetch-and-browse flow work on it unmodified.
  */
 function generateAllProjectsIndex() {
@@ -315,7 +315,7 @@ function generateGrepIndex() {
 //     `{path, size?}[]` list (same shape
 //     convention as the grep/repo indexes' own `{path, lines}[]` — src/lib/
 //     shell.ts derives directory structure from path prefixes, exactly like
-//     src/lib/repoTree.ts's listDir already does for a single repo).
+//     src/common/lib/repo-tree.ts's listDir already does for a single repo).
 //
 // Same skip list as the grep walker, PLUS `public/generated` itself
 // (this file's own output directory — including it would make fs-index.json

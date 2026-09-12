@@ -25,12 +25,12 @@
 // JSON.parse needed, unlike the YAML files in data.ts). Callers live in
 // `.astro` frontmatter (see src/pages/repositories.astro), which thread the result
 // down through Terminal.svelte as a plain prop.
-const REAL_GLOB = import.meta.glob("../generated/commits/*.json", {
+const REAL_GLOB = import.meta.glob("../../generated/commits/*.json", {
   eager: true,
   import: "default",
 }) as Record<string, unknown>;
 
-const FIXTURE_GLOB = import.meta.glob("../../fixtures/commits/*.json", {
+const FIXTURE_GLOB = import.meta.glob("../../../fixtures/commits/*.json", {
   eager: true,
   import: "default",
 }) as Record<string, unknown>;

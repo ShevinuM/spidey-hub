@@ -40,7 +40,7 @@
     ShellData,
     ChooseTreeData,
   } from "../common/lib/data";
-  import type { Commit } from "../lib/commits";
+  import type { Commit } from "../common/lib/commits";
   import type { ViewId } from "../common/lib/views";
   import { pathToView, viewIdToProgram } from "../common/lib/views";
   import type { PaneDirection } from "../common/engines/tmux/tmux";

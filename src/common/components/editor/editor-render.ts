@@ -4,7 +4,7 @@
 // for its `rawLines` derived, and `EditorBuffer.svelte` needs all three for
 // per-segment markup; none of them close over reactive state, so they live
 // here rather than as component-scoped functions or class methods.
-import type { TokenSpan } from "../../../lib/repoTree";
+import type { TokenSpan } from "../../lib/repo-tree";
 
 /** Plain text (docs, flat code fallback), or a tokenized code line —
  * `[paletteIndex, text]` runs resolved against the caller's own palette.

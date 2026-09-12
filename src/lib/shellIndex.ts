@@ -14,11 +14,11 @@
 // singleton cache for the lifetime of the page, matching GrepOverlay's own
 // "fetched once, kept forever" contract.
 import type { FsEntry } from "./shell.ts";
-import type { RepoFile, RepoIndex } from "./repoTree.ts";
+import type { RepoFile, RepoIndex } from "../common/lib/repo-tree";
 
 export type { RepoFile };
 
-/** Site source is never tokenized (see repoTree.ts's own header comment on
+/** Site source is never tokenized (see repo-tree.ts's own header comment on
  * why generate.mjs leaves grep-index.json flat) — a plain flat shape,
  * distinct from a repo index's `RepoFile` which MAY carry tokens. */
 export interface SiteFile {
@@ -76,7 +76,7 @@ export function loadRepoIndex(name: string): Promise<RepoIndex> {
 }
 
 /** `cat`'s own need: just the flat file list (plain-text reconstruction is
- * the caller's job via repoTree.ts's `repoFileText`). */
+ * the caller's job via repo-tree.ts's `repoFileText`). */
 export async function loadRepoFiles(name: string): Promise<RepoFile[]> {
   return (await loadRepoIndex(name)).files;
 }
