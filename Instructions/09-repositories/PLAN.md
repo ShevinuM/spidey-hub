@@ -250,7 +250,7 @@ Verify that relative depth with `node -e "…path.relative…"`; do not guess it
   ```
   Then both sweeps from §Background — every surviving hit must be an intentionally-updated line. **`pnpm check` → 0 errors.** `pnpm test:unit` → **346 passed / 21 files** (proves breaks #1, #2 and #4). Confirm `public/generated/grep-index.json` now carries `src/features/repositories/content/repositories/…` **and** that `grepPathToView()` still routes it — the `views.test.ts` pass is that proof (R4).
 
-- [ ] **6. R6 — split `adversarial-fixtures.spec.ts` and delete the root file.**
+- [x] **6. R6 — split `adversarial-fixtures.spec.ts` and delete the root file.**
   Create `src/features/repositories/tests/ui/visual/adversarial-fixtures.spec.ts` with the repositories `describe` block and `src/features/employment/tests/ui/visual/adversarial-fixtures.spec.ts` with the employment one, each carrying its own verbatim copy of `gotoReady`, `prefixDigit` and `fitsWithin` and its own re-depthed, **extensionless** `BOOT_SEEN_STORAGE_KEY` import. Rewrite each file's header in its own terms — describing the fixtures it actually exercises, at their **new** paths, with no "Phase 7b.2" citation (comments.md R008). Test bodies, locators and assertions are **untouchable** (D23(a)). Delete `tests/visual/adversarial-fixtures.spec.ts`. In `package.json`'s `test:visual`, replace `tests/visual/adversarial-fixtures.spec.ts` with the two new paths.
   *Verify:* `test ! -e tests/visual/adversarial-fixtures.spec.ts`; `ls tests/visual` shows only `identical.spec.ts`, `goldens/` and `README-PIPELINE.md`. Fixture build → `pnpm test:visual` green as a whole, with the adversarial test count still **8** (2 tests × 2 viewports × 2 files), not 4 and not 16.
 

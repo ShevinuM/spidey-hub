@@ -1,27 +1,29 @@
-// Functional (non-golden) coverage for Phase 7b.2's adversarial fixture
-// data. tests/visual/identical.spec.ts proves goldens stay pixel-stable;
-// this file proves the ADVERSARIAL fixtures added alongside them actually
-// exercise the defect classes they exist to catch — a tidy, fixed-length
-// fixture dataset could pass every golden while a panel silently failed to
-// scroll or clipped a long line, exactly what hid iteration 6's defects
-// (see docs/architecture.md's "Blind spots" section). No PNG comparisons
-// here, so this file has no `tests/visual/goldens/` entries of its own —
-// it's wired into `pnpm test:visual` in package.json purely so it always
-// runs against the fixture build, same port-4322 server
-// (playwright.config.ts) `identical.spec.ts` uses.
+// Functional (non-golden) coverage for employment's adversarial fixture
+// data. src/features/employment/tests/ui/visual/identical.spec.ts proves
+// goldens stay pixel-stable; this file proves the ADVERSARIAL fixture added
+// alongside them actually exercises the defect class it exists to catch —
+// a tidy, fixed-length fixture dataset could pass every golden while a
+// panel silently failed to scroll or clipped a long line (see
+// docs/architecture.md's "Blind spots" section). No PNG comparisons here,
+// so this file has no `tests/ui/visual/goldens/` entries of its own — it's
+// wired into `pnpm test:visual` in package.json purely so it always runs
+// against the fixture build, same port-4322 server (playwright.config.ts)
+// `identical.spec.ts` uses.
 //
-// Fixture data under test (src/content.config.ts, fixtures/personnel/,
-// fixtures/repositories/*.md):
+// Fixture data under test (src/content.config.ts,
+// src/features/employment/tests/ui/support/personnel/):
 //   - `damage-control/evidence-cataloguer` — a ~300-line employment record
 //     (the newest-dated, so it's row 0/the default selection) with an
 //     embedded 400-char unbroken (no-space) line.
-//   - `flerken-watch.md`'s body — a second 400-char unbroken line, read
-//     through the all-projects virtual repo's file preview.
-//   - `webbing-lab` — a repo entry (fixtures/repositories/spider-tracker.md)
-//     with a `ready`, zero-file index (fixtures/repos/webbing-lab.json) and
-//     no commits snapshot — the empty-repository path.
+//
+// These helpers (`gotoReady`, `prefixDigit`, `fitsWithin`) are deliberately
+// duplicated verbatim into this file and into
+// src/features/repositories/tests/ui/visual/adversarial-fixtures.spec.ts —
+// extracting them into a shared support module is the rewrite-the-safety-net
+// hazard this repo's test-infra rules exist to prevent; both halves keep
+// their own copy.
 import { expect, test, type Page } from "@playwright/test";
-import { BOOT_SEEN_STORAGE_KEY } from "../../src/features/boot/lib/boot-state.ts";
+import { BOOT_SEEN_STORAGE_KEY } from "../../../../boot/lib/boot-state";
 
 /** Same boot-skip contract tests/visual/pipeline.mjs's `captureState()`
  * uses (pre-seed via `addInitScript`, before any navigation) — this file
@@ -68,7 +70,7 @@ function fitsWithin(box: { width: number }, container: { width: number }, slack 
   return box.width <= container.width + slack;
 }
 
-test.describe("Phase 7b.2 adversarial fixtures — employment", () => {
+test.describe("adversarial fixtures — employment", () => {
   test("the ~300-line evidence-cataloguer record's preview genuinely scrolls", async ({ page }) => {
     const errors = await gotoReady(page, "/");
     await prefixDigit(page, "2");
@@ -79,9 +81,9 @@ test.describe("Phase 7b.2 adversarial fixtures — employment", () => {
     await expect(preview).toBeVisible();
 
     // Guards against the exact defect class this record caught during
-    // Phase 7b.2 authoring: `overflow-wrap:break-word` on the doc-line span
-    // let a single unbroken 400-char line grow this panel's flex ancestors
-    // wide enough to push the WHOLE 3-panel row off-screen to the right —
+    // authoring: `overflow-wrap:break-word` on the doc-line span let a
+    // single unbroken 400-char line grow this panel's flex ancestors wide
+    // enough to push the WHOLE 3-panel row off-screen to the right —
     // `toBeVisible()`/scroll-metric checks alone still passed in that
     // broken state (both sides of the ratio grew together), so this
     // compares against the actual viewport, not just this panel's own
@@ -134,50 +136,5 @@ test.describe("Phase 7b.2 adversarial fixtures — employment", () => {
     // single ordinary line; a clipped one-liner would stay ~baselineHeight
     // regardless of content length.
     expect(longLineBox.height).toBeGreaterThan(baselineHeight * 1.5);
-  });
-});
-
-test.describe("Phase 7b.2 adversarial fixtures — repositories", () => {
-  test("flerken-watch.md's 400-char trace line wraps in the Content panel instead of clipping", async ({
-    page,
-  }) => {
-    await gotoReady(page, "/");
-    await prefixDigit(page, "1");
-
-    // All-projects tree is the default selection/mount state — no click
-    // needed to reach it (see tests/e2e/repositories.spec.ts).
-    await page.locator('[data-testid="repositories-tree-row"][data-entry-name="flerken-watch.md"]').click();
-
-    const previewLines = page.locator('[data-testid="repositories-preview-line"]');
-    await expect(previewLines.first()).toBeVisible();
-    const baselineHeight = await previewLines.nth(0).evaluate((el) => el.getBoundingClientRect().height);
-
-    const longLine = previewLines.filter({ hasText: /^0123456789abcdef/ }).first();
-    await expect(longLine).toBeVisible();
-    const longLineBox = (await longLine.boundingBox())!;
-    const containerBox = (await page.locator('[data-testid="repositories-changes-body"]').boundingBox())!;
-
-    expect(fitsWithin(longLineBox, containerBox)).toBe(true);
-    expect(longLineBox.height).toBeGreaterThan(baselineHeight * 1.5);
-  });
-
-  test("an empty repository (no files, no commits) renders its empty state without throwing", async ({
-    page,
-  }) => {
-    const errors = await gotoReady(page, "/");
-    await prefixDigit(page, "1");
-
-    await page.locator('[data-testid="repositories-repo-row"][data-repo-name="webbing-lab"]').click();
-
-    const filesCaption = page.locator('[data-testid="repositories-files-caption"]');
-    await expect(filesCaption).toContainText("webbing-lab");
-
-    // Zero file rows and zero commit rows, gracefully — no error text, no
-    // thrown exception. (`ready` + `files: []`, not the network-error
-    // path — see this file's header comment.)
-    await expect(page.locator('[data-testid="repositories-tree-row"]')).toHaveCount(0);
-    await expect(page.locator('[data-testid="repositories-commit-row"]')).toHaveCount(0);
-
-    expect(errors).toEqual([]);
   });
 });
