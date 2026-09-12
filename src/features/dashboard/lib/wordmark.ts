@@ -1,8 +1,9 @@
-// Pure geometry for Dashboard.svelte's SPIDEY-HUB wordmark — extracted from
-// that component (rune-free, no reactivity of its own) during the
-// components audit's (c)-criterion cleanup. See Dashboard.svelte's own
-// comment for why the wordmark arches (own rendering, never Marvel's actual
-// logo artwork) — this module only owns the per-letter tilt/rise math.
+// Pure geometry for Dashboard.svelte's SPIDEY-HUB wordmark — kept separate
+// from that component (rune-free, no reactivity of its own) since it's
+// plain per-letter tilt/rise math with no rendering concerns of its own. See
+// Dashboard.svelte's own comment for why the wordmark arches (own
+// rendering, never Marvel's actual logo artwork) — this module only owns
+// the per-letter tilt/rise math.
 
 const WORDMARK_MAX_ANGLE = 16; // degrees the outermost letters tilt
 const WORDMARK_ARCH_PX = 10; // dome rise at the center letter
