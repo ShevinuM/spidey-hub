@@ -2,12 +2,12 @@
 // implementation would break.
 //
 // Repositories renders one project per markdown file in the `repositories` collection,
-// each with exactly one repo (see src/content/repositories/*.md /
-// fixtures/repositories/*.md). Commit snapshots are keyed by *repo name*, not by
+// each with exactly one repo (see src/features/repositories/content/repositories/*.md /
+// src/features/repositories/tests/ui/support/repositories/*.md). Commit snapshots are keyed by *repo name*, not by
 // project slug, so they live next to (not inside) the content collection:
 //   - real content:    src/generated/commits/<repoName>.json   (scripts/generate.mjs)
-//   - fixture content:  fixtures/commits/<repoName>.json        (extracted verbatim
-//                        from Homepage.dc.html's sample `commits` arrays)
+//   - fixture content:  src/features/repositories/tests/ui/support/commits/<repoName>.json
+//                        (extracted verbatim from Homepage.dc.html's sample `commits` arrays)
 //
 // Both directories are switched by the same PORTFOLIO_FIXTURES env var that
 // switches the `repositories` collection's glob() base in src/content.config.ts,
@@ -30,7 +30,7 @@ const REAL_GLOB = import.meta.glob("../../generated/commits/*.json", {
   import: "default",
 }) as Record<string, unknown>;
 
-const FIXTURE_GLOB = import.meta.glob("../../../fixtures/commits/*.json", {
+const FIXTURE_GLOB = import.meta.glob("../../features/repositories/tests/ui/support/commits/*.json", {
   eager: true,
   import: "default",
 }) as Record<string, unknown>;
@@ -40,7 +40,7 @@ const USE_FIXTURES = process.env.PORTFOLIO_FIXTURES === "1";
 export interface Commit {
   /** Full 40-char commit sha, needed by src/features/repositories/lib/github-trees.ts to fetch a
    * commit's tree/file contents. Optional: fixture snapshots
-   * (fixtures/commits/*.json, extracted verbatim from Homepage.dc.html and
+   * (src/features/repositories/tests/ui/support/commits/*.json, extracted verbatim from Homepage.dc.html and
    * never re-fetched) only ever carry `sha8`. Callers needing a tree ref
    * fall back to `sha8` when this is absent (see github-trees.ts's
    * ref-candidate list). */
@@ -51,7 +51,8 @@ export interface Commit {
   initials: string;
   /** ISO commit date (author date), when the source captured it. Real
    * snapshots (src/generated/commits/*.json, scripts/generate.mjs) always
-   * carry it; frozen fixture snapshots (fixtures/commits/*.json, extracted
+   * carry it; frozen fixture snapshots
+   * (src/features/repositories/tests/ui/support/commits/*.json, extracted
    * verbatim from Homepage.dc.html) never do — callers deriving a "last
    * push" value must treat its absence as "not available", not "epoch
    * zero", so fixture builds render no last-push segment at all (keeps
@@ -72,7 +73,7 @@ const REAL = byBasename(REAL_GLOB);
 const FIXTURES = byBasename(FIXTURE_GLOB);
 
 /** Descriptive label only (diagnostics/tests) — no longer a filesystem path. */
-export const commitsDir = USE_FIXTURES ? "fixtures/commits" : "src/generated/commits";
+export const commitsDir = USE_FIXTURES ? "src/features/repositories/tests/ui/support/commits" : "src/generated/commits";
 
 /**
  * Read the committed snapshot for a repo by name. Returns an empty array

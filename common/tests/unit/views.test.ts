@@ -27,7 +27,7 @@ const realIndex = JSON.parse(readFileSync(join(ROOT, "public/generated/grep-inde
  */
 function expectedView(path: string): "employment" | "repositories" | "retina-v" | "profile" | null {
   if (path.startsWith("src/features/employment/content/personnel/")) return "employment";
-  if (path.startsWith("src/content/repositories/")) return "repositories";
+  if (path.startsWith("src/features/repositories/content/repositories/")) return "repositories";
   if (path === "src/features/employment/components/EmploymentRecords.svelte") return "employment";
   if (path === "src/features/repositories/components/Repositories.svelte") return "repositories";
   if (path === "src/common/components/Wallpaper.svelte") return "retina-v";

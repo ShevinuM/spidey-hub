@@ -22,7 +22,7 @@ import type { CollectionEntry } from "astro:content";
 import siteRaw from "../content/site.yaml?raw";
 import dashboardRaw from "../../features/dashboard/content/dashboard.yaml?raw";
 import trackerRaw from "../content/tracker.yaml?raw";
-import repositoriesRaw from "../../data/repositories.yaml?raw";
+import repositoriesRaw from "../../features/repositories/content/repositories.yaml?raw";
 import grepRaw from "../../data/grep.yaml?raw";
 import personnelRaw from "../../features/employment/content/personnel.yaml?raw";
 import helpRaw from "../../features/help/content/help.yaml?raw";
@@ -329,7 +329,7 @@ export interface RepoBrowserData {
 
 /** Panel [3]'s virtual "all-projects" row — every
  * project's .md doc in one browsable tree, backed by
- * public/generated/repos/all-projects.json (fixtures/repos/all-projects.json
+ * public/generated/repos/all-projects.json (src/features/repositories/tests/ui/support/repos/all-projects.json
  * in a fixture build). Not a real repo: no branch to track, no commits. */
 export interface AllProjectsData {
   name: string;

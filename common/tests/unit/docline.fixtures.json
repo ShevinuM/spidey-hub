@@ -15,7 +15,7 @@
   "docs": [
     {
       "kind": "project",
-      "path": "fixtures/repositories/shevinum-dev.md",
+      "path": "src/features/repositories/tests/ui/support/repositories/shevinum-dev.md",
       "kinds": [
         "h",
         "p",
@@ -33,7 +33,7 @@
     },
     {
       "kind": "project",
-      "path": "fixtures/repositories/spider-tracker.md",
+      "path": "src/features/repositories/tests/ui/support/repositories/spider-tracker.md",
       "kinds": [
         "h",
         "p",
@@ -52,7 +52,7 @@
     },
     {
       "kind": "project",
-      "path": "fixtures/repositories/flerken-watch.md",
+      "path": "src/features/repositories/tests/ui/support/repositories/flerken-watch.md",
       "kinds": [
         "h",
         "p",
@@ -74,7 +74,7 @@
     },
     {
       "kind": "project",
-      "path": "fixtures/repositories/latveria-atlas.md",
+      "path": "src/features/repositories/tests/ui/support/repositories/latveria-atlas.md",
       "kinds": [
         "h",
         "p",

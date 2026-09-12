@@ -8,7 +8,7 @@
     "dev": "astro dev",
     "prebuild": "node scripts/generate.mjs",
     "build": "astro build",
-    "build:fixtures": "PORTFOLIO_FIXTURES=1 astro build && cp fixtures/grep-index.json dist/generated/grep-index.json && cp fixtures/repos/*.json dist/generated/repos/ && cp fixtures/fs-index.json dist/generated/fs-index.json && cp fixtures/contributions.json dist/generated/contributions.json",
+    "build:fixtures": "PORTFOLIO_FIXTURES=1 astro build && cp fixtures/grep-index.json dist/generated/grep-index.json && cp src/features/repositories/tests/ui/support/repos/*.json dist/generated/repos/ && cp fixtures/fs-index.json dist/generated/fs-index.json && cp src/features/repositories/tests/ui/support/contributions.json dist/generated/contributions.json",
     "preview": "astro preview",
     "generate": "node scripts/generate.mjs",
     "check": "astro check && tsc --noEmit && svelte-check --threshold error",

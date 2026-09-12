@@ -2,19 +2,20 @@
 //
 // `repositories` is fixture-switched: when PORTFOLIO_FIXTURES=1 (set by
 // `pnpm build:fixtures` / the visual-regression harness) it loads the 4
-// sample projects extracted verbatim from Homepage.dc.html instead of the 3
-// real ones, so 100% pixel comparisons against the prototype's goldens are
-// possible. See src/common/lib/commits.ts for how the
+// sample projects under src/features/repositories/tests/ui/support/repositories/
+// (extracted verbatim from Homepage.dc.html) instead of the 8 real ones under
+// src/features/repositories/content/repositories/, so 100% pixel comparisons
+// against the goldens are possible. See src/common/lib/commits.ts for how the
 // matching per-repo commit snapshots are resolved the same way.
 //
-// `personnel` IS fixture-switched (Phase 7b.2), the same way `repositories`
-// is just above: `fixtures/personnel/*` under `PORTFOLIO_FIXTURES=1`,
-// `src/content/personnel/` (the user's real employment history) otherwise.
-// This was NOT the case before 7b.2 — real employment copy used to leak
-// into every fixture/visual-golden build, which also meant an adversarial
-// (long/overflowing) record could never be added without corrupting the
-// user's actual resume. `fixtures/personnel/` mirrors the real tree's
-// variable-depth SHAPE (see below), not just its record count.
+// `personnel` IS fixture-switched, the same way `repositories` is just
+// above: `src/features/employment/tests/ui/support/personnel/*` under
+// `PORTFOLIO_FIXTURES=1`, `src/features/employment/content/personnel/` (the
+// user's real employment history) otherwise. Real employment copy never
+// leaks into a fixture/visual-golden build, which also means an adversarial
+// (long/overflowing) record can be added without corrupting the user's
+// actual resume. The fixture tree mirrors the real tree's variable-depth
+// SHAPE (see below), not just its record count.
 //
 // Personnel content is a
 // variable-depth, path-driven tree (`enaimco/software-developer/{role.md,
@@ -40,14 +41,15 @@ const repoSchema = z.object({
 const repositories = defineCollection({
   loader: glob({
     pattern: "**/*.md",
-    base: useFixtures ? "fixtures/repositories" : "src/content/repositories",
+    base: useFixtures ? "src/features/repositories/tests/ui/support/repositories" : "src/features/repositories/content/repositories",
     // Astro's default `generateId` lowercases the slug (getContentEntryIdAndSlug's
     // slugify step), which silently turns "SafePass.md" into entry id
     // "safepass" — invisible until the Repositories Files panel started
     // rendering `${project.id}.md` as that file's displayed name, where it
     // renders as the wrong filename ("safepass.md" instead of "SafePass.md"). All of
     // our project filenames are already the exact string we want to display
-    // (see fixtures/repositories/*.md and src/content/repositories/*.md), so this
+    // (see src/features/repositories/tests/ui/support/repositories/*.md and
+    // src/features/repositories/content/repositories/*.md), so this
     // just uses the entry's own basename verbatim, case and all.
     generateId: ({ entry }) => entry.replace(/\.md$/, ""),
   }),

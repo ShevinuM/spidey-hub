@@ -113,7 +113,7 @@ tmuxCommands:
     takesArgs: true
 
 # Error/usage strings the box itself renders (as opposed to the editor's own
-# E21/E45 bell messages, which stay in src/data/repositories.yaml /
+# E21/E45 bell messages, which stay in src/features/repositories/content/repositories.yaml /
 # src/data/personnel.yaml — those only ever fire from inside an already-open
 # editor, so they keep using that editor instance's own labels).
 errors:
