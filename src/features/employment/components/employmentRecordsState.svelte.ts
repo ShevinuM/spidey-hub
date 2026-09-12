@@ -5,9 +5,9 @@
 // folder+state-class pattern established by RepositoriesState/
 // NotificationsState, not a port.
 import type { CollectionEntry } from "astro:content";
-import type { PersonnelData } from "../../common/lib/data";
-import { classifyBody, colorFor } from "../../common/lib/docline";
-import { iconSvgForPath } from "../../common/lib/file-icons";
+import type { PersonnelData } from "../../../common/lib/data";
+import { classifyBody, colorFor } from "../../../common/lib/docline";
+import { iconSvgForPath } from "../../../common/lib/file-icons";
 
 export type RoleEntry = CollectionEntry<"personnel">;
 

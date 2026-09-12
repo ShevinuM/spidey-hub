@@ -26,9 +26,9 @@ const realIndex = JSON.parse(readFileSync(join(ROOT, "public/generated/grep-inde
  * asserted null below, not merely spot-checked.
  */
 function expectedView(path: string): "employment" | "repositories" | "retina-v" | "profile" | null {
-  if (path.startsWith("src/content/personnel/")) return "employment";
+  if (path.startsWith("src/features/employment/content/personnel/")) return "employment";
   if (path.startsWith("src/content/repositories/")) return "repositories";
-  if (path === "src/components/employment-records/EmploymentRecords.svelte") return "employment";
+  if (path === "src/features/employment/components/EmploymentRecords.svelte") return "employment";
   if (path === "src/components/repositories/Repositories.svelte") return "repositories";
   if (path === "src/common/components/Wallpaper.svelte") return "retina-v";
   if (path === "src/features/profile/components/Profile.svelte") return "profile";
@@ -78,9 +78,17 @@ test("variable-depth personnel content paths (path-derived tree) route to employ
   // memorial-university/<slug>/role.md) needs no code change here — this
   // test locks that in explicitly rather than relying solely on the
   // generated-index comparison above.
-  expect(grepPathToView("src/content/personnel/enaimco/software-developer/role.md")).toBe("employment");
-  expect(grepPathToView("src/content/personnel/enaimco/software-developer/full-time/role.md")).toBe("employment");
-  expect(grepPathToView("src/content/personnel/memorial-university/computer-science-tutor/role.md")).toBe("employment");
+  expect(grepPathToView("src/features/employment/content/personnel/enaimco/software-developer/role.md")).toBe(
+    "employment",
+  );
+  expect(
+    grepPathToView("src/features/employment/content/personnel/enaimco/software-developer/full-time/role.md"),
+  ).toBe("employment");
+  expect(
+    grepPathToView(
+      "src/features/employment/content/personnel/memorial-university/computer-science-tutor/role.md",
+    ),
+  ).toBe("employment");
 });
 
 test("fixture-only legacy paths (all under src/) never route via the bare-word fallback", () => {

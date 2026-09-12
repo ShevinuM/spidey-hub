@@ -24,7 +24,7 @@ import dashboardRaw from "../../features/dashboard/content/dashboard.yaml?raw";
 import trackerRaw from "../content/tracker.yaml?raw";
 import repositoriesRaw from "../../data/repositories.yaml?raw";
 import grepRaw from "../../data/grep.yaml?raw";
-import personnelRaw from "../../data/personnel.yaml?raw";
+import personnelRaw from "../../features/employment/content/personnel.yaml?raw";
 import helpRaw from "../../features/help/content/help.yaml?raw";
 import bootRaw from "../../features/boot/content/boot.yaml?raw";
 import cmdlineRaw from "../content/cmdline.yaml?raw";

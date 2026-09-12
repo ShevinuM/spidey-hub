@@ -109,7 +109,7 @@ test.describe("Grep overlay", () => {
     await page.keyboard.type('role: "Software Developer, Co-op"');
     await expect(rows(page).first()).toHaveAttribute(
       "data-path",
-      "src/content/personnel/enaimco/software-developer/co-op/role.md",
+      "src/features/employment/content/personnel/enaimco/software-developer/co-op/role.md",
     );
     await page.keyboard.press("Enter");
     await expect(overlay(page)).not.toBeVisible();

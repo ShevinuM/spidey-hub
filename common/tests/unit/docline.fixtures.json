@@ -92,7 +92,7 @@
     },
     {
       "kind": "personnel",
-      "path": "src/content/personnel/enaimco/software-developer/full-time/role.md",
+      "path": "src/features/employment/content/personnel/enaimco/software-developer/full-time/role.md",
       "kinds": [
         "h",
         "m",
@@ -110,7 +110,7 @@
     },
     {
       "kind": "personnel",
-      "path": "src/content/personnel/enaimco/software-developer/part-time/role.md",
+      "path": "src/features/employment/content/personnel/enaimco/software-developer/part-time/role.md",
       "kinds": [
         "h",
         "m",
@@ -129,7 +129,7 @@
     },
     {
       "kind": "personnel",
-      "path": "src/content/personnel/enaimco/software-developer/co-op/role.md",
+      "path": "src/features/employment/content/personnel/enaimco/software-developer/co-op/role.md",
       "kinds": [
         "h",
         "m",

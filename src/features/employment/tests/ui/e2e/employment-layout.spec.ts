@@ -6,20 +6,20 @@
 // own header comments), and the fact that neither the row list nor the
 // preview could scroll at all.
 //
-// `personnel` deliberately does not fixture-switch (content.config.ts's own
-// header comment: "fixtures/personnel deliberately does not exist") — the
-// six real role.md files ARE the only content this page ever renders. The
-// clipping assertion below is exercised against the real record with the
-// single longest body line, and the scroll assertions shrink the viewport
-// (rather than inventing fixture content) to force real content to
-// overflow.
+// This suite runs against the REAL build (E2E_EXPECT_FIXTURES=0, `personnel`
+// resolves to src/features/employment/content/personnel per
+// content.config.ts's own `base:` ternary), not the fixture tree — the six
+// real role.md files ARE the content this page renders here. The clipping
+// assertion below is exercised against the real record with the single
+// longest body line, and the scroll assertions shrink the viewport (rather
+// than switching to the fixture tree) to force real content to overflow.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
 
 const ROOT = join(import.meta.dirname, "../../../../../..");
-const PERSONNEL_DIR = join(ROOT, "src/content/personnel");
-const PERSONNEL_YAML = readFileSync(join(ROOT, "src/data/personnel.yaml"), "utf8");
+const PERSONNEL_DIR = join(ROOT, "src/features/employment/content/personnel");
+const PERSONNEL_YAML = readFileSync(join(ROOT, "src/features/employment/content/personnel.yaml"), "utf8");
 
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);

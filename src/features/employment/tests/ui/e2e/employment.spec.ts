@@ -26,7 +26,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = join(import.meta.dirname, "../../../../../..");
-const PERSONNEL_DIR = join(ROOT, "src/content/personnel");
+const PERSONNEL_DIR = join(ROOT, "src/features/employment/content/personnel");
 
 // Matches tests/e2e/nav.spec.ts's/sessions.spec.ts's own CLOCK_TIME literal —
 // the visual suite's frozen "now" (tests/visual/recipes.ts). Not installed by
@@ -301,11 +301,12 @@ test.describe("Employment: selection — j/k/arrows sync preview and timeline li
   test("Enter opens the selected record in the shared vim editor; :q closes back to the exact same selection", async ({
     page,
   }) => {
-    // Decision 7 ("j/k/enter selection stays") drops the `f` filter/
-    // drill-down/`../`, not Enter's existing open-in-editor behavior — see
-    // tests/e2e/editor-vim.spec.ts's
-    // "Employment entry point". "Harmless-open" (E1) describes why this is
-    // safe, not that Enter does nothing: the buffer is always readonly.
+    // "j/k/enter selection stays" drops the `f` filter/drill-down/`../`, not
+    // Enter's existing open-in-editor behavior — see
+    // common/tests/ui/e2e/editor-vim.spec.ts's "Employment" entry point,
+    // which parametrizes the same editor suite over this page. "Harmless-
+    // open" describes why this is safe, not that Enter does nothing: the
+    // buffer is always readonly.
     await openEmployment(page);
     await page.keyboard.press("j");
     const pathBefore = await page.locator('[data-testid="employment-preview-path"]').textContent();

@@ -61,7 +61,7 @@ const repositories = defineCollection({
 const personnel = defineCollection({
   loader: glob({
     pattern: "**/*.md",
-    base: useFixtures ? "fixtures/personnel" : "src/content/personnel",
+    base: useFixtures ? "src/features/employment/tests/ui/support/personnel" : "src/features/employment/content/personnel",
     // Same rationale as `projects` above: directory/file names in this tree
     // are already the literal, lowercase strings we want to display, so this
     // just preserves the on-disk relative path (minus extension) as-is rather than trusting
