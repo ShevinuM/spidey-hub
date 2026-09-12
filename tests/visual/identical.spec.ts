@@ -66,7 +66,12 @@ import { captureBootState, captureState } from "../../common/tests/ui/support/pi
 // (notifications-visual-<viewport> projects). Phase 07 (dashboard) owns
 // "01-dashboard" (recipes), now run under
 // src/features/dashboard/tests/ui/visual/ (dashboard-visual-<viewport>
-// projects). All
+// projects). "08-tracker" (also `recipes`) is NOT dashboard's — 00-phases.md
+// D17/phase-07 R1 ruled it common's (its sole renderer is
+// common/components/Wallpaper.svelte, which paints it on every view), so it
+// joined common/tests/ui/visual/'s own goldens/ tree instead
+// (common-visual-<viewport> projects) rather than a dashboard-visual one.
+// All
 // are excluded here to keep every recipe captured exactly once (00-phases.md
 // D21). As later phases move their own recipes out, SPLIT_OWNED_RECIPE_NAMES
 // grows the same way (renamed from COMMON_OWNED_RECIPE_NAMES now that more
@@ -82,6 +87,7 @@ const SPLIT_OWNED_RECIPE_NAMES = new Set([
   "13-boot-mid",
   "14-boot-ready",
   "01-dashboard",
+  "08-tracker",
   "21-notifications-panel-open",
 ]);
 const keyRecipes = [...recipes, ...extraRecipes, ...cmdlineRecipes, ...iteration3Recipes, ...notificationsRecipes].filter(

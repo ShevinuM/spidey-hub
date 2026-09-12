@@ -71,7 +71,7 @@ commandBox:
 # The header's "─" fill is re-padded (6 more dashes than the old
 # "spider-tracker" label needed) so every line — including the closing
 # "└...┘" — stays exactly 37 code points wide (verified by
-# tests/unit/tracker-hud.test.ts).
+# common/tests/unit/tracker-hud.test.ts).
 hud:
   left:
     - "┌─ retina-v ────────────────────────┐"

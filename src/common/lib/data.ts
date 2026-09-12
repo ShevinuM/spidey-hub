@@ -2,7 +2,7 @@
 // string that isn't part of a content collection lives in one of these
 // files. Astro pages/layouts read this module and pass plain data down as
 // props; Svelte islands never read the filesystem themselves. Kernel-owned
-// yaml (site/cmdline/choosetree) lives in `src/common/content/`; a feature
+// yaml (site/cmdline/choosetree/tracker) lives in `src/common/content/`; a feature
 // with its own bounded context keeps its yaml beside its own content (e.g.
 // `src/features/help/content/help.yaml`); every other feature's yaml still
 // lives in `src/data/` — every one of these is read from its own explicit
@@ -21,7 +21,7 @@ import YAML from "yaml";
 import type { CollectionEntry } from "astro:content";
 import siteRaw from "../content/site.yaml?raw";
 import dashboardRaw from "../../features/dashboard/content/dashboard.yaml?raw";
-import trackerRaw from "../../data/tracker.yaml?raw";
+import trackerRaw from "../content/tracker.yaml?raw";
 import repositoriesRaw from "../../data/repositories.yaml?raw";
 import grepRaw from "../../data/grep.yaml?raw";
 import personnelRaw from "../../data/personnel.yaml?raw";

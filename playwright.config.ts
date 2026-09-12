@@ -99,7 +99,10 @@ export default defineConfig({
     })),
     // `common-visual` (D21): the 4 recipes phase 02 owns per
     // Instructions/01-pre-phase/recipe-feature-map.md ("06-editor",
-    // "15-cmdline", "18-split", "19-choose-tree"), moved out of the
+    // "15-cmdline", "18-split", "19-choose-tree"), plus "08-tracker" (joined
+    // late via phase 07's R1 ruling — its sole renderer is
+    // common/components/Wallpaper.svelte, not Dashboard.svelte, so it never
+    // belonged to the dashboard feature phase), moved out of the
     // viewport-named visual projects above. `{projectName}` here is
     // `common-visual-<viewport>`, not the bare viewport, so it can no longer
     // feed `snapshotPathTemplate`'s `{projectName}` token the way the
