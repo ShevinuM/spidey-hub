@@ -100,15 +100,8 @@ test.describe("Grep overlay", () => {
   test("Enter on an employment content hit lands in the employment view", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
-    // The co-op role's own frontmatter `role:` line: personnel-collection content is a
-    // path-derived tree where every leaf is literally named "role.md" — that
-    // bare filename alone is not a unique search term across the whole
-    // index, since it's also a substring of test files/fixtures that
-    // mention this content's own path. This exact frontmatter value only
-    // ever appears in the one real content file, verified against the
-    // committed index.
     await page.keyboard.type('role: "Software Developer, Co-op"');
-    await expect(rows(page).first()).toHaveAttribute(
+    await expect(selectedRow(page)).toHaveAttribute(
       "data-path",
       "src/features/employment/content/personnel/enaimco/software-developer/co-op/role.md",
     );
