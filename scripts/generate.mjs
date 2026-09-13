@@ -386,15 +386,16 @@ function generateAllProjectsIndex() {
 // ---------------------------------------------------------------------------
 //
 // Walks the site's own source: src/**, scripts/**, tests/** (excluding
-// goldens — binary PNGs — and reference — the vendored, never-shipped design
-// handoff copy, see tests/visual/README-PIPELINE.md), plus a short list of
-// root config files and README.md.
+// goldens — binary PNGs), plus a short list of root config files and
+// README.md.
 //
-// `common/tests/ui/support/reference/**` is excluded (via the "reference"
-// basename below) because it's ~3MB of vendored third-party HTML/JS/images
-// that is never shipped (not in src/public) — including it would flood the
-// live grep overlay with the design reference itself rather than "the
-// site's own source".
+// The vendored, never-shipped design handoff copy lives at the repo root
+// (`reference/`, see tests/visual/README-PIPELINE.md) — outside every subdir
+// this walker visits (GREP_ROOT_SUBDIRS below), so it is never walked and
+// needs no skip entry. It is ~3MB of third-party HTML/JS/images that is
+// never shipped (not in src/public); including it would flood the live grep
+// overlay with the design reference itself rather than "the site's own
+// source".
 
 const GREP_SKIP_DIRS = new Set([
   "node_modules",
@@ -402,7 +403,6 @@ const GREP_SKIP_DIRS = new Set([
   "dist",
   ".astro",
   "goldens",
-  "reference",
 ]);
 
 const GREP_ROOT_SUBDIRS = ["src", "scripts", "tests"];
@@ -483,7 +483,6 @@ const FS_INDEX_SKIP_DIRS = new Set([
   "dist",
   ".astro",
   "goldens",
-  "reference",
 ]);
 
 const FS_INDEX_SKIP_FILES = new Set([".DS_Store"]);

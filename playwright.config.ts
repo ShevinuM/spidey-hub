@@ -534,7 +534,7 @@ export default defineConfig({
       // entry) because Playwright's `webServer` array has no per-project
       // conditional wiring — confirmed empirically in phase 02's D21(b)
       // read of identical.spec.ts/adversarial-fixtures.spec.ts.
-      command: "node common/tests/ui/support/static-server.mjs common/tests/ui/support/reference 4400",
+      command: "node common/tests/ui/support/static-server.mjs reference 4400",
       url: "http://localhost:4400/Homepage.dc.html",
       reuseExistingServer: !process.env.CI,
     },

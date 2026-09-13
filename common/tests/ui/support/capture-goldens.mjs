@@ -36,7 +36,7 @@ import { captureState } from "./pipeline.mjs";
 
 const RESTORE_PROTOTYPE_PARITY_FLAG = "--restore-prototype-parity";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REFERENCE_DIR = path.join(__dirname, "reference");
+const REFERENCE_DIR = path.join(__dirname, "../../../../reference");
 // This script's own 10-recipe `recipes` array (see the header comment) only
 // ever wrote into the single tests/visual/goldens/ tree that existed before
 // 00-phases.md D21 started splitting goldens per context (phase 02 moved

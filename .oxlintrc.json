@@ -1,3 +1,3 @@
 {
-  "ignorePatterns": [".cache/**", "common/tests/ui/support/reference/**", "dist/**"]
+  "ignorePatterns": [".cache/**", "reference/**", "dist/**"]
 }
