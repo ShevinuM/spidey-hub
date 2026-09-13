@@ -1,25 +1,7 @@
-// Behavioral e2e suite against the real-content build (`pnpm test:e2e` runs
-// `pnpm build` first, then previews `dist/` on port 4322 — see
-// playwright.config.ts's webServer entry and package.json's `test:e2e`
-// script).
-//
-// Scope: view switching + status bar text per view (including the
-// bug-fix-1 regression: Retina-V renders in numeric order, not appended
-// after Profile), modifier-key fall-through, and the live clock (bug fix 2).
-//
-// The window list has six real windows (0:dashboard through 5:help), and
-// bare q/Esc never switch views anywhere — Esc is reserved for modal-exit
-// roles only (grep close, employment filter exit, prefix cancel), never a
-// view switch. Every test below drives navigation via a status-bar click
-// instead (see `goDashboard()`), and the dedicated q/Esc describe block
-// asserts NO navigation happens, in every view.
+// Runs against the real-content build (`pnpm test:e2e` builds then previews `dist/` — see playwright.config.ts's webServer entry).
+// Bare q/Esc never switch views anywhere — Esc is reserved for modal-exit roles only — so navigation here goes through a status-bar click (`goDashboard()`) instead, with the q/Esc describe block asserting no navigation happens.
 import { expect, test, type Page } from "../support/fixtures";
-// This spec's `context` fixture (imported
-// from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
-// sessionStorage flag before every navigation, so BootSequence.svelte's
-// ~4.6s unskippable sequence never runs for these tests — see that
-// file's header comment for why this is a context-fixture override
-// rather than a per-goto-helper change.
+// This spec's `context` fixture (from ../support/fixtures.ts) pre-seeds the boot-seen flag so BootSequence's ~4.6s sequence never runs for these tests.
 
 const STATUS_BAR = '[data-testid="status-bar-windows"]';
 
@@ -51,14 +33,7 @@ function winText(activeId: string, lastId?: string): string {
   return WINDOWS.map((id, i) => `${i}:${WINDOW_NAMES[id]}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
 }
 
-/**
- * Navigate and wait until Terminal.svelte's real keydown/popstate listeners
- * are attached (`[data-terminal-ready="true"]`) before returning. The SSR'd
- * markup (e.g. the dashboard wordmark, the status bar) is already visible before
- * hydration completes, so it is not by itself proof the app can handle a
- * keypress yet — under real (non-faked) timers this is a genuine race, not
- * a hypothetical one (observed flakily failing without this wait).
- */
+/** Waits for Terminal.svelte's real keydown/popstate listeners to attach (`[data-terminal-ready="true"]`) — SSR markup renders before hydration completes, so visibility alone isn't proof the app can handle a keypress yet (this race was observed flaking without the wait). */
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);
   await page.locator('[data-terminal-ready="true"]').waitFor({ state: "attached" });
@@ -73,10 +48,7 @@ async function prefixDigit(page: Page, digit: string) {
   await page.keyboard.press(digit);
 }
 
-/** Returns to the dashboard via a status-bar click — the only way to reach
- * the dashboard from elsewhere now that q/Esc never navigate — used
- * wherever a test merely needs to get back home as a setup step rather
- * than testing navigation itself. */
+/** Returns to the dashboard via a status-bar click, since q/Esc never navigate — used as a setup step wherever a test just needs to get back home. */
 async function goDashboard(page: Page) {
   await page.locator('[data-testid="status-bar-window"][data-window-id="dashboard"]').click();
   await expect(page).toHaveURL(/\/$/);
@@ -238,12 +210,6 @@ test.describe("URL sync + back/forward", () => {
   });
 });
 
-// The old amber toast-strip system (seeded pool pick + fixed auto-dismiss
-// overlay) is retired — see tests/e2e/notifications.spec.ts for the
-// Mockup-B bell/panel/toast system that replaced it (badge, open/close,
-// tabs, read/unread/spam persistence, dismiss semantics, mark-all-read,
-// 2-new-per-visit injection, toast auto-dismiss).
-
 test.describe("dashboard rename + live footer pane count", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
@@ -301,16 +267,11 @@ test.describe("modifier fall-through", () => {
       return ev.defaultPrevented;
     });
     expect(prevented).toBe(true);
-    // Opening the grep overlay (see tests/e2e/grep.spec.ts
-    // for its own full behavioral suite) is never a URL/view switch: the
-    // overlay sits on top of whichever view/URL was already active.
+    // Opening the grep overlay (see grep.spec.ts for its full suite) is never a URL/view switch — the overlay sits atop whichever view/URL was already active.
     await expect(page).toHaveURL(/\/$/);
   });
 
-  // Regression guard: Terminal.svelte's handleKey briefly claimed
-  // *any* keydown with e.key === "/" as the grep reservation before checking
-  // modifiers — `e.key` is "/" regardless of which modifiers are held, so
-  // Cmd+/ (a real browser/OS shortcut) was getting preventDefault-ed too.
+  // `e.key` is "/" regardless of which modifiers are held, so the modifier check must run before claiming the grep reservation, or Cmd+/ (a real browser/OS shortcut) would get preventDefault-ed too.
   test("a held-modifier `/` keydown (Cmd+/) is NOT preventDefault-ed", async ({ page }) => {
     await gotoReady(page, "/");
     const prevented = await page.evaluate(() => {
@@ -324,32 +285,7 @@ test.describe("modifier fall-through", () => {
 });
 
 test.describe("live clock (bug fix 2)", () => {
-  // `page.clock.install()` does NOT itself freeze `Date.now()` — real
-  // wall-clock time keeps advancing until the FIRST explicit clock-control
-  // call, AND after any `runFor()` call finishes, the clock resumes ticking
-  // in REAL time again until the next control call. StatusBar.svelte's
-  // clock is a self-rescheduling `setTimeout` chain (`msUntilNextMinute`),
-  // not a fixed-interval poll, so using `runFor()` between reading/asserting
-  // the "before" DOM text and the final assertion lets the clock keep
-  // ticking in real wall time in between; under enough parallel-worker CPU
-  // contention, more than the intended 61s of real time could elapse,
-  // occasionally rolling the minute display past "23:35" to "23:36" or
-  // later by the time it's read.
-  //
-  // `page.clock.pauseAt(<absolute time>)` avoids this — see
-  // tests/visual/pipeline.mjs's `captureBootState()` header comment for the
-  // full writeup of the same clock-control property applied to the boot
-  // pipeline: `pauseAt` leaves the clock genuinely FROZEN at its target
-  // instant (confirmed empirically: a bare `setInterval`'s counter and
-  // `Date.now()` were byte-identical across two reads separated by a real
-  // 500ms wait), so no amount of real time passing between assertions —
-  // however slow the runner is — can move the displayed clock. The first
-  // `pauseAt` runs BEFORE navigation (eliminating page-load/hydration
-  // jitter leaking into the "starting instant" the same way it does for
-  // boot), and each subsequent `pauseAt` targets an ABSOLUTE offset from
-  // that same t0 rather than a relative duration from "whenever this call
-  // happens to run" (this is NOT a retry-mask — it's the same root-cause
-  // clock-control fix applied to a second timer chain).
+  // `page.clock.pauseAt()`, not `install()`+`runFor()`, genuinely freezes the clock; it's called before navigation to avoid hydration jitter, and each call targets an absolute offset from t0 so parallel-worker load can't shift the reading (see pipeline.mjs's `captureBootState()` for the same technique applied to boot).
   test("status bar minute advances after 60s of (faked) time", async ({ page }) => {
     const CLOCK_TIME = "2026-08-15T23:34:00";
     const t0 = new Date(CLOCK_TIME).getTime();
@@ -415,9 +351,6 @@ test.describe("dashboard wordmark restyle + outer chrome removal", () => {
     expect(style.strokeWidth).not.toBe("0px");
     expect(style.strokeColor).not.toBe("");
 
-    // The old bordered plate wrapped the wordmark in its own bordered div;
-    // item 10 removes that wrapper entirely, so the wordmark's parent must
-    // carry no border of its own.
     const parentBorder = await wordmark.evaluate((el) => getComputedStyle(el.parentElement as Element).borderStyle);
     expect(parentBorder).toBe("none");
   });

@@ -1,14 +1,4 @@
-// Behavioral e2e safety net for Terminal.svelte's keydown dispatch order and
-// view routing, written as a pre-refactor baseline (PLAN.md Phase A) —
-// Terminal and Dashboard previously had no dedicated spec (only incidental
-// coverage from nav.spec.ts/tmux.spec.ts/boot.spec.ts). This file
-// deliberately overlaps those specs in a few places (a safety net is
-// supposed to be redundant, not minimal) but focuses on: prefix arm/single-
-// shot-disarm, the digit window-jump table end to end, direct-route view
-// rendering (nav.spec.ts only ever SSR-checked "/retina-v" directly), the
-// global `r` reboot backstop reached from every non-Profile view (boot.spec.ts
-// only exercises it from the dashboard and Profile), and the status bar's
-// active-window highlight style.
+// Deliberately overlaps nav.spec.ts/tmux.spec.ts/boot.spec.ts in places — a safety net is meant to be redundant, not minimal — but focuses on prefix arm/single-shot-disarm, the digit window-jump table, direct-route view rendering, the global `r` reboot backstop from every non-Profile view, and the status bar's active-window highlight.
 import { expect, test, type Page } from "../support/fixtures";
 
 const STATUS_BAR = '[data-testid="status-bar-windows"]';
@@ -180,14 +170,7 @@ test.describe("dispatch order: an open overlay claims a key before the global ba
     await expect(page).toHaveURL(/\/$/);
   });
 
-  // Symmetric case from the OTHER direction (tmux.spec.ts's "prefix works
-  // even while grep is open" already proves prefix > grep for a digit
-  // target) — here a bare `r` typed after arming the prefix mid-grep is the
-  // window-kill-adjacent reboot letter, not a query character, so the
-  // prefix must consume it before grep ever sees it. `r` has no bound
-  // prefix command, so it's simply swallowed (same class of proof
-  // tmux.spec.ts's "a prefixed \"/\" is swallowed" test uses for grep's own
-  // opener key).
+  // Symmetric case from the other direction (tmux.spec.ts's "prefix works even while grep is open" already proves prefix > grep for a digit target): a bare `r` typed after arming the prefix mid-grep must be consumed by the prefix before grep ever sees it, and since `r` has no bound prefix command it's simply swallowed (same proof tmux.spec.ts's "a prefixed \"/\" is swallowed" test uses).
   test("Ctrl-b r while grep is open is swallowed by the (unbound) prefix dispatch, not typed into the query", async ({
     page,
   }) => {

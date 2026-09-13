@@ -1,18 +1,6 @@
-// Behavioral e2e suite for the tmux copy-mode overlay (CopyMode.svelte) —
-// `Ctrl-b [` / `Ctrl-b ]`.
-//
-// The "which pane does copy-mode capture" half is deliberately data-driven
-// off each view's OWN rendered `[data-copy-source]` text (read at test time,
-// same convention grep.spec.ts/repositories.spec.ts already use for on-disk
-// content) rather than hardcoded copy, so this suite can't drift from
-// whatever each view's data files actually render.
+// This suite reads each view's `[data-copy-source]` text at test time (same convention as grep.spec.ts/repositories.spec.ts) rather than hardcoding copy, so it can't drift from what the view actually renders.
 import { expect, test, type Page } from "../support/fixtures";
-// This spec's `context` fixture (imported
-// from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
-// sessionStorage flag before every navigation, so BootSequence.svelte's
-// ~4.6s unskippable sequence never runs for these tests — see that
-// file's header comment for why this is a context-fixture override
-// rather than a per-goto-helper change.
+// This spec's `context` fixture (from ../support/fixtures.ts) pre-seeds the boot-seen flag so BootSequence's ~4.6s sequence never runs for these tests.
 
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);
@@ -99,14 +87,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     });
   }
 
-  // A program can run in more than one pane at once, so `[data-copy-source]`
-  // capture must resolve to the FOCUSED PANE's own program, not the window's
-  // `view`. Wallpaper's tracker HUD is always in the DOM (just faded) at
-  // every view, so without this, splitting the retina-v window and focusing
-  // the new (shell) sibling still leaves Wallpaper's `data-copy-source`
-  // attribute on — CopyMode's `document.querySelector('[data-copy-source]')`
-  // would find the HUD (earlier in the DOM) instead of the focused shell,
-  // since querySelector returns only the first match.
+  // A program can run in more than one pane at once, so `[data-copy-source]` capture must resolve to the focused pane's program, not the window's `view` — without this, splitting retina-v and focusing the new pane would still match Wallpaper's always-present (faded) tracker HUD first, since `querySelector` returns only the first match.
   test("a shell pane split off a retina-v window is the copy-source, not the tracker HUD", async ({ page }) => {
     await gotoReady(page, "/retina-v");
     await expect(page.locator("[data-copy-source]")).toHaveCount(1);
@@ -123,17 +104,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     await expect(page.locator('pre[data-copy-source]')).toHaveCount(0);
   });
 
-  // A verifier caught that the editor's visible scroller renders each line's
-  // gutter number and text as SIBLING flex items, and `innerText` inserts a
-  // line break between flex siblings the same way it does between block
-  // boxes — scraping that DOM interleaved every gutter digit as its own
-  // "line", so copy-mode line N was never the buffer's real line N (yanking
-  // line 1 actually yanked the gutter digit "1"). Editor.svelte now exposes
-  // a text-only, hidden `data-copy-source` mirror built from `rawLines`
-  // directly — asserted here by yanking copy-mode's own line 1 and checking
-  // it EQUALS the real buffer's line 1 text exactly (not merely contained
-  // somewhere in the overlay, which is how the interleaving bug slipped
-  // through the original test).
+  // The editor's gutter number and line text render as sibling flex items, and `innerText` inserts a line break between flex siblings the same way it does between block boxes, so this asserts the yanked line EQUALS the buffer's real line text exactly rather than merely containing it, to catch any gutter-digit bleed into the capture.
   test("captures the vim editor buffer as its active pane, one real buffer line per copy-mode line", async ({
     page,
     context,
@@ -273,8 +244,6 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     await expect(overlay(page)).not.toBeVisible();
   });
 
-  // Round-trip requirement: a copy-mode yank in one view, pasted via
-  // Ctrl-b ] into an entirely different overlay's text input.
   test("round trip: a copy-mode yank pastes into the grep query via Ctrl-b ]", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await gotoReady(page, "/help");

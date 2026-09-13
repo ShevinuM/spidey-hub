@@ -1,20 +1,7 @@
-// Behavioral e2e suite for the vim-lite engine in Editor.svelte.
-// Parametrized over both places the shared editor
-// is mounted from — Repositories (a real repo file) and Employment (a real role
-// doc) — since the engine itself is entry-point-agnostic and both callers
-// must get identical behavior "for free" from the one shared component.
-//
-// Assertions read real, on-disk content at test time (the same convention
-// repositories.spec.ts / employment.spec.ts already use for their own editor
-// assertions) rather than hardcoding line text, so this suite can't drift
-// from whatever the fixture repos/role docs actually contain.
+// Parametrized over both places the shared editor is mounted — Repositories and Employment — since the engine is entry-point-agnostic and both callers must behave identically.
+// Reads real on-disk content at test time (like repositories.spec.ts/employment.spec.ts) rather than hardcoding line text, so this suite can't drift from the fixtures.
 import { expect, test, type Page } from "../support/fixtures";
-// This spec's `context` fixture (imported
-// from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
-// sessionStorage flag before every navigation, so BootSequence.svelte's
-// ~4.6s unskippable sequence never runs for these tests — see that
-// file's header comment for why this is a context-fixture override
-// rather than a per-goto-helper change.
+// This spec's `context` fixture (from ../support/fixtures.ts) pre-seeds the boot-seen flag so BootSequence's ~4.6s sequence never runs for these tests.
 
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);
@@ -29,11 +16,7 @@ const pasteBuffer = (page: Page) => page.locator('[data-testid="paste-buffer"]')
 const closePill = (page: Page) => page.locator('[data-testid="editor-close-pill"]');
 const overlay = (page: Page) => page.locator('[data-testid="grep-overlay"]');
 const lineText = (page: Page, n: number) => page.locator(`[data-line="${n}"] [data-testid="editor-line-text"]`);
-// The `:` ex-command line's PRESENTATION (the typed text, the resulting
-// readonly/E492 error) lives in the site-wide floating Cmdline box, not
-// Editor.svelte's own footer — see Cmdline.svelte /
-// tests/e2e/cmdline.spec.ts for that box's own dedicated coverage; the
-// assertions below read these locators for ex-command-specific output.
+// The `:` ex-command's presentation (typed text, readonly/E492 error) lives in the site-wide Cmdline box, not Editor.svelte's own footer — see Cmdline.svelte / cmdline.spec.ts for that box's own coverage.
 const cmdlineOverlay = (page: Page) => page.locator('[data-testid="cmdline-overlay"]');
 const cmdlineInput = (page: Page) => page.locator('[data-testid="cmdline-input"]');
 const cmdlineError = (page: Page) => page.locator('[data-testid="cmdline-error"]');
@@ -58,15 +41,7 @@ const entryPoints: EntryPoint[] = [
     name: "Repositories",
     async open(page) {
       await gotoReady(page, "/repositories");
-      // The default-highlighted panel [1] repo is the virtual "all-projects"
-      // entry, not a real repo, so pressing Enter on the default highlight
-      // does not load a real repo's tree. The Files pane also renders the
-      // FULL nested tree at once, and daily-tech-digest genuinely has two
-      // files named "README.md" (root + "site/README.md") simultaneously
-      // visible in that tree, which would make the locator below ambiguous.
-      // transcript-tts has exactly one README.md and no nested duplicate, so
-      // clicking its panel [1] row directly (which both selects it AND loads
-      // its tree) sidesteps both issues.
+      // transcript-tts is used here, not the default-highlighted virtual "all-projects" repo, because daily-tech-digest has two files named README.md simultaneously visible in its nested tree, which would make the locator below ambiguous.
       await page.locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]').click();
       await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')).toBeVisible();
       // Clicking a file previews it in panel [3] but does NOT open the
@@ -84,20 +59,14 @@ const entryPoints: EntryPoint[] = [
   {
     name: "Employment",
     async open(page) {
-      // v2 (flat list + timeline):
-      // no more drill-down — row 0 (newest: Enaimco's Software Developer) is
-      // selected by default, so a single Enter opens its role.md directly.
+      // Row 0 (newest: Enaimco's Software Developer) is selected by default, so a single Enter opens its role.md directly.
       await gotoReady(page, "/employment");
       await expect(page.locator('[data-testid="employment-row"]').first()).toBeVisible();
       await page.keyboard.press("Enter"); // -> editor
       await expect(scroller(page)).toBeVisible();
     },
     async assertParentVisible(page) {
-      // There is no `employment-path` breadcrumb element. Anchor instead
-      // (same convention employment.spec.ts's own `rowLocator` uses): the
-      // flat list's row 0 is back, still selected (its own preview path is
-      // the exact file this entry point opened) — proving we're back on the
-      // Employment Records list, not the dashboard or some other view.
+      // Anchored (same convention as employment.spec.ts's `rowLocator`) on the flat list's row 0 being back and still selected, since there's no `employment-path` breadcrumb element.
       await expect(page.locator('[data-testid="employment-row"]').first()).toBeVisible();
       await expect(page.locator('[data-testid="employment-preview-path"]')).toHaveText("enaimco/software-developer.md");
     },
@@ -267,11 +236,7 @@ for (const entry of entryPoints) {
       page,
     }) => {
       await entry.open(page);
-      // The footer mode indicator does not show the typed ex-command text
-      // (that presentation lives in the box) — it stays "NORMAL" throughout,
-      // since the editor's own mode never
-      // actually changes for `:` anymore (see Editor.svelte's own comment
-      // on that key).
+      // The footer mode indicator does not show the typed ex-command text (that presentation lives in the box) — it stays "NORMAL" throughout, since the editor's own mode never changes for `:` (see Editor.svelte's own comment on that key).
       await expect(modeText(page)).toHaveText("NORMAL");
       await page.keyboard.press(":");
       await expect(cmdlineOverlay(page)).toBeVisible();
@@ -292,13 +257,7 @@ for (const entry of entryPoints) {
       await entry.assertParentVisible(page);
     });
 
-    // Regression test (live-reproduced defect): an active VISUAL/VISUAL-LINE
-    // selection must drop to NORMAL AT BOX-OPEN TIME when `:` is pressed —
-    // otherwise the selection stays alive underneath the box, so a
-    // subsequent `:<n>` jump would EXTEND the selection instead of moving a
-    // bare cursor. Asserted immediately after pressing `:`, before typing or
-    // executing any command, so this can't pass by coincidence of the
-    // command itself happening to reset the mode.
+    // An active VISUAL/VISUAL-LINE selection must drop to NORMAL when `:` is pressed, or a subsequent `:<n>` jump would extend it instead of moving a bare cursor; asserted immediately after pressing `:`, before typing, so this can't pass by coincidence.
     test("`:` from VISUAL drops the selection to NORMAL at box-open time; :<n> does not extend it", async ({
       page,
     }) => {

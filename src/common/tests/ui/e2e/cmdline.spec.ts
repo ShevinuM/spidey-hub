@@ -1,24 +1,5 @@
-// Behavioral e2e suite for the site-wide floating Cmdline —
-// src/common/components/Cmdline.svelte, driven by Terminal.svelte. Covers
-// all THREE entry contexts (site `:`, editor ex-mode `:`, tmux
-// command-prompt `Ctrl-b :`), the palette feel (silent Tab completion +
-// zsh-style repeated-Tab cycling — no suggestions list ever renders,
-// asserted absent throughout this file), and a DATA-DRIVEN sweep over
-// src/common/content/cmdline.yaml's own `commands` list so a future addition to that
-// file is asserted automatically rather than silently untested ("the e2e
-// sweep is generated FROM the yaml so the list can't drift").
-// The new `?` HelpSearch palette that took over the browsable/discoverable
-// role has its own suite — tests/e2e/help-search.spec.ts.
 import { expect, test, type Page } from "../support/fixtures";
-// This spec's `context` fixture (imported from
-// ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
-// sessionStorage flag before every navigation, so BootSequence.svelte's
-// ~4.6s unskippable sequence never runs for these tests — see that file's
-// header comment for why this is a context-fixture override rather than a
-// per-goto-helper change. The `:reboot` test below still works under this
-// flag: BootSequence's `replay()` is a manual trigger independent of the
-// sessionStorage auto-skip (see boot.spec.ts's own "r on the ready
-// dashboard replays boot, independent of the session flag" test).
+// This spec's `context` fixture (from ../support/fixtures.ts) pre-seeds the boot-seen flag so BootSequence's ~4.6s sequence never runs here; the `:reboot` test still works because BootSequence's `replay()` is a manual trigger independent of that auto-skip.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
@@ -166,10 +147,7 @@ test.describe("Cmdline: opening", () => {
   test("while the box is open, the prefix is inert except the bare Ctrl-b arm and ]: no digit switch, no & confirm", async ({
     page,
   }) => {
-    // Same "prompt owns the keyboard" gate as an open status-bar prompt
-    // (reuses/extends the isPromptActive gating pattern) —
-    // mirrors tmux.spec.ts's own "Ctrl-b <digit>/&/x/,/n are all inert
-    // while the rename prompt is open" regression test.
+    // Same isPromptActive gating as an open status-bar prompt — mirrors tmux.spec.ts's "Ctrl-b <digit>/&/x/,/n are all inert while the rename prompt is open" test.
     await gotoReady(page, "/");
     await page.keyboard.press(":");
     await expect(overlay(page)).toBeVisible();
@@ -246,12 +224,6 @@ test.describe("Cmdline: `:` stays literal inside other text inputs", () => {
     await expect(page.locator('[data-testid="grep-query"]')).toContainText(":");
     await expect(overlay(page)).not.toBeVisible();
   });
-
-  // The Employment `f`-filter prompt this test covered no longer exists
-  // (Decision 7, PLAN.md — dropped along with drill-down/`../` in the v2
-  // rebuild). Employment's own
-  // ":"-while-editor-open coverage lives in the "editor ex-mode still works
-  // through the box" describe block below (the Employment entry point).
 
   test(": types literally into the rename-window prompt, never opening the box", async ({ page }) => {
     await gotoReady(page, "/");
@@ -401,15 +373,7 @@ test.describe("Cmdline: editor ex-mode still works through the box", () => {
       name: "Repositories",
       async open(page) {
         await gotoReady(page, "/repositories");
-        // The default-highlighted panel [1] repo is the virtual
-        // "all-projects" entry (no README.md in its flat .md-only tree), and
-        // the Files pane renders the FULL nested tree at once —
-        // daily-tech-digest genuinely has two files named "README.md" (root
-        // + "site/README.md") simultaneously visible, which would make the
-        // locator below ambiguous. transcript-tts has exactly one README.md
-        // and no nested duplicate, so clicking its panel [1] row directly
-        // (selects AND loads its tree) sidesteps both issues — same
-        // approach as editor-vim.spec.ts's Repositories entry point.
+        // transcript-tts is used here, not the default-highlighted virtual "all-projects" repo, because daily-tech-digest has two files named README.md simultaneously visible in its nested tree, which would make the locator below ambiguous — same choice as editor-vim.spec.ts's Repositories entry point.
         await page.locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]').click();
         await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')).toBeVisible();
         await page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]').click();
@@ -424,19 +388,14 @@ test.describe("Cmdline: editor ex-mode still works through the box", () => {
     {
       name: "Employment",
       async open(page) {
-        // v2 (flat list + timeline):
-        // no more drill-down — row 0 (newest) is selected by default, so a
-        // single Enter opens its role.md directly (same as editor-vim.spec.ts's
-        // Employment entry point).
+        // Row 0 (newest) is selected by default, so a single Enter opens its role.md directly (same as editor-vim.spec.ts's Employment entry point).
         await gotoReady(page, "/employment");
         await expect(page.locator('[data-testid="employment-row"]').first()).toBeVisible();
         await page.keyboard.press("Enter");
         await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
       },
       async assertParentVisible(page) {
-        // There is no `employment-path` breadcrumb element. Anchor instead:
-        // the flat list's row 0 is back, still selected (its own preview
-        // path is the exact file this entry point opened).
+        // Anchored on the flat list's row 0 being back and still selected (its own preview path is the exact file this entry point opened), since there's no `employment-path` breadcrumb element.
         await expect(page.locator('[data-testid="employment-row"]').first()).toBeVisible();
         await expect(page.locator('[data-testid="employment-preview-path"]')).toHaveText("enaimco/software-developer.md");
       },
@@ -557,10 +516,7 @@ test.describe("Cmdline: tmux command-prompt mode (executes through the same flow
     await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveCount(0);
   });
 
-  // Killing the session's last window destroys the session outright and,
-  // with no other session to fall back to, detaches the client to the host
-  // shell printing exactly `[exited]` (see tests/e2e/tmux.spec.ts's own
-  // "killing every window down to the last one" test).
+  // Killing the session's last window destroys the session outright and, with no other session to fall back to, detaches the client to the host shell printing exactly `[exited]` (see tmux.spec.ts's "killing every window down to the last one" test).
   test("kill-window on the last remaining window destroys the session and detaches to the host shell ([exited])", async ({
     page,
   }) => {
@@ -627,13 +583,6 @@ test.describe("Cmdline: tmux command-prompt mode (executes through the same flow
   });
 });
 
-// ---------------------------------------------------------------------
-// Data-driven sweep over src/common/content/cmdline.yaml's own `commands` list —
-// every entry there is executed here by its `action` id,
-// so a future addition to that file fails loudly (an unhandled `action`)
-// rather than silently shipping untested.
-// ---------------------------------------------------------------------
-
 const VIEW_ROUTE_BY_ACTION: Record<string, RegExp> = {
   "view:home": /\/$/,
   "view:repositories": /\/repositories$/,
@@ -673,13 +622,7 @@ test.describe("Cmdline: data-driven sweep of every src/common/content/cmdline.ya
         await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
         await expect(page.locator('[data-testid="grep-query"]')).toContainText("svelte");
 
-        // The overlay is already SEARCHING, not just open with the query
-        // text sitting there unused — asserted against the real index via
-        // the same `search()` port the component itself uses (grep.spec.ts
-        // does the same), rather than a hardcoded row count: the number of
-        // rows actually RENDERED also depends on the list pane's own
-        // ResizeObserver-measured height (GrepOverlay.svelte's `listVis`),
-        // not just the hit count, so only a lower bound is asserted here.
+        // Asserted against the real index via the same `search()` the component uses (like grep.spec.ts), rather than a hardcoded count, since rendered row count also depends on the list pane's ResizeObserver height (GrepOverlay.svelte's `listVis`), so only a lower bound is checked here.
         const files = JSON.parse(
           readFileSync(join(ROOT, "public/generated/grep-index.json"), "utf8"),
         ) as RepoFile[];
@@ -716,18 +659,13 @@ test.describe("Cmdline: data-driven sweep of every src/common/content/cmdline.ya
     }
 
     if (action === "exit-program") {
-      // Exits the active pane's program to a shell in the SAME window
-      // (does not kill it). Behavior on the last remaining window is its own
-      // dedicated test below (no last-window guard applies, since nothing is
-      // being killed).
+      // Exits the active pane's program to a shell in the same window without killing it; the last-remaining-window case is its own test below, since nothing here is actually being killed.
       test(`:${def.name} exits the active pane's program to a shell in the same window`, async ({ page }) => {
         await gotoReady(page, "/repositories");
         await page.keyboard.press(":");
         await typeAndEnter(page, def.name);
         await expect(overlay(page)).not.toBeVisible();
-        // Window survives (same stable id), auto-renamed live to "zsh" —
-        // and its URL is frozen (Architecture notes: pushState only for
-        // canonical program windows — "shell" isn't one).
+        // Window survives (same stable id) and is auto-renamed live to "zsh"; its URL stays frozen since pushState only happens for canonical program windows, and "shell" isn't one.
         await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveText(/zsh/);
         await expect(page.locator('[data-testid="shell-prompt"]')).toBeVisible();
         await expect(page).toHaveURL(/\/repositories$/);
@@ -735,10 +673,7 @@ test.describe("Cmdline: data-driven sweep of every src/common/content/cmdline.ya
       continue;
     }
 
-    // Any future cmdline.yaml command with an `action` this sweep doesn't
-    // yet know how to exercise fails loudly here, by design ("the e2e
-    // sweep is generated FROM the yaml so the list can't drift") — rather
-    // than being silently skipped.
+    // Any future cmdline.yaml command whose `action` this sweep doesn't handle fails loudly here by design, rather than being silently skipped.
     test(`:${def.name} has sweep coverage for its action "${action}"`, () => {
       throw new Error(
         `cmdline.spec.ts's data-driven sweep doesn't know how to exercise action "${action}" (command "${def.name}") — add a case above.`,

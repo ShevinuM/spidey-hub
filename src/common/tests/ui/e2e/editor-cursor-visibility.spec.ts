@@ -1,26 +1,4 @@
-// Regression test: pressing j or other vim commands must never make the vim
-// cursor disappear on some pages.
-//
-// Root cause (found via runtime repro, not static analysis): the editor's
-// per-line row (Editor.svelte, the `<div data-line={l.n} ...>` the cursor
-// span lives inside) never set `white-space:pre`, unlike its sibling
-// CopyMode.svelte's equivalent row (`data-copy-mode-line`, which already has
-// `white-space:pre`). Under the browser's default `white-space:normal`,
-// leading whitespace (an indentation space/tab at the very start of a line's
-// rendered content) collapses to zero width — so whenever the block cursor
-// landed on a leading-indentation character (extremely common in real source
-// files: any indented code line), the `[data-testid="editor-cursor"]` span
-// still existed in the DOM (so most naive `toHaveCount(1)`-style assertions
-// never caught it) but rendered as a 0x0 box, i.e. invisible. Plain prose
-// fixtures (READMEs, role docs) rarely start a line with whitespace, which
-// is why this went unnoticed on those pages and only reproduced on real
-// indented source. Fixed by adding `white-space:pre` to that row, matching
-// CopyMode's own convention.
-//
-// This spec deliberately opens a real, on-disk, indented source file (not a
-// prose fixture) and drives the cursor onto a line that genuinely starts
-// with a tab character, then asserts the cursor box has non-zero area —
-// the exact symptom a plain `toHaveCount(1)` assertion would miss.
+// Checks the rendered cursor's bounding box has non-zero size, not just DOM presence — a collapsed-to-0x0 box would still pass a toHaveCount(1) check.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Page } from "../support/fixtures";
@@ -117,9 +95,7 @@ test.describe("Editor cursor visibility (regression)", () => {
     expect(box!.width, "cursor collapsed to zero width on a leading-whitespace character").toBeGreaterThan(0);
     expect(box!.height, "cursor collapsed to zero height on a leading-whitespace character").toBeGreaterThan(0);
 
-    // Sweep every remaining line in the file too (a broader net than the one
-    // known line above) — the original bug reproduced on ANY line whose
-    // first character was whitespace, not just this one.
+    // Sweeps every remaining line too, since any line starting with whitespace could exhibit the same collapse.
     const lineCount = await page.locator("[data-line]").count();
     await page.keyboard.press("g");
     await page.keyboard.press("g");

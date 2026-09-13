@@ -1,16 +1,5 @@
-// Behavioral e2e suite for the tmux prefix (Ctrl-b) state machine
-// (Terminal.svelte) and the mobile-block card (Shell.astro):
-//   - the window list has "0:dashboard" through "5:help" (six windows), so
-//     `n`/`p` cycle all six windows and `5`/`?` jump straight to Help;
-//   - the prefix takes precedence over the grep overlay ("Prefix precedence
-//     over grep"): Ctrl-b arms even while grep is open.
 import { expect, test, type Page } from "../support/fixtures";
-// This spec's `context` fixture (imported
-// from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
-// sessionStorage flag before every navigation, so BootSequence.svelte's
-// ~4.6s unskippable sequence never runs for these tests — see that
-// file's header comment for why this is a context-fixture override
-// rather than a per-goto-helper change.
+// This spec's `context` fixture (from ../support/fixtures.ts) pre-seeds the boot-seen flag so BootSequence's ~4.6s sequence never runs for these tests.
 
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);
@@ -150,8 +139,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await expect(page).toHaveURL(/\/repositories$/);
   });
 
-  // `d` is real tmux detach — see tests/e2e/sessions.spec.ts for its own
-  // coverage.
+  // `d` is real tmux detach — see sessions.spec.ts for its own coverage.
   test("Ctrl-b 0 returns to the dashboard", async ({ page }) => {
     await gotoReady(page, "/repositories");
     await ctrlB(page);
@@ -159,10 +147,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await expect(page).toHaveURL(/\/$/);
   });
 
-  // `w` is real tmux choose-tree — see tests/e2e/choose-tree.spec.ts for its
-  // own dedicated coverage. This is just a smoke test: opening does NOT
-  // navigate anywhere (the URL stays put — choose-tree is an overlay, not a
-  // window switch) until Enter picks something.
+  // `w` is real tmux choose-tree (see choose-tree.spec.ts for full coverage); this is just a smoke test proving opening does not navigate anywhere until Enter picks something.
   test("Ctrl-b w opens choose-tree instead of going home", async ({ page }) => {
     await gotoReady(page, "/repositories");
     await ctrlB(page);
@@ -191,29 +176,17 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     expect(await statusBarText(page)).toBe(winText("dashboard"));
   });
 
-  // Ctrl-b Ctrl-b is tmux's own default "send-prefix" binding.
-  // The second Ctrl-b disarms and is dispatched as a literal keydown instead
-  // of arming anything further, so a digit typed right after it is
-  // unprefixed (does nothing from the dashboard, which has no digit
-  // hotkeys) rather than being treated as a fresh prefix target.
+  // Ctrl-b Ctrl-b is tmux's own default "send-prefix" binding: the second Ctrl-b disarms and dispatches as a literal keydown, so a digit typed right after is unprefixed (does nothing from the dashboard, which has no digit hotkeys) rather than a fresh prefix target.
   test("Ctrl-b Ctrl-b (send-prefix) does not re-arm — a digit typed right after is unprefixed", async ({ page }) => {
     await gotoReady(page, "/");
     await ctrlB(page);
     await ctrlB(page);
     await page.keyboard.press("2");
-    // Still on the dashboard: the second Ctrl-b was send-prefix (consumed,
-    // dispatched as a literal chord with nothing bound to it outside an
-    // open editor), not a re-arm, so "2" never switched anything.
     await expect(page).toHaveURL(/\/$/);
     expect(await statusBarText(page)).toBe(winText("dashboard"));
   });
 
-  // Send-prefix's whole purpose is making vim's own Ctrl-b (full-page-back)
-  // reachable from a real keypress — a bare Ctrl-b is otherwise always
-  // consumed by the prefix arm first. Opens a real repo
-  // file (same fixture/entry point editor-vim.spec.ts uses) long enough to
-  // scroll, jumps to the last line, then proves Ctrl-b Ctrl-b actually moves
-  // the cursor backward.
+  // Send-prefix's whole purpose is making vim's own Ctrl-b (full-page-back) reachable from a real keypress, since a bare Ctrl-b is otherwise always consumed by the prefix arm first; opens a real repo file (same entry point as editor-vim.spec.ts) long enough to scroll, jumps to the last line, then proves Ctrl-b Ctrl-b moves the cursor backward.
   test("Ctrl-b Ctrl-b pages back in the open vim editor (send-prefix reaches vim's Ctrl-b)", async ({ page }) => {
     await page.route("**/api.github.com/**", (route) => route.abort());
     await gotoReady(page, "/repositories");
@@ -240,10 +213,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await expect(position).not.toContainText(`${totalLines}:`);
   });
 
-  // The grep overlay is WINDOW chrome, not something that survives a window
-  // switch — switching via the prefix (or a status-bar click) always closes
-  // it. The prefix itself still works while grep is open — that half is
-  // unchanged.
+  // The grep overlay is window chrome, not something that survives a window switch, so switching via the prefix (or a status-bar click) always closes it — the prefix itself still works while grep is open.
   test("Ctrl-b works even while the grep overlay is open, and the switch closes the overlay", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
@@ -251,17 +221,10 @@ test.describe("tmux prefix (Ctrl-b)", () => {
 
     await ctrlB(page);
     await page.keyboard.press("2");
-    // The view switched...
     await expect(page).toHaveURL(/\/employment$/);
-    // ...and the "2" was consumed by the prefix, not typed into the grep
-    // query (proven indirectly: the overlay is gone entirely below, but if
-    // the prefix hadn't consumed it first the query would still show a
-    // dangling "2" the instant before close).
-    // ...and the overlay is now closed — grep is window chrome, not session
-    // chrome, so a window switch always takes it down.
+    // The view switched, and the "2" was consumed by the prefix rather than typed into the grep query (proven indirectly: if the prefix hadn't consumed it, the query would show a dangling "2" the instant before close).
     await expect(page.locator('[data-testid="grep-overlay"]')).not.toBeVisible();
 
-    // Reopening grep from the new window works cleanly.
     await page.keyboard.press("/");
     await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
   });
@@ -394,8 +357,6 @@ test.describe("Ctrl-b , rename-window", () => {
     await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveText("1:repos*");
   });
 
-  // "Prompt owns keys — typing j into rename doesn't scroll anything
-  // behind it."
   test("the prompt owns the keyboard — typing j does not move the Repositories repo selection behind it", async ({
     page,
   }) => {
@@ -415,9 +376,7 @@ test.describe("Ctrl-b , rename-window", () => {
     await page.keyboard.press("Escape");
   });
 
-  // FAIL #1 regression coverage: fixing "Ctrl-b arms even while a prompt is
-  // open" must not turn every OTHER key into a prefix command — a literal
-  // "]" typed with no preceding Ctrl-b is still just a character.
+  // Fixing "Ctrl-b arms even while a prompt is open" must not turn every other key into a prefix command — a literal "]" with no preceding Ctrl-b is still just a character.
   test("a literal ] keypress with no preceding Ctrl-b still types normally into the prompt", async ({ page }) => {
     await gotoReady(page, "/repositories");
     await ctrlB(page);
@@ -469,12 +428,7 @@ test.describe("Ctrl-b & kill-window", () => {
     await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveCount(1);
   });
 
-  // Sessions exist to fall back to (or, as here, not to): killing the
-  // session's last window destroys the session outright and, since it's the
-  // only session,
-  // detaches the client to the host shell printing exactly `[exited]`. See
-  // tests/e2e/sessions.spec.ts for the "another session still exists"
-  // sibling case.
+  // Killing the session's last window (with no other session to fall back to) destroys it outright and detaches the client to the host shell printing exactly `[exited]` — see sessions.spec.ts for the "another session still exists" sibling case.
   test("killing every window down to the last one destroys the session and detaches to the host shell ([exited])", async ({
     page,
   }) => {
@@ -568,10 +522,7 @@ test.describe("Ctrl-b c new-window", () => {
   });
 });
 
-// `Ctrl-b x` is real tmux kill-pane (there is no Repositories-internal panel-kill
-// — see tests/e2e/panes.spec.ts for full split/kill/layout coverage); this
-// describe block keeps only the single-pane-window smoke test, exercising
-// the numeric-index prompt and real cascade.
+// `Ctrl-b x` is real tmux kill-pane (there is no Repositories-internal panel-kill — see panes.spec.ts for full split/kill/layout coverage); this describe block keeps only the single-pane-window smoke test, exercising the numeric-index prompt and real cascade.
 test.describe("Ctrl-b x kill-pane", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
@@ -596,15 +547,7 @@ test.describe("Ctrl-b x kill-pane", () => {
   });
 });
 
-// While a status-bar prompt (rename/confirm) is open, it owns the keyboard:
-// every branch of `handlePrefixedKey` except `]` is gated behind
-// `statusBarRef.isPromptActive()` (see Terminal.svelte's handleKey()
-// comment), so `Ctrl-b 2` can't switch the view out from under a still-open
-// rename prompt (which would otherwise commit onto the NEW window instead
-// of the one it was opened for), and `Ctrl-b &` can't silently replace a
-// rename prompt with a kill-window confirm. The rename/kill-window commit
-// closures also close over the target window's id captured at prompt-OPEN
-// time rather than re-reading `view` at commit time (defense in depth).
+// While a status-bar prompt is open, it owns the keyboard — every branch of `handlePrefixedKey` except `]` is gated behind `statusBarRef.isPromptActive()` (see Terminal.svelte's handleKey() comment) — so `Ctrl-b 2`/`Ctrl-b &` can't switch the view or replace the prompt out from under it, and the commit closures capture the target window's id at prompt-open time rather than re-reading `view` at commit time.
 test.describe("prompt keyboard ownership vs. the prefix system", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
@@ -811,12 +754,7 @@ test.describe("mobile block (README \"Mobile policy\")", () => {
     await expect(page.locator('[data-terminal-ready="false"]')).toBeAttached();
   });
 
-  // "Prefix inert in mobile mode" — a separate assertion from "pressing b
-  // does nothing" above. Structurally
-  // guaranteed the same way (no keydown listener attaches at all outside
-  // desktop+fine-pointer — see Terminal.svelte's `desktopMode` effect), but
-  // called out explicitly since Ctrl-b arms *state*, not just a view
-  // switch: this proves that state machine never even gets a chance to run.
+  // A separate assertion from "pressing a key does nothing" above — structurally guaranteed the same way (no keydown listener attaches outside desktop+fine-pointer, see Terminal.svelte's `desktopMode` effect) but called out explicitly since Ctrl-b arms state, not just a view switch, proving that state machine never gets a chance to run.
   test("Ctrl-b does nothing on a mobile-blocked viewport (the prefix never arms)", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator('[data-testid="mobile-block"]')).toBeVisible();

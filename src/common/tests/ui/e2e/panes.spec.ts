@@ -1,7 +1,3 @@
-// Behavioral e2e suite for real panes: splits, nav, kill, and the 7 preset
-// layouts. Companion to tests/e2e/tmux.spec.ts (the prefix state machine
-// itself, whose own single-pane kill-pane smoke test covers the new real
-// semantics) and tests/e2e/choose-tree.spec.ts (item 6.5).
 import { expect, test, type Page } from "../support/fixtures";
 
 async function gotoReady(page: Page, path: string) {
@@ -363,12 +359,7 @@ test.describe("layouts: Ctrl-b Space cycles the 7 presets", () => {
     await expect(page.locator('[data-testid="cmdline-error"]')).toHaveText("unknown layout: bogus-layout");
     await page.keyboard.press("Escape");
 
-    // Bare `select-layout` (tmux.ts's reapplyLastLayout: "return if
-    // window.lastLayout is unset") on a window that has NEVER had a layout
-    // applied (no Space cycle, no named select-layout, no manual split) is a
-    // true no-op — the box closes cleanly with no error (onSubmit returns
-    // undefined, Cmdline.svelte's own close-on-undefined contract), and the
-    // window stays exactly as it was (still the single original pane).
+    // Bare `select-layout` on a window that never had a layout applied is a true no-op (tmux.ts's reapplyLastLayout returns early) — the box closes cleanly via Cmdline.svelte's close-on-undefined contract, and the window stays exactly as it was.
     await prefixed(page, ":");
     await page.keyboard.type("select-layout");
     await page.keyboard.press("Enter");

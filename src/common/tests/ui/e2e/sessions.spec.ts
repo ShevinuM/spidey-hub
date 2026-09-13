@@ -1,12 +1,3 @@
-// Behavioral e2e suite for detach/sessions — `Ctrl-b d` detach to the
-// fullscreen HOST shell (src/features/shell-fs/components/Shell.svelte,
-// `mode: "host"`) over the dimmed radar, its `tmux ls`/`new [-s name]`/
-// `a [-t name]`/`edith`/`open <view>` builtins, the kill-cascade rules that
-// destroy a session outright once its last window dies, and the host `exit`
-// (`logout` + reload). Companion to src/features/shell-fs/tests/ui/e2e/shell.spec.ts (the in-window
-// shell) and src/common/tests/ui/e2e/tmux.spec.ts (the prefix state machine, including its
-// own updated "w/0 still go home, d now detaches" and "[exited]" cascade
-// coverage) — this file is the one that actually exercises SESSIONS.
 import { expect, test, type Page } from "../support/fixtures";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -90,10 +81,7 @@ test.describe("Ctrl-b d detaches to the host shell", () => {
     await expect(page.locator('[data-testid="shell-line"]').last()).toHaveText(detachedLine());
     await expect(shellPrompt(page)).toContainText("git:(main) $");
 
-    // Radar stays visible but dim (Locked #? / item 5.1 "very dark, radar
-    // faint behind") — a coarse numeric check (not an exact string) since
-    // the precise dim value is an executor design choice, not a fidelity-
-    // locked constant.
+    // A coarse numeric check, not an exact string, since the precise dim value is a design choice, not a fidelity-locked constant.
     const opacity = await page.locator('[data-testid="wallpaper-layer"]').evaluate((el) => Number(getComputedStyle(el).opacity));
     expect(opacity).toBeLessThan(0.3);
     expect(opacity).toBeGreaterThan(0);
@@ -125,13 +113,7 @@ test.describe("Ctrl-b d detaches to the host shell", () => {
     await detach(page);
     const linesBefore = await page.locator('[data-testid="shell-line"]').count();
 
-    // Ctrl-b itself never arms anything while detached (no preventDefault,
-    // no side effect) — the FOLLOWING bare key (no modifier) is therefore
-    // an ordinary keystroke the host shell's own input claims, exactly like
-    // any other unprefixed character. This is the discriminating proof of
-    // "inert": if the prefix HAD armed, "d" would either re-detach (no-op,
-    // already detached) or "1" would attach — neither happens, and both
-    // characters instead show up in the live input line.
+    // Ctrl-b itself never arms anything while detached, so the following bare key is an ordinary keystroke the host shell's input claims — if the prefix had armed, "d" would re-detach or "1" would attach, and neither happens.
     await ctrlB(page);
     await page.keyboard.press("d");
     await expect(shellInput(page)).toHaveText("d");
@@ -165,10 +147,7 @@ test.describe("tmux ls (real tmux fidelity)", () => {
   });
 
   test("lists the default session with NO (attached) suffix while detached — exact format", async ({ page }) => {
-    // `clock.install` alone drifts with real wall-clock time (see
-    // nav.spec.ts's "live clock" test) — `setFixedTime` pins `Date.now()`
-    // outright, which this exact ctime-string equality requires. No fake
-    // timers are needed here, so `install` is skipped entirely.
+    // `clock.install` alone drifts with real wall-clock time (see nav.spec.ts's "live clock" test), but `setFixedTime` pins `Date.now()` outright with no fake-timer machinery needed, which this exact ctime-string equality requires.
     await page.clock.setFixedTime(CLOCK_TIME);
     await gotoReady(page, "/");
     await detach(page);
@@ -201,11 +180,7 @@ test.describe("tmux ls (real tmux fidelity)", () => {
   test("lists EVERY session while detached — two rows, correct formats, NO (attached) suffix on either", async ({
     page,
   }) => {
-    // Frozen for the WHOLE test (not just at load): the second session is
-    // created later, mid-test, and must stamp the identical ctime as the
-    // first — `install` alone would let real time drift in between under
-    // parallel-worker load, splitting the two rows' seconds. `setFixedTime`
-    // pins `Date.now()` outright with no fake-timer machinery needed.
+    // Frozen for the whole test since the second session is created mid-test and must stamp the identical ctime as the first — `install` alone would let real time drift under parallel-worker load, so `setFixedTime` pins `Date.now()` outright instead.
     await page.clock.setFixedTime(CLOCK_TIME);
     await gotoReady(page, "/");
     await detach(page);
@@ -468,15 +443,7 @@ test.describe("host exit / reboot", () => {
   }) => {
     await gotoReady(page, "/");
     await detach(page);
-    // Deliberately not asserting the transient "logout" line itself here:
-    // `onHostExit()` appends it and calls `window.location.reload()` in the
-    // same synchronous tick, so there is no reliable window in which to
-    // observe it before the page navigates out from under the assertion —
-    // an inherent race with reload, not a gap in the feature (the exact
-    // string lives in shell.yaml and the effect-dispatch wiring is unit-
-    // tested via shell.ts's `exit` -> `exit-pane` outcome). What IS
-    // reliably observable, and asserted below, is the reload actually
-    // happening and where it lands.
+    // The transient "logout" line isn't asserted here since `onHostExit()` appends it and reloads in the same synchronous tick, leaving no reliable window to observe it before the page navigates away (the string itself is unit-tested via shell.ts's `exit` -> `exit-pane` outcome) — what's asserted instead is that the reload happens and where it lands.
     await runInShell(page, "exit");
     await page.waitForURL("**/");
     await page.locator('[data-terminal-ready="true"]').waitFor({ state: "attached" });

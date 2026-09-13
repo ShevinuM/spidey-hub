@@ -1,27 +1,5 @@
-// Regression gate for PLAN.md F1 (Iteration 7, Phase 1): Svelte scopes a
-// `@keyframes` block declared inside a component `<style>` block by
-// renaming it (`svelte-<hash>-<name>`), but it does NOT rewrite an
-// `animation:` value written in an inline `style="..."` attribute in
-// markup. Every animation ported verbatim from this codebase's inline-style
-// `.dc.html` mockups therefore referenced a keyframe name that no longer
-// existed anywhere — the browser created no animation object at all.
-//
-// `getComputedStyle(el).animationName` is USELESS for detecting this: it
-// returns the declared name whether or not it resolves to a real
-// `@keyframes` rule. This suite's primary assertion instead cross-checks
-// every element's live `animation-name` against the actual
-// `CSSKeyframesRule`s registered in `document.styleSheets` — deterministic,
-// and correct even for one-shot entrance animations that may have already
-// finished (unlike `el.getAnimations()`, which only reports animations
-// currently in effect).
-//
-// Runs against the REAL (non-fixture) build, invoked directly
-// (`pnpm exec playwright test tests/e2e/animations.spec.ts`) against a
-// `pnpm build` + `node tests/visual/static-server.mjs dist 4322`, never via
-// `pnpm test:e2e`/`pnpm test:visual`. This is no longer required to dodge a
-// fixture-mode animation gate — as of Phase 7b.1 a fixture build renders
-// every `infinite` animation live too — it's simply this spec's own
-// standing invocation convention.
+// Svelte scopes `@keyframes` declared in a component `<style>` block but does not rewrite an `animation:` value written in an inline `style="..."` attribute, so a keyframe name ported verbatim into markup can silently resolve to nothing; `getComputedStyle().animationName` can't detect that (it returns the declared name regardless), so this suite cross-checks every live `animation-name` against the actual `CSSKeyframesRule`s in `document.styleSheets` instead.
+// Run directly against a real build — `pnpm exec playwright test src/common/tests/ui/e2e/animations.spec.ts` against `pnpm build` + `node src/common/tests/ui/support/static-server.mjs dist 4322` — never via `pnpm test:e2e`/`pnpm test:visual`.
 import { expect, test, E2E_NOTIFICATIONS_INJECT_SEED, E2E_TOAST_DURATION_SCALE, type Page } from "../support/fixtures";
 import { BOOT_SEEN_STORAGE_KEY } from "../../../../features/boot/lib/boot-state";
 import { NOTIFICATIONS_INJECT_SEED_STORAGE_KEY, TOAST_DURATION_SCALE_STORAGE_KEY } from "../../../../features/notifications/lib/notification-store";
@@ -33,10 +11,7 @@ async function gotoReady(page: Page, path = "/") {
 
 const ROUTES = ["/", "/repositories", "/employment", "/retina-v", "/profile", "/help"];
 
-/** Every currently-applied `animation-name` (split on `,`) that has no
- * matching `CSSKeyframesRule` anywhere in `document.styleSheets`. Walks
- * `@media`-nested rule lists too, even though none of this repo's
- * `-global-` keyframes are nested — cheap and future-proof. */
+/** Every currently-applied `animation-name` (split on `,`) with no matching `CSSKeyframesRule` anywhere in `document.styleSheets`, including within nested `@media` rules. */
 async function findUnresolvedAnimationNames(page: Page): Promise<string[]> {
   return page.evaluate(() => {
     const known = new Set<string>();
@@ -98,12 +73,7 @@ test.describe("Phase 1: every animation-name resolves to a real @keyframes rule 
   });
 });
 
-/** Testids of every element carrying one of the 6 currently-infinite
- * animations this phase repairs (`pls` excluded — it was never dead; its two
- * component-scoped duplicates are just removed, not repaired). None of these
- * are fixtureMode-gated as of Phase 7b.1 — they run live in every build.
- * Used by both the motion assertion below and the prefers-reduced-motion
- * assertion. */
+/** Testids of the six infinite animations checked below for actual movement (`pls` excluded — it was never dead). */
 const INFINITE_ANIMATION_TESTIDS = [
   "notifications-sense-ring",
   "notifications-sweep",
@@ -138,14 +108,9 @@ test.describe("Phase 1: infinite animations actually move (secondary, motion-bas
     expect(sweepB).not.toBe(sweepA);
   });
 
-  // `pls` is checked for a resolvable keyframe name above, but a resolvable
-  // name is not motion: an `animation:none` on this dot would leave every
-  // dead-name assertion green. This is the only assertion that the repo
-  // status dot actually pulses.
+  // `pls` already passed the resolvable-keyframe check above, but a resolvable name isn't motion, so this is the only assertion that the status dot actually pulses.
   test("pls pulses on an open repository's status dot", async ({ page }) => {
     await gotoReady(page, "/repositories");
-    // Row 0 is the pinned `all-projects` virtual repo; row 1 is the first
-    // real repo, whose open-dot carries the pulse.
     await page.locator('[data-testid="repositories-repo-row"]').nth(1).click();
     const dot = page.locator('[data-testid="repositories-repo-open-dot"]').first();
     await expect(dot).toBeVisible();
@@ -177,14 +142,7 @@ test.describe("Phase 1: infinite animations actually move (secondary, motion-bas
 });
 
 test.describe("Phase 1: prefers-reduced-motion suppresses the repaired infinite animations", () => {
-  // `test.use({ reducedMotion: "reduce" })` doesn't type-check against the
-  // `test` exported by ./fixtures.ts — that module overrides the `context`
-  // fixture, and the resulting merged Fixtures type drops
-  // `PlaywrightTestOptions` (so `reducedMotion` reads as an unknown
-  // property). Building the context by hand sidesteps that entirely, and
-  // lets this test mirror fixtures.ts's own addInitScript (boot-seen +
-  // notification inject seed + toast duration scale) explicitly, since we
-  // aren't going through its `context` fixture override here.
+  // `test.use({ reducedMotion: "reduce" })` doesn't type-check against this file's `test` export, so this builds the context by hand and mirrors fixtures.ts's own addInitScript (boot-seen + notification inject seed + toast duration scale) explicitly.
   async function assertSuppressed(page: Page, testid: string) {
     const el = page.locator(`[data-testid="${testid}"]`).first();
     await expect(el).toBeVisible();
@@ -201,7 +159,7 @@ test.describe("Phase 1: prefers-reduced-motion suppresses the repaired infinite 
           sessionStorage.setItem(injectSeedKey, String(injectSeed));
           sessionStorage.setItem(durationScaleKey, String(durationScale));
         } catch {
-          // best-effort — same contract as tests/e2e/fixtures.ts
+          // best-effort, same contract as ../support/fixtures.ts
         }
       },
       {

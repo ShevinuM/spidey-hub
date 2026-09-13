@@ -1,7 +1,3 @@
-// Behavioral e2e suite for the choose-tree overlay (`Ctrl-b w`). Companion
-// to tests/e2e/panes.spec.ts (splits/nav/kill/layouts) and
-// tests/e2e/sessions.spec.ts (the session model itself, whose
-// `tmux new -s <name>` this file reuses to get a second session to browse).
 import { expect, test, type Page } from "../support/fixtures";
 
 async function gotoReady(page: Page, path: string) {
@@ -202,15 +198,7 @@ test.describe("choose-tree does NOT open competing modals while open (window-chr
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  // Prefix precedence over grep: the tmux prefix (and therefore choose-tree,
-  // opened via it) still works even while grep is open — closing it, exactly
-  // like every other window-switch prefix key already does
-  // (`closeWindowChrome()`). Cmdline is a DIFFERENT case: opening it already
-  // blocks every OTHER prefixed key including plain digit targets (the
-  // prefix system treats it like the status prompts), so `Ctrl-b w` is
-  // correctly inert while Cmdline is open too, same as `Ctrl-b 2` — there's
-  // nothing to "close on open" in that direction since choose-tree never
-  // gets the chance to open in the first place.
+  // Grep closes via the same closeWindowChrome() every prefix key uses, but cmdline instead blocks all prefixed keys like the status prompts do, so choose-tree never gets a chance to open while it's up.
   test("opening choose-tree closes an already-open grep overlay", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
@@ -277,12 +265,7 @@ test.describe("choose-tree across sessions (create a second session via the host
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  /** `tmux new -s test` (host mode) creates AND attaches "test" — real tmux's
-   * own "starting a new session from outside both creates and attaches".
-   * `createSession` APPENDS to `client.sessions` (src/common/engines/tmux/tmux.ts), so the
-   * default session "10.42.7.13" stays FIRST in array order (and therefore
-   * FIRST in choose-tree's own row list — sessions are rendered in that
-   * same array order) even though "test" is now the ATTACHED one. */
+  /** Creates and attaches "test", but `createSession` appends to `client.sessions`, so "10.42.7.13" stays first in choose-tree's row order despite no longer being attached. */
   async function createAndAttachSecondSession(page: Page) {
     await detach(page);
     await runInShell(page, "tmux new -s test");
@@ -297,21 +280,16 @@ test.describe("choose-tree across sessions (create a second session via the host
 
     await openChooseTree(page);
     await expect(sessionRows(page)).toHaveCount(2);
-    // "test" (attached, current) starts expanded; "10.42.7.13" collapsed.
     await expect(windowRows(page)).toHaveCount(1); // just test's own 0:zsh
 
     const otherSessionRow = sessionRows(page).filter({ hasText: "10.42.7.13" });
     await expect(otherSessionRow).toContainText("10.42.7.13: 6 windows");
     await expect(otherSessionRow).not.toContainText("(attached)");
 
-    // Select the other session's row directly (array order puts it FIRST,
-    // ahead of "test" — see createAndAttachSecondSession's own comment) and
-    // expand it.
     await otherSessionRow.click();
     await page.keyboard.press("l");
     await expect(windowRows(page)).toHaveCount(7); // test's 1 + the other session's 6
 
-    // Move onto its "repositories" window row and switch to it.
     const reposRow = windowRows(page).filter({ hasText: "1: repos" });
     await expect(reposRow).toBeVisible();
     await reposRow.click();

@@ -1,7 +1,3 @@
-// Behavioral e2e suite for Phase 10's Command Log removal + PanelBadge
-// redesign (real, non-fixture build). Grown in step with the feature: this
-// file starts with the Command Log coverage; the spacing suite lands in a
-// later commit alongside its own fix.
 import { expect, test, type Page } from "../support/fixtures";
 
 /** Asserts `actual` is within `tol` px of `target` — real-build layout
@@ -31,15 +27,14 @@ test.describe("Repositories: Command Log panel removed", () => {
     await gotoReady(page, "/repositories");
     await expect(page.locator('[data-testid="repositories-panel-5"]')).toHaveCount(0);
     await expect(page.getByText("Command Log")).toHaveCount(0);
-    // Pressing "5" (the old panel-5 focus key) must be a no-op now — no
-    // panel exists to focus, and it must not throw/break other panels.
+    // Pressing "5" must be a no-op — no panel exists to focus, and it must not throw/break other panels.
     await page.keyboard.press("0");
     await expect(page.locator('[data-testid="repositories-panel-0"]')).toHaveAttribute(
       "style",
       /border: 1px solid rgb\(224, 69, 60\)/,
     );
     await page.keyboard.press("5");
-    // Panel 0 must STAY focused — "5" no longer moves focus anywhere.
+    // Panel 0 stays focused — "5" doesn't move focus.
     await expect(page.locator('[data-testid="repositories-panel-0"]')).toHaveAttribute(
       "style",
       /border: 1px solid rgb\(224, 69, 60\)/,
@@ -68,13 +63,7 @@ test.describe("PanelBadge: [N] Label composition", () => {
   });
 });
 
-// f1cb7ee dropped the spider glyph from PanelBadge everywhere; that was a
-// misread of the user (they meant "only remove it from Repositories' OLD
-// corner-bracket header", not "remove it globally"). The glyph never left —
-// it MOVES: Repositories now sits it BETWEEN the bracketed number and the
-// label (`[N] <glyph> Label`, `variant="repositories"`); Employment Records
-// and Help restore their pre-f1cb7ee look exactly (glyph between the two
-// split words / before the section-header label, respectively).
+// The spider glyph's position differs per view: Repositories places it between the bracketed number and the label, Employment between its two split words, and Help before the section-header label.
 test.describe("PanelBadge: spider glyph position (scoped, not removed)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
@@ -124,8 +113,7 @@ test.describe("PanelBadge: spider glyph position (scoped, not removed)", () => {
     await gotoReady(page, "/help");
     const badges = page.locator('[data-testid="panel-badge"][data-accent="teal"]');
     const count = await badges.count();
-    // ~14 section headers per the plan; assert a floor rather than pinning
-    // the exact count, which is Help's own content, not this spec's concern.
+    // Asserts a floor, not the exact count, since that's Help's own content, not this spec's concern.
     expect(count).toBeGreaterThanOrEqual(10);
     await expect(
       page.locator('[data-testid="panel-badge"][data-accent="teal"] img[src="/assets/spiderman-teal.svg"]'),
@@ -133,10 +121,7 @@ test.describe("PanelBadge: spider glyph position (scoped, not removed)", () => {
   });
 });
 
-// Only Repositories kept f1cb7ee's left-alignment (its variant="repositories"
-// wrapper); Employment Records restored its pre-f1cb7ee centered wrapper.
-// Help's inline mode was never centered/left-aligned to begin with — its
-// pill sits inline at the start of a flex row, unaffected either way.
+// Only Repositories's variant="repositories" wrapper is left-aligned; Employment Records's wrapper is centered, and Help's inline pill was never centered/left-aligned to begin with.
 test.describe("PanelBadge: Repositories left-aligned, Employment Records centered (restored)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
@@ -186,16 +171,7 @@ test.describe("PanelBadge: Repositories left-aligned, Employment Records centere
   });
 });
 
-// Regression coverage for the uniform-spacing pass: every inter-panel gap
-// on /repositories (the column gap under the [0] Status bar, the gap
-// between [1]/[2] in the left column, the gap between [3]/[4] in the right
-// column, and the horizontal gap between the two columns) and the outer
-// padding around the whole panel grid were all raised from 12px to 20px in
-// one uniform sweep (Repositories.svelte's `repositories-panels-root` and
-// its two column divs). This test measures real `getBoundingClientRect()`
-// deltas between adjacent panels — never CSS text — so it catches a
-// regression even if a future refactor moves the values into a different
-// stylesheet layer.
+// Measures real `getBoundingClientRect()` deltas between adjacent panels, never CSS text, so this catches a regression even if a future refactor moves the values into a different stylesheet layer.
 test.describe("Repositories: panel spacing is a uniform 20px (gaps + outer padding)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
