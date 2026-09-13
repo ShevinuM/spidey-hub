@@ -1,8 +1,4 @@
 <script lang="ts">
-  // Panel buffer/gutter region — moved out of Editor.svelte during the
-  // folder+state-class relocation refactor. Pure relocation: same DOM,
-  // testids, classes, and inline styles as the original inline markup.
-  // segStyle/segTestId moved to src/common/components/editor/editor-render.ts (pure, rune-free).
   import { segStyle, segTestId, lineText } from "./editor-render";
   import type { EditorState } from "./editorState.svelte";
 

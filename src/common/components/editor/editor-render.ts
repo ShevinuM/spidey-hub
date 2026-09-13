@@ -1,13 +1,8 @@
-// Pure, rune-free rendering helpers for Editor.svelte's line/segment
-// display — extracted during the folder+state-class relocation refactor.
-// Editor's own `EditorState` class (editorState.svelte.ts) needs `lineText`
-// for its `rawLines` derived, and `EditorBuffer.svelte` needs all three for
-// per-segment markup; none of them close over reactive state, so they live
-// here rather than as component-scoped functions or class methods.
 import type { TokenSpan } from "../../lib/repo-tree";
 
 /** Plain text (docs, flat code fallback), or a tokenized code line —
  * `[paletteIndex, text]` runs resolved against the caller's own palette.
+ *
  * Either way this reconstructs the plain text every vim motion/search/yank
  * operates on, so the engine never has to know which form a given line
  * came in as. */

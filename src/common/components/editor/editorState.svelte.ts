@@ -1,11 +1,3 @@
-// EditorState — the vim-lite editor's reactive core, extracted from
-// Editor.svelte during the folder+state-class relocation refactor. See
-// Editor.svelte's own header comment for the view's behavior; every
-// `$state`/`$derived`/`$effect` here (and its accompanying comment) is
-// moved verbatim from the original monolith — no reactivity, timing, or
-// behavior change. The keymap itself (handleKey/handleEscape/
-// handleSearchInput/handleCtrlChord/handleNormalOrVisual/runExCommand) stays
-// on Editor.svelte, the orchestrator — see that file's own comment.
 import {
   clamp,
   clampCursor,
@@ -23,11 +15,7 @@ import { lineText } from "./editor-render";
 import type { EditorLabels } from "../../lib/data";
 import type { TokenSpan } from "../../lib/repo-tree";
 
-// Mirrors Editor.svelte's own `EditorLine` export structurally — a plain
-// .ts module can't import a named type from a .svelte file under `tsc`
-// (only svelte-check's virtual modules allow that, and this file is also
-// type-checked by plain tsc via `pnpm check`), so this is kept in sync by
-// shape rather than by import. Editor.svelte remains the source of truth.
+// Mirrors Editor.svelte's `EditorLine` structurally and is kept in sync by shape rather than import, since a plain .ts module can't import a type from a .svelte file under `tsc` (this file is type-checked by plain tsc via `pnpm check`).
 interface EditorLine {
   n: number;
   t: string | TokenSpan[];
@@ -99,7 +87,7 @@ export class EditorState {
   }
 
   /** Row pitch (line height + the container's `gap:1px`), measured from two
-   * adjacent rendered rows rather than assumed — see file header comment. */
+   * adjacent rendered rows rather than assumed. */
   linePitch(): number {
     if (!this.scrollerEl) return 21;
     const rows = this.scrollerEl.querySelectorAll<HTMLElement>("[data-line]");
@@ -130,7 +118,9 @@ export class EditorState {
   /** Every motion routes through here: clamps into the buffer (via
    * vim.ts's own clamp, so a column past a shorter line or a line past the
    * buffer's end always lands somewhere valid) and scrolls the new position
-   * into view. `halfPage`/`fullPage` below manage scrolling themselves and
+   * into view.
+   *
+   * `halfPage`/`fullPage` below manage scrolling themselves and
    * deliberately bypass this (see their own comment).
    *
    * Landing exactly on the first or last line snaps `scrollTop` straight to
@@ -216,18 +206,7 @@ export class EditorState {
     return this.labels.modeLabel;
   });
 
-  // ---------------------------------------------------------------------
-  // Rendering: cursor block + visual-selection + search-match highlights.
-  //
-  // Perf note ("keep performance sane on large files"):
-  // this only does character-level segmentation for the small set of
-  // "interesting" lines — the cursor's own line, the lines spanned by an
-  // active visual selection, and lines containing a search match — every
-  // other line short-circuits back to a single-span markup. A whole-buffer
-  // re-scan only ever
-  // happens once per committed search (via `searchMatches` above), never
-  // per keystroke of cursor movement.
-  // ---------------------------------------------------------------------
+  // Character-level segmentation (cursor block, visual-selection, search-match highlights) only runs for "interesting" lines — the cursor's own line, the visual-selection span, and search-match lines — while every other line short-circuits to a single-span markup, keeping this cheap on large files.
 
   /** Token boundary offsets + per-offset palette color for one tokenized
    * line, or `null` for a plain-text line — folded into the same cut-point

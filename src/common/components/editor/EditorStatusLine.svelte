@@ -1,7 +1,4 @@
 <script lang="ts">
-  // Status/ex-command line — moved out of Editor.svelte during the
-  // folder+state-class relocation refactor. Pure relocation: same DOM,
-  // testids, classes, and inline styles as the original inline markup.
   import type { EditorLabels } from "../../lib/data";
   import type { EditorState } from "./editorState.svelte";
 
