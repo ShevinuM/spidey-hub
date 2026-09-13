@@ -3,8 +3,8 @@ import { viewports } from "./common/tests/ui/support/recipes";
 
 // Two viewport projects (PLAN.md "Visual-regression harness"), used by
 // tests/visual/identical.spec.ts (and its per-context splits, e.g.
-// common-visual-<viewport> — 00-phases.md D21) and tests/e2e (later
-// phases). common/tests/ui/support/capture-goldens.mjs is a standalone
+// common-visual-<viewport> — 00-phases.md D21).
+// common/tests/ui/support/capture-goldens.mjs is a standalone
 // script (not run through the Playwright test runner) and manages its own
 // browser/server, so it does not go through this config.
 export default defineConfig({
@@ -33,8 +33,8 @@ export default defineConfig({
   snapshotPathTemplate: "tests/visual/goldens/{projectName}/{arg}{ext}",
   use: {
     trace: "on-first-retry",
-    // The real implementation build (astro preview), used by both
-    // tests/visual/identical.spec.ts and tests/e2e — the vendored reference
+    // The real implementation build (astro preview), used by the visual
+    // specs and every context/feature e2e project — the vendored reference
     // (port 4400) is only ever addressed by its own full URL.
     baseURL: "http://localhost:4322",
   },
@@ -539,7 +539,7 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
     },
     {
-      // Real implementation build, served for tests/visual + tests/e2e.
+      // Real implementation build, served for the visual and e2e specs.
       // Port 4322 per PLAN.md (4321 is `astro dev`, unused by the test
       // suite). Each of those two scripts (package.json `test:visual` /
       // `test:e2e`) runs its own build first (`build:fixtures` / `build`
