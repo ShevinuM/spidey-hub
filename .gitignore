@@ -10,3 +10,4 @@ ds-bundle/
 context.sh
 .memsearch/
 Instructions/
+.cache/

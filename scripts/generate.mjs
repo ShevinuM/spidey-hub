@@ -3,16 +3,18 @@
 //
 // Produces five kinds of artifacts:
 //  1. public/generated/repos/<name>.json   — file tree + text contents for
-//     each of the eight submodules under repos/ (lazy-fetched by the Repositories
-//     island when a repo is opened).
+//     each of the eight repos declared in src/features/repositories/content/repositories/*.md
+//     frontmatter, fetched as a SHA-pinned GitHub tarball (pins live in
+//     repos.json) and cached under .cache/repos/<name>-<sha>/ (lazy-fetched
+//     by the Repositories island when a repo is opened).
 //  1b. public/generated/repos/all-projects.json — same {name, files} shape,
 //     but built from src/features/repositories/content/repositories/*.md (one entry per project doc,
-//     path "<id>.md", lines = the raw file text) instead of a submodule
+//     path "<id>.md", lines = the raw file text) instead of a repo tarball
 //     checkout — backs Repositories' virtual "all-projects" repo. Deliberately
 //     reads straight from src/features/repositories/content/repositories regardless of
 //     PORTFOLIO_FIXTURES (this script has no fixture awareness at all — see
 //     generateRepoIndexes() above it, which has always read the real
-//     repos/ submodules unconditionally);
+//     repo contents unconditionally);
 //     `pnpm build:fixtures` overwrites this one file post-build from
 //     src/features/repositories/tests/ui/support/repos/all-projects.json; see that script's cp step.
 //  2. public/generated/grep-index.json     — walks the site's own source so
@@ -43,8 +45,12 @@ import {
   readFileSync,
   writeFileSync,
   mkdirSync,
+  mkdtempSync,
+  renameSync,
+  rmSync,
   existsSync,
 } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { join, relative, extname, basename, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getIcon, defaultIcon } from "material-file-icons";
@@ -200,6 +206,101 @@ function loadProjectRepos() {
 
 const REPOS = loadProjectRepos();
 
+// ---------------------------------------------------------------------------
+// Repo tarball cache (.cache/repos/<name>-<sha>/) — sourced from
+// codeload.github.com instead of an on-disk git submodule checkout.
+//
+// Deliberate: this reads from each repo's committed git TREE (a `git
+// archive`-equivalent snapshot at a pinned SHA), not from a local working
+// checkout. A working checkout can carry untracked, machine-local files
+// (build tooling, editor/plugin state, anything gitignored) that were never
+// part of the repo — exactly what happened to the pre-tarball
+// `Legend-of-Arlo-Guardians-Gauntlet.json`, which embedded a local
+// memsearch plugin's memory notes because the old submodule-directory walk
+// couldn't tell "on disk" from "in the repo". Sourcing from the tree makes
+// that class of contamination structurally impossible, not just absent
+// today.
+// ---------------------------------------------------------------------------
+
+const REPOS_JSON_PATH = join(ROOT, "repos.json");
+const REPO_CACHE_DIR = join(ROOT, ".cache/repos");
+
+function loadPins() {
+  if (!existsSync(REPOS_JSON_PATH)) return {};
+  return JSON.parse(readFileSync(REPOS_JSON_PATH, "utf8"));
+}
+
+function savePins(pins) {
+  const sorted = Object.fromEntries(Object.keys(pins).sort().map((k) => [k, pins[k]]));
+  writeFileSync(REPOS_JSON_PATH, JSON.stringify(sorted, null, 2) + "\n");
+}
+
+/**
+ * Returns the commit SHA to fetch for `name`: the pin already recorded in
+ * repos.json, or — only when a repo has no pin at all — the current head of
+ * `branch` via the GitHub REST API, recorded into repos.json immediately so
+ * the pin survives even if a later repo in the loop fails. This is the
+ * FUTURE re-pin mechanism for a repo added without one; every repo this
+ * phase seeds already has a pin (captured from `git submodule status` while
+ * the submodules still existed), so this branch never fires today.
+ */
+async function resolveSha(pins, name, github, branch) {
+  if (pins[name]) return pins[name];
+  const url = `https://api.github.com/repos/${github}/commits/${branch}`;
+  const headers = { Accept: "application/vnd.github+json", "User-Agent": "shevinum-dev-v3-generate-script" };
+  if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  const res = await fetch(url, { headers });
+  if (!res.ok) {
+    throw new Error(`GET ${url} -> ${res.status} ${res.statusText}`);
+  }
+  const data = await res.json();
+  if (!data.sha) {
+    throw new Error(`GET ${url} -> unexpected response shape`);
+  }
+  pins[name] = data.sha;
+  savePins(pins);
+  console.warn(`[generate] new pin recorded for ${name} (${data.sha}) — commit repos.json`);
+  return data.sha;
+}
+
+/**
+ * Ensures a SHA-keyed extraction of <github>@<sha> exists at
+ * .cache/repos/<name>-<sha>/, fetching + extracting it if not already
+ * cached — a cache hit costs zero network, so predev stays instant on every
+ * run after the first. Extracts into a sibling temp directory first and
+ * renames into place only once extraction fully succeeds, so an
+ * interrupted or partial fetch can never leave behind a SHA-keyed cache
+ * entry that a later run would then wrongly treat as a hit.
+ */
+async function ensureRepoCache(name, github, sha) {
+  const finalDir = join(REPO_CACHE_DIR, `${name}-${sha}`);
+  if (existsSync(finalDir)) return finalDir;
+  mkdirSync(REPO_CACHE_DIR, { recursive: true });
+  const url = `https://codeload.github.com/${github}/tar.gz/${sha}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`GET ${url} -> ${res.status} ${res.statusText}`);
+  }
+  const buffer = Buffer.from(await res.arrayBuffer());
+  const tmpDir = mkdtempSync(join(REPO_CACHE_DIR, `.tmp-${name}-`));
+  try {
+    // GitHub nests the archive's contents one level down, under
+    // <repo>-<sha>/ (codeload's own naming — not necessarily this
+    // project's `name`, which is why --strip-components=1 is required;
+    // getting it wrong would silently re-prefix every path in the output).
+    const result = spawnSync("tar", ["-xz", "--strip-components=1", "-C", tmpDir], { input: buffer });
+    if (result.status !== 0) {
+      const stderr = result.stderr?.toString().trim();
+      throw new Error(`tar extraction failed for ${github}@${sha}${stderr ? `: ${stderr}` : ""}`);
+    }
+    renameSync(tmpDir, finalDir);
+  } catch (err) {
+    rmSync(tmpDir, { recursive: true, force: true });
+    throw err;
+  }
+  return finalDir;
+}
+
 /**
  * Tokenizes one already-walked file entry in place: on success replaces
  * `lines: string[]` with `{tok: 1, lines: TokenSpan[][]}` (colors resolved
@@ -219,16 +320,21 @@ async function tokenizeRepoFile(file, palette) {
 async function generateRepoIndexes() {
   const outDir = join(ROOT, "public/generated/repos");
   mkdirSync(outDir, { recursive: true });
-  for (const { name } of REPOS) {
-    const repoDir = join(ROOT, "repos", name);
-    if (!existsSync(repoDir)) {
-      console.warn(`[generate] repos/${name} not found — is the submodule initialized? Skipping.`);
+  const pins = loadPins();
+  for (const { name, github, branch } of REPOS) {
+    let repoDir;
+    try {
+      const sha = await resolveSha(pins, name, github, branch);
+      repoDir = await ensureRepoCache(name, github, sha);
+    } catch (err) {
+      console.warn(`[generate] WARNING: fetch failed for ${name} (${err.message}); keeping existing snapshot.`);
       continue;
     }
     const files = [];
-    // ".git" is a FILE in a submodule checkout (gitlink), not a directory,
-    // so it's already excluded by isTextFile(); no directory skip needed
-    // beyond that, but pass an empty set for symmetry/clarity.
+    // A GitHub tarball never contains a `.git` entry at all (unlike a
+    // submodule checkout, where it's a gitlink FILE isTextFile() already
+    // excludes) — no directory skip needed, but pass an empty set for
+    // symmetry/clarity with the other walk() call sites in this file.
     walk(repoDir, new Set(), files, repoDir);
     files.sort((a, b) => a.path.localeCompare(b.path));
     const palette = new PaletteBuilder();
