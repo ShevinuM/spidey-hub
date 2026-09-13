@@ -1,37 +1,13 @@
 <script lang="ts">
-  // tmux-style status bar (design/Homepage.dc.html lines 443-461).
+  // tmux-style status bar (reference/Homepage.dc.html lines 443-461).
   //
-  // Bug fix 1: the prototype appends the active Retina-V window *after*
-  // profile ("...4:profile 3:retina-v*") instead of rendering it in place.
-  // We always render windows 0-5 in numeric order (as authored in
-  // site.yaml) and simply highlight whichever one is active, in place.
-  //
-  // Bug fix 2: the prototype hardcodes "23:34" / "15-Aug-26". We render a
-  // live local clock, filled immediately on mount and refreshed on a
-  // minute-aligned timer, gated by the same desktop/fine-pointer guard as
-  // every other listener/timer in the app (README "Mobile policy").
-  //
-  // Every window is mouse-clickable (`onSelect`,
-  // provided by Terminal.svelte as `setView` composed with
-  // `windowIdToView()` for the one id — "dashboard" — that doesn't already
-  // equal its own ViewId), not just the dashboard menu / tmux prefix.
-  //
-  // This component also owns the tmux-style
-  // status-LINE prompt states — a transient auto-clearing message, an
-  // editable text prompt (`(rename-window) <name>`), and a y/n confirm
-  // (`kill-window <name>? (y/n)`) — which REPLACE the normal window-list
-  // rendering while active (exactly like real tmux's status line). Terminal
-  // .svelte drives all three through the exported `showMessage`/
-  // `startRename`/`startConfirm` methods below (the window list itself is
-  // a live, mutable prop — `windows` — rather than read straight off
-  // `site.statusBar.windows`, so Ctrl-b , 's rename actually sticks and
-  // Ctrl-b & 's kill actually removes a row). While a prompt/confirm is
-  // active it OWNS the keyboard: Terminal calls this component's
-  // `handleKey()` before anything else (prefix arm, grep, every view ref),
-  // exactly like GrepOverlay's own "every key is ours while open" contract
-  // — typing "j" into a rename must not scroll a list behind it. A bare
-  // `message` state does NOT own the keyboard (it's purely informational and
-  // auto-clears on its own), so `handleKey()` returns `false` for it.
+  // The window list is replaced, one state at a time, by a transient
+  // auto-clearing message, an editable rename prompt, or a y/n kill
+  // confirm — driven by the exported `showMessage`/`startRename`/
+  // `startConfirm` methods. Only the rename/confirm states own the
+  // keyboard (Terminal.svelte calls this component's `handleKey()` before
+  // any other view ref while one is active); a bare message does not, so
+  // `handleKey()` returns `false` for it.
   import type { SiteData, WindowEntry } from "../lib/data";
   import { formatClockDate, formatClockTime, msUntilNextMinute } from "../lib/clock";
   import { pushPasteTarget, removePasteTarget } from "../lib/paste-targets";
@@ -39,37 +15,26 @@
 
   interface Props {
     site: SiteData;
-    /** The ATTACHED session's own bare name — substituted into
-     * `site.statusBar.sessionTemplate` here rather than passed pre-formatted
-     * (this component owns every bit of its own text rendering, same
-     * convention as `activeWindowId`/`lastWindowId` below). Dynamic: it
-     * changes as sessions are renamed-via-creation (`tmux new -s test`) or
-     * switched. */
+    /** The attached session's own bare name, substituted into
+     * `site.statusBar.sessionTemplate` here rather than passed
+     * pre-formatted — this component owns all of its own text rendering. */
     sessionName: string;
     windows: WindowEntry[];
     /** The tmux model's own active window id, passed straight through
-     * rather than derived here from a `view`/ViewId — a window's id and the
-     * PROGRAM its pane currently runs are not the same thing, since a pane
-     * can run any program (or a shell) in any window, so this component
-     * must be told directly which window is active rather than
-     * reconstructing it from the visible program. */
+     * rather than derived from a `view`/ViewId. A window's id and the
+     * program its pane currently runs are not the same thing — any pane
+     * can run any program in any window — so this must be told directly. */
     activeWindowId: string;
-    /** The real tmux `-` flag marks the PREVIOUSLY active window of the
-     * session (`Session.lastWindowIdx` in tmux.ts), so `Ctrl-b l`/`last-
-     * window` has something to jump back to. Undefined whenever the
-     * session hasn't switched windows yet (fresh session: last === active,
-     * no flag). */
+    /** Marks the previously active window (`Session.lastWindowIdx`) so
+     * `Ctrl-b l` has something to jump back to; undefined until the
+     * session has switched windows at least once. */
     lastWindowId?: string | undefined;
-    /** Passed the clicked window's own `id` (a site.yaml window id, e.g.
-     * "repositories") — no ViewId translation happens in this component; the
-     * caller (Terminal.svelte) owns turning a window id into a window
-     * switch. */
+    /** The clicked window's own `id` (e.g. "repositories") — this
+     * component does no id/ViewId translation; the caller owns that. */
     onSelect: (windowId: string) => void;
-    /** ↻ reboot — always rendered in the
-     * right-hand cluster (unlike the window list, which the rename/confirm
-     * prompt states below replace), so it must stay clickable regardless
-     * of prompt state; Terminal.svelte's handler cancels any open prompt
-     * itself before switching + replaying. */
+    /** ↻ reboot — always rendered in the right-hand cluster regardless of
+     * prompt state; Terminal.svelte's handler cancels any open prompt
+     * before switching and replaying. */
     onReboot: () => void;
   }
 
@@ -117,9 +82,9 @@
   let prompt = $state<PromptState>({ kind: "none" });
   let messageTimer: ReturnType<typeof setTimeout> | undefined;
 
-  /** Transient, auto-clearing status-line message (Ctrl-b ] with nothing to
-   * paste, Ctrl-b & on the last remaining window). Does NOT own the
-   * keyboard — see file header comment. */
+  /** Transient, auto-clearing status-line message (e.g. "nothing to
+   * paste", "last remaining window"). Does NOT own the keyboard — see the
+   * file header. */
   export function showMessage(text: string): void {
     prompt = { kind: "message", text };
     clearTimeout(messageTimer);
@@ -150,12 +115,9 @@
     return prompt.kind === "rename" || prompt.kind === "confirm";
   }
 
-  /** "Reboot from a view with a prompt open should cancel the prompt" —
-   * the ↻ reboot control (right cluster) is
-   * always rendered, even while a rename/kill-window/kill-pane prompt has
-   * replaced the window list on the left, so Terminal.svelte's reboot
-   * handler calls this first. A no-op for the "message"/"none" states
-   * (nothing to own/cancel there). */
+  /** Cancels any open rename/confirm prompt; a no-op for the "message"/
+   * "none" states. Terminal.svelte's reboot handler calls this first, since
+   * the ↻ control stays clickable even while a prompt is open. */
   export function cancelPrompt(): void {
     clearTimeout(messageTimer);
     prompt = { kind: "none" };
@@ -210,13 +172,9 @@
       return true;
     }
 
-    // confirm — "lowercase y confirms, ANY other key
-    // cancels" — an EXACT `e.key === "y"` check (not case-insensitive:
-    // uppercase Y does NOT confirm here, unlike choose-tree's own
-    // deliberately case-insensitive quirk), and every other key (not just
-    // "n") tears the prompt down rather than leaving it stuck open. Shared
-    // by kill-window's `&` confirm too — real tmux's own single-keystroke
-    // confirm-before behaves identically for both.
+    // confirm — an exact, case-sensitive `e.key === "y"` (unlike
+    // choose-tree's confirm, which is case-insensitive); any other key
+    // cancels rather than leaving the prompt stuck open.
     if (e.key === "y") {
       e.preventDefault();
       const onYes = prompt.onYes;
@@ -273,16 +231,9 @@
           data-window-id={win.id}
           onclick={(e) => {
             onSelect(win.id);
-            // A mouse click focuses this span (native behavior for a
-            // focusable element) — left focused, it would keep intercepting
-            // every LATER, unrelated Enter/Space keydown at this element
-            // itself (bubble phase fires here before it ever reaches
-            // Terminal.svelte's window-level listener), e.g. swallowing the
-            // Enter that submits a cmdline command typed sometime after this
-            // click. Blurring immediately after handling restores normal
-            // "the click did its one job" button semantics (found while
-            // testing the reboot-then-shell
-            // workflow — a pre-existing latent bug, not introduced there).
+            // Blurs immediately so this span doesn't stay focused and
+            // intercept a later, unrelated Enter/Space keydown before it
+            // reaches Terminal.svelte's window-level listener.
             (e.currentTarget as HTMLElement).blur();
           }}
           onkeydown={(e) => {
@@ -306,9 +257,7 @@
       data-testid="status-bar-reboot"
       onclick={(e) => {
         onReboot();
-        // See the status-bar-window span's own onclick comment above — same
-        // "don't leave a clicked control focused to hijack a later Enter"
-        // fix, same discovery context (reboot-then-shell).
+        // See the status-bar-window span's own onclick comment above.
         (e.currentTarget as HTMLElement).blur();
       }}
       onkeydown={(e) => {

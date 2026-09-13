@@ -1,22 +1,19 @@
 <script lang="ts">
-  // SIGNAL row live meter (design/Homepage.dc.html lines 262-267; README
-  // "Live meter (SIGNAL row)"; reference `Component` methods `meterRef`/
-  // `startMeter`/`stopMeter`/`probe`/`netStats`/`linkSpeed`, lines ~909-978).
+  // SIGNAL row live meter (reference/Homepage.dc.html lines 262-267;
+  // `Component` methods `meterRef`/`startMeter`/`stopMeter`/`probe`/
+  // `netStats`/`linkSpeed`, lines ~909-978).
   //
-  // Renders the 60-bar strip + the readout span (the two live pieces of the
-  // SIGNAL row; the "SIGNAL" label and coordinates are static copy owned by
-  // Profile.svelte itself). One requestAnimationFrame loop writes each
-  // bar's height/background/box-shadow directly onto its DOM node every
-  // frame — deliberately NOT through Svelte state/reactivity (README: "do
-  // NOT re-render 60 nodes per frame through the framework"). The readout
-  // text is the one piece of UI state that *is* plain Svelte state, because
-  // it only changes once per 2.5s probe, not once per frame (mirrors the
-  // reference's own `setState({netReadout})` only inside `probe()`).
+  // Renders the 60-bar strip and the readout span; the "SIGNAL" label and
+  // coordinates are static copy owned by Profile.svelte. One
+  // requestAnimationFrame loop writes each bar's height/background/
+  // box-shadow directly onto its DOM node every frame, deliberately not
+  // through Svelte reactivity. The readout text is the one piece of plain
+  // Svelte state, since it only changes once per 2.5s probe, not once per
+  // frame.
   //
   // Gated by the same desktop/fine-pointer matchMedia guard as every other
-  // timer/listener in the app (README "Mobile policy"; StatusBar.svelte's
-  // clock effect is the precedent this mirrors) — no rAF loop or interval
-  // is ever started in blocked mode.
+  // timer/listener in the app — no rAF loop or interval starts in blocked
+  // mode.
   import {
     barBackground,
     barBoxShadow,

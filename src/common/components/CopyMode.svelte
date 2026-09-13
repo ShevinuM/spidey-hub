@@ -1,31 +1,19 @@
 <script lang="ts">
-  // tmux copy-mode overlay (`Ctrl-b [`).
-  // Generic — one instance, always mounted in Terminal.svelte (same
-  // always-mounted / bind:this / handleKey():boolean contract as
-  // GrepOverlay), reused across every view: each view marks its own
-  // "primary pane" with a bare `data-copy-source` attribute (Editor.svelte's
-  // scroller — shared by both Repositories and Personnel's file editor —,
-  // Repositories.svelte's currently-FOCUSED panel, EmploymentRecords.svelte's row list,
-  // Profile.svelte's summary block, Wallpaper.svelte's left HUD `<pre>`
-  // (only while `view === "retina-v"`), HelpView.svelte's scroller, and
-  // Dashboard.svelte's menu). Exactly one such element exists in the DOM at
-  // any given moment — Terminal.svelte only ever mounts one view's
-  // component tree at a time, and Wallpaper's own attribute is conditional
-  // on the tracker view being active — so a single, untargeted
-  // `document.querySelector('[data-copy-source]')` at open-time is enough
-  // to find "the active pane" with no view-aware wiring needed here.
+  // tmux copy-mode overlay (`Ctrl-b [`) — one instance, always mounted in
+  // Terminal.svelte, reused across every view. Each view marks its own
+  // "primary pane" with a bare `data-copy-source` attribute (Editor.svelte,
+  // Repositories.svelte, EmploymentRecords.svelte, Profile.svelte,
+  // Wallpaper.svelte's HUD, HelpView.svelte, Dashboard.svelte), and exactly
+  // one such element exists in the DOM at a time, so an untargeted
+  // `document.querySelector('[data-copy-source]')` at open-time finds the
+  // active pane with no view-aware wiring here.
   //
-  // Deliberately reuses src/common/engines/vim/vim.ts's pure motion helpers (clampCursor /
-  // moveHorizontal / moveVertical / normalizeCharRange / extractCharRange)
-  // rather than re-deriving cursor math — same engine Editor.svelte's vim-
-  // lite mode already uses, applied here to captured plain text instead of
-  // a live buffer. Feature set is intentionally smaller than the full
-  // editor: h/l/j/k/gg/G/Ctrl-d/u navigation, `v` charwise selection only
-  // (no VISUAL LINE), `y`/Enter yank-and-exit. `q` IS a valid exit key
-  // here — real tmux's copy-mode uses bare `q`, and this is the one place
-  // bare `q` is allowed despite it being banned everywhere else as a
-  // navigation key (this never navigates a view, only closes the overlay
-  // it belongs to).
+  // Reuses vim.ts's pure motion helpers (clampCursor/moveHorizontal/
+  // moveVertical/normalizeCharRange/extractCharRange) applied to captured
+  // plain text instead of a live buffer, with a smaller feature set:
+  // h/l/j/k/gg/G/Ctrl-d/u navigation, `v` charwise selection only, `y`/Enter
+  // yank-and-exit. Bare `q` is a valid exit key here — the one place it's
+  // allowed despite being banned elsewhere as a navigation key.
   import {
     clampCursor,
     extractCharRange,
@@ -57,23 +45,18 @@
 
   let overlayEl = $state<HTMLElement | null>(null);
 
-  /** Keeps the cursor's own line scrolled into view as it moves — the lines
-   * container renders every captured line at once (`overflow-y:auto`), so
-   * without this a long capture (help content, a big editor buffer) would
-   * let `G`/Ctrl-d walk the cursor right off the visible viewport while the
-   * scroll position stayed put. Svelte 5 effects run after the DOM update
-   * that changed `cursor`/`open`, so the cursor span already reflects the
-   * new position by the time this queries for it — no extra tick needed. */
+  /** Keeps the cursor's own line scrolled into view as it moves, since the
+   * lines container renders the whole capture at once with no
+   * virtualization. */
   $effect(() => {
     if (!open) return;
     void cursor; // tracked dependency — re-run on every cursor move
     overlayEl?.querySelector<HTMLElement>('[data-testid="copy-mode-cursor"]')?.scrollIntoView({ block: "nearest" });
   });
 
-  /** Ctrl-b [ — captures the current active pane's rendered text as lines.
-   * An empty/missing source still opens (rendering `copyMode.emptyText`)
-   * rather than silently doing nothing, so the binding always gives visible
-   * feedback. */
+  /** Ctrl-b [ — captures the active pane's rendered text as lines; an
+   * empty/missing source still opens (rendering `copyMode.emptyText`)
+   * rather than doing nothing. */
   export function openOverlay(): void {
     const el = document.querySelector<HTMLElement>("[data-copy-source]");
     const text = el?.innerText ?? "";
@@ -86,12 +69,13 @@
     open = true;
   }
 
-  /** Exported so Terminal.svelte's ↻ reboot
-   * handler can close a stray copy-mode overlay the same way it already
-   * closes a stray grep overlay (`grepRef.close()`) before switching to the
-   * dashboard and replaying boot — copy-mode's own z-index (50) sits above
-   * the status bar, so its "↻ reboot" click would otherwise land on a
-   * dead overlay instead of the dashboard underneath. */
+  /** Exported so Terminal.svelte's ↻ reboot handler can close a stray
+   * copy-mode overlay before switching views, the same way it closes a
+   * stray grep overlay.
+   *
+   * This overlay's z-index sits above the status bar, so without this its
+   * "↻ reboot" click would land on the dead overlay instead of the
+   * dashboard underneath. */
   export function close(): void {
     open = false;
     gPending = false;

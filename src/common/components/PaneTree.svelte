@@ -1,29 +1,18 @@
 <script lang="ts">
-  // Recursive pane-tree renderer — replaces Terminal.svelte's old
-  // `{#if view === "home"}...{:else if ...}` chain. A "split" node renders
-  // a flex row/column of its children (each sized by its parallel `sizes`
-  // fraction), recursing into itself via `<svelte:self>` for each child.
+  // Recursive pane-tree renderer: a "split" node renders a flex row/column
+  // of its children (each sized by its parallel `sizes` fraction),
+  // recursing into itself via `<svelte:self>` for each child.
   //
-  // Ref registry ("per-pane ref Map for delegation"): `refs` is a PROP, not
-  // a component-local Map — Terminal.svelte creates it ONCE (imperative,
-  // non-$state — it's consulted on keydown, never rendered through a
-  // template) and threads the SAME object down through every recursive
-  // `<svelte:self>` call, so every leaf anywhere in the tree registers into
-  // ONE shared map regardless of nesting depth. A fresh Map per component
-  // instance would only work when exactly one leaf instance ever exists;
-  // once the root becomes a split node, every leaf lives in a CHILD
-  // instance, so a component-local map would silently fragment the
-  // registry across instances.
+  // `refs` is a PROP, not a component-local Map, because Terminal.svelte
+  // creates it once and threads the same object through every recursive
+  // `<svelte:self>` call — a component-local map would fragment the
+  // registry once the tree has more than one leaf instance.
   //
-  // `activePaneId` is threaded down alongside `refs` for two things: (1)
-  // each leaf knows whether IT is the focused one (`isFocused`), gating its
-  // own data-copy-source/paste-target registration so exactly one mounted
-  // instance of a multi-instance program (any pane can run any program,
-  // even one already running elsewhere) ever claims either; (2) the
-  // active-pane border accent below, which only ever renders around the
-  // ACTUAL active leaf — never shown at all on a single-pane window
-  // (`multiPane` gate), matching real tmux's own "no border to speak of
-  // with only one pane".
+  // `activePaneId` gates two things per leaf: its own data-copy-source/
+  // paste-target registration, so exactly one mounted instance of a
+  // multi-instance program ever claims either; and the active-pane border
+  // accent below, shown only around the actually-focused leaf when
+  // `multiPane` is true.
   import type { ProgramName, PaneNode } from "../engines/tmux/tmux";
   import type {
     DashboardData,
@@ -53,10 +42,8 @@
     /** True once the window has more than one pane — gates the active-pane
      * border accent (see file header). */
     multiPane: boolean;
-    /** Shared, non-reactive ref registry — see file header. Only ever
-     * `.set`/`.delete`'d from a leaf's own `$effect`; Terminal.svelte reads
-     * it directly (`refs.get(activePaneId)`), never through this
-     * component's exports. */
+    /** Shared, non-reactive ref registry (see the file header); only ever
+     * `.set`/`.delete`'d from a leaf's own `$effect`. */
     refs: Map<string, unknown>;
     dashboard: DashboardData;
     /** Window id (a `ProgramName`) -> its live tmux window number — threaded
@@ -214,7 +201,6 @@
     {:else if node.pane.program === "profile"}
       <Profile bind:this={leafRef} {profile} {isFocused} />
     {:else}
-      <!-- program === "shell". -->
       <Shell
         bind:this={leafRef}
         {shell}

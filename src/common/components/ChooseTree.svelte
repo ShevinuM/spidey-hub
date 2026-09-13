@@ -1,45 +1,21 @@
 <script lang="ts">
-  // choose-tree overlay (`Ctrl-b w` — REBINDS the old "go home" binding).
-  // Always mounted
-  // (same contract as GrepOverlay/CopyMode/Cmdline/HelpSearch — `bind:this`,
-  // `handleKey(): boolean`, `close()`, `isOpen()`), but a FULL window-content
-  // overlay rather than a centered box: real tmux's choose-tree replaces the
-  // entire pane area while leaving the status line visible, which this
-  // mirrors with the exact same `bottom:{STATUS_BAR_HEIGHT_PX}px` inset
-  // CopyMode.svelte already uses for the same reason.
+  // choose-tree overlay (`Ctrl-b w`) — a full window-content overlay (not a
+  // centered box), mirroring real tmux's choose-tree replacing the entire
+  // pane area while leaving the status line visible. Always mounted, same
+  // `bind:this`/`handleKey(): boolean`/`close()`/`isOpen()` contract as
+  // GrepOverlay/CopyMode/Cmdline/HelpSearch.
   //
-  // Keyboard-slot placement ("keep it simple and faithful-enough"):
-  // Terminal.svelte consults this component's
-  // `handleKey()` AFTER copy-mode AND after the tmux prefix system has had
-  // its turn (arm + dispatch), but BEFORE Cmdline/StatusBar/every view ref.
-  // Concretely this means: while this overlay is open —
-  //   - the tmux PREFIX still arms and dispatches as normal underneath it
-  //     (so `Ctrl-b d` still detaches, which closes this overlay for free
-  //     via `detachSession()`'s own `closeWindowChrome()` call — real tmux's
-  //     own choose-tree is a PANE MODE, not a modal that blocks the prefix);
-  //   - window-switch prefix keys (digits, n/p) still work too, and also
-  //     close this overlay for free (every window-switch path calls
-  //     `closeWindowChrome()`, which now closes this overlay alongside grep/
-  //     cmdline/the help palette);
-  //   - but Terminal.svelte's `handlePrefixedKey` GATES four prefixed keys —
-  //     `,` (rename), `&` (kill-window), `x` (kill-pane), `:` (cmdline) —
-  //     while this overlay is open: each of those would pop a COMPETING
-  //     modal (a status-bar prompt or the Cmdline box) UNDERNEATH this
-  //     overlay, whose own y/n/Enter keystrokes could then never reach it —
-  //     this component's `handleKey()` runs BEFORE StatusBar's/Cmdline's in
-  //     the dispatch order, so it would swallow every key first, starving
-  //     the prompt forever. Gating those four keys avoids
-  //     ever creating that starved state in the first place;
-  //   - every UNPREFIXED key (bare j/k/h/l/Enter/x/q/Esc, no Ctrl-b) reaches
-  //     THIS component's own `handleKey()` (the prefix system only reacts to
-  //     an armed prefix or a bare Ctrl-b, so it's a no-op for these and
-  //     falls through), which owns them for its own tree navigation/kill/
-  //     switch/close vocabulary — this is what it means for choose-tree to
-  //     own the keyboard while it's open.
-  //   - `?` is swallowed here too (this component's own catch-all at the end
-  //     of `handleKey()`) — "does NOT open [the help palette]... while
-  //     choose-tree is open" falls out for free, since
-  //     Terminal.svelte's bare-`?` opener is never reached.
+  // Terminal.svelte consults this component's `handleKey()` after copy-mode
+  // and the tmux prefix system, but before Cmdline/StatusBar/every view
+  // ref. While open: the prefix still arms/dispatches underneath it (so
+  // `Ctrl-b d` and window-switch keys still work, and close this overlay
+  // for free via `closeWindowChrome()`); Terminal's `handlePrefixedKey`
+  // gates the four prefixed keys that would otherwise pop a competing modal
+  // underneath this one (`,`/`&`/`x`/`:`), since this component's
+  // `handleKey()` would swallow every key first and starve that modal;
+  // every unprefixed key (j/k/h/l/Enter/x/q/Esc/?) reaches this component's
+  // own `handleKey()` instead, which owns the keyboard for tree navigation
+  // while open.
   import type { Client } from "../engines/tmux/tmux";
   import { allPanes } from "../engines/tmux/tmux";
   import type { ChooseTreeData } from "../lib/data";
@@ -132,10 +108,9 @@
     return `${chooseTree.preview.windowPanesLabel} ${programs}  ${chooseTree.preview.windowLayoutLabel} ${layout}`;
   });
 
-  /** `Ctrl-b w` — opens the overlay with the current session expanded (every
-   * other session collapsed) and the current window pre-selected. A
-   * no-op-safe default (row 0) when, for whatever reason, the attached
-   * session/window can't be found. */
+  /** `Ctrl-b w` — opens with the current session expanded (every other
+   * collapsed) and the current window pre-selected; falls back to row 0
+   * when the attached session/window can't be found. */
   export function openOverlay(): void {
     const attachedId = client.attachedSessionId;
     expandedSessionIds = new Set(attachedId ? [attachedId] : []);

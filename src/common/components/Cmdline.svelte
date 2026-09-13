@@ -1,39 +1,21 @@
 <script lang="ts">
-  // Site-wide floating Cmdline — a noice.nvim-style
-  // centered box, same visual family as GrepOverlay.svelte (bordered box,
-  // box-drawing inset title, existing palette, prompt + blinking block
-  // cursor). Always mounted (Terminal.svelte renders this once,
-  // unconditionally), exactly like GrepOverlay/CopyMode/BootSequence —
-  // Terminal owns a live `bind:this` ref so it can decide WHEN to open this
-  // (three different entry contexts, see openSite/openEx/openTmux below)
-  // and call handleKey() on every keydown once it's up.
+  // Site-wide floating Cmdline (noice.nvim-style centered box, same visual
+  // family as GrepOverlay). Always mounted; Terminal.svelte owns a live
+  // `bind:this` ref to pick when to open it and forwards every keydown to
+  // `handleKey()`.
   //
-  // Three entry contexts share this one component, tracked
-  // by `mode`:
-  //   "site" — `:` from anywhere with no other text input active. Only
-  //            `cmdline.commands` are offered/executed.
-  //   "ex"   — `:` while a Repositories/Personnel file editor is open. Terminal
-  //            tries the ex-command state machine first
-  //            (src/common/lib/cmdline.ts's parseExCommand, executed by
-  //            Editor.svelte's own runExCommand) via the `onSubmit` prop;
-  //            only a command that machine doesn't recognize falls through
-  //            to the site-wide set — "editor context wins".
-  //            Tab-completion candidates here are exCommands ∪ commands,
-  //            exCommands winning name collisions (src/common/lib/cmdline.ts's
-  //            mergeCommandLists) — same "editor context wins" precedence.
-  //   "tmux" — `Ctrl-b :`, real tmux's own "command-prompt" binding. Only
-  //            `cmdline.tmuxCommands` are offered/executed.
+  // Three entry contexts share this component via `mode`: "site" (`:` with
+  // nothing else open — only `cmdline.commands`), "ex" (`:` with an editor
+  // open — tries `cmdline.ts`'s `parseExCommand` first via `onSubmit`, and
+  // only falls through to `cmdline.commands` on an unrecognized command;
+  // Tab-completion candidates are `exCommands ∪ commands`, `exCommands`
+  // winning name collisions via `mergeCommandLists`), and "tmux" (`Ctrl-b
+  // :` — only `cmdline.tmuxCommands`).
   //
-  // This component itself is deliberately dumb about EXECUTION: `onSubmit`
-  // is the only way anything actually happens (view switches, grep/reboot/
-  // resume, window rename/kill/select) — Terminal.svelte owns every one of
-  // those side effects, exactly like GrepOverlay's `onNavigate` prop. This
-  // component only owns: open/closed + which mode, the typed text, silent
-  // zsh-style Tab-cycling (src/common/lib/cmdline.ts's pure cycleComplete —
-  // deliberately no visible suggestions list under the input: the `?`
-  // HelpSearch.svelte palette is the discoverable/browsable surface, this
-  // box stays a plain, quiet command line), and rendering the transient
-  // error `onSubmit` hands back.
+  // This component does no execution itself: `onSubmit` is the only side
+  // effect, and completion is silent zsh-style Tab-cycling (`cmdline.ts`'s
+  // `cycleComplete`) with no visible suggestion list — the `?` help
+  // palette is the browsable surface instead.
   import type { CmdlineData } from "../lib/data";
   import { cycleComplete, mergeCommandLists, type CommandDef, type TabCycleState } from "../lib/cmdline";
   import { pushPasteTarget, removePasteTarget } from "../lib/paste-targets";
@@ -57,11 +39,9 @@
   let mode = $state<CmdlineMode>("site");
   let text = $state("");
   let error = $state<string | null>(null);
-  /** Tab-cycle state — non-null only
-   * for the span of consecutive Tab presses that are cycling the SAME
-   * match list; reset to `null` by every other keydown (Enter, Backspace,
-   * a printable character, Escape, opening the box) so the next Tab press
-   * always starts a fresh cycle from whatever's typed at that moment. */
+  /** Non-null only for the span of consecutive Tab presses cycling the same
+   * match list; every other keydown resets it, so the next Tab always
+   * starts a fresh cycle from what's currently typed. */
   let cycle = $state<TabCycleState | null>(null);
 
   const commandSource = $derived.by((): CommandDef[] => {
@@ -132,12 +112,10 @@
     }
   }
 
-  /** Handles one keydown while the box is open. Returns `false` only when
-   * the box is closed (letting Terminal.svelte's own handling decide
-   * whether to open it) — every key is "ours" once open, same
-   * always-consumed-while-open contract GrepOverlay/StatusBar's prompt
-   * already use, including unrecognized modifier combos (consumed but
-   * never preventDefault-ed, so browser/OS shortcuts still fire). */
+  /** Handles one keydown while the box is open; returns `false` only when
+   * the box is closed, since every key is "ours" once open — same
+   * always-consumed contract as GrepOverlay/StatusBar's prompt, including
+   * unrecognized modifier combos (consumed, never preventDefault-ed). */
   export function handleKey(e: KeyboardEvent): boolean {
     if (!open) return false;
 
@@ -149,19 +127,11 @@
 
     if (e.metaKey || e.ctrlKey || e.altKey) return true;
 
-    // Any key after an error dismisses it and keeps editing the same text
-    // ("cleared by Esc/next open" — a fresh keystroke is "next open" in
-    // spirit: the box stays open, but the stale message must not linger
-    // over new input).
+    // Any key after an error dismisses it without clearing the typed text.
     if (error) error = null;
 
-    // Tab-cycling — every key OTHER
-    // than Tab invalidates whatever cycle is in progress, so the very next
-    // Tab press always starts a FRESH one from whatever's typed at that
-    // moment (a stray Enter that only surfaced an error, or a Backspace/
-    // printable edit, must never leave a stale cycle position for a later,
-    // unrelated Tab press to continue from). Reset happens once, here, at
-    // the top — not duplicated in every branch below.
+    // Any key other than Tab invalidates the in-progress cycle, so the next
+    // Tab press always starts fresh from whatever's typed at that moment.
     if (e.key !== "Tab") cycle = null;
 
     if (e.key === "Enter") {
@@ -183,9 +153,9 @@
       text = text.slice(0, -1);
       return true;
     }
-    // j/k (and every other printable character) just type. ArrowUp/ArrowDown
-    // have no suggestion list to navigate, so they simply fall through to
-    // the generic "consumed, no side effect" return below.
+    // j/k and other printable characters just type; ArrowUp/ArrowDown have
+    // no suggestion list to navigate, so they fall through to "consumed, no
+    // side effect" below.
     if (e.key.length === 1) {
       e.preventDefault();
       text += e.key;

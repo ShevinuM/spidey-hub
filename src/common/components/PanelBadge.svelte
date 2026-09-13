@@ -1,61 +1,42 @@
 <script lang="ts">
-  // Shared top-straddling pill badge — every panel across Repositories/
-  // Employment Records/Help renders one of these (mockup:
-  // UI-Mockups/builds-page-design-review/Builds.dc.html's "1 · Status"
-  // pill et al; byte-identical markup repeated per panel there, pulled out
-  // into one component here). Two accents: "blue" (the default —
-  // red-glow/blue-border pill every Repositories/Employment Records panel
-  // uses, red spider glyph `spider-glyph-red.svg`) and "teal" (Help's
-  // section-header pill — Help-Panel-Changes.md / Help.dc.html lines
-  // ~150-152 — teal spiderman glyph `spiderman-teal.svg`).
+  // Shared top-straddling pill badge, rendered by every Repositories/
+  // Employment Records/Help panel. Two accents: "blue" (default —
+  // red-glow/blue-border pill, red spider glyph) and "teal" (Help's
+  // section-header pill, teal spiderman glyph).
   //
-  // "variant" scopes the ONE place the glyph's position and the wrapper's
-  // alignment differ from every other consumer: Repositories
-  // (variant="repositories") is left-aligned with the glyph BETWEEN the
-  // bracketed number and the label (`[N] <glyph> Label`). Every other
-  // "blue" consumer (Employment Records' split-text badges, and any future
-  // non-split/non-repositories caller) keeps the centered wrapper with the
-  // glyph before the number (`<glyph> {n} · {label}`) or between the two
-  // split words (`{left} <glyph> {right}`) — the pre-existing look.
+  // `variant="repositories"` is the one consumer whose wrapper is
+  // left-aligned, with the glyph BETWEEN the bracketed number and the
+  // label (`[N] <glyph> Label`); every other consumer keeps the centered
+  // wrapper.
   //
-  // The wrapper below (`position:absolute;...;transform:translateY(-50%)`)
-  // straddles whatever ancestor panel box has `position:relative` — it is
-  // NOT itself the panel's border/background, just the floating pill on top
-  // of it, exactly like the mockup's own markup. `pointer-events:none` on
-  // the wrapper keeps the badge from stealing clicks meant for the panel
-  // underneath (the mockup's own convention, unchanged here).
+  // The wrapper straddles whatever ancestor panel has `position:relative`
+  // — it is not itself the panel's border/background, just the floating
+  // pill on top of it — and `pointer-events:none` keeps it from stealing
+  // clicks meant for the panel underneath.
   interface Props {
-    /** Panel number shown before the label, e.g. `1` in "[1] Repositories"
-     * (repositories variant) or "1 · Status" (default, non-split). Omit
-     * together with `label` when using `left`/`right` split-text mode
-     * instead (Employment Records' badges — see below). */
+    /** Panel number shown before the label — `1` in "[1] Repositories"
+     * (repositories variant) or "1 · Status" (default). Omit with `label`
+     * when using split-text (`left`/`right`) mode instead. */
     n?: number;
     /** Panel label shown after the number. */
     label?: string;
-    /** Split-text mode: renders `{left} <glyph> {right}` as one badge
-     * instead of `[{n}] {label}` — the glyph sits BETWEEN two words rather
-     * than before/inside a numbered label (Employment Records' "Employment
-     * <glyph> Records" / "File <glyph> Preview" badges, UI-Mockups
-     * Personnel.dc.html). Blue accent only; pass both or neither. */
+    /** Split-text mode: renders `{left} <glyph> {right}` instead of
+     * `[{n}] {label}` (Employment Records' "Employment <glyph> Records" /
+     * "File <glyph> Preview" badges). Blue accent only; pass both or
+     * neither. */
     left?: string;
     right?: string;
-    /** "blue" (default): red-glow/blue-border pill used on every
-     * Repositories/Employment Records panel. "teal": Help's section-header
-     * pill (spiderman-teal glyph, teal border/glow). */
+    /** "blue" (default): red-glow/blue-border pill. "teal": Help's
+     * section-header pill (teal glyph, teal border/glow). */
     accent?: "blue" | "teal";
-    /** Renders the pill inline, in normal flow, instead of the default
-     * absolutely-positioned wrapper that straddles a panel's top border.
-     * Help's section headers sit the pill inline at the start of a flex row
-     * (pill + dotted rule + hint), not straddling anything — see
-     * Help.dc.html line ~150. */
+    /** Renders the pill inline instead of the default absolutely-positioned
+     * wrapper that straddles a panel's top border — used by Help's section
+     * headers, which sit the pill at the start of a flex row instead of
+     * straddling anything. */
     inline?: boolean;
-    /** "repositories": the ONLY consumer whose wrapper is left-aligned
-     * (not centered) and whose glyph sits BETWEEN the bracketed number and
-     * the label (`[N] <glyph> Label`) instead of before the number.
-     * "default" (default): centered wrapper, glyph before the number in
-     * non-split mode or between the two words in split mode — the look
-     * every other consumer (Employment Records, and non-split callers)
-     * keeps. */
+    /** "repositories": left-aligned wrapper, glyph between the bracketed
+     * number and the label (`[N] <glyph> Label`). "default": centered
+     * wrapper, glyph before the number (or between split words). */
     variant?: "repositories" | "default";
   }
 
