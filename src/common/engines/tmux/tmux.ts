@@ -139,7 +139,7 @@ function removePaneNode(node: PaneNode, paneId: string): PaneNode | null {
     const remainingSizesRaw = node.sizes.filter((_, i) => i !== idx);
     const total = remainingSizesRaw.reduce((a, b) => a + b, 0) || 1;
     const remainingSizes = remainingSizesRaw.map((s) => s / total);
-    if (remainingChildren.length === 1) return remainingChildren[0]; // collapse — no 1-child splits
+    if (remainingChildren.length === 1) return remainingChildren[0];
     return { ...node, children: remainingChildren, sizes: remainingSizes };
   }
 

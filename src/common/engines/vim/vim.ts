@@ -78,7 +78,7 @@ function wordForwardOnce(lines: string[], pos: CursorPos): CursorPos {
   }
   while (true) {
     const text = lines[cur.line - 1] ?? "";
-    if (text.length === 0) return { line: cur.line, col: 0 }; // empty line always stops
+    if (text.length === 0) return { line: cur.line, col: 0 };
     if (classAt(lines, cur.line, cur.col) !== "space") return cur;
     const next = step(lines, cur, 1);
     if (!next) return { line: cur.line, col: Math.max(0, text.length - 1) };
@@ -272,11 +272,11 @@ export function nextMatch(matches: SearchMatch[], from: CursorPos, direction: 1 
     for (const m of matches) {
       if (m.line > from.line || (m.line === from.line && m.col > from.col)) return m;
     }
-    return matches[0]; // wrap to the first match
+    return matches[0];
   }
   for (let i = matches.length - 1; i >= 0; i--) {
     const m = matches[i];
     if (m.line < from.line || (m.line === from.line && m.col < from.col)) return m;
   }
-  return matches[matches.length - 1]; // wrap to the last match
+  return matches[matches.length - 1];
 }

@@ -17,8 +17,8 @@ import {
 
 test("computeThroughputMbps: sums transferSize>2000 && duration>1 entries, floors at 0.2 Mb/s, null when none qualify", () => {
   expect(computeThroughputMbps([])).toBe(null);
-  expect(computeThroughputMbps([{ transferSize: 100, duration: 50 }])).toBe(null); // below 2000 bytes
-  expect(computeThroughputMbps([{ transferSize: 5000, duration: 0.5 }])).toBe(null); // below 1ms
+  expect(computeThroughputMbps([{ transferSize: 100, duration: 50 }])).toBe(null);
+  expect(computeThroughputMbps([{ transferSize: 5000, duration: 0.5 }])).toBe(null);
 
   // 1,000,000 bytes over 1000ms = 8 Mb/s.
   const mbps = computeThroughputMbps([{ transferSize: 1_000_000, duration: 1000 }]);
@@ -64,12 +64,12 @@ test("smoothRtt: 0.6/0.4 blend, rounded; first sample passes through as-is", () 
 test("qFromDown / lagFromRtt: README mapping, clamped to [0,1]", () => {
   expect(qFromDown(0)).toBe(0);
   expect(Math.abs(qFromDown(50) - 1) < 0.01).toBeTruthy(); // log10(51)/log10(51) ≈ 1
-  expect(qFromDown(1e9)).toBe(1); // clamped
+  expect(qFromDown(1e9)).toBe(1);
 
   expect(lagFromRtt(30)).toBe(0);
-  expect(lagFromRtt(30 - 1000)).toBe(0); // clamped low
+  expect(lagFromRtt(30 - 1000)).toBe(0);
   expect(lagFromRtt(30 + 500)).toBe(1);
-  expect(lagFromRtt(30 + 5000)).toBe(1); // clamped high
+  expect(lagFromRtt(30 + 5000)).toBe(1);
 });
 
 test("hueForHeight: 212 at h=0 (blue), 0 at h=1 (red)", () => {

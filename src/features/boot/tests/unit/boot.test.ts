@@ -37,7 +37,7 @@ test("progress: linear 0..1, clamped at the duration", () => {
   expect(progress(0, 4600)).toBe(0);
   expect(progress(2300, 4600)).toBe(0.5);
   expect(progress(4600, 4600)).toBe(1);
-  expect(progress(9999, 4600)).toBe(1); // hard-stop overshoot never exceeds 1
+  expect(progress(9999, 4600)).toBe(1);
 });
 
 test("pct: matches the mock's eased+jittered formula at hand-computed points", () => {
@@ -94,7 +94,7 @@ test("handshakeText: dot count cycles 1/2/3 every 220ms of elapsed time", () => 
   expect(handshakeText(0, 0, HANDSHAKE)).toBe("negotiating.");
   expect(handshakeText(0, 220, HANDSHAKE)).toBe("negotiating..");
   expect(handshakeText(0, 440, HANDSHAKE)).toBe("negotiating...");
-  expect(handshakeText(0, 660, HANDSHAKE)).toBe("negotiating."); // wraps back to 1
+  expect(handshakeText(0, 660, HANDSHAKE)).toBe("negotiating.");
 });
 
 // ---------------------------------------------------------------------------
@@ -150,7 +150,7 @@ test("padStatusValue: right-pads/truncates to exactly 16 characters", () => {
   expect(padStatusValue("ONLINE")).toBe("ONLINE          ");
   expect(padStatusValue("ONLINE").length).toBe(16);
   expect(padStatusValue("········").length).toBe(16);
-  expect(padStatusValue("0123456789ABCDEFGH").length).toBe(16); // truncated
+  expect(padStatusValue("0123456789ABCDEFGH").length).toBe(16);
 });
 
 test("statusRowValue: dots below threshold, onlineText (padded) above it", () => {
@@ -189,7 +189,7 @@ test("spinnerFrame: cycles the 8 braille glyphs every 90ms", () => {
   const frames = "⣾⣽⣻⢿⡿⣟⣯⣷";
   expect(spinnerFrame(0)).toBe(frames[0]);
   expect(spinnerFrame(90)).toBe(frames[1]);
-  expect(spinnerFrame(90 * 8)).toBe(frames[0]); // wraps
+  expect(spinnerFrame(90 * 8)).toBe(frames[0]);
 });
 
 // ---------------------------------------------------------------------------

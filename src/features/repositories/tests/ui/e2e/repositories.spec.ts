@@ -147,7 +147,7 @@ test.describe("Repositories: panel [1] repo list — all-projects pinned first +
     await expect(treeRow(page, "README.md")).toBeVisible();
 
     await blurActive(page); // see helper doc — avoids a stale-focus double-fire on Enter below
-    await page.keyboard.press("1"); // focus panel [1]
+    await page.keyboard.press("1");
     await expect(page.locator('[data-testid="repositories-panel-1"]')).toHaveAttribute(
       "style",
       /border: 1px solid rgb\(224, 69, 60\)/,
@@ -394,9 +394,9 @@ test.describe("Repositories: panel [4] commits track ONLY panel [1] (bug fix)", 
 
     // Browsing WITHIN that same repo's tree/preview — panel [2]/[3],
     // including toggling a dir's collapse state — must not move panel [4] again.
-    await treeRow(page, "feeds").click(); // collapses "feeds"
+    await treeRow(page, "feeds").click();
     await expect(shaOf()).resolves.toBe(afterSelect);
-    await treeRow(page, "feeds").click(); // re-expands it
+    await treeRow(page, "feeds").click();
     await expect(shaOf()).resolves.toBe(afterSelect);
     await treeRow(page, "dev_to.py").click();
     await expect(shaOf()).resolves.toBe(afterSelect);
