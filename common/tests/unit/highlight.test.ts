@@ -1,6 +1,6 @@
 // Unit tests for src/common/lib/highlight.ts's generate-time token pipeline. Uses
-// small inline fixture snippets (not repos/ content — the submodules can
-// move/change independently of this test) so determinism, the palette
+// small inline fixture snippets (not real repo content — a fetched repo's
+// tree can change independently of this test) so determinism, the palette
 // round-trip, and the size-cap fallback are each pinned to a stable input.
 import { expect, test } from "vitest";
 import { PaletteBuilder, tokenizeFile, tokenLineText } from "../../../src/common/lib/highlight";

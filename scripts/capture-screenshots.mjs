@@ -1,5 +1,5 @@
 // Documentation screenshot capture — writes docs/screenshots/*.png from a
-// REAL (non-fixture) `pnpm build`: real submodule repos, real personnel
+// REAL (non-fixture) `pnpm build`: real fetched repos, real personnel
 // content, and the real live-generated contribution grid, not the
 // deterministic fixture content the visual-regression goldens use.
 //

@@ -1,5 +1,5 @@
 // Unit tests for src/common/lib/repo-tree.ts's repo browsing.
-// Exercised against the real generated index for one of the 8 submodules
+// Exercised against the real generated index for one of the 8 repos
 // (public/generated/repos/daily-tech-digest.json — has genuine nested
 // subdirectories, unlike transcript-tts which is flat at the root) so the
 // directory-synthesis logic is checked against real data, not a hand-rolled

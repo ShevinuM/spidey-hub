@@ -1,4 +1,4 @@
-// Pure helpers for browsing a submodule's file index. The index itself
+// Pure helpers for browsing a repo's file index. The index itself
 // (public/generated/repos/<name>.json, produced by scripts/generate.mjs) is
 // a FLAT list of {path, lines} — one entry per text file, posix-separated
 // relative path, no directory nodes. Repositories.svelte fetches that JSON lazily

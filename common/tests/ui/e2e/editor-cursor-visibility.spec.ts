@@ -77,10 +77,14 @@ test.describe("Editor cursor visibility (regression)", () => {
     test.setTimeout(90_000);
 
     // Real, on-disk, indented JS source (not a prose README) — read at test
-    // time so this can't drift from the actual submodule checkout.
+    // time from the SHA-pinned tarball cache scripts/generate.mjs populates
+    // at `.cache/repos/<name>-<sha>/` (the pin comes from the committed
+    // repos.json), so this can't drift from the actual repo content.
     const repoName = "Legend-of-Arlo-Guardians-Gauntlet";
     const relPath = "js/main.js";
-    const realLines = readFileSync(join(ROOT, "repos", repoName, relPath), "utf8").split("\n");
+    const pins = JSON.parse(readFileSync(join(ROOT, "repos.json"), "utf8")) as Record<string, string>;
+    const sha = pins[repoName];
+    const realLines = readFileSync(join(ROOT, ".cache/repos", `${repoName}-${sha}`, relPath), "utf8").split("\n");
     const indentedLineNo = realLines.findIndex((l) => /^[ \t]/.test(l)) + 1; // 1-based, vim convention
     expect(indentedLineNo, "fixture must contain at least one indented line for this test to be meaningful").toBeGreaterThan(0);
 

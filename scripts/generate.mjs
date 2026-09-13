@@ -69,7 +69,7 @@ const TEXT_EXTENSIONS = new Set([
   "md", "mdx", "txt", "json", "yaml", "yml", "toml", "ini", "cfg", "conf",
   "properties", "xml", "html", "htm", "css", "scss", "less",
   "js", "mjs", "cjs", "jsx", "ts", "tsx", "svelte", "astro", "vue",
-  // languages found in the three submodules (and generally common)
+  // languages found in the eight repos (and generally common)
   "py", "java", "kt", "kts", "gradle", "rb", "go", "rs",
   "c", "cc", "cpp", "h", "hpp", "cs", "php",
   "sh", "bash", "zsh", "fish", "ps1", "cmd",
@@ -466,12 +466,16 @@ function generateGrepIndex() {
 // text or binary; `cat`'s own "binary or unindexed" case is what a real fs
 // walk's content-vs-structure split looks like).
 //
-// repos/* subtrees come from the per-repo index JSONs already written by
-// generateRepoIndexes() above (path-only), NOT a second walk of the repos/
-// submodules on disk, so `cat`'s own lazy
-// per-repo fetch always agrees with what `ls`/`tree` show here. The virtual
-// "all-projects" entry is excluded — it has no corresponding `repos/
-// all-projects` directory on disk for a real `cd`/`ls` to land in.
+// repos/* subtrees are entirely VIRTUAL: nothing under repos/ exists on disk
+// at all (no submodule checkout, no cache — real repo content lives at
+// .cache/repos/<name>-<sha>/, a different path the shell never shows). The
+// entries come from the per-repo index JSONs already written by
+// generateRepoIndexes() above (path-only), so `cat`'s own lazy per-repo
+// fetch always agrees with what `ls`/`tree` show here even though `cd
+// repos/<name>` lands nowhere on the real filesystem. The virtual
+// "all-projects" entry is excluded from this — it has no corresponding real
+// GitHub repo, so there is no `repos/all-projects` shell path for it to
+// populate.
 // ---------------------------------------------------------------------------
 
 const FS_INDEX_SKIP_DIRS = new Set([
