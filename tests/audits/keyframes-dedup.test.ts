@@ -6,7 +6,7 @@
 // copies shadowing it.
 //
 // The e2e "every animation-name resolves to a real CSSKeyframesRule" check
-// (tests/e2e/animations.spec.ts) cannot catch THIS failure mode: an unused
+// (src/common/tests/ui/e2e/animations.spec.ts) cannot catch THIS failure mode: an unused
 // `@keyframes` declaration is invisible to a resolution check — nothing
 // ever references it, so there's nothing to fail to resolve. This test
 // closes that gap with a source-only scan: no `@keyframes <name>` may be

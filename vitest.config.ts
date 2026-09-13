@@ -8,11 +8,17 @@ import { defineConfig } from "vitest/config";
 // cover the unit-test homes the bounded-context split introduces:
 // `src/common/tests/unit/` (phase 02's own tmux/vim/cmdline/views tests) and
 // `src/features/*/tests/unit/` (every later feature phase's own, per
-// architecture R001) — in addition to the original bulk-imported
-// `tests/unit/`, which stays populated until each feature phase claims its
-// own tests out of it.
+// architecture R001). Phase 13's tests restructure retired the original
+// bulk-imported `tests/unit/` once its last two files claimed their own
+// homes: `scripts/tests/unit/` for build-time tooling tests, beside the
+// tooling, and `tests/audits/` for repo-wide source-hygiene scans.
 export default defineConfig({
   test: {
-    include: ["tests/unit/**/*.test.ts", "src/common/tests/unit/**/*.test.ts", "src/features/*/tests/unit/**/*.test.ts"],
+    include: [
+      "scripts/tests/unit/**/*.test.ts",
+      "tests/audits/**/*.test.ts",
+      "src/common/tests/unit/**/*.test.ts",
+      "src/features/*/tests/unit/**/*.test.ts",
+    ],
   },
 });
