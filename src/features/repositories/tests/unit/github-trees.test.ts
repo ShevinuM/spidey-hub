@@ -1,8 +1,4 @@
-// Unit tests for src/features/repositories/lib/github-trees.ts: tree mapping, base64 decode incl.
-// multibyte, cache TTL, null-on-failure. Follows the same style as
-// github-commits.test.ts: pure/cache logic is exercised directly
-// here; the live fetch/DOM integration is covered end-to-end by
-// src/features/repositories/tests/ui/e2e/repositories.spec.ts's mocked-route tests.
+// Unit-pins tree mapping, base64 decode, cache TTL, and null-on-failure logic; the live fetch/DOM integration is covered by repositories.spec.ts's mocked-route tests.
 import { expect, test } from "vitest";
 import {
   mapTreeResponse,

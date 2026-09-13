@@ -1,30 +1,6 @@
-// Functional (non-golden) coverage for repositories' adversarial fixture
-// data. src/features/repositories/tests/ui/visual/identical.spec.ts proves
-// goldens stay pixel-stable; this file proves the ADVERSARIAL fixtures added
-// alongside them actually exercise the defect classes they exist to catch —
-// a tidy, fixed-length fixture dataset could pass every golden while a
-// panel silently failed to scroll or clipped a long line. No PNG comparisons here,
-// so this file has no `tests/ui/visual/goldens/` entries of its own — it's
-// wired into `pnpm test:visual` in package.json purely so it always runs
-// against the fixture build, same port-4322 server (playwright.config.ts)
-// `identical.spec.ts` uses.
-//
-// Fixture data under test (src/content.config.ts,
-// src/features/repositories/tests/ui/support/repositories/*.md):
-//   - `flerken-watch.md`'s body — a 400-char unbroken line, read through
-//     the all-projects virtual repo's file preview.
-//   - `webbing-lab` — a repo entry
-//     (src/features/repositories/tests/ui/support/repositories/spider-tracker.md)
-//     with a `ready`, zero-file index
-//     (src/features/repositories/tests/ui/support/repos/webbing-lab.json)
-//     and no commits snapshot — the empty-repository path.
-//
-// These helpers (`gotoReady`, `prefixDigit`, `fitsWithin`) are deliberately
-// duplicated verbatim into this file and into
-// src/features/employment/tests/ui/visual/adversarial-fixtures.spec.ts —
-// extracting them into a shared support module is the rewrite-the-safety-net
-// hazard this repo's test-infra rules exist to prevent; both halves keep
-// their own copy.
+// Proves the adversarial fixtures actually exercise their defect classes (an unwrapped long line, an empty repo) rather than merely looking fine in a golden — no PNG comparisons here, so this file has no goldens of its own.
+// Fixture data under test: flerken-watch.md's 400-char unbroken line (via the all-projects preview), and webbing-lab's ready-but-empty repo index (no files, no commits snapshot).
+// gotoReady/prefixDigit/fitsWithin are deliberately duplicated verbatim in employment's own adversarial-fixtures.spec.ts rather than extracted into a shared module, per this repo's test-infra rules against shared-helper fragility.
 import { expect, test, type Page } from "@playwright/test";
 import { BOOT_SEEN_STORAGE_KEY } from "../../../../../common/tests/ui/support/fixtures";
 
@@ -46,11 +22,7 @@ async function gotoReady(page: Page, path: string): Promise<string[]> {
   page.on("pageerror", (e) => pageErrors.push(String(e)));
   await page.goto(path);
   await page.locator('[data-terminal-ready="true"]').waitFor({ state: "attached" });
-  // Self-guard: fail loudly if this ever runs against the real build
-  // instead of the fixture build (E2E_EXPECT_FIXTURES/checkFixtureFlag.ts
-  // already gates the SERVER, but a per-test assert here means a future
-  // refactor of the playwright config can't silently defeat that gate for
-  // this file specifically).
+  // Self-guard: asserts fixture mode directly, so a future playwright.config change can't silently defeat E2E_EXPECT_FIXTURES' server-side gate for this file.
   await expect(page.locator("html")).toHaveAttribute("data-fixture-mode", "true");
   return pageErrors;
 }
@@ -62,13 +34,7 @@ async function prefixDigit(page: Page, digit: string) {
   await page.keyboard.press(digit);
 }
 
-/** True if `box` fits within `container`'s width, i.e. text wrapped rather
- * than overflowing past its container. Deliberately compares the LEAF
- * span's own rendered box against its container — never a container
- * against itself, which the plan/checklist calls out as vacuous: an
- * ancestor with `text-overflow:ellipsis` absorbs overflow internally, so
- * the ancestor's own scrollWidth/clientWidth pair can look "fine" even
- * while its content is visually clipped. */
+/** True if `box` fits within `container`'s width — deliberately compares the leaf span's own box against its container, never a container against itself, since an ellipsis-absorbing ancestor can look fine while its content is clipped. */
 function fitsWithin(box: { width: number }, container: { width: number }, slack = 2): boolean {
   return box.width <= container.width + slack;
 }
@@ -109,9 +75,7 @@ test.describe("adversarial fixtures — repositories", () => {
     const filesCaption = page.locator('[data-testid="repositories-files-caption"]');
     await expect(filesCaption).toContainText("webbing-lab");
 
-    // Zero file rows and zero commit rows, gracefully — no error text, no
-    // thrown exception. (`ready` + `files: []`, not the network-error
-    // path — see this file's header comment.)
+    // Zero file rows and zero commit rows render gracefully — no error text, no thrown exception (a `ready`, empty index, not the network-error path).
     await expect(page.locator('[data-testid="repositories-tree-row"]')).toHaveCount(0);
     await expect(page.locator('[data-testid="repositories-commit-row"]')).toHaveCount(0);
 

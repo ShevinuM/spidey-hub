@@ -1,13 +1,4 @@
 <script lang="ts">
-  // Panel [2]: tree browser rows — moved out of Repositories.svelte during the
-  // folder+state-class relocation refactor. Pure relocation: same DOM,
-  // testids, classes, and inline styles as the original inline markup.
-  //
-  // Selection highlight: the "2 · Files" panel's own BLUE variant —
-  // distinct from the repo list's red one — a 2px left accent bar + a
-  // horizontal blue fade. Every row — selected or not —
-  // carries the same 2px `border-left` (transparent when unselected) so
-  // selecting a row never shifts its text 2px to the right.
   import type { RepositoriesData } from "../../../common/lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
   import { iconSvgForPath } from "../../../common/lib/file-icons";
@@ -106,17 +97,7 @@
 
 <style>
   .repositories-row {
-    /* Rows are flex children of an overflow-y:auto column; without this
-       they flex-shrink below their own line box under a full 15-commit
-       live list (only 1 commit ships in the committed snapshot, so this
-       doesn't show up there) — glyphs render vertically clipped and rows
-       overlap. Pairs with the containers above using overflow-y:auto so a
-       genuinely-too-long list scrolls instead of compressing. An explicit
-       line-height (rather than the initial "normal", which resolves
-       through getComputedStyle() as the literal string "normal" —
-       unparseable as a number) also gives the row a concrete, measurable
-       full-glyph height for the e2e assertion that checks commit-row
-       bounding-box heights are >= the computed line-height. */
+    /* Same flex-shrink/line-height rationale as ReposPanel.svelte's rows. */
     flex-shrink: 0;
     line-height: 1.6;
   }

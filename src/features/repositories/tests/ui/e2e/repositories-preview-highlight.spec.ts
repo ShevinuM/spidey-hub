@@ -1,21 +1,4 @@
-// Regression coverage: the Repositories (panel [3]) file preview discarded
-// the Shiki token/palette data generate.mjs already writes into
-// public/generated/repos/<name>.json, painting every non-markdown line one
-// flat colour (repositoriesState.svelte.ts's old `previewLines`), while the
-// full-screen Editor (same underlying `file` object) rendered it correctly.
-// Fix: `PreviewState` now carries `tokens`/`palette` too, and
-// `previewLines`/`previewPalette` resolve them the same way
-// `editorLines`/`editorPalette` already did.
-//
-// Exercised against REAL (non-fixture) content: `pnpm generate` tokenizes
-// every text file in the actual SHA-pinned GitHub tarball it fetches per
-// repo, regardless of PORTFOLIO_FIXTURES (see src/common/lib/highlight.ts +
-// scripts/generate.mjs's generateRepoIndexes(), which has no fixture branch
-// at all) — so a real repo file already gives real, multi-colour tokens
-// without inventing fixture data that would have to live inside a vendored
-// copy. Trees/Trie/word_search_ii.java
-// (Data-Structures-And-Algorithms) is that file: real Java keyword/type/
-// comment tokens (multiple palette colours) on line 31 alone.
+// Exercised against real (non-fixture) content since `pnpm generate` tokenizes every repo file regardless of PORTFOLIO_FIXTURES; `word_search_ii.java` genuinely has multiple token colors (keywords, types, comments) to check against.
 import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
 
 async function gotoReady(page: Page, path: string) {

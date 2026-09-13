@@ -1,13 +1,4 @@
 <script lang="ts">
-  // Panel [4]: commit rows / all-projects local-only text — moved out of
-  // Repositories.svelte during the folder+state-class relocation refactor. Pure
-  // relocation: same DOM, testids, classes, and inline styles as the
-  // original inline markup.
-  //
-  // Selection highlight: the "4 · Commits" panel's own red variant — a
-  // THIRD gradient distinct from both the repo list's and the files tree's
-  // — a horizontal red fade only, no left accent bar, so there is no
-  // alignment shift to guard against here.
   import type { RepositoriesData } from "../../../common/lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
   import RepositoriesPanel from "./RepositoriesPanel.svelte";
@@ -46,13 +37,7 @@
         <div style="color:rgba(196,216,232,.5)">{repositories.panels.commits.localOnlyText}</div>
         <div style="color:rgba(196,216,232,.35)">{repositories.allProjects.description}</div>
       {:else}
-        <!-- Spine graph: a plain vertical line + one node per REAL visible
-             commit row below — deliberately not a fake merge/branch topology
-             (curved forks, HEAD/tag pills), which would have no basis in our
-             actual commit data. Lives in the SAME
-             scrolling container as the rows (not a sibling positioned
-             outside it) so the graph scrolls in lockstep with them instead
-             of drifting once the list is taller than the panel. -->
+        <!-- Spine graph: one node per real commit row, no fake merge/branch topology, in the same scrolling container as the rows so it scrolls in lockstep with them. -->
         <div style="position:relative">
           {#if state.commits.length > 0}
             <svg
@@ -105,11 +90,7 @@
 
 <style>
   .repositories-row {
-    /* Fixed height AND matching line-height (not display:flex — the
-       existing markup joins its three spans with plain inline whitespace,
-       not a flex gap) so the spine SVG's node `cy` math (`i*22+11`) lands
-       exactly on each row's own vertical center regardless of glyph
-       metrics. */
+    /* Fixed height and matching line-height (not flex — these spans join with plain whitespace) so the spine SVG's `cy` math (`i*22+11`) lands on each row's vertical center. */
     height: 22px;
     line-height: 22px;
   }

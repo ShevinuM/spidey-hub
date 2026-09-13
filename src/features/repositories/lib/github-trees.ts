@@ -1,37 +1,10 @@
-// Client-side commit-tree browsing. Mirrors github-commits.ts's shape
-// (unauthenticated GitHub REST, sessionStorage cache with a 10min TTL,
-// null-on-any-failure — never throws) but for two different endpoints:
-// listing a commit's files (Git Trees API) and reading one file's content at
-// that commit (Contents API).
-//
-// UNVERIFIED-API-FACT check, done before writing this file: live curl on
-// 2026-08-17
-// against a real commit —
-//   curl "https://api.github.com/repos/ShevinuM/transcript-tts/git/trees/<40-char sha>?recursive=1"
-// — returned the tree directly (200, `{sha, tree: [...], truncated: false}`),
-// confirming GitHub's Git Trees API resolves a full COMMIT sha to that
-// commit's tree by itself; no separate `GET /commits/{sha}` call for
-// `commit.tree.sha` is needed. A second curl against the same endpoint with
-// the 8-char `sha8` also returned 200 — git's abbreviated-sha resolution
-// works here too — which is what makes the "stale snapshot lacks full sha"
-// fallback below viable without any extra request. `recursive=1` returns
-// BOTH "blob" (file) and "tree" (dir) entries with full paths (verified
-// against a repo with subdirectories, daily-tech-digest); this module keeps
-// only the blobs — directories are re-synthesized from file-path prefixes by
-// ../common/lib/repo-tree.ts's listDir(), exactly like the existing working-tree
-// indexes, so one rendering path in Repositories.svelte serves both tree sources.
-// `truncated: true` (a repo too large for one recursive listing) is not
-// handled — none of the three tracked repos are anywhere near GitHub's
-// ~100k-entry cap, so pagination machinery for a case that can't occur with
-// this content is intentionally not added.
+// Client-side commit-tree browsing (unauthenticated GitHub REST, sessionStorage-cached, null-on-failure) — mirrors github-commits.ts's shape for two different endpoints.
+// TODO(scaling): `truncated: true` (a repo too large for one recursive listing) isn't handled — none of the 8 tracked repos are near GitHub's ~100k-entry cap; add pagination if that changes.
 
 const TTL_MS = 10 * 60 * 1000;
 const TREE_CACHE_PREFIX = "repositories:tree:";
 const CONTENT_CACHE_PREFIX = "repositories:content:";
-/** "ShevinuM" — see the matching NOTE in github-commits.ts (fixture repos
- * referenced by src/features/repositories/tests/ui/support/commits/*.json
- * don't exist on GitHub at all; a tree fetch for them fails closed, same as
- * any other API failure). */
+/** GitHub owner login; fixture repos don't actually exist there. */
 const GITHUB_OWNER = "ShevinuM";
 /** Matches scripts/generate.mjs's own SIZE_CAP — files bigger than this are
  * treated as "too large to preview" rather than fetched in full. */
@@ -92,9 +65,7 @@ interface RawTreeEntry {
   path?: string;
 }
 
-/** Pure mapper: a GitHub Git Trees API response -> the flat list of blob
- * (file) paths it contains, or null if the shape is unrecognizable. Exported
- * for unit testing without a network call. */
+/** Maps a GitHub Git Trees API response to its flat list of blob paths, or null if the shape is unrecognizable. */
 export function mapTreeResponse(data: unknown): string[] | null {
   if (!data || typeof data !== "object" || !Array.isArray((data as { tree?: unknown }).tree)) return null;
   const tree = (data as { tree: RawTreeEntry[] }).tree;
@@ -112,15 +83,7 @@ async function fetchTreeForRef(repo: string, ref: string): Promise<string[] | nu
   }
 }
 
-/**
- * List a repo's files (paths only, no content) at a commit. Tries `sha`
- * first when present, then falls back to `sha8` if a stale snapshot lacks
- * the full sha — both work directly against the Trees API per the curl
- * finding above, so the fallback never needs a second kind of request.
- * Caches the successful ref's result in sessionStorage (10min TTL). Returns null on
- * total failure (network error, abort, non-2xx, unrecognizable shape, or
- * every candidate ref rejected) — never throws.
- */
+/** Lists a repo's file paths at a commit, trying `sha` then falling back to `sha8` (both resolve directly against the Trees API, so no second lookup is needed) — caches the result and returns null on any failure. */
 export async function fetchCommitTree(repo: string, sha: string | undefined, sha8: string): Promise<string[] | null> {
   const candidates = [...new Set([sha, sha8].filter((s): s is string => !!s))];
   for (const ref of candidates) {
@@ -135,16 +98,6 @@ export async function fetchCommitTree(repo: string, sha: string | undefined, sha
   return null;
 }
 
-/**
- * Decodes a GitHub Contents API base64 payload to a UTF-8 string. Deliberate
- * two-step decode (base64 -> raw bytes -> TextDecoder), NOT reading
- * `atob()`'s own output directly as text: `atob()` maps each base64 sextet
- * to one UTF-16 code unit in the 0-255 range (it's decoding bytes, not
- * characters), so any multibyte UTF-8 character (accents, CJK, emoji) comes
- * out as several mangled Latin-1 code points if read straight — routing
- * those same bytes through `TextDecoder("utf-8")` instead decodes them
- * correctly. Exported for unit testing.
- */
 export function decodeBase64Utf8(b64: string): string {
   const binary = atob(b64.replace(/\n/g, ""));
   const bytes = new Uint8Array(binary.length);
@@ -152,9 +105,7 @@ export function decodeBase64Utf8(b64: string): string {
   return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
 }
 
-/** True if `text` contains a NUL code point — the same binary guard
- * scripts/generate.mjs's walk() uses for the working-tree indexes, applied
- * here to decoded commit-tree content. Written as a charCode scan (avoiding any embedded NUL literal in this source file itself). */
+/** True if `text` contains a NUL code point — the same binary guard `generate.mjs`'s `walk()` uses for working-tree indexes. */
 function hasNulByte(text: string): boolean {
   for (let i = 0; i < text.length; i++) {
     if (text.charCodeAt(i) === 0) return true;
@@ -186,11 +137,7 @@ async function fetchContentForRef(repo: string, path: string, ref: string): Prom
   }
 }
 
-/**
- * Fetch one file's content at a commit (same sha/sha8 fallback + cache
- * strategy as fetchCommitTree). Resolves to `{kind:"binary"}` for
- * oversize/non-text content (never thrown), or null on total failure.
- */
+/** Fetches one file's content at a commit, using the same sha/sha8 fallback and cache strategy as `fetchCommitTree`; resolves to `{kind:"binary"}` for oversize/non-text content or null on failure. */
 export async function fetchCommitFileContent(
   repo: string,
   path: string,

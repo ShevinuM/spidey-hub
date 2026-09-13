@@ -1,8 +1,4 @@
 <script lang="ts">
-  // Panel [3]: file/doc preview + commit-fetch error line — moved out of
-  // Repositories.svelte during the folder+state-class relocation refactor. Pure
-  // relocation: same DOM, testids, and inline styles as the original inline
-  // markup.
   import type { RepositoriesData } from "../../../common/lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
   import RepositoriesPanel from "./RepositoriesPanel.svelte";

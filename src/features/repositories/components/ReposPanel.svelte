@@ -1,14 +1,4 @@
 <script lang="ts">
-  // Panel [1]: flat repo list rows + fetch spinner — moved out of
-  // Repositories.svelte during the folder+state-class relocation refactor. Pure
-  // relocation: same DOM, testids, classes, and inline styles as the
-  // original inline markup.
-  //
-  // Selection highlight: the "1 · Repositories" panel's own red variant —
-  // a 2px left accent bar + a horizontal red fade, not a flat fill. Every
-  // row — selected or not — carries the same 2px
-  // `border-left` (transparent when unselected) so selecting a row never
-  // shifts its text 2px to the right.
   import type { RepositoriesData } from "../../../common/lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
   import RepositoriesPanel from "./RepositoriesPanel.svelte";
@@ -61,13 +51,7 @@
             <span style="color:#5fc6b4">{repo.mark}</span> {repo.key}
             <span style="color:rgba(217,176,74,.75)">{repo.branch}</span>
           </span>
-          <!-- Fixed right-hand slot: the status dot (or fetch spinner) sits
-               here so its right edge lands at the row's own right edge —
-               the row's left span already consumes all remaining space via
-               flex:1, so this slot's content never drifts with name/branch
-               length. Every row gets a dot, the virtual all-projects row
-               included — gold/pulsing while it's the open repo (same as any
-               other row), otherwise the idle two-tone dot. -->
+          <!-- Fixed slot at the row's right edge so the status dot never drifts with name/branch length. -->
           <span style="flex:none;display:flex;align-items:center;justify-content:flex-end">
             {#if state.isFetching(repo.key)}
               <span
@@ -100,17 +84,7 @@
 
 <style>
   .repositories-row {
-    /* Rows are flex children of an overflow-y:auto column; without this
-       they flex-shrink below their own line box under a full 15-commit
-       live list (only 1 commit ships in the committed snapshot, so this
-       doesn't show up there) — glyphs render vertically clipped and rows
-       overlap. Pairs with the containers above using overflow-y:auto so a
-       genuinely-too-long list scrolls instead of compressing. An explicit
-       line-height (rather than the initial "normal", which resolves
-       through getComputedStyle() as the literal string "normal" —
-       unparseable as a number) also gives the row a concrete, measurable
-       full-glyph height for the e2e assertion that checks commit-row
-       bounding-box heights are >= the computed line-height. */
+    /* flex-shrink: 0 and an explicit line-height keep rows from clipping so e2e's row-height assertion has a stable value to check. */
     flex-shrink: 0;
     line-height: 1.6;
   }

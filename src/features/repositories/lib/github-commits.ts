@@ -1,15 +1,4 @@
-// Client-side commit refresh. Runs in the browser (unlike
-// scripts/generate.mjs's server-side fetch, which this deliberately mirrors
-// the shape of but does not share code with: generate.mjs sends a
-// GITHUB_TOKEN header and writes to disk; this is unauthenticated,
-// CORS-open, and only ever updates in-memory + sessionStorage state).
-//
-// Repositories.svelte calls `getLiveCommits(repoName)` once per repo per Repositories
-// mount; sessionStorage caches a successful response for TTL_MS so
-// switching projects back and forth (or remounting Repositories) within the same
-// browser tab session doesn't re-fetch needlessly. A failed fetch (offline,
-// rate-limited, aborted by a test's route handler) resolves to `null` —
-// callers keep whatever snapshot/committed data they already had, silently.
+// Client-side commit refresh, mirroring generate.mjs's shape without sharing code (unauthenticated, CORS-open, cached in sessionStorage for TTL_MS instead of written to disk).
 import type { Commit } from "../../../common/lib/commits";
 
 const TTL_MS = 10 * 60 * 1000;
@@ -20,7 +9,7 @@ interface CacheEntry {
   commits: Commit[];
 }
 
-/** "ShevinuM" (fixture repos don't exist on GitHub — see NOTE in fetchLiveCommits). */
+/** GitHub owner login; fixture repos don't actually exist there. */
 const GITHUB_OWNER = "ShevinuM";
 
 function initialsFrom(name: string): string {
@@ -54,10 +43,7 @@ function readCache(repoName: string): Commit[] | null {
     if (!raw) return null;
     const entry = JSON.parse(raw) as CacheEntry;
     if (Date.now() - entry.ts > TTL_MS) return null;
-    // A cached entry that predates the `sha` field only carries `sha8` —
-    // stale shape. Treat it as a miss so the page re-fetches instead of
-    // silently handing github-trees.ts commits it can't resolve a tree ref
-    // for.
+    // A cached entry predating the `sha` field only carries `sha8`; treat it as a miss so the page re-fetches instead of handing github-trees.ts an unresolvable commit.
     if (!entry.commits.every((c) => typeof c.sha === "string" && c.sha.length > 0)) return null;
     return entry.commits;
   } catch {
@@ -70,18 +56,11 @@ function writeCache(repoName: string, commits: Commit[]): void {
     const entry: CacheEntry = { ts: Date.now(), commits };
     sessionStorage.setItem(CACHE_PREFIX + repoName, JSON.stringify(entry));
   } catch {
-    // sessionStorage unavailable/full — refresh simply won't be cached this
-    // session; not fatal, since a failed fetch already means callers
-    // silently keep their existing snapshot.
+    // sessionStorage unavailable/full — not fatal, since a failed fetch already means callers keep their existing snapshot.
   }
 }
 
-/**
- * Fetch live commits for `repoName` (per_page=15, GitHub REST).
- * Returns `null` on any failure (network error, abort,
- * non-2xx, unexpected shape) — never throws — so callers can silently keep
- * their existing snapshot/committed data.
- */
+/** Fetches live commits for `repoName` (GitHub REST, per_page=15); returns `null` on any failure so callers can keep their existing snapshot. */
 export async function fetchLiveCommits(repoName: string): Promise<Commit[] | null> {
   try {
     const cached = readCache(repoName);

@@ -1,21 +1,5 @@
 <script lang="ts">
-  // Harness-only wrapper: mounts Repositories.svelte alone, reproducing just
-  // the one piece of cross-component routing Terminal.svelte normally owns
-  // — PaneTree.svelte's shared `refs` map keydown delegation
-  // (`if (ref.handleKey(e)) return`). Repositories.svelte itself attaches no
-  // listener of its own; it only exports `handleKey()`, `isEditorOpen()` and
-  // `runEditorExCommand()`. Mirrors the shape NotificationsHarness.svelte/
-  // EmploymentHarness.svelte already reimplement for the same
-  // "exports handleKey, attaches nothing" shape. `isEditorOpen()`/
-  // `runEditorExCommand()` are Terminal's ex-mode delegation contract
-  // (Cmdline box routing `:`-commands into an open editor) — this harness
-  // has no Cmdline box to route through, so only the keydown piece is
-  // reproduced here.
-  //
-  // Lives beside its own harness spec (not in this feature's real
-  // `components/` tree) since it exists only to let the harness route mount
-  // this one piece with Terminal's routing reproduced — it is test support,
-  // not production UI.
+  // Reproduces just PaneTree.svelte's keydown delegation (the only cross-component routing Repositories.svelte needs) since it exports `handleKey()` but attaches no listener itself.
   import { onMount } from "svelte";
   import Repositories from "../../../components/Repositories.svelte";
   import type { RepositoriesData } from "../../../../../common/lib/data";
@@ -32,14 +16,7 @@
 
   let ref = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
 
-  /** True only once this island has actually hydrated — same race
-   * NotificationsHarness.svelte's/EmploymentHarness.svelte's own `ready`
-   * flags guard against: the server-rendered HTML (repo list, files tree,
-   * preview, commits, status panel) is present before `client:load`'s JS
-   * runs, so a spec pressing a key immediately after navigation would
-   * otherwise race `<svelte:window>`'s listener attaching. `onMount` only
-   * ever runs client-side, after mount, so this flips exactly once
-   * hydration is done. */
+  /** Flips true once this island hydrates (via onMount, client-only) so a spec doesn't press a key before `<svelte:window>`'s listener attaches. */
   let ready = $state(false);
   onMount(() => {
     ready = true;
@@ -52,8 +29,6 @@
 
 <svelte:window onkeydown={handleKey} />
 
-<!-- `isFocused: true` — the only mounted instance, so it IS the focused
-     one. In the real app this comes from PaneTree.svelte's multi-instance
-     focus tracking, which a kernel-free harness excludes. -->
+<!-- The only mounted instance is always the focused one; a real kernel would derive this from PaneTree's multi-instance tracking. -->
 <Repositories bind:this={ref} {repositories} {projects} {commitsByRepo} isFocused={true} />
 <div data-testid="repositories-harness-ready" data-ready={ready}></div>

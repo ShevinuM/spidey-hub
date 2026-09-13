@@ -1,14 +1,5 @@
 <script lang="ts">
-  // Shared panel chrome (bordered box + top-straddling PanelBadge) for the
-  // five Repositories panels. UI v2: every panel's
-  // OLD corner-bracket floating title ("─[N]─Label") is replaced by the
-  // shared PanelBadge pill straddling the panel's own top border,
-  // left-aligned, reading "[{n}] <spider glyph> {label}" — same badge, same
-  // position, on every one of the five panels (only the panel BORDER color
-  // reflects focus; the badge itself never varies with it, matching the
-  // mockup exactly). `variant="repositories"` is what scopes the
-  // left-alignment + glyph-between-number-and-label rendering to this page
-  // only — every other PanelBadge consumer keeps the default centered look.
+  // Shared bordered-box + top-straddling PanelBadge chrome for the five Repositories panels; `variant="repositories"` scopes the left-aligned, glyph-between-number-and-label rendering to this page only.
   import type { Snippet } from "svelte";
   import PanelBadge from "../../../common/components/PanelBadge.svelte";
 

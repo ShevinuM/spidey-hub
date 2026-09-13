@@ -1,34 +1,10 @@
-# Repositories (lazygit clone) view copy. Source: design/Homepage.dc.html
-# lines 322-382 (content/behavior only — panel NUMBERING here is UI v2's own
-# reading-order scheme: 0=Status, 1=Repositories, 2=Files, 3=Content,
-# 4=Commits; PanelBadge.svelte composes the "[{n}] {label}"
-# text from each panel's own bare `label` below).
-#
-# Repositories' interaction model goes beyond
-# what the prototype markup shows any precedent for (same "Repositories
-# interactivity extension" territory as the original repo-file
-# browsing): panel [1] becomes a flat list of every repo across every
-# project plus a virtual "all-projects" entry, panel [2] becomes that
-# selection's tree browser, panel [3] previews whatever file is highlighted
-# in the tree, and panel [4] tracks only the panel [1] selection (never file/
-# project movement — a fix for a live user bug report of commits changing
-# while browsing files). Every new user-visible string this introduces still
-# lives here, not inlined in Repositories.svelte.
-
-# Panel labels are bare (no "─[N]─" bracket, no leading dash) — the
-# UI v2 badge (PanelBadge.svelte) composes the "[{n}] {label}" text itself,
-# floating on the panel's own top border, so the label here is just the
-# word after the bracketed number.
+# Panel labels are bare (no bracket/dash) — PanelBadge.svelte composes the full "[{n}] {label}" text itself.
 panels:
   status:
     label: "Status"
   files:
     label: "Files"
-    # {value} is "<repo>" for a repo's working tree, or "<repo> @<sha8>"
-    # while browsing a commit snapshot — rendered as a standalone caption
-    # line inside the panel body (UI v2; used to be appended after the
-    # corner title). Only rendered once a repo has been opened — see
-    # repoBrowser.emptyText below for the state before that.
+    # {value} is "<repo>" (working tree) or "<repo> @<sha8>" (browsing a commit snapshot); only rendered once a repo has been opened.
     subtitleTemplate: "{value}"
   repos:
     label: "Repositories"
@@ -38,10 +14,7 @@ panels:
     # panel [1] selection's own RepoRow (all-projects' is "local"), count
     # from the actually-rendered commit list (0 for all-projects).
     subtitleTemplate: "{branch} · {count} commits"
-    # Author initials shown next to every commit sha — hardcoded in the
-    # prototype markup (not derived from commit data); fixtures/real commit
-    # snapshots both carry "Sh" per-commit too so either source works if this
-    # literal is ever swapped for `commit.initials`.
+    # Hardcoded, not derived from commit data; real and fixture snapshots both happen to carry "Sh" too, so swapping to `commit.initials` later would be a no-op.
     authorInitials: "Sh"
     # Shown instead of commit rows when the virtual all-projects repo is
     # selected in panel [1] — it isn't a real remote, so there's nothing to
@@ -49,22 +22,10 @@ panels:
     localOnlyText: "local only — no remote to fetch commits from"
   changes:
     label: "Content"
-    # {value} = "<repo>/<path>" for the file currently previewed, or
-    # "<project-id>.md" for the default project doc shown before anything
-    # has been browsed. Standalone caption line (UI v2; used to be appended
-    # after the corner title).
+    # {value} = "<repo>/<path>" while previewing a file, or "<project-id>.md" before anything's been browsed.
     subtitleTemplate: "{value}"
 
-# Status panel (panel [0]) copy. Left cluster: "{prefix} {arrow} {N}
-# {reposSuffix}" with N computed from the real repo count (repoCount already
-# counts every repo across every project). Right cluster: real branch label,
-# a "last push" relative-time segment (rendered only when at least one real
-# commit date is known — see repositoriesState.svelte.ts's `lastPushLabel`;
-# frozen fixture commit snapshots carry no dates, so fixture builds render no
-# last-push segment at all, keeping goldens stable regardless of wall-clock
-# time), and a decorative "connected" pulse (matches the rest of the site's
-# own always-online narrative conventions — boot sequence, dashboard's
-# "synced N/N panes" footer).
+# Right cluster's "last push" segment only renders when a real commit date is known; frozen fixtures carry none, keeping goldens stable regardless of wall-clock time.
 statusLine:
   prefix: "shevinum.dev"
   arrow: "→"
@@ -73,36 +34,19 @@ statusLine:
   lastPushTemplate: "last push {value}"
   connectedLabel: "connected"
 
-# Repo file-tree browsing (panel [1] -> panel [2] -> panel [3]) and the
-# full-screen nvim-style file editor it opens into. Both are a
-# "Repositories interactivity extension" beyond the prototype's visuals (no
-# prototype markup exists for either), but every user-visible string they
-# render still lives here, not inlined in Repositories.svelte / Editor.svelte.
+# Repo tree browsing (panel [1]→[2]→[3]) and the file editor it opens into have no prototype-markup precedent, but every string they render still lives here, not inlined in the components.
 repoBrowser:
-  # The Files pane is a lazygit-style tree now
-  # (Repositories.svelte renders inline SVG folder/file icons + a ▾/▸ caret keyed
-  # off each row's own type/expand-state, not a yaml glyph) and there is no
-  # more `../` row to navigate to (the whole tree renders at once) — both
-  # `upEntry` and the `dirIcon`/`fileIcon` glyphs are retired.
   loadingText: "Loading repo index…"
   errorText: "Failed to load repo index."
   emptyText: "Select a repo in panel [1] to browse its files."
 
-# Panel [1]'s virtual "all-projects" row: every
-# project's .md doc in one browsable tree (public/generated/repos/all-projects.json,
-# emitted by scripts/generate.mjs from src/features/repositories/content/repositories/*.md — see that
-# script's own comment). Not a real git remote: no branch to track, no
-# commits (see panels.commits.localOnlyText above).
+# Panel [1]'s virtual "all-projects" row: every project's .md doc in one browsable tree, generated by scripts/generate.mjs; not a real git remote, so no branch/commits.
 allProjects:
   name: "all-projects"
   branch: "local"
   description: "every project's markdown doc, browsable in one place"
 
-# Lazygit-style animated braille spinner shown on a panel [1] repo row while
-# ANY fetch for that repo is in flight (working-tree index, a commit's tree,
-# a commit's live-refresh, or a file's content at a commit). Frames
-# cycle at a fixed interval; `label` + the current frame render as one
-# string ("Pulling ··●").
+# Animated braille spinner shown on a panel [1] row while ANY fetch for that repo is in flight (index, tree, live-refresh, or file content).
 spinner:
   label: "Pulling"
   frames: ["··●", "·●·", "●··", "·●·"]
@@ -114,31 +58,14 @@ spinner:
 commitBrowser:
   errorText: "Failed to load that commit's tree — showing the previous view."
 
-# Panel [0] file-preview states while browsing a commit snapshot (working-
-# tree file previews render synchronously, no loading state needed).
-# Binary/oversize guard: a decode failure shows the 'binary or too large'
-# message line.
+# Panel [3] file-preview states while browsing a commit snapshot; working-tree previews render synchronously, so no loading state is needed.
 filePreview:
   loadingText: "Loading file…"
   errorText: "Failed to load that file."
   binaryText: "Binary or too large to preview."
 
-# Editor.svelte is generic (built standalone so it can be reused
-# for personnel role docs); every
-# caller passes its own labels object sourced from its own data file. This is
-# the Repositories caller's copy of those literal strings — identical wording to
-# personnel.yaml's `editor:` section (src/features/employment/content/personnel.yaml) because both
-# reproduce the same prototype markup (Homepage.dc.html lines 317-336:
-# "NORMAL", "⑂ main"), not because the two data files share storage.
-#
-# This block also carries VISUAL/
-# VISUAL-LINE mode labels, the search/cmdline prompt glyphs, the `[:q]`
-# close-pill label (Esc
-# no longer closes the editor, only `:q`/`:q!` do), and the three vim-style
-# status messages (readonly bell, `:w` error, `:<unknown>` E492). The
-# `readonlyBellMessage`/`writeReadonlyMessage`/`notAnEditorCommandTemplate`
-# wording below mirrors real vim's own error text (E21/E45/E492) —
-# vim-faithful, not invented.
+# Editor.svelte is generic and reused elsewhere (e.g. personnel.yaml's `editor:` section) — this is Repositories' own copy of those literal strings, not shared storage.
+# readonlyBellMessage/writeReadonlyMessage/notAnEditorCommandTemplate mirror real vim's own error text (E21/E45/E492), not invented wording.
 editor:
   modeLabel: "NORMAL"
   modeVisualLabel: "VISUAL"

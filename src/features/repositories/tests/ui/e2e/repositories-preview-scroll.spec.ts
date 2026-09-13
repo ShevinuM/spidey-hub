@@ -1,22 +1,4 @@
-// Regression coverage: `repositories-changes-body` (panel [3]'s file/doc
-// preview) used bare `overflow:hidden` with no scroll affordance and no
-// line-wrapping, so a long line rendered past the panel's right edge and got
-// silently clipped by the ancestor's `overflow:hidden` — the same defect
-// independently found on the Employment Records preview. Fix: the container
-// switches to `overflow-y:auto;overflow-x:hidden`, and each line's content
-// span gets `flex:1;min-width:0` (so it actually respects the row's width
-// instead of growing to fit its own content) plus `white-space:pre-wrap;
-// overflow-wrap:anywhere` (so it wraps instead of overflowing).
-//
-// Exercised against REAL (non-fixture) content — `pnpm generate` fetches the
-// actual SHA-pinned GitHub tarballs regardless of PORTFOLIO_FIXTURES
-// (src/common/lib/highlight.ts + scripts/generate.mjs's
-// generateRepoIndexes() has no fixture branch at all), so a real repo file
-// already gives a genuinely long unbroken line without inventing fixture
-// data that would have to live inside a vendored copy.
-// Trees/Trie/word_search_ii.java (Data-Structures-And-Algorithms) is that
-// file: 113 lines (enough to overflow vertically) with a real 574-character
-// javadoc line at line 33 (enough to overflow horizontally without the fix).
+// Exercised against real (non-fixture) content since `pnpm generate` fetches actual repo tarballs regardless of PORTFOLIO_FIXTURES; `word_search_ii.java` genuinely has a 574-char line (horizontal overflow) and 113 lines (vertical overflow) to check against.
 import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
 
 async function gotoReady(page: Page, path: string) {

@@ -1,25 +1,4 @@
-// Regression coverage for the reported defect: "Those dots aren't right
-// aligned like in the mock." Reference: the user's screenshot
-// (~/Desktop/Screenshot 2026-08-21 at 2.54.30 AM.png), showing the repo-list
-// status dot sitting in its own fixed, right-aligned column (so every row's
-// dot lines up vertically). This covers only the column-alignment layout,
-// not the dot's pulse timing.
-//
-// Before the 856f455 fix, ReposPanel.svelte appended the dot inline
-// immediately after the variable-length "{repo.key} {repo.branch}" text, so
-// its x position drifted row to row with name/branch length instead of
-// forming a column. This test pins the falsifiable signal: every visible
-// dot's `getBoundingClientRect().right` must match across rows (within
-// ~1px).
-//
-// CORRECTION: 856f455 also read the user's *separate* complaint — "I still
-// don't see the yellow dot of all project" — backwards, and gated the dot
-// off entirely for the virtual `all-projects` row (`!repo.isAllProjects` in
-// ReposPanel.svelte). The user meant the dot was MISSING, not that it
-// should be suppressed. That gate is now removed: all-projects gets a dot
-// like every other row (idle two-tone, or the gold open-dot while it's the
-// active repo — true by default on load, since all-projects is
-// pinned first and auto-opened).
+// The repo-list status dot sits in a fixed right-aligned column so its x position never drifts with name/branch length, and every row — including the virtual all-projects one — always renders one.
 import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
 
 async function gotoReady(page: Page, path: string) {
@@ -77,15 +56,7 @@ test.describe("Repositories: status dot column alignment", () => {
   });
 });
 
-// Regression coverage for "the red selection bar despite it being the one
-// in selection" — on a fresh load, `selectedRepoIdx` correctly points at
-// all-projects (it's pinned first and auto-opened), but the row's own
-// highlight style previously also required `state.focusedPanel === 1`,
-// which defaults to 2 (Files). The visual highlight and the actual
-// selection disagreed until the row was clicked (which sets focusedPanel
-// to 1 as a side effect). Fix: the highlight now tracks selection alone,
-// matching FilesPanel.svelte's own tree-row convention (its selected-row
-// highlight never gated on panel focus either).
+// The row highlight tracks `selectedRepoIdx` alone, never gated on `focusedPanel`, matching FilesPanel.svelte's tree-row convention.
 test.describe("Repositories: selection highlight matches actual selection on load", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
@@ -113,11 +84,7 @@ test.describe("Repositories: selection highlight matches actual selection on loa
   });
 });
 
-// Regression coverage for "why is all projects so close to the header with
-// no padding" — the badge straddles the panel's own top border and hangs
-// down into the panel body; ReposPanel's top padding (12px) left only ~2px
-// of clearance before the first row, unlike Files/Content/Commits (already
-// 18px). Raised to 18px to match.
+// ReposPanel's top padding matches Files/Content/Commits (18px) so the badge clears the first row by the same margin as the other panels.
 test.describe("Repositories: first row clears the badge", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
@@ -134,13 +101,7 @@ test.describe("Repositories: first row clears the badge", () => {
     expect(rowBox).toBeTruthy();
     if (badgeBox && rowBox) {
       const clearance = rowBox.y - (badgeBox.y + badgeBox.height);
-      // Before the fix (12px top padding), this measured ~2px. The badge's
-      // own straddling geometry (translateY(-50%) on a ~21px-tall pill)
-      // means padding-top P nets P - ~10.5px of clearance — 18px (matching
-      // Files/Content/Commits' own top padding, the "comparable clearance"
-      // the panel never got) nets ~7.5px. Threshold set well above the
-      // pre-fix value and just under that, so a regression back toward
-      // 12px is caught but the actual achieved geometry isn't over-pinned.
+      // The badge straddles the border via `translateY(-50%)` on a ~21px pill, so P px of top padding nets ~(P-10.5)px clearance; 18px nets ~7.5px, and 6px is comfortably below that without over-pinning the exact figure.
       expect(clearance).toBeGreaterThanOrEqual(6);
     }
   });

@@ -1,9 +1,4 @@
-// Unit test for the pure mapper in src/features/repositories/lib/github-commits.ts:
-// client-side commit refresh must map to the same shape as the
-// build-time snapshot generator, scripts/generate.mjs's fetchCommits().
-// The fetch/sessionStorage side of that module is exercised end-to-end by
-// src/features/repositories/tests/ui/e2e/repositories.spec.ts (route-fulfill / route-abort against a live
-// page), not here — this only pins the shape-mapping logic itself.
+// Unit-pins `mapGithubCommits`'s shape-mapping logic only; the fetch/sessionStorage side is covered end-to-end by repositories.spec.ts.
 import { expect, test } from "vitest";
 import { mapGithubCommits } from "../../lib/github-commits";
 

@@ -1,19 +1,4 @@
 <script lang="ts">
-  // Panel [0]: Status — a full-width bar above the two-column row (UI v2's
-  // own panel layout). Left cluster: "{prefix} {arrow} {N} repos" (N = the
-  // real repo count, counted across every project, not the prototype's
-  // fixed number). Middle: the GitHub-contribution
-  // grid — 52 columns x 7 rows of cells colored from `state.contributionLevels`
-  // (oldest-first, populated by repositoriesState.svelte.ts's mount fetch of
-  // public/generated/contributions.json; empty array renders zero cells,
-  // e.g. before that fetch resolves or on failure). Right cluster: real
-  // branch label, a real "last push" relative-time segment (rendered only
-  // when repositoriesState.svelte.ts's mount effect found at least one real
-  // commit date — every frozen fixture snapshot carries none, so fixture
-  // builds render no last-push segment at all), and a decorative
-  // "connected" pulse matching the site's own always-online narrative
-  // conventions elsewhere (boot sequence, dashboard's "synced N/N panes"
-  // footer).
   import type { RepositoriesData } from "../../../common/lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
   import RepositoriesPanel from "./RepositoriesPanel.svelte";

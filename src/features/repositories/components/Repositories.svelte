@@ -1,39 +1,4 @@
 <script lang="ts">
-  // Repositories (lazygit clone) view — design/Homepage.dc.html lines 338-397
-  // (five-panel layout: [1] Status, [2] Files, [3] Local Repositories,
-  // [4] Commits, [0] Changes).
-  //
-  // This view uses a lazygit-style flat-repo-list flow, fixing two live
-  // user bug reports along the way:
-  //   - Panel [1] "Local Repositories" is now a FLAT list of every repo
-  //     across every project, plus a virtual "all-projects" entry (every
-  //     project's .md doc, browsable like a repo — see repositories.yaml's
-  //     `allProjects` key and scripts/generate.mjs's all-projects.json).
-  //     A single click OR Enter loads that repo's working tree into panel
-  //     [2] — no more separate "select" vs "open" step.
-  //   - Panel [2] "Files" is the tree browser for whatever's selected in
-  //     [3] (its title reads "<repo>" or "<repo> @<sha8>" while browsing a
-  //     commit snapshot instead of the working tree). Selecting/clicking a
-  //     FILE previews it in panel [3]; Enter opens the full-screen vim
-  //     Editor. Dirs/`../` navigate the same way on click or Enter.
-  //   - Panel [4] "Commits" tracks ONLY the panel [1] selection — moving
-  //     through files/dirs in [2]/[0] must never change it: panel [4]'s
-  //     repo comes from panel [1]'s own selection state, never from
-  //     whatever panel [2]/[0] happen to be browsing. Commit rows are
-  //     not `<a target="_blank">`: click/Enter fetches that commit's
-  //     tree (src/features/repositories/lib/github-trees.ts) into panel [2] instead, with a
-  //     lazygit-style braille spinner on the panel [1] repo row while any
-  //     fetch for that repo is in flight; `o` opens the commit on GitHub
-  //     (the only surviving external-link path, documented in the Help
-  //     window's Repositories scope).
-  //     Selecting the all-projects entry shows a data-driven "local only"
-  //     line instead (it isn't a real remote).
-  //
-  // Terminal.svelte drives a single global keydown listener and, while
-  // `view === "repositories"`, delegates to this component's exported
-  // `handleKey()` via `bind:this` *before* its own generic q/Esc-to-dashboard
-  // fallback (removed sitewide) — this is what lets the file editor get
-  // first refusal over GrepOverlay while it's open.
   import type { CollectionEntry } from "astro:content";
   import type { RepositoriesData } from "../../../common/lib/data";
   import type { Commit } from "../../../common/lib/commits";
@@ -49,10 +14,7 @@
     repositories: RepositoriesData;
     projects: CollectionEntry<"repositories">[];
     commitsByRepo: Record<string, Commit[]>;
-    /** See PaneTree.svelte's own header comment (multi-instance
-     * data-copy-source gating); ANDed with each panel's own
-     * `focusedPanel === N` check below (both must hold: this pane is the
-     * window's focused one, AND this is its focused panel). */
+    /** Same multi-instance data-copy-source gating as PaneTree.svelte; ANDed with each panel's own `focusedPanel === N` check below. */
     isFocused: boolean;
   }
 
@@ -68,21 +30,12 @@
   // Keymap
   // ---------------------------------------------------------------------
 
-  /** Exposed for Terminal.svelte's delegation-order flip: while a file is
-   * open in the vim editor, Terminal must give this component's
-   * `handleKey()` (which just forwards to `editorRef`) a turn BEFORE
-   * GrepOverlay's, so `/` searches the buffer instead of opening grep. */
+  /** True while the vim editor is open — lets Terminal route `handleKey()` here before GrepOverlay's, so `/` searches the buffer instead of opening grep. */
   export function isEditorOpen(): boolean {
     return !!state.editorFile;
   }
 
-  /** Forwards to the embedded Editor's own `runExCommand` — Terminal.svelte's
-   * site-wide Cmdline box calls this when its ex-mode Enter fires, and only
-   * falls through to the site-wide
-   * command set when the result comes back `recognized: false`. A no-op
-   * (unrecognized) when the editor isn't actually open — shouldn't happen
-   * in practice since Terminal only opens ex mode while `isEditorOpen()` is
-   * true, but keeps this safe to call unconditionally regardless. */
+  /** Forwards to the open editor's `runExCommand`; returns `recognized: false` when no editor is open so Terminal's site-wide command set can still handle the ex command. */
   export function runEditorExCommand(cmd: string): { recognized: boolean; error?: string } {
     if (!state.editorFile || !state.editorRef) return { recognized: false };
     return state.editorRef.runExCommand(cmd);
@@ -183,7 +136,6 @@
       data-testid="repositories-panels-root"
       style="flex:1;min-height:0;display:flex;flex-direction:column;gap:20px;padding:20px;font-size:13px"
     >
-      <!-- [0] Status — full-width bar above the two-column row (UI v2) -->
       <StatusPanel {repositories} {state} {isFocused} />
 
       <div style="flex:1;min-height:0;display:flex;gap:20px">
