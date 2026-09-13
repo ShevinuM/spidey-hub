@@ -1,38 +1,10 @@
-// Harness spec — proves GrepOverlay.svelte itself works, mounted alone (no
-// Terminal kernel, no tmux chrome, no window-level keydown routing beyond
-// what GrepHarness.svelte itself reproduces) against `/harness/grep`
-// (fixture build only, seeded fixture props via GrepHarness.svelte — see
-// that wrapper's own header comment for the one piece of Terminal keydown
-// routing it reproduces).
-//
-// Deliberately NOT a copy of
-// src/features/grep/tests/ui/e2e/grep.spec.ts: that suite exercises this
-// overlay through the real kernel against the real site-source index —
-// this file mounts standalone against the FIXTURE grep index
-// (src/features/grep/tests/ui/support/grep-index.json, served from
-// `dist/generated/grep-index.json` by `build:fixtures`' own `cp` step) and
-// covers exactly: mount + `/` opening the overlay, the empty-query row
-// list, typing a query filtering the results and updating the counter,
-// arrow-key navigation moving the selection (grep types `g`/`G` into the
-// query like any other character rather than jumping — see the ported
-// e2e suite's own "g and G are typed into the query like any other
-// character (no jump)" test — so this suite exercises arrow-key
-// navigation only, not a vim-style jump), the preview pane rendering the
-// selected row's lines, and Escape closing — the feature's own core
-// interactions, independent of the kernel.
-//
-// Every count and piece of expected text below is derived from the real
-// fixture file plus the real `search`/`formatCount` port (same
-// "derive the expectation from the real source" convention the ported e2e
-// suite and repositories' own harness spec use), not hardcoded, so a
-// future fixture edit doesn't silently desync this suite from the truth
-// it's supposed to check. Assertions are web-first throughout, since a
-// harness spec has no live clock to race the way a ported spec might
-// (playwright.md R002) — no CSS-selector reads (including inside
-// `page.evaluate()`), only page-object locators built from testids and
-// visible text; the one non-retrying read anywhere in this file is
-// `readFileSync`ing the fixture to derive an expected value, never used as
-// an assertion itself.
+// Harness spec: proves GrepOverlay.svelte works standalone, mounted
+// without Terminal's kernel, against the fixture grep index rather than
+// the real site-source index the e2e suite uses.
+
+// Every expected value here is derived from the real fixture plus the
+// real search()/formatCount() port, never hardcoded, so a fixture edit
+// can't silently desync this suite from the truth it's checking.
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";

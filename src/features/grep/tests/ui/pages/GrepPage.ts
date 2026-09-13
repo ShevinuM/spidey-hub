@@ -1,19 +1,9 @@
 import { expect, type Page } from "@playwright/test";
 import { StatusBarPage } from "../../../../../common/tests/ui/pages/StatusBarPage";
 
-/**
- * Page object for the grep feature's harness mount (`GrepOverlay.svelte`,
- * wrapped by `GrepHarness.svelte` to reproduce the generic keydown
- * delegation Terminal.svelte normally owns — see that wrapper's own header
- * comment for why). Named for the UI surface it models, matching
- * `StatusBarPage`/`RepositoriesPage` convention. Currently consumed only by
- * the harness suite (`tests/ui/harness/`), since the e2e suite's
- * `grep.spec.ts` is a verbatim-ported spec exempt from the page-object
- * convention.
- *
- * Kernel-chrome locators (the status bar, etc.) are never redefined here —
- * this composes the shared `StatusBarPage` instead.
- */
+/** Page object for the grep feature's harness mount; the e2e suite's
+ * `grep.spec.ts` is a verbatim port and stays exempt from this
+ * convention. */
 export class GrepPage {
   readonly statusBar: StatusBarPage;
 
@@ -21,16 +11,10 @@ export class GrepPage {
     this.statusBar = new StatusBarPage(page);
   }
 
-  /** Navigates straight to the standalone harness route and waits for the
-   * wrapper's own hydration flag — same race `RepositoriesPage.openHarness()`/
-   * `NotificationsPage.openHarness()` guard against: the server-rendered
-   * HTML is present before `client:load`'s JS runs, so a keypress sent
-   * right after `goto()` could race `GrepHarness.svelte`'s
-   * `<svelte:window>` listener attaching. Waits on its `data-ready` flag
-   * (flipped by an `onMount`) rather than any content locator — the
-   * overlay itself renders nothing until `/` is pressed (see
-   * `GrepOverlay.svelte`'s own header comment), so there is no content
-   * locator to wait on anyway. */
+  /** Navigates to the standalone harness route and waits for the wrapper's
+   * own hydration flag, guarding the same `client:load` race
+   * `RepositoriesPage.openHarness()`/`NotificationsPage.openHarness()`
+   * guard against. */
   async openHarness() {
     await this.page.goto("/harness/grep");
     await expect(this.page.getByTestId("grep-harness-ready")).toHaveAttribute("data-ready", "true");

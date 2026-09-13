@@ -1,5 +1,5 @@
-# Grep overlay copy. Source: design/Homepage.dc.html lines 384-425 and the
-# Component class's grepHits()/renderVals() (lines 812-832, 1039-1070).
+# Grep overlay copy, ported from reference/Homepage.dc.html's
+# grepHits()/renderVals() (lines 812-832, 1039-1070).
 
 leftPane:
   titlePrefix: "GREP "
@@ -16,27 +16,22 @@ modeLine:
   liveGrep: "live_grep · shevinum.dev@main"
   repoFiles: "repo files · shevinum.dev@main"
 
-# Loading/error text for the lazy index fetch — loaded lazily at runtime
-# (fetch on first `/` press). No prototype precedent
-# (the prototype's repoSrc was inline data, never fetched) — mirrors
-# RepoBrowserData's loadingText/errorText for the same reason:
-# a real network request needs a graceful transient state.
+# Loading/error text for the lazy index fetch — no prototype precedent
+# (repoSrc was inline data), so this mirrors RepoBrowserData's own
+# loadingText/errorText convention.
 loadingText: "loading index…"
 errorText: "grep index unavailable"
 
-# Position-pill templates (same "Top/Bot must come from data" precedent
-# applied to grep's own two position strings, Component.renderVals() lines
-# 1064/1080 — the literal "{n} lines" *inside* a matched row's snippet
-# text is grep.ts's own tested search() output and stays there unchanged).
+# Position-pill templates (Component.renderVals() lines 1064/1080) — the
+# "{n} lines" match snippet text itself comes from grep.ts's tested
+# search() output, not from here.
 rowPosTemplate: ":{line}:{col}"
 filePosTemplate: "{line}:{col}"
 fileLinesTemplate: "{n} lines"
 
-# "no matches in {n} tracked files" — the prototype hardcodes n=22 (line
-# 403), which is a miscount: repoSrc has 24 entries and the visible counter
-# (grepCount) renders 24/24 against its own index. Our version is
-# data-driven: {n} is interpolated from the real index length at render
-# time, not hardcoded.
+# "no matches in {n} tracked files" — the prototype hardcoded n=22 (a
+# miscount versus its real 24-entry repoSrc); {n} here is interpolated
+# from the real index length instead.
 emptyStateTemplate: "no matches in {n} tracked files"
 
 noResultsFile: "no results"

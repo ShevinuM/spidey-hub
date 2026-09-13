@@ -27,13 +27,9 @@ const LIMIT = 400;
 /** How many characters of left context to keep before an ellipsis. */
 const LEFT_CUT = 24;
 
-/**
- * Search `files` for `query` (case-insensitive substring). An empty (or
- * whitespace-only) query returns one summary row per file: `{n} lines`.
- * Otherwise, for every file: a path-substring hit contributes one row (no
- * line/col, same "{n} lines" summary text), followed by one row per line
- * that contains the query, capped at 400 total rows across all files.
- */
+/** Searches `files` for `query` (case-insensitive substring), returning one
+ * path-hit row plus one row per matching line per file, capped at 400 rows
+ * total. */
 export function search(files: RepoFile[], query: string): Hit[] {
   const q = query.trim().toLowerCase();
 

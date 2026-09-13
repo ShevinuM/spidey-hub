@@ -1,15 +1,8 @@
 // Behavioral e2e suite for the grep overlay (GrepOverlay.svelte), against
-// the real-content build.
-//
-// Real index: public/generated/grep-index.json, refreshed by `pnpm
-// generate` (which `pnpm build` runs as its `prebuild` hook — see
-// package.json) immediately before this suite's own build, so reading that
-// file here reflects exactly what the served `dist/` copy contains. Every
-// numeric assertion below (file counts, hit counts, counter text) is
-// computed from that file at test time via the same `search`/`formatCount`
-// port the component itself uses (src/features/grep/lib/grep.ts, already unit-tested in
-// src/features/grep/tests/unit/grep.test.ts) — never hardcoded — so this suite can't drift
-// from the index's real contents as the site's own source grows.
+// the real-content build: every numeric assertion below is computed at
+// test time from public/generated/grep-index.json via the same
+// search()/formatCount() port the component itself uses
+// (src/features/grep/lib/grep.ts), never hardcoded.
 import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
 // This spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
@@ -44,9 +37,8 @@ const selectedRow = (page: Page) => page.locator('[data-testid="grep-row"][data-
 test.describe("Grep overlay", () => {
   test.beforeEach(async ({ page }) => {
     // Same network-determinism rule as the visual suite: Repositories' own
-    // commit-refresh island fires on mount, and
-    // none of these tests should depend on api.github.com's real
-    // availability. Grep itself never calls it (verified explicitly below).
+    // commit-refresh island fires on mount, so no test here should depend
+    // on api.github.com's real availability.
     await page.route("**/api.github.com/**", (route) => route.abort());
   });
 
@@ -107,61 +99,30 @@ test.describe("Grep overlay", () => {
     );
     await page.keyboard.press("Enter");
     await expect(overlay(page)).not.toBeVisible();
-    // There is no `employment-path` breadcrumb element. GrepOverlay's own
-    // routing (`grepPathToView`, src/common/lib/views.ts) is coarse — it only
-    // switches the active VIEW to "employment", it never deep-links to the
-    // specific directory the hit lives in — so the real claim here is just
-    // "we landed on the employment view", never anything path-specific;
-    // `employment-preview` (unconditionally rendered by the EmploymentRecords view)
-    // is the equivalent-strength anchor for that claim.
+    // GrepOverlay's routing only switches the active VIEW (coarse, no deep
+    // link), so `employment-preview` — unconditionally rendered by the
+    // EmploymentRecords view — is the right-strength anchor here.
     await expect(page.locator('[data-testid="employment-preview"]')).toBeVisible();
   });
 
   test("Enter on a Repositories.svelte hit lands in the repositories view", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
-    // A path-fragment query, not a bare filename: plenty of OTHER files'
-    // header comments mention "Repositories.svelte" in prose (e.g.
-    // CopyMode.svelte's data-copy-source contract doc), which would
-    // otherwise compete for an early row in the result set, ahead of the
-    // real target, depending on alphabetical file order. Prefixed
-    // with "src/" (not just "components/..."): every indexed path begins
-    // with "src/", because kernel components live under
-    // `src/common/components/`, whose own relative imports of this file
-    // (e.g. PaneTree.svelte's `../../features/repositories/components/
-    // Repositories.svelte`) now also contain the un-prefixed fragment as
-    // file CONTENT — a second, competing hit that (per this file's own
-    // scoring: path-hit-then-content-hit, in file order) can win the race
-    // depending on where `common/` sorts relative to `components/`. Only
-    // the real file's own PATH is ever prefixed with "src/" — a relative
-    // import literal never spells that out — so this fragment stays
-    // unique to it.
-    //
-    // Assembled at RUN TIME rather than written verbatim on any line here,
-    // for the same reason the very next test builds a run-time
-    // `nonceQuery`: this spec's own source is itself indexed
-    // (`scripts/generate.mjs` walks `tests/**`), so a literal copy of this
-    // query would let this file's own content out-rank the real component
-    // it's asserting about. The same reasoning is why this comment never
-    // spells the assembled string out either.
-    //
-    // Two rows come back today, not one: one of `src/common/tests/unit/`'s
-    // own suites keeps a whitelist of known grep-to-view path mappings and
-    // carries this exact path as literal test DATA (verifying
-    // `grepPathToView`), which is a second, independent content-hit source
-    // from the PaneTree.svelte one above. `src/common/...` sorts ahead of
-    // `src/features/...`, so that suite's row now lands at index 0 — the
-    // real component's own path-hit is index 1, not 0. `Enter` acts on
-    // whichever row is SELECTED, not on row 0 specifically, so the
-    // load-bearing assertion is on selection rather than position: from the
-    // default row-0 selection, ArrowDown once lands on the target's own
-    // path-hit row.
+    // A path-fragment query (not a bare filename), prefixed with "src/" so
+    // it stays unique to the real file's own path rather than matching
+    // other files' prose mentions or relative-import literals of it.
+    // Assembled at run time rather than written verbatim, for the same
+    // reason the next test builds a run-time `nonceQuery`: this spec's own
+    // source is indexed too, so a literal copy would out-rank the target.
     const REPOSITORIES_PATH = ["src", "features", "repositories", "components", "Repositories.svelte"].join("/");
     await page.keyboard.type(REPOSITORIES_PATH);
     // Wait for the filtered list to settle on the target's own row before
     // moving selection onto it — ArrowDown moves relative to whatever list
     // is on screen at the instant it's pressed, and typing is async.
     await expect(rowByPath(page, REPOSITORIES_PATH)).toBeVisible();
+    // Two rows match this path — a common/tests/unit suite's own whitelist
+    // test data sorts ahead of the real component — so this selects
+    // explicitly with ArrowDown rather than assuming row 0.
     await page.keyboard.press("ArrowDown");
     await expect(selectedRow(page)).toHaveAttribute("data-path", REPOSITORIES_PATH);
     await page.keyboard.press("Enter");
@@ -241,9 +202,6 @@ test.describe("Grep overlay", () => {
   test("/ inside the employment editor searches the buffer instead of opening grep (editor gets first refusal)", async ({
     page,
   }) => {
-    // v2 (flat list + timeline): row
-    // 0 (newest) is selected by default, so a single Enter opens its
-    // role.md directly — no more drill-down.
     await gotoReady(page, "/employment");
     await expect(page.locator('[data-testid="employment-row"]').first()).toBeVisible();
     await page.keyboard.press("Enter"); // -> editor
@@ -274,11 +232,6 @@ test.describe("Grep overlay", () => {
     await expect(page.locator('[data-testid="editor-mode"]')).toHaveText("NORMAL");
   });
 
-  // The Employment `f`-filter this test covered no longer exists (dropped
-  // along with drill-down/`../` in the v2 rebuild). Employment's own
-  // "editor gets first refusal over grep" coverage is the test
-  // immediately above.
-
   test("overlay list row count matches this viewport's own computed fit", async ({ page }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
@@ -288,24 +241,9 @@ test.describe("Grep overlay", () => {
     await expect(rows(page)).toHaveCount(expectedRows);
   });
 
-  // Regression coverage for the overlay's top rendering clipped.
-  // Prior research couldn't reproduce it against the LEFT pane's "GREP ~"
-  // title across 8 viewports; the actual culprit is the RIGHT preview
-  // pane's own absolutely-positioned labels (`grep-file` / `grep-file-pos`,
-  // both `top:-9px`, meant to straddle the pane's border the same way the
-  // left title does) — that pane's container had `overflow:hidden`, which
-  // clips a negative-offset absolutely-positioned child unconditionally, at
-  // every viewport size (deterministic, not viewport-dependent — see the
-  // fix's comment in GrepOverlay.svelte). `boundingBox()` alone can't catch
-  // this: a clipped element still reports its full, correct layout rect
-  // (clipping is a paint-time effect, not a layout one) — so the real
-  // assertion walks every ancestor with non-"visible" overflow and checks
-  // the label's rect is fully contained within each one's own rect, which
-  // fails pre-fix and passes post-fix (and guards a future regression, e.g.
-  // someone re-adding `overflow:hidden` to that container).
-  /** Runs inside the page. Returns `null` when `id`'s element is fully
-   * visible (inside the viewport, and inside every ancestor whose computed
-   * overflow isn't "visible") or a human-readable reason string otherwise. */
+  /** Runs inside the page; returns `null` when `id`'s element is fully
+   * visible (in the viewport and every non-"visible"-overflow ancestor) or
+   * a reason string otherwise. */
   function clipCheck(id: string): string | null {
     const label = document.querySelector(`[data-testid="${id}"]`);
     if (!label) return "missing element";

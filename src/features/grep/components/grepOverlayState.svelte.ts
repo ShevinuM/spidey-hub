@@ -1,8 +1,6 @@
-// GrepOverlayState — the grep overlay's reactive core. See
-// GrepOverlay.svelte's own header comment for the view's behavior. The
-// keymap itself (handleKey/openSelectedRow/pickRow/close/isOpen/
-// openWithQuery) stays on GrepOverlay.svelte, the orchestrator — see that
-// file's own comment.
+// GrepOverlayState — the grep overlay's reactive core; the keymap itself
+// (handleKey/openSelectedRow/pickRow/close/isOpen/openWithQuery) stays on
+// GrepOverlay.svelte, the orchestrator.
 import type { GrepData } from "../../../common/lib/data";
 import { search, formatCount, type RepoFile } from "../lib/grep";
 import { pushPasteTarget, removePasteTarget } from "../../../common/lib/paste-targets";

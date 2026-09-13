@@ -1,7 +1,3 @@
-// Pins search() (src/features/grep/lib/grep.ts) to Homepage.dc.html's grepHits() (lines
-// 812-832) semantics: empty-query row shape, per-file path-hit-then-
-// content-hit ordering, 400-row cap, and the 24-char ellipsis/offset math.
-// Run via `pnpm test:unit`.
 import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";

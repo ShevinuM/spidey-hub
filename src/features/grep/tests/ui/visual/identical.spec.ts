@@ -1,22 +1,11 @@
 // Pixel-regression suite for the 2 recipes GrepOverlay.svelte owns
-// ("09-grep-empty", "10-grep-query"). Split out of
-// tests/visual/identical.spec.ts the same way the common-owned/
-// profile-owned/help-owned/boot-owned/notifications-owned/dashboard-owned/
-// employment-owned/repositories-owned recipes were split into their own
-// contexts — every recipe is captured exactly once, never twice and never
-// dropped, as each context/feature owns its own rendered recipes. Same
-// capture pipeline (src/common/tests/ui/support/pipeline.mjs), same recipes
-// source (src/common/tests/ui/support/recipes.ts), same real-implementation
-// build (port 4322) — see tests/visual/identical.spec.ts's own header
-// comment for the full mechanism this reuses verbatim.
-//
-// Goldens resolve via this project's own `snapshotPathTemplate`
-// (playwright.config.ts, "grep-visual-<viewport>" projects) to
-// src/features/grep/tests/ui/visual/goldens/<viewport>/<recipe>.png —
-// hardcoded per project rather than derived from `{projectName}`, since the
-// project name now carries a "grep-visual-" context prefix that the
-// viewport-only literal directory name must not. Feature tests nest under
-// src/features/<f>/tests/ (unlike common's src/common/tests/).
+// ("09-grep-empty", "10-grep-query"); see tests/visual/identical.spec.ts's
+// own header for the shared capture pipeline this reuses verbatim.
+
+// Goldens resolve via this project's own `snapshotPathTemplate` to
+// src/features/grep/tests/ui/visual/goldens/<viewport>/<recipe>.png,
+// hardcoded rather than derived from `{projectName}` since the project
+// name carries a "grep-visual-" prefix the literal directory name must not.
 import { expect, test } from "@playwright/test";
 import { recipes } from "../../../../../common/tests/ui/support/recipes";
 import { captureState } from "../../../../../common/tests/ui/support/pipeline.mjs";
