@@ -1,18 +1,3 @@
-// Behavioral e2e suite for the Employment Records view (v2: flat list +
-// service timeline), against the real-content build. Replaces the old
-// drill-down/filter suite entirely: the view was rebuilt from scratch in the
-// folder + state-class pattern, not relocated.
-//
-// The `personnel` collection is a variable-depth tree (content.config.ts's
-// own header comment) — `<org>/<role-slug>/role.md` for every position, plus
-// three deeper sub-role leaves under Enaimco's Software Developer position
-// (full-time/part-time/co-op). This page shows exactly one flat row per
-// `<org>/<role-slug>` directory (six today), newest start-date first — see
-// the change doc's "Interpretation" section for why the sub-role leaves are
-// deliberately excluded. Row/file names are synthesized from each
-// directory's own slug (`software-developer.md`), since every real leaf on
-// disk is literally named `role.md`.
-//
 // Nothing here hardcodes the six records' own field values (dates, months,
 // org tags) as magic strings beyond what's needed to name a row — the index
 // values are independently recomputed straight from the real frontmatter
@@ -28,11 +13,7 @@ import { join } from "node:path";
 const ROOT = join(import.meta.dirname, "../../../../../..");
 const PERSONNEL_DIR = join(ROOT, "src/features/employment/content/personnel");
 
-// Matches src/common/tests/ui/e2e/nav.spec.ts's/sessions.spec.ts's own CLOCK_TIME
-// literal — the visual suite's frozen "now"
-// (src/common/tests/ui/support/recipes.ts). Not installed by every test below
-// (most don't care about live durations), only the ones that assert
-// index/timeline values computed against "now".
+// Matches nav.spec.ts's and sessions.spec.ts's own CLOCK_TIME literal; only installed by tests that assert values computed against "now".
 const CLOCK_TIME = "2026-08-15T23:34:00";
 
 async function gotoReady(page: Page, path: string) {
@@ -150,12 +131,7 @@ test.describe("Employment: flat list renders from the real collection", () => {
     const truth = readTruth();
     await expect(rows(page)).toHaveCount(truth.length);
     const names = await rowNames(page);
-    // Row NAMES are synthesized from each role's own directory slug, not
-    // guaranteed globally unique — Enaimco and Memorial both have a
-    // "Software Developer" position, so "software-developer.md" legitimately
-    // renders twice (disambiguated by the org-tag column), matching the
-    // mockup's own mock data exactly. Assert a multiset match instead of
-    // set-uniqueness.
+    // Row names aren't globally unique — Enaimco and Memorial can both render "software-developer.md" — so this asserts a multiset match, not set-uniqueness.
     const expectedNames = truth.map((t) => t.name).sort();
     expect([...(names as string[])].sort()).toEqual(expectedNames);
   });
@@ -223,7 +199,6 @@ test.describe("Employment: badges", () => {
     await expect(badges.nth(0)).toContainText("Records");
     await expect(badges.nth(1)).toContainText("File");
     await expect(badges.nth(1)).toContainText("Preview");
-    // Straddles the panel's own TOP border, not the bottom (old model).
     const box = await badges.first().boundingBox();
     const panelBox = await page.locator('[data-testid="employment-row"]').first().locator("xpath=../..").boundingBox();
     expect(box).toBeTruthy();
@@ -274,15 +249,7 @@ test.describe("Employment: selection — j/k/arrows sync preview and timeline li
     await openEmployment(page);
     const nodes = page.locator('[data-testid="employment-timeline-node"]');
     await expect(nodes).toHaveCount((await sortedTruth({ y: 2026, m: 8 })).length);
-    // Asserted via `toHaveCSS` (computed style, auto-retrying) rather than a
-    // raw `style` attribute regex — Svelte 5's compiled dynamic `style`
-    // attribute round-trips through the browser's CSSOM (colors become
-    // `rgb(...)`, `width:30px` becomes `width: 30px`), so a literal
-    // substring match on the authored string is fragile — and the size
-    // change is behind a 0.4s CSS transition (real, not fixtureMode-gated:
-    // only the INFINITE keyframe animations are gated), so a one-shot
-    // `evaluate()` right after the keypress can race it; `toHaveCSS` polls
-    // until the transition settles.
+    // `toHaveCSS` polls until the 0.4s size transition settles and tolerates the browser's CSSOM rewrite of the compiled inline style, unlike a raw `style` attribute match.
     const dot = (loc: Locator) => loc.locator('[data-testid="employment-timeline-dot"]');
 
     // Row 0 (newest) is selected by default -> timeline node 0 too (same index).
@@ -302,12 +269,6 @@ test.describe("Employment: selection — j/k/arrows sync preview and timeline li
   test("Enter opens the selected record in the shared vim editor; :q closes back to the exact same selection", async ({
     page,
   }) => {
-    // "j/k/enter selection stays" drops the `f` filter/drill-down/`../`, not
-    // Enter's existing open-in-editor behavior — see
-    // src/common/tests/ui/e2e/editor-vim.spec.ts's "Employment" entry point,
-    // which parametrizes the same editor suite over this page. "Harmless-
-    // open" describes why this is safe, not that Enter does nothing: the
-    // buffer is always readonly.
     await openEmployment(page);
     await page.keyboard.press("j");
     const pathBefore = await page.locator('[data-testid="employment-preview-path"]').textContent();

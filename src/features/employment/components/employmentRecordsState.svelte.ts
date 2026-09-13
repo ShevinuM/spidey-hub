@@ -103,6 +103,7 @@ export class EmploymentRecordsState {
     const now = new Date();
     const personnel = this.personnelFn();
     const rows = this.personnelEntriesFn()
+      // Only two-segment `org/role` entries become rows; deeper sub-role entries under a role directory are excluded.
       .filter((entry) => dirSegmentsOf(entry).length === 2)
       .map((entry): EmploymentRow => {
         const [org, roleSlug] = dirSegmentsOf(entry);

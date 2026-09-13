@@ -1,21 +1,6 @@
-// Pixel-regression suite for the 2 recipes EmploymentRecords.svelte owns
-// ("04-employment-l0", "05-employment-l1"). Split out of
-// tests/visual/identical.spec.ts the same way the common-owned/
-// profile-owned/dashboard-owned recipes were split into their own contexts
-// — every recipe is captured exactly once, never twice and never dropped,
-// as each context/feature owns its own rendered recipes. Same capture
-// pipeline (src/common/tests/ui/support/pipeline.mjs), same recipes source
-// (src/common/tests/ui/support/recipes.ts), same real-implementation build
-// (port 4322) — see tests/visual/identical.spec.ts's own header comment for
-// the full mechanism this reuses verbatim.
+// Pixel-regression suite for the 2 recipes EmploymentRecords.svelte owns ("04-employment-l0", "05-employment-l1"); every recipe is captured exactly once, by exactly one context.
 //
-// Goldens resolve via this project's own `snapshotPathTemplate`
-// (playwright.config.ts, "employment-visual-<viewport>" projects) to
-// src/features/employment/tests/ui/visual/goldens/<viewport>/<recipe>.png —
-// hardcoded per project rather than derived from `{projectName}`, since the
-// project name now carries an "employment-visual-" context prefix that the
-// viewport-only literal directory name must not. Feature tests nest under
-// src/features/<f>/tests/ (unlike common's src/common/tests/).
+// Goldens resolve via this project's own `snapshotPathTemplate` (playwright.config.ts, "employment-visual-<viewport>" projects) to a hardcoded per-project directory rather than one derived from `{projectName}`, since the project name carries an "employment-visual-" prefix the viewport-only goldens directory must not.
 import { expect, test } from "@playwright/test";
 import { recipes } from "../../../../../common/tests/ui/support/recipes";
 import { captureState } from "../../../../../common/tests/ui/support/pipeline.mjs";
@@ -25,10 +10,7 @@ const keyRecipes = recipes.filter((recipe) => EMPLOYMENT_OWNED_RECIPE_NAMES.has(
 
 test.describe("visual (employment): implementation vs goldens", () => {
   test.beforeEach(async ({ page }) => {
-    // Same network-determinism rule as tests/visual/identical.spec.ts /
-    // src/common/tests/ui/support/capture-goldens.mjs: the commit-refresh
-    // island fires a fetch on Repositories mount, and fixture repos must
-    // not depend on api.github.com 404-ing by luck.
+    // Aborts api.github.com so the commit-refresh island's fetch doesn't depend on network luck.
     await page.route("**/api.github.com/**", (route) => route.abort());
   });
 

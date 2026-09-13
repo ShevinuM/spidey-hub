@@ -1,21 +1,5 @@
 <script lang="ts">
-  // Harness-only wrapper: mounts EmploymentRecords.svelte alone, reproducing
-  // just the one piece of cross-component routing Terminal.svelte normally
-  // owns — the generic per-pane-ref keydown delegation PaneTree.svelte's
-  // shared `refs` map drives (`if (ref.handleKey(e)) return`).
-  // EmploymentRecords.svelte itself attaches no listener of its own; it only
-  // exports `handleKey()`. Mirrors the shape NotificationsHarness.svelte
-  // already reimplements for Notifications.svelte (same "exports handleKey,
-  // attaches nothing" shape) — unlike DashboardHarness.svelte, which mounts
-  // its component directly because Dashboard.svelte owns no keyboard model
-  // of its own.
-  //
-  // This one piece matters here specifically because EmploymentRecords'
-  // two most distinctive interactions — j/k cursor movement and Enter
-  // opening the editor — are keyboard-only and therefore unreachable from a
-  // direct mount with no listener at all. Row *selection* is click-driven
-  // (`onclick={() => state.select(i)}` in both RecordsPanel.svelte and
-  // TimelinePanel.svelte) and needs no wrapper support.
+  // Harness-only wrapper: mounts EmploymentRecords.svelte alone and reproduces the one piece of cross-component routing Terminal.svelte normally owns — PaneTree.svelte's generic per-pane-ref keydown delegation — since EmploymentRecords exports `handleKey()` but attaches no listener of its own, and its two keyboard-only interactions (j/k movement, Enter-to-edit) would otherwise be unreachable from a direct mount.
   //
   // Lives beside its own harness spec (not in this feature's real
   // `components/` tree) since it exists only to let the harness route mount
@@ -35,13 +19,7 @@
 
   let ref = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
 
-  /** True only once this island has actually hydrated — same race
-   * NotificationsHarness.svelte's/HelpHarness.svelte's own `ready` flags
-   * guard against: the server-rendered HTML (rows, timeline, preview) is
-   * present before `client:load`'s JS runs, so a spec pressing `j`/`Enter`
-   * immediately after navigation would otherwise race `<svelte:window>`'s
-   * listener attaching. `onMount` only ever runs client-side, after mount,
-   * so this flips exactly once hydration is done. */
+  /** True only once this island has hydrated — guards against a spec pressing `j`/`Enter` before `client:load`'s JS attaches `<svelte:window>`'s listener, since the server-rendered HTML is present first. */
   let ready = $state(false);
   onMount(() => {
     ready = true;
@@ -54,9 +32,6 @@
 
 <svelte:window onkeydown={handleKey} />
 
-<!-- `isFocused: true` — the only mounted instance, so it IS the focused one
-     (gates `data-copy-source` on the row list, not asserted by this
-     harness's spec). In the real app this comes from PaneTree.svelte's
-     multi-instance focus tracking, which a kernel-free harness excludes. -->
+<!-- `isFocused: true` because this harness's only mounted instance is trivially the focused one — in the real app this comes from PaneTree.svelte's multi-instance focus tracking, which this kernel-free harness excludes. -->
 <EmploymentRecords bind:this={ref} {personnel} {personnelEntries} isFocused={true} />
 <div data-testid="employment-harness-ready" data-ready={ready}></div>

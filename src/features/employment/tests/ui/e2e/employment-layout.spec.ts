@@ -1,18 +1,4 @@
-// Regression suite for the Employment Records view's left row-list panel
-// (a bottom-anchored void used to open up between the breadcrumb and the
-// first row), the preview's horizontal line-clipping (previously reported
-// as "the preview width changes when changing files" — width is constant,
-// asserted separately below; see RecordsPanel.svelte/PreviewPanel.svelte's
-// own header comments), and the fact that neither the row list nor the
-// preview could scroll at all.
-//
-// This suite runs against the REAL build (E2E_EXPECT_FIXTURES=0, `personnel`
-// resolves to src/features/employment/content/personnel per
-// content.config.ts's own `base:` ternary), not the fixture tree — the six
-// real role.md files ARE the content this page renders here. The clipping
-// assertion below is exercised against the real record with the single
-// longest body line, and the scroll assertions shrink the viewport (rather
-// than switching to the fixture tree) to force real content to overflow.
+// This suite runs against the real build (E2E_EXPECT_FIXTURES=0), not the fixture tree, so the clipping and scroll assertions exercise real content that actually overflows.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
@@ -69,9 +55,6 @@ function longestRecord(): { name: string; orgTag: string } {
 }
 
 function rowFor(page: Page, name: string, orgTag: string) {
-  // Row names are not globally unique (both orgs have a "Software
-  // Developer" position) — disambiguate with the org-tag text, same
-  // approach the row list itself uses to tell the two apart visually.
   return page.locator(`[data-testid="employment-row"][data-row-name="${name}"]`).filter({ hasText: orgTag });
 }
 
@@ -96,12 +79,6 @@ test.describe("Employment: left panel is top-stacked, no bottom-anchored void", 
 });
 
 test.describe("Employment: no line is clipped horizontally (the preview panel's width itself is constant)", () => {
-  // Guardrail, not a regression test for the fix below: the preview's width
-  // never changes per-record (it's a `flex:1` box, not content-driven), so
-  // this assertion holds both before and after the line-wrap fix and is
-  // expected to stay green — it exists to catch a future change that makes
-  // the panel's width vary with content, which would be the wrong fix for
-  // clipped text.
   test("the preview panel's own width is constant across every record at 1470x842", async ({ page }) => {
     await page.setViewportSize({ width: 1470, height: 842 });
     await openEmployment(page);
@@ -135,10 +112,7 @@ test.describe("Employment: no line is clipped horizontally (the preview panel's 
 
 test.describe("Employment: the row list and preview scroll when content overflows", () => {
   test.beforeEach(async ({ page }) => {
-    // A short viewport leaves too little vertical room for either the
-    // 6-row list or the longest real record's body to fit without
-    // scrolling. Real content, no fixture added — see this file's own
-    // header comment.
+    // A short viewport leaves too little vertical room for the row list or the longest real record's body to fit without scrolling.
     await page.setViewportSize({ width: 1470, height: 340 });
   });
 

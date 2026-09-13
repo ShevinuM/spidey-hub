@@ -1,28 +1,5 @@
-// Harness spec — proves EmploymentRecords.svelte itself works, mounted
-// alone (no Terminal kernel, no tmux chrome, no PaneTree-owned focus/refs
-// routing) against `/harness/employment` (fixture build only, seeded
-// fixture props via EmploymentHarness.svelte — see that wrapper's own
-// header comment for the one piece of Terminal/PaneTree keydown routing it
-// reproduces).
-//
-// Deliberately NOT a copy of
-// src/features/employment/tests/ui/e2e/employment.spec.ts: that suite
-// exercises this view through the real kernel and the real content tree
-// (window switching, live tmux focus) — this file mounts standalone
-// against the FIXTURE personnel tree
-// (src/features/employment/tests/ui/support/personnel, self-switched by
-// content.config.ts's own `base:` ternary under PORTFOLIO_FIXTURES=1) and
-// covers exactly: mount + row rendering, click-selection updating the
-// preview/timeline, j/k cursor movement, and Enter opening the editor — the
-// feature's own core interactions, independent of the kernel.
-//
-// Row count/order is derived from the real fixture tree on disk (same
-// "derive the expectation from the real source" convention the ported e2e
-// suite uses for the real tree), not hardcoded, so a future fixture edit
-// doesn't silently desync this suite from the truth it's supposed to check.
-// Assertions are web-first throughout (Mechanics 5b, playwright.md R002) —
-// no `page.evaluate`/CSS-selector reads as the assertion itself, only as an
-// input deriving an expected value fed into a `toHaveText`/`toHaveCount`.
+// Harness spec — mounts EmploymentRecords.svelte standalone against the fixture personnel tree (no Terminal kernel, no real content), deriving row truth from the fixture files on disk rather than hardcoding it.
+// Assertions are web-first throughout: no `page.evaluate`/CSS-selector read is used as the assertion itself, only as an input feeding an expected value into `toHaveText`/`toHaveCount`.
 import { expect, test } from "@playwright/test";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
