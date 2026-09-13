@@ -1,28 +1,10 @@
-// Regression suite for the boot/toast race: a toast
-// spawned on a fresh visit used to arm its auto-dismiss countdown the
-// instant it mounted, with no awareness that BootSequence.svelte's opaque
-// ~5.36s overlay (src/data/boot.yaml's `bootMs` + BootSequence's own
-// `OUT_MS`) was still hiding it — an info (3s) or warn (5s) toast could
-// fully expire before the visitor ever saw the dashboard.
-//
-// Deliberately imports the RAW `@playwright/test` (not
-// src/common/tests/ui/support/fixtures.ts), same reason
-// src/features/boot/tests/ui/e2e/boot.spec.ts does: the shared `context` fixture
-// pre-seeds the boot-seen sessionStorage flag for every other spec
-// specifically so boot never runs during THEIR tests — this file exists to
-// exercise the real first-visit interaction between boot and toasts, which
-// no other spec covers from either direction.
-//
-// Uses `page.clock` (Playwright's fake-timer API) so a run costs no real
-// wall-clock time and the boot phase transition is deterministic, matching
-// boot.spec.ts's own "outro bloom" test.
+// Imports the raw @playwright/test (not the shared fixtures) so a real boot plays.
 import { expect, test, type Page } from "@playwright/test";
 import { BOOT_SEEN_STORAGE_KEY } from "../../../../boot/lib/boot-state";
 import { TOAST_DURATION_MS } from "../../../lib/notification-store";
 
-// Hand-mirrored from src/data/boot.yaml / BootSequence.svelte, same
-// convention boot.spec.ts already uses (no runtime import of the yaml is
-// possible from this Playwright-only module).
+// Hand-mirrored from src/features/boot/content/boot.yaml, since this
+// Playwright-only module can't import the yaml at runtime.
 const BOOT_MS = 4600;
 const HARD_STOP_MS = BOOT_MS + 60;
 const OUT_MS = 760;
@@ -37,9 +19,7 @@ async function terminalReady(page: Page) {
 
 const toasts = (page: Page) => page.locator('[data-testid="toast"]');
 
-/** Fresh context, fake clock installed before navigation, no sessionStorage
- * flag pre-seeded — a genuine first-load boot plays, same contract as
- * boot.spec.ts's own `freshBoot`. */
+/** Installs a fake clock before navigation with no sessionStorage flag pre-seeded, so a genuine first-load boot plays. */
 async function freshBoot(page: Page, path = "/") {
   await page.clock.install({ time: CLOCK_TIME });
   await page.goto(path);
@@ -47,15 +27,7 @@ async function freshBoot(page: Page, path = "/") {
   await page.locator(`${BOOT_SEQUENCE}[data-boot-running="true"]`).waitFor({ state: "attached" });
 }
 
-/** True once at least one toast's `.eh-toast-drain` bar is actually
- * animating with progress still under 1 — i.e. the toast is not merely
- * present in the DOM but genuinely mid-countdown, not a bar that happened
- * to render on the very frame it finished. `getAnimations()` (not
- * `animationName`) is deliberate: a dead keyframe reference can still
- * report a non-"none" `animationName` while resolving to no animation at
- * all — `drain` is declared inside ToastStack's own `<style>` block
- * (Svelte rewrites both sides), so it is confirmed to actually run, making
- * this a reliable liveness check here. */
+/** True once at least one toast's drain bar is actually mid-countdown (progress under 1), using `getAnimations()` rather than `animationName` since a dead keyframe reference can still report a name while resolving to no animation. */
 async function hasLiveDrainingToast(page: Page): Promise<boolean> {
   return page.evaluate(() => {
     const bars = document.querySelectorAll('[data-testid="toast"] .eh-toast-drain');
@@ -71,10 +43,8 @@ async function hasLiveDrainingToast(page: Page): Promise<boolean> {
 }
 
 test.describe("cold boot: toasts survive the boot overlay", () => {
-  // Severity (and therefore duration) is drawn randomly per visit
-  // (src/features/notifications/lib/notification-store.ts's `injectVisit`/`pickRandomUnseen`, no
-  // seed pre-set here on purpose) — 5 independent runs cover the info/warn/
-  // alert mix rather than pinning one lucky draw.
+  // Severity (and duration) is drawn randomly per visit with no seed
+  // pre-set, so 5 independent runs cover the info/warn/alert mix.
   for (let i = 1; i <= 5; i++) {
     test(`run ${i}: at least one toast is visible and still counting down once boot clears`, async ({ page }) => {
       await page.route("**/api.github.com/**", (route) => route.abort());
@@ -86,9 +56,9 @@ test.describe("cold boot: toasts survive the boot overlay", () => {
       await page.clock.runFor(HARD_STOP_MS + OUT_MS + 100);
       await expect(page.locator(BOOT_SEQUENCE)).toHaveCount(0);
 
-      // A fresh visit always injects 2 unseen pool entries (30 real
-      // src/features/notifications/content entries, never exhausted on a first
-      // visit), so both toasts should now be visible and freshly armed.
+      // A fresh visit always injects 2 unseen pool entries (30 real content
+      // entries, never exhausted on a first visit), so both toasts should
+      // now be visible and freshly armed.
       await expect(toasts(page)).toHaveCount(2);
       await expect.poll(() => hasLiveDrainingToast(page)).toBe(true);
     });
@@ -114,11 +84,6 @@ test.describe("returning visitor: boot-seen already set", () => {
     await expect(toasts(page)).toHaveCount(2);
     await expect.poll(() => hasLiveDrainingToast(page)).toBe(true);
 
-    // Advance past the longest possible severity duration (alert, 10s): if
-    // the boot-active gate ever failed to no-op when boot never ran, the
-    // timer would never have armed and the toasts would still be sitting
-    // here unchanged. Seeing them clear proves the countdown started right
-    // on mount, exactly as before this fix.
     await page.clock.runFor(TOAST_DURATION_MS.alert + 200);
     await expect(toasts(page)).toHaveCount(0);
   });

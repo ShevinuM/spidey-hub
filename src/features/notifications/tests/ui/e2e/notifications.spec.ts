@@ -1,13 +1,4 @@
-// Behavioral e2e suite for the signal-inbox bell/panel/toast system
-// (src/features/notifications/components/Notifications.svelte, backed by
-// src/features/notifications/lib/notification-store.ts) — Mockup B, dashboard-view only. Covers:
-// badge/toast injection on a fresh visit, open/close via bell click/n/Esc,
-// tab switching (including the alerts-tab derived filter), read/unread
-// toggling, dismiss semantics per folder, mark-as-spam, mark-all-read,
-// read/unread/spam/archive persistence ACROSS RELOAD via localStorage, the
-// 2-new-per-visit pool injection, and toast auto-dismiss/hover-pause via the
-// shortened test-duration hook (src/common/tests/ui/support/fixtures.ts) rather
-// than sleeping through the real severity timers.
+// Behavioral e2e suite for the signal-inbox bell/panel/toast system (Mockup B, dashboard-view only): injection, open/close, tabs, read/unread, dismiss/spam/archive persistence across reload, and toast auto-dismiss/hover-pause under a shortened test-duration scale.
 import { join } from "node:path";
 import { expect, test, E2E_NOTIFICATIONS_INJECT_SEED, E2E_TOAST_DURATION_SCALE, type Page } from "../../../../../common/tests/ui/support/fixtures";
 import { mulberry32, pickRandomUnseen, TOAST_DURATION_MS, type NotificationSeverity, type PoolEntry } from "../../../lib/notification-store";
@@ -36,11 +27,7 @@ function loadPool(): PoolEntry[] {
 
 const POOL = loadPool();
 
-/** What the FIRST visit injects, computed the exact same way
- * injectVisit()/pickRandomUnseen() does, against the fixed seed
- * src/common/tests/ui/support/fixtures.ts pre-seeds for every test in this file —
- * no notification copy is hardcoded here (content-purity), same convention the
- * old toast spec followed. */
+/** What the FIRST visit injects, computed the same way `pickRandomUnseen()` does against the fixed seed every test in this file pre-seeds, so no notification copy is hardcoded here. */
 const [firstA, firstB] = pickRandomUnseen(POOL, new Set(), 2, mulberry32(E2E_NOTIFICATIONS_INJECT_SEED));
 
 /** What a SECOND visit (after the first two ids are already "seen" in
@@ -244,22 +231,15 @@ test.describe("signal inbox: dismiss semantics per folder", () => {
     await expect(page.getByText("caught in the web")).toBeVisible();
     const spammed = row(page, firstA.id);
     await expect(spammed).toBeVisible();
-    // Deviation from the mockup: spam rows show no mark-as-spam
-    // action (already spam).
     await expect(spammed.locator('[data-testid="notification-mark-spam"]')).toHaveCount(0);
     await spammed.locator('[data-testid="notification-dismiss"]').click();
     await expect(row(page, firstA.id)).toHaveCount(0);
     await expect(tab(page, "spam")).toContainText("0");
   });
 
-  // The zero-notification state can't live in the fixture dataset (it
-  // would collide with the toast-bearing visual recipes seeded by
-  // TOAST_SEED — see recipes.ts's own comment on notification-store's
-  // `buildFixtureState()`), so it's reached here instead, as a dismiss-all
-  // interaction against the two items a fresh visit always injects.
-  // Dismissing FROM the inbox only archives (see "dismissing an inbox item
-  // archives it" above), which is enough to empty the inbox tab itself and
-  // surface `notifications-empty` — no need to delete outright.
+  // The zero-notification state can't live in the fixture dataset (it would
+  // collide with the toast-bearing visual recipes), so it's reached here by
+  // dismissing (archiving) both of a fresh visit's injected items instead.
   test("dismissing every inbox item surfaces the zero-notification empty state", async ({ page }) => {
     await gotoReady(page, "/");
     await bell(page).click();
@@ -327,13 +307,9 @@ test.describe("signal inbox: toast auto-dismiss + hover-pause", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  // src/common/tests/ui/support/fixtures.ts pre-seeds a duration-scale override
-  // (E2E_TOAST_DURATION_SCALE) so even the longest (alert, 10s) severity
-  // timer resolves in a few seconds — no sleeping through the real
-  // durations, and no page.clock (CSS `drain` runs on real wall-clock time,
-  // untouched by faked JS timers). The scale is deliberately not so
-  // aggressive that a toast's own dismiss timer can fire while it's still
-  // mid-entrance-transform (see fixtures.ts's own comment on the constant).
+  // A duration-scale override lets even the longest (alert, 10s) severity
+  // timer resolve in a few seconds without page.clock, since the CSS
+  // `drain` animation runs on real wall-clock time regardless of faked JS timers.
   const maxScaledMs = Math.round(TOAST_DURATION_MS.alert * E2E_TOAST_DURATION_SCALE);
 
   test("both toasts auto-dismiss on their own", async ({ page }) => {
@@ -378,29 +354,9 @@ test.describe("signal inbox: reboot", () => {
   });
 });
 
-// The row-list body already declares `overflow-y:auto`
-// (NotificationsPanel.svelte's `[flex:1;min-height:120px;overflow-y:auto]`
-// div), but that declaration had never been asserted, so a future
-// regression back to bare `overflow:hidden` would ship silently.
-//
-// `overflowY === "auto"` alone is not the falsifiable signal here (a CSS
-// property can be correctly declared and still fail to scroll for other
-// reasons); pairing it with an actual wheel-driven `scrollTop` move is
-// required — a container assertion alone can pass vacuously.
-// `scrollHeight > clientHeight` is deliberately NOT asserted on its own
-// either: it's true regardless of whether `overflow-y` is `auto` or
-// `hidden` (it measures content, not scrollability), so a broken
-// `overflow:hidden` panel would still pass it.
-//
-// Forces overflow the same way tests/e2e/employment.spec.ts's scroll
-// coverage does: shrinks the viewport rather than adding fixture data —
-// this suite's real pool is a fixed, curated set with no adversarial
-// (deliberately long) entries. Measured empirically
-// against the real pool (a fresh visit always injects exactly 2 unseen
-// entries): at 1470x340 the row body's `min-height:120px` floor holds
-// `clientHeight` at 120px while the 2 real rows need ~150-165px, a stable,
-// non-viewport-dependent overflow — not a coincidence of any one pool
-// entry's copy length.
+// A declared overflow-y:auto is not itself proof the body scrolls, so this
+// pairs it with an actual wheel-driven scrollTop move; the viewport is
+// shrunk to force overflow since the real pool has no adversarially long entries.
 test.describe("signal inbox: notifications panel body scrolls", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
