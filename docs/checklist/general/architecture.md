@@ -7,21 +7,23 @@ The structural rules for the bounded-context rewrite: the skeleton, the dependen
 - [ ] **R001** Top level is organized by architectural role:
 
   ```
-  src/
-  ├── features/           one bounded context per folder
-  │   └── <feature>/
-  │       ├── components/
-  │       ├── lib/
-  │       ├── content/
-  │       └── tests/
-  ├── common/              shared code, split by kind (never a catch-all)
-  │   ├── engines/         feature-agnostic, swappable machinery (tmux, vim)
-  │   ├── components/      UI reused by 2+ features or by bootstrap
-  │   ├── lib/             shared pure utilities
-  │   └── content/
-  ├── scripts/             build-time tooling — never bundled to the client
-  ├── bootstrap/           composition root — wires common into features
-  └── tests/               cross-feature/meta tests only
+  <repo root>/
+  ├── src/
+  │   ├── features/           one bounded context per folder
+  │   │   └── <feature>/
+  │   │       ├── components/
+  │   │       ├── lib/
+  │   │       ├── content/
+  │   │       └── tests/
+  │   ├── common/              shared code, split by kind (never a catch-all)
+  │   │   ├── engines/         feature-agnostic, swappable machinery (tmux, vim)
+  │   │   ├── components/      UI reused by 2+ features or by bootstrap
+  │   │   ├── lib/             shared pure utilities
+  │   │   └── content/
+  │   └── bootstrap/           composition root — wires common into features
+  ├── common/tests/            common's tests + the shared UI test infra
+  ├── scripts/                 build-time tooling — never bundled to the client
+  └── tests/                   cross-feature/meta tests only
   ```
 
 - [ ] **R002** An opt-in folder (`common/engines/`, a feature's `content/`, etc.) is grown in only when its trigger appears — never scaffolded empty ahead of need.
