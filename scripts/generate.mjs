@@ -3,7 +3,7 @@
 //
 // Produces five kinds of artifacts:
 //  1. public/generated/repos/<name>.json   — file tree + text contents for
-//     each of the three submodules under repos/ (lazy-fetched by the Repositories
+//     each of the eight submodules under repos/ (lazy-fetched by the Repositories
 //     island when a repo is opened).
 //  1b. public/generated/repos/all-projects.json — same {name, files} shape,
 //     but built from src/features/repositories/content/repositories/*.md (one entry per project doc,
@@ -48,6 +48,7 @@ import {
 import { join, relative, extname, basename, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getIcon, defaultIcon } from "material-file-icons";
+import YAML from "yaml";
 import { tokenizeFile, PaletteBuilder } from "../src/common/lib/highlight.ts";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -168,16 +169,36 @@ const OWNER = "ShevinuM";
 // 1. Repo indexes (public/generated/repos/<name>.json)
 // ---------------------------------------------------------------------------
 
-const REPOS = [
-  "daily-tech-digest",
-  "transcript-tts",
-  "Legend-of-Arlo-Guardians-Gauntlet",
-  "SpotifyPal",
-  "Advent-of-Code-2024",
-  "Advent-Of-Code-2023",
-  "Sheldon",
-  "Data-Structures-And-Algorithms",
-];
+const PROJECTS_DIR = join(ROOT, "src/features/repositories/content/repositories");
+
+/**
+ * Reads {name, github, branch} for every repo declared across all project
+ * docs' `repos:` frontmatter arrays (schema: src/content.config.ts's
+ * `repoSchema`) under src/features/repositories/content/repositories/ —
+ * always the real content dir, never PORTFOLIO_FIXTURES (this script has no
+ * fixture awareness at all, see file header). Astro's getCollection() isn't
+ * available in a prebuild script, so frontmatter is parsed by hand: split
+ * off the leading `---\n...\n---` block and hand it to `yaml` (already a
+ * runtime dependency — see src/common/lib/data.ts). Replaces the old
+ * hand-maintained REPOS array, which duplicated exactly what this
+ * frontmatter already declares.
+ */
+function loadProjectRepos() {
+  const repos = [];
+  for (const entry of readdirSync(PROJECTS_DIR).sort()) {
+    if (!entry.endsWith(".md")) continue;
+    const raw = readFileSync(join(PROJECTS_DIR, entry), "utf8");
+    const match = /^---\n([\s\S]*?)\n---/.exec(raw);
+    if (!match) throw new Error(`${entry}: missing frontmatter block`);
+    const frontmatter = YAML.parse(match[1]);
+    for (const r of frontmatter.repos ?? []) {
+      repos.push({ name: r.name, github: r.github, branch: r.branch });
+    }
+  }
+  return repos;
+}
+
+const REPOS = loadProjectRepos();
 
 /**
  * Tokenizes one already-walked file entry in place: on success replaces
@@ -198,7 +219,7 @@ async function tokenizeRepoFile(file, palette) {
 async function generateRepoIndexes() {
   const outDir = join(ROOT, "public/generated/repos");
   mkdirSync(outDir, { recursive: true });
-  for (const name of REPOS) {
+  for (const { name } of REPOS) {
     const repoDir = join(ROOT, "repos", name);
     if (!existsSync(repoDir)) {
       console.warn(`[generate] repos/${name} not found — is the submodule initialized? Skipping.`);
@@ -460,8 +481,8 @@ function initialsFrom(name) {
   return s[0].toUpperCase() + s[1].toLowerCase();
 }
 
-async function fetchCommits(repo) {
-  const url = `https://api.github.com/repos/${OWNER}/${repo}/commits?per_page=15`;
+async function fetchCommits(github) {
+  const url = `https://api.github.com/repos/${github}/commits?per_page=15`;
   const headers = {
     Accept: "application/vnd.github+json",
     "User-Agent": "shevinum-dev-v3-generate-script",
@@ -496,18 +517,18 @@ async function fetchCommits(repo) {
 async function generateCommitSnapshots() {
   const outDir = join(ROOT, "src/generated/commits");
   mkdirSync(outDir, { recursive: true });
-  for (const repo of REPOS) {
-    const outFile = join(outDir, `${repo}.json`);
+  for (const { name, github } of REPOS) {
+    const outFile = join(outDir, `${name}.json`);
     try {
-      const commits = await fetchCommits(repo);
+      const commits = await fetchCommits(github);
       if (commits.length === 0) throw new Error("zero commits returned");
       writeFileSync(outFile, JSON.stringify(commits, null, 2) + "\n");
-      console.log(`[generate] src/generated/commits/${repo}.json — ${commits.length} commits (live)`);
+      console.log(`[generate] src/generated/commits/${name}.json — ${commits.length} commits (live)`);
     } catch (err) {
       if (existsSync(outFile)) {
-        console.warn(`[generate] WARNING: commit fetch failed for ${repo} (${err.message}); keeping existing snapshot.`);
+        console.warn(`[generate] WARNING: commit fetch failed for ${name} (${err.message}); keeping existing snapshot.`);
       } else {
-        console.warn(`[generate] WARNING: commit fetch failed for ${repo} (${err.message}); no existing snapshot — Repositories will have no commits for this repo until this succeeds.`);
+        console.warn(`[generate] WARNING: commit fetch failed for ${name} (${err.message}); no existing snapshot — Repositories will have no commits for this repo until this succeeds.`);
       }
     }
   }
