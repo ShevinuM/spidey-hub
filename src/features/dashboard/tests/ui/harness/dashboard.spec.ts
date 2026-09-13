@@ -1,28 +1,12 @@
-// Harness spec — proves Dashboard.svelte itself works, mounted alone (no
-// Terminal kernel, no tmux chrome, no PaneTree-owned onSelect routing)
-// against `/harness/dashboard` (fixture build only, seeded fixture props via
-// DashboardHarness.svelte — see that wrapper's own header comment for its
-// synthetic prop values). Deliberately NOT a copy of
-// src/features/dashboard/tests/ui/e2e/dashboard.spec.ts: that suite exercises
-// Dashboard through the real kernel (status-bar window switching, real tmux
-// window numbers, real pane counts) — this file instead covers the
-// component's own self-contained render: the wordmark, the menu rows' static
-// content (labels/icons/key-hint bindings from dashboard.yaml), the footer
-// sync line, and the absence of kernel chrome.
-//
-// Does NOT assert row navigation (click/Enter/Space -> onSelect): in the
-// real app PaneTree.svelte supplies that callback and Terminal.svelte owns
-// the window switch, neither of which exists in this harness —
-// DashboardHarness.svelte wires onSelect to a no-op. Asserting what the
-// component renders, not what the kernel does with a selection (same rule
-// Profile's harness follows for its own `handleKey()` export).
+// Proves Dashboard.svelte renders standalone (wordmark, menu rows, footer
+// line, no kernel chrome) at `/harness/dashboard`; does not assert row
+// navigation, since PaneTree.svelte/Terminal.svelte own that in the real app.
 import { expect, test } from "@playwright/test";
 import { DashboardPage } from "../pages/DashboardPage";
 
-// Hand-mirrored from src/features/dashboard/content/dashboard.yaml, same
-// "no runtime import of that file is possible here" convention the ported
-// e2e dashboard.spec.ts already uses for its own MENU table (its `?raw`
-// imports are Vite-only syntax) — yaml order, not window-number order.
+// Hand-mirrored from src/features/dashboard/content/dashboard.yaml — yaml
+// order, not window-number order — since Playwright specs can't import a
+// .yaml file at runtime (Vite-only `?raw` imports aren't available here).
 const MENU = [
   { id: "projects", icon: "▤", label: "Repositories", binding: "C-b 1" },
   { id: "xp", icon: "◆", label: "Employment Records", binding: "C-b 2" },

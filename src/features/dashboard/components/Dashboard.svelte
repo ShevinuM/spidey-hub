@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Home/dashboard card (design/Homepage.dc.html lines 142-169).
+  // Home/dashboard card (reference/Homepage.dc.html lines 142-169).
   import type { DashboardData } from "../../../common/lib/data";
   import type { ViewId } from "../../../common/lib/views";
   import { menuIdToView, viewToTmuxBinding } from "../../../common/lib/views";
@@ -7,11 +7,7 @@
 
   interface Props {
     dashboard: DashboardData;
-    /** Whether THIS mounted instance is the window's focused pane (multiple
-     * panes can run "dashboard" simultaneously). Gates `data-copy-source`
-     * below so
-     * `Ctrl-b [`'s untargeted `document.querySelector` only ever finds the
-     * focused instance's own menu, never a non-focused sibling's. */
+    /** Whether this mounted instance is the window's focused pane — gates `data-copy-source` so `Ctrl-b [`'s untargeted `document.querySelector` only ever matches the focused instance, never a non-focused sibling when multiple dashboard panes are mounted. */
     isFocused: boolean;
     /** Window id (a tmux `ProgramName`) -> its live window number, so each
      * row's hotkey column can show the real `C-b N` binding for that view
@@ -33,26 +29,16 @@
     if (view) onSelect(view);
   }
 
-  /** The row's hotkey-column text — the actual tmux binding for whatever
-   * window `item.id` maps to, never a hardcoded per-row letter. Empty if
-   * that window isn't present in the live session. */
+  /** The row's hotkey-column text: the live tmux binding for whatever window `item.id` maps to (empty if that window isn't in the current session), never a hardcoded per-row letter. */
   function binding(menuId: string): string {
     const view = menuIdToView(menuId);
     if (!view) return "";
     return viewToTmuxBinding(view, windowNumbers) ?? "";
   }
 
-  // SPIDEY-HUB wordmark, own arched rendering (never Marvel's actual logo
-  // artwork) — each character gets a
-  // small rotation + vertical rise so the word bows like a dome, tallest at
-  // the middle letter and tilting outward toward the ends, evoking the
-  // classic arched Spider-Man wordmark without copying it. Purely
-  // presentational (content-purity: the letters themselves still come from
-  // dashboard.plate.title, nothing is hardcoded here) — `aria-hidden` on
-  // each letter span + a single `aria-label` on the container keeps this
-  // accessible/testable as one string despite the per-character markup
-  // (getByText on the split text would otherwise see "S P I D E Y..." with
-  // stray whitespace from the each-block).
+  // `aria-hidden` on each letter span plus one `aria-label` on the container
+  // keeps the wordmark one accessible/testable string despite the
+  // per-character markup.
   const wordmarkCharsList = $derived(wordmarkChars(dashboard.plate.title));
 </script>
 

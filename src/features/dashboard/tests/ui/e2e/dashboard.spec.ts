@@ -1,10 +1,3 @@
-// Behavioral e2e safety net for Dashboard.svelte — the
-// dashboard previously had only incidental coverage (nav.spec.ts's rename +
-// footer-pane-count describe block). Scope: the menu's labels/icons/key-hint
-// column against src/features/dashboard/content/dashboard.yaml (asserted as current truth —
-// "Employment Records" included), click AND keyboard (Enter/Space)
-// navigation from every row, the synced-panes footer line, and wordmark
-// presence/label.
 import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
 
 async function gotoReady(page: Page, path = "/") {
@@ -17,13 +10,7 @@ async function goDashboard(page: Page) {
   await expect(page).toHaveURL(/\/$/);
 }
 
-/** src/features/dashboard/content/dashboard.yaml's `menu` list, top to bottom, plus the tmux
- * binding each id's mapped view actually carries (window numbers per
- * site.yaml: dashboard=0, repositories=1, employment=2, retina-v=3, profile=4,
- * help=5 — see src/common/lib/views.ts's `viewToTmuxBinding`). Yaml order does NOT
- * match window-number order (info/tracker are swapped relative to their
- * bindings), which is exactly why this table is hand-mirrored rather than
- * assumed sorted. */
+/** Mirrors dashboard.yaml's `menu` order with each id's real tmux binding hand-included, since yaml order doesn't match window-number order (info/tracker are swapped). */
 const MENU = [
   { id: "projects", icon: "▤", label: "Repositories", binding: "C-b 1", route: "/repositories" },
   { id: "xp", icon: "◆", label: "Employment Records", binding: "C-b 2", route: "/employment" },
