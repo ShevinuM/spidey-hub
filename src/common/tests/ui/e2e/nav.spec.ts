@@ -291,7 +291,7 @@ test.describe("live clock (bug fix 2)", () => {
     const t0 = new Date(CLOCK_TIME).getTime();
 
     await page.clock.install({ time: CLOCK_TIME });
-    await page.clock.pauseAt(t0); // freeze immediately, before navigation
+    await page.clock.pauseAt(t0);
     await page.goto("/");
     await page.clock.pauseAt(t0 + 5000);
     await expect(page.locator('[data-testid="dashboard-wordmark"]')).toBeVisible();

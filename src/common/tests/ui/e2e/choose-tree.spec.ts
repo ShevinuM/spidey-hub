@@ -161,7 +161,7 @@ test.describe("choose-tree Enter switches window/session; x kills; q/Esc close",
     await expect(killConfirm(page)).toHaveText("Kill window 2? (y/n)");
     await page.keyboard.press("Y"); // case-insensitive — the real tmux quirk
     await expect(killConfirm(page)).not.toBeVisible();
-    await expect(overlay(page)).toBeVisible(); // stays open after a kill
+    await expect(overlay(page)).toBeVisible();
     await expect(windowRows(page)).toHaveCount(5);
     await expect(windowRows(page).filter({ hasText: "employment" })).toHaveCount(0);
   });
@@ -174,7 +174,7 @@ test.describe("choose-tree Enter switches window/session; x kills; q/Esc close",
     await page.keyboard.press("z");
     await expect(killConfirm(page)).not.toBeVisible();
     await expect(overlay(page)).toBeVisible();
-    await expect(windowRows(page)).toHaveCount(6); // nothing killed
+    await expect(windowRows(page)).toHaveCount(6);
   });
 
   test("killing every window down to the last one still cascades to [exited], same as Ctrl-b &", async ({ page }) => {

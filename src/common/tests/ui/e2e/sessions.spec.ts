@@ -117,14 +117,14 @@ test.describe("Ctrl-b d detaches to the host shell", () => {
     await ctrlB(page);
     await page.keyboard.press("d");
     await expect(shellInput(page)).toHaveText("d");
-    expect(await page.locator('[data-testid="shell-line"]').count()).toBe(linesBefore); // no new [detached] line
-    await expect(statusBarWindows(page)).not.toBeVisible(); // still detached
+    expect(await page.locator('[data-testid="shell-line"]').count()).toBe(linesBefore);
+    await expect(statusBarWindows(page)).not.toBeVisible();
 
     await page.keyboard.press("Backspace"); // clear "d" before the next probe
     await ctrlB(page);
     await page.keyboard.press("1");
     await expect(shellInput(page)).toHaveText("1");
-    await expect(statusBarWindows(page)).not.toBeVisible(); // did not attach
+    await expect(statusBarWindows(page)).not.toBeVisible();
   });
 
   // "?" opens the HelpSearch palette EXCEPT while a shell pane is focused
