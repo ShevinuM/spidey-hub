@@ -39,6 +39,7 @@ const counterText = (page: Page) => page.locator('[data-testid="grep-counter"]')
 const modeText = (page: Page) => page.locator('[data-testid="grep-mode"]');
 const rows = (page: Page) => page.locator('[data-testid="grep-row"]');
 const rowByPath = (page: Page, path: string) => page.locator(`[data-testid="grep-row"][data-path="${path}"]`);
+const selectedRow = (page: Page) => page.locator('[data-testid="grep-row"][data-selected="true"]');
 
 test.describe("Grep overlay", () => {
   test.beforeEach(async ({ page }) => {
@@ -129,8 +130,8 @@ test.describe("Grep overlay", () => {
     // A path-fragment query, not a bare filename: plenty of OTHER files'
     // header comments mention "Repositories.svelte" in prose (e.g.
     // CopyMode.svelte's data-copy-source contract doc), which would
-    // otherwise win the path-substring-vs-content-hit race for
-    // `rows(page).first()` depending on alphabetical file order. Prefixed
+    // otherwise compete for an early row in the result set, ahead of the
+    // real target, depending on alphabetical file order. Prefixed
     // with "src/" (not just "components/..."): every indexed path begins
     // with "src/", because kernel components live under
     // `src/common/components/`, whose own relative imports of this file
@@ -148,10 +149,28 @@ test.describe("Grep overlay", () => {
     // `nonceQuery`: this spec's own source is itself indexed
     // (`scripts/generate.mjs` walks `tests/**`), so a literal copy of this
     // query would let this file's own content out-rank the real component
-    // it's asserting about.
+    // it's asserting about. The same reasoning is why this comment never
+    // spells the assembled string out either.
+    //
+    // Two rows come back today, not one: one of `src/common/tests/unit/`'s
+    // own suites keeps a whitelist of known grep-to-view path mappings and
+    // carries this exact path as literal test DATA (verifying
+    // `grepPathToView`), which is a second, independent content-hit source
+    // from the PaneTree.svelte one above. `src/common/...` sorts ahead of
+    // `src/features/...`, so that suite's row now lands at index 0 — the
+    // real component's own path-hit is index 1, not 0. `Enter` acts on
+    // whichever row is SELECTED, not on row 0 specifically, so the
+    // load-bearing assertion is on selection rather than position: from the
+    // default row-0 selection, ArrowDown once lands on the target's own
+    // path-hit row.
     const REPOSITORIES_PATH = ["src", "features", "repositories", "components", "Repositories.svelte"].join("/");
     await page.keyboard.type(REPOSITORIES_PATH);
-    await expect(rows(page).first()).toHaveAttribute("data-path", REPOSITORIES_PATH);
+    // Wait for the filtered list to settle on the target's own row before
+    // moving selection onto it — ArrowDown moves relative to whatever list
+    // is on screen at the instant it's pressed, and typing is async.
+    await expect(rowByPath(page, REPOSITORIES_PATH)).toBeVisible();
+    await page.keyboard.press("ArrowDown");
+    await expect(selectedRow(page)).toHaveAttribute("data-path", REPOSITORIES_PATH);
     await page.keyboard.press("Enter");
     await expect(overlay(page)).not.toBeVisible();
     await expect(page.locator('[data-testid="repositories-panel-2"]')).toBeVisible();
