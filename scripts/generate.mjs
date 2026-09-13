@@ -240,9 +240,8 @@ function savePins(pins) {
  * repos.json, or — only when a repo has no pin at all — the current head of
  * `branch` via the GitHub REST API, recorded into repos.json immediately so
  * the pin survives even if a later repo in the loop fails. This is the
- * FUTURE re-pin mechanism for a repo added without one; every repo this
- * phase seeds already has a pin (captured from `git submodule status` while
- * the submodules still existed), so this branch never fires today.
+ * FUTURE re-pin mechanism for a repo added without one; every repo in
+ * repos.json already carries a pin, so this branch does not fire today.
  */
 async function resolveSha(pins, name, github, branch) {
   if (pins[name]) return pins[name];
