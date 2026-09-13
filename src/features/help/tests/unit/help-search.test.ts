@@ -1,9 +1,3 @@
-// Unit tests for the pure scoring/search logic behind the site-wide `?`
-// fuzzy help palette — src/features/help/lib/help-search.ts. No DOM, no Svelte state:
-// exercised against
-// fixture command/section lists (not the real cmdline.yaml/help content,
-// same "shape, not wording" isolation tests/unit/cmdline.test.ts already
-// uses) so this suite can't drift silently if either source's copy changes.
 import { expect, test } from "vitest";
 import {
   buildEntries,
@@ -51,9 +45,8 @@ const sections: HelpSectionSource[] = [
   },
 ];
 
-// shell.yaml's own `help.rows[]` shape, including shell builtins — a small
-// representative subset, "shape not wording" per this file's own header
-// comment.
+// A small representative subset of shell.yaml's own `help.rows[]` shape,
+// including shell builtins.
 const shellRows: ShellHelpRowSource[] = [
   { cmd: "cd <path>", description: "change directory" },
   { cmd: "neofetch", description: "system info card" },

@@ -1,12 +1,5 @@
-// Behavioral e2e suite for the Help window — the sixth status-bar window
-// ("5:help"), reachable via `Ctrl-b ?`, `Ctrl-b 5`, a status-bar click, and
-// the dashboard menu's Help row (its hotkey column shows the live `Ctrl-b 5`
-// binding, not a bare letter — there is no bare-key dashboard hotkey; a bare
-// `?` opens the site-wide HelpSearch palette instead, see
-// help-search.spec.ts in this same folder). Content is asserted against the real
-// src/features/help/content/help.yaml chrome + src/features/help/content/*.md
-// scopes (read directly, same pattern as grep.spec.ts's real-index
-// comparisons) so this suite can never drift from the actual copy.
+// Behavioral e2e suite for the Help window ("5:help") — a bare `?` alone
+// opens the site-wide HelpSearch palette instead (see help-search.spec.ts).
 import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
 // This spec's `context` fixture (imported from src/common/tests/ui/support/fixtures,
 // not raw "@playwright/test") pre-seeds the boot-seen sessionStorage flag

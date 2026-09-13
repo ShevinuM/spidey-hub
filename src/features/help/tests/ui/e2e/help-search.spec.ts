@@ -1,12 +1,3 @@
-// Behavioral e2e suite for the site-wide `?` fuzzy HelpSearch palette —
-// src/features/help/components/HelpSearch.svelte, driven by Terminal.svelte. Covers:
-// opening from multiple contexts, the gating rules (editor/grep/Cmdline/
-// status-bar prompt/boot all block it), the empty-query command listing, fuzzy
-// filtering + fuzzy canaries mirroring the pure unit-test canaries in
-// ../../unit/help-search.test.ts, Enter's two behaviors (executes a command,
-// no-ops on a keymap row), Esc, and window-chrome close-on-switch. The
-// sibling Cmdline suite (cmdline.spec.ts) covers the regression that `?`
-// still types literally into an already-open grep query / Cmdline input.
 import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -152,11 +143,10 @@ test.describe("HelpSearch: gating — does NOT open in these contexts", () => {
     await expect(overlay(page)).toBeVisible();
   });
 
-  // Mirrors cmdline.spec.ts's "while the box is open, the prefix is inert"
-  // case — Terminal.svelte's combined `isPromptActive()/cmdlineRef.isOpen()/
-  // helpSearchRef.isOpen()` gate (checked BEFORE every prefixed branch,
-  // including `w`) blocks `Ctrl-b w` from opening choose-tree while the help
-  // palette is up; this pins that with a live e2e probe.
+  // Terminal.svelte's combined isPromptActive()/cmdlineRef.isOpen()/
+  // helpSearchRef.isOpen() gate blocks `Ctrl-b w` from opening choose-tree
+  // while this palette is up, mirroring
+  // src/common/tests/ui/e2e/cmdline.spec.ts's own inert-prefix case.
   test("Ctrl-b w does not open choose-tree while the help palette is open (window-chrome contract)", async ({
     page,
   }) => {
@@ -191,12 +181,9 @@ test.describe("HelpSearch: empty-query listing + fuzzy filtering", () => {
     await gotoReady(page, "/");
     await page.keyboard.press("?");
     await page.keyboard.type("reboot");
-    // An exact match on the "reboot" command ranks first (the scoring
-    // cascade); other rows whose DESCRIPTION merely mentions the
-    // word "reboot" (e.g. the Global section's own "r" keymap row) can
-    // still trail behind it (results are capped at 10), so the only thing
-    // asserted here is the top result and that an unrelated command from
-    // the empty-query listing (e.g. "profile") no longer appears at all.
+    // An exact match on "reboot" ranks first regardless of other rows that
+    // merely mention the word, so this only asserts the top result and that
+    // an unrelated command (e.g. "profile") no longer appears.
     await expect(results(page).first()).toHaveAttribute("data-label", "reboot");
     await expect(results(page).first()).toHaveAttribute("data-kind", "command");
     await expect(page.locator('[data-testid="help-search-result"][data-label="profile"]')).toHaveCount(0);

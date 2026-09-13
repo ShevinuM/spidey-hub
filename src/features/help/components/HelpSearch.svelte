@@ -1,27 +1,4 @@
 <script lang="ts">
-  // Site-wide `?` fuzzy help palette — same visual family as Cmdline.svelte
-  // (bordered floating box, box-drawing inset title, `>`-style prompt +
-  // blinking block cursor, existing palette) but its OWN component/state:
-  // this is the discoverable/browsable surface Cmdline.svelte deliberately
-  // doesn't provide itself — empty query lists the site-wide commands,
-  // typing fuzzy-searches commands + every help scope's keymap row.
-  //
-  // Always mounted (Terminal.svelte renders this once, unconditionally),
-  // exactly like Cmdline/GrepOverlay/CopyMode — Terminal owns a live
-  // `bind:this` ref so it can decide WHEN to open this (see that
-  // component's own gating notes on Terminal.handleKey's bare-`?` opener)
-  // and calls handleKey() on every keydown once it's up.
-  //
-  // Deliberately dumb about EXECUTION, same split as Cmdline.svelte:
-  // `onExecute` is the only way anything actually happens (Terminal.svelte
-  // funnels it straight into its own executeSiteAction — the exact same
-  // function Cmdline's `:` commands already run through, so a command
-  // executed from either surface behaves identically, no duplicated
-  // switch/case). Selecting a KEYMAP row (informational only — it documents
-  // a binding, it isn't one) is a deliberate no-op: Enter there just
-  // flashes the box border briefly rather than closing or navigating
-  // anywhere, and there is nothing for an e2e test to assert beyond "the
-  // palette is still open and nothing navigated" (see help-search.spec.ts).
   import type { CmdlineData, HelpData, HelpSearchData, ShellData } from "../../../common/lib/data";
   import { buildEntries, commandEntries, searchHelp, type HelpSearchEntry } from "../lib/help-search";
   import { pushPasteTarget, removePasteTarget } from "../../../common/lib/paste-targets";
@@ -35,10 +12,9 @@
      * help-search.ts's `shellEntries`); the rest of ShellData is irrelevant
      * to this palette. */
     shell: ShellData;
-    /** Runs a resolved command entry's `action` id — Terminal.svelte's own
-     * executeSiteAction, reused verbatim (see file header). Never called
-     * for a keymap entry (Enter no-ops on those, handled entirely inside
-     * this component). */
+    /** Runs a resolved command entry's `action` id through Terminal.svelte's
+     * own executeSiteAction; never called for a keymap entry, which no-ops
+     * on Enter instead. */
     onExecute: (action: string | undefined) => void;
   }
 
@@ -46,23 +22,18 @@
 
   let open = $state(false);
   let text = $state("");
-  /** Always clamped into range at render/Enter time — a fresh result list
-   * (a keystroke, or the box just opening) resets this to 0: unlike
-   * Cmdline's resting `-1` (no implicit first suggestion — Enter there
-   * parses whatever's literally typed), THIS box has no "typed command" of
-   * its own to fall back on — Enter only ever means "the highlighted row",
-   * so a picker with no highlight would have nothing for Enter to do. */
+  /** Reset to 0 on every fresh result list, since this box (unlike
+   * Cmdline's resting `-1`) has no typed command to fall back on — Enter
+   * always means "the highlighted row". */
   let selected = $state(0);
-  /** Brief visual "that did nothing" acknowledgment for Enter on a keymap
-   * row (see file header) — reset by its own timer, not by any keydown. */
+  /** Brief "that did nothing" acknowledgment for Enter on a keymap row,
+   * reset by its own timer rather than by any keydown. */
   let flash = $state(false);
   let flashTimer: ReturnType<typeof setTimeout> | undefined;
 
-  // A help row is {name, desc, keys[]} (HelpView.svelte's own scope/
-  // chip shape) — adapted here into help-search.ts's decoupled {key,
-  // description} shape (see that file's own header comment on why it stays
-  // independent of src/common/lib/data.ts's types) rather than changing that
-  // module and its unit tests to match a UI-specific row shape.
+  // Adapts HelpView.svelte's {name, desc, keys[]} row shape into
+  // help-search.ts's {key, description} shape, rather than changing that
+  // pure module (and its unit tests) to match a UI-specific shape.
   const searchSections = $derived(
     help.scopes.map((s) => ({
       title: s.label,
@@ -133,16 +104,13 @@
       close();
       return;
     }
-    // Keymap row — informational only (see file header).
+    // Keymap row — informational only, so Enter just flashes the border.
     triggerFlash();
   }
 
-  /** Handles one keydown while the box is open. Returns `false` only when
-   * the box is closed (letting Terminal.svelte's own handling decide
-   * whether to open it) — every key is "ours" once open, same
-   * always-consumed-while-open contract Cmdline/GrepOverlay already use,
-   * including unrecognized modifier combos (consumed but never
-   * preventDefault-ed, so browser/OS shortcuts still fire). */
+  /** Returns `false` only when the box is closed; every key is consumed
+   * while open, including unrecognized modifiers (never preventDefault-ed,
+   * so OS shortcuts still fire). */
   export function handleKey(e: KeyboardEvent): boolean {
     if (!open) return false;
 
@@ -175,10 +143,9 @@
       selected = 0;
       return true;
     }
-    // Every printable character types, deliberately including q/j/k/? — a
-    // second `?` while the palette is already open is just a character
-    // (this is a text input, not a toggle key): printable chars type, `?`
-    // types too once open.
+    // Every printable character types, deliberately including q/j/k/? —
+    // this is a text input, not a toggle key, so a second `?` while already
+    // open just types instead of re-opening.
     if (e.key.length === 1) {
       e.preventDefault();
       text += e.key;

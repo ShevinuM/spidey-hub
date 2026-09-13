@@ -1,21 +1,7 @@
-// Harness spec — proves the help feature's own two pieces (HelpView.svelte's
-// keymap reference, HelpSearch.svelte's `?` fuzzy palette) work mounted
-// together, standalone (no Terminal kernel, no tmux chrome, no window
-// switching), against `/harness/help` (fixture build only, seeded fixture
-// props). Both pieces are composed here by `HelpHarness.svelte` (this same
-// folder) rather than Terminal — its own minimal keydown routing (not
-// Terminal's fuller delegation) is what makes `?` reachable at all in this
-// mount, so asserting it here is proving the harness's own wiring, not a
-// kernel-only hotkey (e2e-testing.md R018's exclusion covers the latter,
-// not this).
-//
-// Deliberately NOT a copy of src/features/help/tests/ui/e2e/help*.spec.ts:
-// those suites exercise help through the real kernel (window switching,
-// status-bar reachability, tmux prefix gating against grep/Cmdline/editor —
-// none of which exist here). This spec covers mount + the feature's own
-// core interactions: keymap content rendering, opening the search palette,
-// its fuzzy canary, Enter's no-op on a keymap row, Esc, and the absence of
-// kernel chrome.
+// Harness spec: proves HelpView.svelte + HelpSearch.svelte work standalone,
+// driven by HelpHarness.svelte's own keydown routing rather than Terminal's,
+// so it covers only the feature's own core interactions — never kernel-only
+// chrome or hotkeys.
 import { expect, test } from "@playwright/test";
 import { HelpPage } from "../pages/HelpPage";
 

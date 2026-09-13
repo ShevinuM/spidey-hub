@@ -1,19 +1,8 @@
 <script lang="ts">
-  // Harness-only wrapper: mounts HelpView + HelpSearch together with the
-  // minimal keydown routing needed to reach both from a single page, without
-  // pulling in the full kernel (Terminal.svelte). In the real app, Terminal
-  // owns this routing (deciding when `?` opens the palette vs. forwarding a
-  // keystroke to whichever view is active, plus gating against editor/grep/
-  // Cmdline/status-bar-prompt state that doesn't exist here at all) — this
-  // component only reimplements the three-way split needed for both pieces
-  // to be reachable in isolation: while the palette is open, every key goes
-  // to it; a bare `?` opens the palette; otherwise the key goes to HelpView.
-  // No gating logic, because nothing here can ever be open to gate against.
-  //
-  // Lives beside its own harness spec (not in this feature's real
-  // `components/` tree) since it exists only to let the harness route mount
-  // two independently-driven components together — it is test support, not
-  // production UI.
+  // Harness-only wrapper: reimplements just the three-way keydown split
+  // Terminal.svelte would otherwise own (palette-open consumes every key; a
+  // bare `?` opens the palette; otherwise the key goes to HelpView) so
+  // HelpView + HelpSearch are both reachable without the real kernel.
   import { onMount } from "svelte";
   import HelpView from "../../../components/HelpView.svelte";
   import HelpSearch from "../../../components/HelpSearch.svelte";
@@ -35,19 +24,15 @@
     openPalette: () => void;
   } | null>(null);
 
-  /** The last command action HelpSearch resolved via Enter — rendered into a
-   * testid'd element rather than asserted as a real navigation, since
-   * `executeSiteAction` (Terminal.svelte's own dispatcher) doesn't exist
-   * here; the harness only needs to prove the palette itself resolved and
-   * closed on a command row, not that the site actually navigated. */
+  /** The last command action HelpSearch resolved via Enter, rendered into a
+   * testid'd element since there's no real `executeSiteAction` here to
+   * navigate against. */
   let lastExecuted = $state<string | undefined>(undefined);
 
-  /** True only once this island has actually hydrated — the server-rendered
-   * HTML (including HelpView's own content) is present before any JS runs,
-   * so a spec that presses `?` immediately after navigation would otherwise
-   * race `<svelte:window>`'s listener attaching. `onMount` only ever runs
-   * client-side, after mount, so this flips exactly once hydration is done
-   * and the spec has something real to wait on. */
+  /** True only after this island hydrates (`onMount` runs client-side only)
+   * — the server-rendered HTML exists before then, so a spec pressing `?`
+   * right after navigation could otherwise race `<svelte:window>`'s
+   * listener attaching. */
   let ready = $state(false);
   onMount(() => {
     ready = true;

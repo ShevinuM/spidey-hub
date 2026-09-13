@@ -1,21 +1,8 @@
 <script lang="ts">
-  // Help window ("5:help") — sidebar-scoped keymap reference plus a live
-  // filter, following Mockup A's layout (header + 230px scope sidebar +
-  // section rows with right-aligned key chips). Renders the `HelpData`
-  // built from this feature's own help.yaml chrome plus the `help` content
-  // collection's scopes verbatim; this component owns no copy of its own
-  // beyond structure/styling.
-  //
-  // Reachable via `Ctrl-b ?`, `Ctrl-b 5`, a status-bar click, and the
-  // dashboard menu's Help row.
-  //
-  // Row layout: each row is its OWN 2-column CSS grid (`1fr auto`) rather
-  // than one grid shared across every row — the key-chips column then sizes
-  // to that row's own content instead of a fixed width, which is what
-  // guarantees no row's name/description/chips ever wraps to a second line
-  // at any viewport (the one deviation from the mockup's fixed `300px`
-  // column — see tests/ui/e2e/help-layout.spec.ts in this feature's own
-  // test tree).
+  // Each row is its own 2-column CSS grid (`1fr auto`), rather than one grid
+  // shared across every row, so the key-chips column sizes to that row's
+  // own content and no row ever wraps at any viewport (see
+  // src/features/help/tests/ui/e2e/help-layout.spec.ts).
   import type { HelpData, HelpRow } from "../../../common/lib/data";
   import PanelBadge from "../../../common/components/PanelBadge.svelte";
 
@@ -64,10 +51,10 @@
     filterFocused = true;
   }
 
-  /** Reused delegation contract — see EmploymentRecords.svelte's own `isEditorOpen`
-   * comment for the shared reasoning. While the filter box is "focused"
-   * every keystroke must land in the query, never reboot/open grep/open the
-   * command search out from under it (Terminal.svelte's `paneIsGreedy`). */
+  /** Reused delegation contract (see EmploymentRecords.svelte's own
+   * `isEditorOpen`) — while the filter box is focused, every keystroke must
+   * land in the query, never trigger Terminal.svelte's `paneIsGreedy`
+   * shortcuts. */
   export function isEditorOpen(): boolean {
     return filterFocused;
   }
@@ -280,11 +267,9 @@
     display: none;
   }
 
-  /* Instant hover (no transition) — matches Mockup A's own `style-hover`
-     rule, which never animates. Inline `style=""` above intentionally
-     leaves background/border-left/label-color unset for the non-active
-     case so these rules can apply (an inline value always wins over a CSS
-     rule, active or not). */
+  /* The inline `style=""` above intentionally leaves background/border-left/
+     label-color unset for the non-active case so these CSS rules can apply
+     — an inline value always wins over CSS otherwise. */
   .help-scope-tab:hover {
     background: rgba(87, 226, 201, 0.07);
   }

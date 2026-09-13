@@ -1,14 +1,6 @@
-// Permanent regression coverage for the Help page's "no row ever wraps"
-// rule (a locked layout requirement, not just a Mockup A style choice):
-// every row's name, description, and key chips render on exactly one line
-// at both of the viewports this closes the user's clipped-title bug for.
-// HelpView.svelte enforces this with `white-space:nowrap` on each of those
-// three pieces plus `flex-wrap:nowrap` on the chip row — this spec proves
-// that CSS actually holds by measuring scrollWidth vs clientWidth (nowrap
-// turns "would have wrapped" into "overflows its box instead", so this
-// single check catches both wrapping AND truncation/overflow in one go)
-// and confirming every row renders at the same height (rows are two lines
-// tall by design — name over description — not one).
+// Regression coverage for the Help page's "no row ever wraps" rule: every
+// row's name, description, and key chips must render on one line without
+// overflow, at the same row height, at both tracked viewports.
 import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
 
 const VIEWPORTS = [
@@ -21,14 +13,9 @@ async function gotoReady(page: Page, path: string) {
   await page.locator('[data-terminal-ready="true"]').waitFor({ state: "attached" });
 }
 
-/** True if the element's content overflows its own box on either axis —
- * the only way `white-space:nowrap` content can misbehave once wrapping
- * itself is impossible. Not used for the key-chips container: its chips
- * are `transform:skewX(...)`, and Chromium's scrollable-overflow region
- * includes a transformed descendant's SHEARED (visually wider) bounds even
- * though nothing actually wraps or clips — a false positive from this
- * measurement, not a real layout bug (see `chipsOnOneLine` below for the
- * transform-agnostic check used there instead). */
+/** True if the element's content overflows its own box — not used for the
+ * key-chips container, since Chromium reports a false-positive overflow for
+ * its skewed (`transform`) chips (see `chipsAllOnOneLine` below instead). */
 async function overflows(locator: ReturnType<Page["locator"]>): Promise<boolean> {
   const handles = await locator.elementHandles();
   for (const handle of handles) {
@@ -39,9 +26,8 @@ async function overflows(locator: ReturnType<Page["locator"]>): Promise<boolean>
 }
 
 /** True only if every chip inside every matched keys-container sits at the
- * same vertical position as its siblings — the direct, transform-agnostic
- * proof that `flex-wrap:nowrap` actually held (chips never wrapped to a
- * second line), independent of the skewed chips' visual bounds. */
+ * same vertical position as its siblings, proving `flex-wrap:nowrap` held
+ * regardless of the chips' skewed visual bounds. */
 async function chipsAllOnOneLine(locator: ReturnType<Page["locator"]>): Promise<boolean> {
   const handles = await locator.elementHandles();
   for (const handle of handles) {

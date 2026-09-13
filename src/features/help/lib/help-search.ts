@@ -1,45 +1,7 @@
-// Pure scoring/search logic for the site-wide `?` fuzzy help palette —
-// src/features/help/components/HelpSearch.svelte and Terminal.svelte own the
-// stateful/effectful parts (open/close, typed text, Up/Down selection,
-// executing a chosen command), exactly the same split src/common/lib/cmdline.ts
-// already uses for Cmdline.svelte. No DOM, no Svelte state, no side effects.
-//
-// The palette's corpus is two different shapes glued together for search
-// purposes (deliberately decoupled from src/common/lib/data.ts's YAML-loader
-// types, same reasoning as src/common/lib/cmdline.ts's own CommandDef — this file
-// stays a zero-dependency pure module):
-//   - "command" entries: cmdline.yaml's own site-wide `commands` list
-//     (dashboard/repositories/employment/profile/retina-v/help/grep/reboot/resume/q)
-//     — EXECUTABLE (Enter runs the same action id Cmdline.svelte's own
-//     onSubmit already dispatches through Terminal.svelte's
-//     executeSiteAction). `q` is included with its exitProgram meaning
-//     (site-mode `:q`/cmdline `q` exits the active pane's program to a
-//     shell — it does not kill the window), same as every other command.
-//   - "keymap" entries: every row of every help scope (src/features/help/
-//     content/*.md, one file per scope), PLUS every row of src/features/shell-fs/content/shell.yaml's
-//     own `help.rows` (the in-window shell's `cd`/`ls`/`cat`/.../
-//     `neofetch`/`sudo`/... — see src/common/lib/shell.ts's `runCommand` "help"
-//     case, which prints this exact same list inside the shell itself) —
-//     INFORMATIONAL ONLY (Enter no-ops; see HelpSearch.svelte), same shape
-//     as a help row (`{label, description}`), sourced from shell.yaml
-//     rather than duplicated here.
-//
-// Scoring cascade: exact > prefix > word-boundary > substring
-// > subsequence. The first four tiers all mean "the query occurs verbatim,
-// character-for-character, somewhere relevant in the field" — there is
-// zero fuzziness to measure between the query and its own verbatim
-// occurrence, so each carries a fixed distance of 0. Only "subsequence"
-// (characters present in order but not contiguous) is genuinely fuzzy, so
-// that's the one tier where a real Levenshtein distance breaks ties
-// between multiple subsequence matches (a small Levenshtein tiebreak).
-// Every remaining tie (same tier, same distance) falls back to
-// the entry's position in the corpus array passed in by the caller —
-// commands are listed before keymap rows, both in their own yaml's
-// declared order, so this is what makes e.g. "dash" resolve to the
-// `dashboard` COMMAND rather than the "d / w / 0" keymap row whose
-// description also happens to contain the word "dashboard" at the same
-// tier/distance — fully deterministic, unit-tested below as
-// "determinism/stability".
+// Pure scoring module (no DOM, no Svelte state): ranks entries via a fixed
+// tier cascade — exact > prefix > word-boundary > substring > subsequence —
+// falling back to the entry's position in the caller-supplied corpus to
+// break remaining ties, so results stay fully deterministic.
 
 export interface CommandSource {
   name: string;
@@ -85,10 +47,8 @@ export interface HelpSearchKeymapEntry {
 
 export type HelpSearchEntry = HelpSearchCommandEntry | HelpSearchKeymapEntry;
 
-/** cmdline.yaml's `commands` list (see file header) — this is BOTH the
- * empty-query listing and the "command" half of the typed-search corpus, in
- * the yaml's own declared order. `q` is included with its exitProgram
- * meaning (see file header). */
+/** Serves as both the empty-query listing and the command half of the
+ * typed-search corpus, in cmdline.yaml's declared order. */
 export function commandEntries(commands: CommandSource[]): HelpSearchCommandEntry[] {
   return commands
     .map((c) => ({
@@ -101,9 +61,9 @@ export function commandEntries(commands: CommandSource[]): HelpSearchCommandEntr
     }));
 }
 
-/** Every row of every help scope, flattened, in scope order. Index (not
- * title text) anchors each id — two scopes could share a title in
- * principle, and a row's own text can change without breaking identity. */
+/** Flattens every row of every help scope, in scope order, anchoring each id
+ * on index rather than title text so identity survives duplicate titles and
+ * row-text edits. */
 export function keymapEntries(sections: HelpSectionSource[]): HelpSearchKeymapEntry[] {
   const out: HelpSearchKeymapEntry[] = [];
   sections.forEach((section, si) => {
@@ -114,18 +74,12 @@ export function keymapEntries(sections: HelpSectionSource[]): HelpSearchKeymapEn
   return out;
 }
 
-/** shell.yaml's own `help.rows[]` (see file header) as "keymap"-shaped
- * entries — `id`s are namespaced `shell:` (distinct from `keymapEntries`'s
- * `key:${si}:${ri}`) so the two sources can never collide. */
+/** shell.yaml's `help.rows[]` as "keymap"-shaped entries, `id`-namespaced
+ * `shell:` so they can never collide with `keymapEntries`'s `key:${si}:${ri}`. */
 export function shellEntries(rows: ShellHelpRowSource[]): HelpSearchKeymapEntry[] {
   return rows.map((row, i) => ({ kind: "keymap", id: `shell:${i}`, label: row.cmd, description: row.description }));
 }
 
-/** The full corpus in the order ties resolve against — commands first
- * (see file header), then the help scopes' keymap rows, then the shell's
- * own builtins. `shellRows` defaults to `[]` so existing callers (and the
- * fixture-driven unit tests that predate shell.yaml) don't all need
- * updating in lockstep. */
 export function buildEntries(
   commands: CommandSource[],
   sections: HelpSectionSource[],
@@ -160,9 +114,8 @@ function isSubsequence(needle: string, haystack: string): boolean {
   return i === needle.length;
 }
 
-/** Classic Wagner–Fischer edit distance. Exported for direct unit testing;
- * only ever consulted here as the subsequence tier's tiebreak (see file
- * header) — never used to promote a worse tier over a better one. */
+/** Classic Wagner–Fischer edit distance, consulted only as the subsequence
+ * tier's tiebreak — never to promote a worse tier over a better one. */
 export function levenshtein(a: string, b: string): number {
   const m = a.length;
   const n = b.length;
@@ -230,13 +183,9 @@ function bestMatch(query: string, entry: HelpSearchEntry, commands: CommandSourc
   return best;
 }
 
-/** Fuzzy-searches `entries` (as built by buildEntries, in that same order —
- * `commands` is passed again here only to reach alias text, see
- * aliasFieldsOf) and returns the top `limit` matches, ranked per the
- * cascade in the file header. An empty/whitespace-only `query` returns an
- * empty array — the CALLER picks the empty-query listing instead
- * (`commandEntries`), never this function: the empty-query behavior is
- * "list the commands", not "everything scores equally". */
+/** Returns an empty array for an empty/whitespace-only query — callers use
+ * `commandEntries` for the empty-query listing instead, since "no query"
+ * means "list the commands", not "everything scores equally". */
 export function searchHelp(
   query: string,
   entries: HelpSearchEntry[],
