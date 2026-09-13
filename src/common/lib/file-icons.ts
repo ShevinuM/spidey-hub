@@ -1,13 +1,7 @@
-// Per-extension SVG file icons (Material Icon Theme style), resolved at
-// generate time by scripts/generate.mjs into src/generated/file-icons.json —
-// only the icons this site actually shows, never material-file-icons'
-// full set. Folder/caret glyphs are drawn inline by each caller and never
-// go through this lookup.
+// Per-extension SVG icons, resolved at generate time into src/generated/file-icons.json.
 import fileIcons from "../../generated/file-icons.json";
 
-/** Exact filename match wins (some names carry their own icon distinct from
- * a generic same-extension file, e.g. "package.json" vs any other ".json");
- * otherwise the lowercased extension; otherwise the generic file glyph. */
+/** Resolves an icon by exact filename first, then by extension, then the generic fallback. */
 export function iconSvgForPath(path: string): string {
   const name = path.split("/").pop() ?? path;
   const byName = (fileIcons.byName as Record<string, string>)[name];

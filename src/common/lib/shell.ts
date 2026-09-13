@@ -1,23 +1,10 @@
-// Pure line-parser/builtins/fs-navigation logic for the in-window shell —
-// src/features/shell-fs/components/Shell.svelte owns the stateful/effectful parts (keydown
-// handling, the lazy fetch+cache of the generated fs/grep/repo indexes,
-// calling into src/common/engines/tmux/tmux.ts to launch/exit a program or reboot the
-// client), exactly the same split src/common/lib/cmdline.ts already uses for
-// Cmdline.svelte. No DOM, no Svelte state, no fetch — every builtin below is
-// a pure function of (state, already-resolved data) so it's unit-testable
-// against a small fixture fs index with no network/browser involved.
+// Pure line-parser/builtins/fs-navigation logic for the in-window shell; Shell.svelte owns the stateful/effectful parts, the same split cmdline.ts uses for Cmdline.svelte.
 //
-// Deliberately designed so this ONE component/module serves BOTH the
-// per-pane in-window shell (`mode: "pane"`) and the detached HOST shell
-// (`mode: "host"`) without rework — every function below already takes
-// `mode` where it matters (the prompt, and the `tmux` builtin's
-// nesting-refusal rule).
+// Deliberately serves both the per-pane shell (`mode: "pane"`) and the detached host shell (`mode: "host"`) without rework.
 import type { ShellData } from "./data";
 import { formatCtime } from "./clock";
 
-// ---------------------------------------------------------------------
 // State
-// ---------------------------------------------------------------------
 
 export type ShellLineKind = "input" | "output" | "error";
 
@@ -26,12 +13,11 @@ export interface ShellLine {
   kind: ShellLineKind;
 }
 
-/** Lives inside a tmux.ts `Pane`: shell buffers must survive switching away
- * from and back to a window — only `reboot()`/a page reload resets them,
- * exactly like a real tmux pane's scrollback.
- * `cwd` is a segment array (posix path components, `[]` = the fs root) —
- * never a raw string, so `..`/`.`/double-slash normalization has one home
- * (`resolveCd` below). */
+/**
+ * Lives inside a tmux.ts `Pane`: only `reboot()` or a page reload resets these buffers, exactly like a real tmux pane's scrollback.
+ *
+ * `cwd` is a segment array, never a raw string, so `..`/`.` normalization has one home (`resolveCd` below).
+ */
 export interface ShellState {
   cwd: string[];
   input: string;
@@ -49,10 +35,7 @@ export function createShellState(): ShellState {
   return { cwd: [], input: "", history: [], historyIndex: null, draftBeforeHistory: "", lines: [] };
 }
 
-// ---------------------------------------------------------------------
-// Line parsing — no pipes/redirection/globbing: a plain whitespace split is
-// the whole grammar.
-// ---------------------------------------------------------------------
+// Line parsing — no pipes/redirection/globbing: a plain whitespace split is the whole grammar.
 
 export interface ParsedLine {
   cmd: string;
@@ -64,14 +47,8 @@ export function parseLine(line: string): ParsedLine {
   return { cmd: parts[0] ?? "", args: parts.slice(1) };
 }
 
-// ---------------------------------------------------------------------
-// fs-index navigation — a FLAT {path, size?}[] list (same shape convention
-// as src/common/lib/repo-tree.ts's RepoFile / src/features/grep/lib/grep.ts's RepoFile: this
-// module stays a zero-Svelte-dependency pure module, so it declares its own
-// structurally-equivalent type rather than importing theirs). `size` is
-// absent for `repos/*` entries — those subtrees are paths only, taken from
-// the per-repo index JSONs without an extra byte-size pass.
-// ---------------------------------------------------------------------
+// fs-index navigation over a flat {path, size?}[] list, declared as its own structurally-equivalent type rather than importing repo-tree.ts's/grep.ts's, so this stays a zero-Svelte-dependency pure module.
+// `size` is absent for `repos/*` entries, which are paths only, taken from the per-repo index JSONs without an extra byte-size pass.
 
 export interface FsEntry {
   path: string;
@@ -143,12 +120,11 @@ export function listDir(entries: FsEntry[], segments: string[]): DirEntry[] {
   });
 }
 
-/** `tree`(1)-style ASCII rendering of `segments` and its descendants, capped
- * at `maxDepth` levels of directory listing beyond `segments` itself — a
- * directory at the cap is listed but its OWN children are replaced by a
- * single `…` marker rather than descended into. Root label is `.` at the
- * fs root, else the cwd's own last
- * segment (matching real `tree`'s own "argument you gave it" label). */
+/**
+ * `tree`(1)-style ASCII rendering of `segments` and its descendants, capped at `maxDepth` levels beyond `segments` itself.
+ *
+ * A directory at the cap is listed but its children are replaced by a single `…` marker; the root label is `.` at the fs root, else the cwd's last segment.
+ */
 export function renderTree(entries: FsEntry[], segments: string[], maxDepth = 3): string[] {
   const rootLabel = segments.length === 0 ? "." : segments[segments.length - 1];
   const lines = [rootLabel];
@@ -183,12 +159,11 @@ export function resolveCd(entries: FsEntry[], cwd: string[], argPath: string | u
   return { ok: true, cwd: target };
 }
 
-/** Where `cat <argPath>` (resolved against `cwd`) should pull content
- * from — a decision the (impure) caller makes BEFORE fetching anything, so
- * it knows whether to warm the grep index or a specific repo index (site
- * files from the grep index, repos/<name>/ files from repo index JSONs).
- * Pure — depends only on the fs-index structure,
- * never on whether content has actually been fetched yet. */
+/**
+ * Where `cat <argPath>` should pull content from, decided before fetching so the caller knows whether to warm the grep index or a specific repo index.
+ *
+ * Pure — depends only on the fs-index structure, never on whether content has actually been fetched.
+ */
 export type CatTarget =
   | { kind: "site"; path: string }
   | { kind: "repo"; repo: string; path: string }
@@ -206,11 +181,7 @@ export function resolveCatTarget(entries: FsEntry[], cwd: string[], argPath: str
   return { kind: "site", path: joinPath(segments) };
 }
 
-// ---------------------------------------------------------------------
-// History / input editing — driven by keydowns directly (Up/Down/
-// Backspace/printable), not by `runCommand` (which only ever runs on
-// Enter).
-// ---------------------------------------------------------------------
+// History / input editing — driven by keydowns directly, not by `runCommand` (which only runs on Enter).
 
 export function typeChar(state: ShellState, ch: string): ShellState {
   return { ...state, input: state.input + ch, historyIndex: null };
@@ -239,9 +210,7 @@ export function historyDown(state: ShellState): ShellState {
   return { ...state, historyIndex: idx, input: state.history[idx] };
 }
 
-// ---------------------------------------------------------------------
 // Prompt
-// ---------------------------------------------------------------------
 
 export type ShellMode = "pane" | "host";
 
@@ -254,9 +223,7 @@ export function formatPrompt(mode: ShellMode, shell: ShellData, cwd: string[]): 
   return shell.prompt.paneTemplate.replace("{path}", path);
 }
 
-// ---------------------------------------------------------------------
 // runCommand — the Enter-key dispatcher
-// ---------------------------------------------------------------------
 
 export interface SessionSummary {
   name: string;
@@ -265,64 +232,38 @@ export interface SessionSummary {
   attached: boolean;
 }
 
-/** One roster row for `tmux ls`
- * / the `tmux new [-s name]` duplicate check / the `tmux a [-t name]`
- * missing-session check / bare `tmux a`'s "most recently used unattached
- * session" pick / `open <view>`'s "does that window still exist" check.
- * Deliberately its own type (not a re-export of tmux.ts's `Session`) —
- * shell.ts stays a zero-Svelte/zero-tmux.ts-dependency pure module (same
- * "structurally equivalent, not imported" convention `FsEntry` already
- * documents against repo-tree.ts/grep.ts) — the (impure) caller builds one
- * of these per live `Session` on every keystroke. */
+/**
+ * One roster row for `tmux ls`, the new/attach duplicate and missing-session checks, and `open <view>`'s window-existence check.
+ *
+ * Deliberately its own type, not a re-export of tmux.ts's `Session`, so shell.ts stays a zero-Svelte/zero-tmux.ts-dependency pure module.
+ */
 export interface SessionRosterEntry {
   id: string;
   name: string;
   windowCount: number;
   createdAt: number;
   attached: boolean;
-  /** Mirrors tmux.ts's `Session.lastAttachedSeq` — a logical recency
-   * counter, NOT a clock read (see that field's own comment on why: a
-   * pinned test clock would otherwise collapse every session's timestamp to
-   * the same instant). */
+  /** Mirrors tmux.ts's `Session.lastAttachedSeq`; see that field's comment for why it's a logical counter, not a clock read. */
   lastAttachedSeq: number;
-  /** Every window id currently present in this session — `open <view>`'s
-   * "does the target window still exist" check (if the window was killed,
-   * attach + message). */
+  /** Every window id currently present in this session, used by `open <view>`'s window-existence check. */
   windowIds: string[];
 }
 
 export interface RunContext {
   fsEntries: FsEntry[];
-  /** Already-warmed content lookup for `cat` — the (impure) caller resolves
-   * `resolveCatTarget` FIRST, fetches whatever that implies (the grep index
-   * or one repo index), and only then calls `runCommand` with this filled
-   * in; `undefined` means "structurally a file, but no captured text
-   * content" (binary, over the size cap, or simply never walked — renders
-   * as `cat: {path}: binary or unindexed`). This function
-   * never fetches anything itself. */
+  /** Already-warmed content lookup for `cat`; the caller resolves `resolveCatTarget` and fetches first, and `undefined` means a structurally real file with no captured content (binary, over the size cap, or unindexed). */
   resolveContent: (target: CatTarget) => string | undefined;
   mode: ShellMode;
-  /** Real "now", supplied by the caller (`Date.now()` — or a Playwright-
-   * frozen clock under test) so this module never calls `Date.now()`
-   * itself (determinism rules: every timestamp flows through an explicit
-   * parameter, never a hidden global read). */
+  /** Real "now", supplied by the caller so this module never calls `Date.now()` itself. */
   nowMs: number;
-  /** Kept for neofetch's own uptime anchor (`session.createdAt`) — the ONE
-   * remaining use of a single "current session" summary now that `tmux ls`
-   * (below) reads the full `sessions` roster instead. */
+  /** Used only for neofetch's uptime anchor; `tmux ls` reads the full `sessions` roster instead. */
   session: SessionSummary;
-  /** Every session the CLIENT
-   * currently knows about (attached or not) — `tmux ls`/`new`/`a`/`attach`'s
-   * own validation source. Always populated, in both pane and host mode
-   * (`tmux ls` works everywhere). */
+  /** Every session the client currently knows about, attached or not — the validation source for `tmux ls`/`new`/`a`/`attach`; always populated in both pane and host mode. */
   sessions: SessionRosterEntry[];
-  /** The well-known default session's bare name ("10.42.7.13") — HOST
-   * mode's `open <view>`/`edith` builtin always target this specific
-   * session by name, never "whichever is most recent". */
+  /** The well-known default session's bare name; HOST mode's `open <view>`/`edith` always targets this specific session, never "whichever is most recent". */
   defaultSessionName: string;
   shell: ShellData;
-  /** The six canonical program names — bare-command validation for `open`/
-   * relaunch-by-name. */
+  /** The six canonical program names, for bare-command validation on `open`/relaunch-by-name. */
   viewNames: readonly string[];
 }
 
@@ -331,30 +272,17 @@ export type ShellEffect =
   | { kind: "launch"; program: string }
   | { kind: "exit-pane" }
   | { kind: "reboot" }
-  /** `tmux a [-t name]` resolved to an EXISTING session id — the impure
-   * caller (Terminal.svelte) performs the actual
-   * `attachSession()` mutation. */
+  /** `tmux a [-t name]` resolved to an existing session id; the caller performs the actual `attachSession()` mutation. */
   | { kind: "attach"; sessionId: string }
-  /** `tmux new [-s name]` — `name` is already fully resolved/validated
-   * (explicit `-s` name checked non-duplicate, or the next free numeric
-   * name computed) by the time this effect is returned; the caller creates
-   * AND immediately attaches (real tmux's own combined behavior for a
-   * brand-new session started from outside). */
+  /** `tmux new [-s name]`; `name` is already fully resolved/validated by the time this effect is returned, and the caller creates and immediately attaches. */
   | { kind: "create-and-attach"; name: string }
-  /** HOST mode's `open <view>` / `edith` builtin — attaches the default
-   * session and selects `view`'s window if it still exists
-   * (`windowExists`); the caller shows a fallback message instead of a
-   * hard navigation when it doesn't (that window was killed at some
-   * point). */
+  /** HOST mode's `open <view>`/`edith` builtin: attaches the default session and selects `view`'s window if `windowExists`, else the caller shows a fallback message instead of navigating. */
   | { kind: "attach-view"; sessionId: string; view: string; windowExists: boolean }
-  /** `vim`/`vi`/`nvim <file>`: `path` is the
-   * fully-resolved (cwd-joined) display path, `content` its already-
-   * fetched text (the caller resolved `resolveCatTarget` and fetched it
-   * BEFORE calling `runCommand`, same "pre-warm, then call" convention
-   * `cat` already uses). The (impure) caller opens a read-only Editor over
-   * this pane, reusing the exact same `editorFile` local-state pattern
-   * Repositories.svelte/EmploymentRecords.svelte already use — `:q` there drops back to
-   * this shell, never killing the pane. */
+  /**
+   * `vim`/`vi`/`nvim <file>`: `path` is the fully-resolved display path, `content` its already-fetched text, pre-warmed the same way `cat` is.
+   *
+   * The caller opens a read-only Editor over this pane; `:q` there drops back to this shell without killing the pane.
+   */
   | { kind: "open-editor"; path: string; content: string };
 
 export interface RunOutcome {
@@ -362,35 +290,21 @@ export interface RunOutcome {
   effect: ShellEffect;
 }
 
-// ---------------------------------------------------------------------
 // Sessions
-// ---------------------------------------------------------------------
 
-/** Bare `tmux new` fidelity rule: "next numeric name (\"1\", \"2\", …)" —
- * the first positive integer (as a string) not already in use by any
- * existing session. Pure — takes the plain name list, never a `Session[]`
- * (module boundary: shell.ts never imports tmux.ts). */
+/** Bare `tmux new`'s next numeric name: the first positive integer, as a string, not already in use by any existing session. */
 export function nextNumericSessionName(existingNames: string[]): string {
   let n = 1;
   while (existingNames.includes(String(n))) n += 1;
   return String(n);
 }
 
-/** Bare `tmux a`/`attach` fidelity rule: "most recently used unattached
- * session" — the highest `lastAttachedSeq` in `sessions`, or `undefined`
- * for an empty roster (`no sessions`, rendered by the caller). Small,
- * deliberate duplicate of tmux.ts's own `pickMostRecentSession` (same
- * one-line sort, different element type) rather than an import — see this
- * file's header comment on why shell.ts never imports tmux.ts. */
+/** Bare `tmux a`/`attach`'s "most recently used unattached session": the highest `lastAttachedSeq`, or `undefined` for an empty roster. */
 function pickMostRecentUnattached(sessions: SessionRosterEntry[]): SessionRosterEntry | undefined {
   return [...sessions].sort((a, b) => b.lastAttachedSeq - a.lastAttachedSeq)[0];
 }
 
-/** Builds the detached HOST shell's
- * pre-seeded scrollback from shell.yaml's `host.narrative` rows, with every
- * row's `{session}` placeholder substituted for the real default session
- * name. Pure (no DOM/fetch) so it's callable from both Terminal.svelte (at
- * client-factory/reboot time) and a unit test. */
+/** Builds the detached HOST shell's pre-seeded scrollback from shell.yaml's `host.narrative` rows, substituting each row's `{session}` placeholder. */
 export function seedHostNarrative(shell: ShellData, sessionName: string): ShellLine[] {
   return shell.host.narrative.map((row) => ({ text: row.text.replace("{session}", sessionName), kind: row.kind }));
 }
@@ -400,12 +314,11 @@ function formatUptime(shell: ShellData, fromMs: number, toMs: number): string {
   return shell.neofetch.uptimeTemplate.replace("{mins}", String(mins));
 }
 
-/** Runs one submitted (Enter-pressed) line. Always echoes the prompt+typed
- * text as the first appended line (even for an empty/unknown command —
- * real shells echo nothing extra for a bare Enter, handled by the early
- * return below skipping the echo entirely for a wholly-blank line, matching
- * "a bare Enter does nothing visible"). History only grows for a
- * non-blank line (`pushHistory` below). */
+/**
+ * Runs one submitted (Enter-pressed) line, always echoing the prompt+typed text as the first appended line — even a bare Enter, which otherwise does nothing visible.
+ *
+ * History only grows for a non-blank line.
+ */
 export function runCommand(state: ShellState, rawLine: string, ctx: RunContext): RunOutcome {
   const trimmedForHistory = rawLine.trim();
   if (trimmedForHistory === "") {
@@ -460,10 +373,7 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
       return out(content.split("\n").map(outLine));
     }
 
-    // `vim`/`vi`/`nvim <file>`: reuses `cat`'s
-    // own path-resolution and content-fetch machinery (same fs index,
-    // same `resolveCatTarget`/`ctx.resolveContent` pre-warm convention) —
-    // this viewer never writes, so there is nothing else to resolve.
+    // `vim`/`vi`/`nvim <file>` reuse `cat`'s path-resolution and content-fetch machinery; this viewer never writes.
     case "vim":
     case "vi":
     case "nvim": {
@@ -515,10 +425,7 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
       return { state: base, effect: { kind: "launch", program: target } };
     }
 
-    // HOST mode only (the mock's header
-    // advertises `edith` to launch the site again); a pane shell has
-    // nothing to attach (it's already attached — that's what a pane IS), so
-    // it falls through to the ordinary command-not-found case below.
+    // HOST mode only; a pane shell has nothing to attach (it's already attached), so this falls through to command-not-found.
     case "edith": {
       if (ctx.mode !== "host") return out([errLine(ctx.shell.errors.commandNotFoundTemplate.replace("{cmd}", cmd))]);
       return attachViewOutcome(base, ctx, "dashboard");
@@ -544,9 +451,7 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
         return out(rows.map(outLine));
       }
 
-      // Inside a pane shell, new/attach
-      // always refuse — real tmux nesting protection. `ls` above works
-      // everywhere; only these two subcommands are pane-restricted.
+      // Inside a pane shell, new/attach always refuse (real tmux nesting protection); `ls` above works everywhere.
       if (sub === "new") {
         if (ctx.mode === "pane") return out([errLine(ctx.shell.errors.nestedTmuxMessage)]);
         if (args.length === 1) {
@@ -582,24 +487,18 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
 
     default:
       if (ctx.viewNames.includes(cmd) && args.length === 0) {
-        // Bare view-name commands print a hint
-        // to attach in HOST mode — a bare name never attaches on its own,
-        // only `open <view>`/`edith` do (those are the site's own
-        // "return commands", per the user's own return_path design).
+        // Bare view-name commands print a hint to attach in HOST mode; only `open <view>`/`edith` actually attach.
         if (ctx.mode === "host") return out([errLine(ctx.shell.host.notAttachedMessage)]);
         return { state: base, effect: { kind: "launch", program: cmd } };
       }
       return out([errLine(ctx.shell.errors.commandNotFoundTemplate.replace("{cmd}", cmd))]);
   }
 
-  /** Shared tail of HOST mode's `open <view>`/`edith` — both always target
-   * the well-known DEFAULT session by name (never "whichever is most
-   * recent"). If that session doesn't exist at
-   * all (destroyed via a kill-cascade and never recreated), reports it the
-   * same way a missing `-t` target does; otherwise emits the attach-view
-   * effect, letting the window-existence check ride along for the
-   * (impure) caller to act on (if the window was killed, attach + message
-   * per its own judgment). */
+  /**
+   * Shared tail of HOST mode's `open <view>`/`edith`, both of which always target the well-known default session by name.
+   *
+   * Reports a missing default session the same way a missing `-t` target does; otherwise emits the attach-view effect with the window-existence check for the caller to act on.
+   */
   function attachViewOutcome(state: ShellState, runCtx: RunContext, view: string): RunOutcome {
     const found = runCtx.sessions.find((s) => s.name === runCtx.defaultSessionName);
     if (!found) {

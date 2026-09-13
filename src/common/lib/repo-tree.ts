@@ -1,19 +1,6 @@
-// Pure helpers for browsing a repo's file index. The index itself
-// (public/generated/repos/<name>.json, produced by scripts/generate.mjs) is
-// a FLAT list of {path, lines} — one entry per text file, posix-separated
-// relative path, no directory nodes. Repositories.svelte fetches that JSON lazily
-// (client-side, real `fetch`, not a build-time import — the file lives
-// under `public/`) and calls the functions below to derive one directory
-// "level" at a time, mirroring how the Files/EmploymentRecords panels already
-// present one flat list per screen.
+// Pure helpers for browsing a repo's file index, a flat {path, lines} list with no directory nodes, fetched lazily client-side since it lives under `public/`.
 //
-// A file's `lines` is plain text UNLESS `tok` is set, in which case it's a
-// per-line token stream (`[paletteIndex, text][]`) resolved against the
-// index's own `palette` — code files generate.mjs successfully tokenized.
-// `import type` keeps this a type-only reference (erased at build time), so
-// pulling in TokenSpan's shape never drags shiki itself into the client
-// bundle — only scripts/generate.mjs ever imports highlight.ts's runtime
-// exports.
+// `import type` keeps the TokenSpan reference type-only (erased at build time), so pulling in its shape never drags shiki's runtime into the client bundle.
 import type { TokenSpan } from "./highlight";
 
 export type { TokenSpan };
@@ -95,13 +82,7 @@ export function joinPath(segments: string[]): string {
   return segments.join("/");
 }
 
-// ---------------------------------------------------------------------------
-// Nested tree + flatten-visible helpers: the Files panel is a lazygit-style
-// tree — ALL dirs expanded by default, Enter/click on a dir toggles collapse,
-// no `../` entry, j/k walks the FLATTENED list of currently-visible rows.
-// Pure and unit-testable: no
-// Svelte state here, Repositories.svelte owns the collapsed-set and selection.
-// ---------------------------------------------------------------------------
+// Nested tree + flatten-visible helpers for the Files panel's lazygit-style tree, where all dirs are expanded by default and j/k walks the flattened visible rows.
 
 export interface TreeNode {
   type: TreeEntryType;
@@ -113,11 +94,7 @@ export interface TreeNode {
   children?: TreeNode[];
 }
 
-/**
- * Build the full nested tree from a repo's flat file list. Mirrors
- * `listDir`'s sort convention (dirs before files, case-insensitive name) at
- * every level, applied recursively.
- */
+/** Builds the full nested tree from a repo's flat file list, applying `listDir`'s sort convention at every level. */
 export function buildTree(files: RepoFile[]): TreeNode {
   const root: TreeNode = { type: "dir", name: "", path: "", children: [] };
   const dirs = new Map<string, TreeNode>([["", root]]);
@@ -169,12 +146,7 @@ export interface FlatTreeRow {
   expanded?: boolean;
 }
 
-/**
- * Flatten a tree into the rows currently visible given a `collapsedDirs`
- * set (dir paths whose children are hidden). ALL dirs are expanded by
- * default — pass an empty set for that starting state; collapse is opt-in
- * per path, so a tree with no collapsed paths shows every descendant.
- */
+/** Flattens a tree into the rows currently visible given a `collapsedDirs` set; pass an empty set to show every descendant expanded. */
 export function flattenVisible(root: TreeNode, collapsedDirs: ReadonlySet<string>, depth = 0): FlatTreeRow[] {
   const rows: FlatTreeRow[] = [];
   for (const child of root.children ?? []) {

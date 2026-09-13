@@ -1,14 +1,4 @@
-// Shared paste-buffer store. A single module-level variable, not a
-// per-component Svelte store — every importer (Editor.svelte and the tmux
-// copy-mode overlay, `Ctrl-b [`/`Ctrl-b ]`) shares the exact same in-memory
-// buffer, exactly like tmux's own single
-// paste-buffer stack (simplified here to one slot, not a stack, since
-// nothing in this app's spec needs buffer history).
-//
-// Deliberately framework-free (no Svelte runes) so it works identically
-// whether the caller is a `.svelte` component or a future plain-`.ts`
-// module (e.g. a copy-mode helper) — callers that need reactivity wrap a
-// read in their own `$state`/`$derived`.
+// A single module-level buffer, not a per-component store, shared by every importer, and deliberately framework-free so a plain `.ts` caller can use it too.
 
 export type PasteBufferKind = "char" | "line";
 
@@ -19,17 +9,12 @@ export interface PasteBufferEntry {
 
 let buffer: PasteBufferEntry | null = null;
 
-/** Records a new yank or copy-mode capture. `kind` mirrors
- * vim's own charwise/linewise register distinction — paste
- * (`Ctrl-b ]`) uses it to decide whether to insert the text inline or
- * as its own line. */
+/** Records a new yank or copy-mode capture; `kind` decides whether paste inserts it inline or as its own line. */
 export function setPasteBuffer(text: string, kind: PasteBufferKind): void {
   buffer = { text, kind };
 }
 
-/** Returns the current buffer, or `null` if nothing has been yanked yet
- * this session. Always a fresh object read (never a live reference callers
- * could mutate out from under the store). */
+/** Returns a fresh copy of the current buffer, or `null` if nothing has been yanked yet. */
 export function getPasteBuffer(): PasteBufferEntry | null {
   return buffer ? { ...buffer } : null;
 }
@@ -38,11 +23,7 @@ export function clearPasteBuffer(): void {
   buffer = null;
 }
 
-/** Best-effort system-clipboard mirror. Guarded for unavailability
- * (`navigator.clipboard` is missing in some headless/insecure contexts) and
- * for rejection (no clipboard permission) — a failed write must never throw
- * into the caller's key-handling path or surface as an unhandled promise
- * rejection in tests. */
+/** Best-effort system-clipboard mirror; a missing API or a rejected write must never throw into the caller's key-handling path. */
 export function writeToSystemClipboard(text: string): void {
   if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) return;
   navigator.clipboard.writeText(text).catch(() => {});

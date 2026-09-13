@@ -1,14 +1,4 @@
-// Live status-bar clock formatting — renders the real local time/date (as
-// "23:34" / "15-Aug-26") and keeps it updating. This is formatting logic, not
-// copy — the month abbreviations are a fixed calendar table, not narrative
-// site content, so it lives in src/lib (outside the src/components|layouts|
-// pages audit) same as docline.ts/grep.ts.
-//
-// IMPORTANT: use local-time getters (getHours/getMinutes/getDate/getMonth/
-// getFullYear), never UTC/ISO — the visual-regression capture pipeline
-// installs a fake clock at a literal local wall-clock instant
-// (2026-08-15T23:34:00, tests/visual/recipes.ts CLOCK_TIME), and a UTC leak
-// would render a different hour/date on any non-UTC machine.
+// Uses local-time getters, never UTC, since the visual-regression pipeline freezes the clock at a specific local wall-clock instant (recipes.ts's CLOCK_TIME).
 const MONTHS = [
   "Jan",
   "Feb",
@@ -44,37 +34,19 @@ export function msUntilNextMinute(d: Date): number {
   return 60000 - (d.getSeconds() * 1000 + d.getMilliseconds());
 }
 
-// ---------------------------------------------------------------------------
-// Frozen page clock — no wall-clock timestamps except via the frozen page
-// clock helpers in src/common/lib/clock.ts: tmux session `createdAt`, `tmux ls`'s
-// "created {ctime}" column, and neofetch's uptime line all read this ONE
-// epoch, resolved once
-// per page load/reboot, rather than calling `Date.now()` repeatedly at
-// render time. Same sessionStorage-override-with-Date.now()-fallback shape
-// as src/features/notifications/lib/notification-store.ts's NOTIFICATIONS_INJECT_SEED_STORAGE_KEY/
-// resolveInjectRand() and src/lib/bootState.ts's BOOT_SEEN_STORAGE_KEY — a
-// test fixture pins the key, production falls through to the real clock.
-// ---------------------------------------------------------------------------
+// A single frozen epoch, resolved once per page load/reboot rather than calling Date.now() repeatedly, so tmux's createdAt, `tmux ls`, and neofetch's uptime all agree.
 
-/** sessionStorage key a test fixture can set to pin the page epoch (ms since
- * Unix epoch, as a decimal string) — read once at client-factory time (initial
- * mount AND every `reboot`), same pattern as the notification store's own
- * sessionStorage overrides. */
+/** sessionStorage key a test fixture can set to pin the page epoch, as a decimal ms-since-epoch string. */
 export const CLOCK_EPOCH_STORAGE_KEY = "edith:clock-epoch";
 
-/** Parse a raw sessionStorage string into a valid epoch-ms number, or null if
- * missing/unparseable — pure, no storage access, unit-testable without a
- * DOM/sessionStorage shim (mirrors src/features/notifications/lib/notification-store.ts's
- * parseInjectSeed shape). */
+/** Parses a raw sessionStorage string into a valid epoch-ms number, or null if missing/unparseable. */
 export function parseClockEpoch(raw: string | null | undefined): number | null {
   if (raw === null || raw === undefined || raw === "") return null;
   const n = Number(raw);
   return Number.isFinite(n) ? n : null;
 }
 
-/** Epoch = Date.now() in prod, overridable via sessionStorage. Guarded for
- * SSR/privacy-mode the same way bootState.ts/notifications.ts guard their
- * own sessionStorage access — falls back to Date.now() on any failure. */
+/** Epoch = Date.now() in prod, overridable via sessionStorage; falls back to Date.now() on any storage failure. */
 export function resolvePageEpoch(): number {
   try {
     if (typeof sessionStorage !== "undefined") {
@@ -82,18 +54,14 @@ export function resolvePageEpoch(): number {
       if (parsed !== null) return parsed;
     }
   } catch {
-    // ignore — same best-effort contract as bootState.ts/notifications.ts
+    // ignore — best-effort only
   }
   return Date.now();
 }
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
-/** asctime-style "{Weekday} {Mon} {DD} {HH:MM:SS} {YYYY}" local time, e.g.
- * "Mon Aug 17 23:34:00 2026" — real tmux's own default `created` format for
- * `tmux ls`. Always fed a Date built from
- * a frozen epoch (`Session.createdAt`, itself from `resolvePageEpoch()`
- * above) — never `new Date()` at call time. */
+/** asctime-style "{Weekday} {Mon} {DD} {HH:MM:SS} {YYYY}" local time, e.g. "Mon Aug 17 23:34:00 2026" — real tmux's default `created` format for `tmux ls`. */
 export function formatCtime(d: Date): string {
   const wd = WEEKDAYS[d.getDay()];
   const month = MONTHS[d.getMonth()];

@@ -1,22 +1,4 @@
-// Build-time loader for the site's copy/labels yaml — every user-visible
-// string that isn't part of a content collection lives in one of these
-// files. Astro pages/layouts read this module and pass plain data down as
-// props; Svelte islands never read the filesystem themselves. Kernel-owned
-// yaml (site/cmdline/choosetree/tracker) lives in `src/common/content/`; a feature
-// with its own bounded context keeps its yaml beside its own content (e.g.
-// `src/features/help/content/help.yaml`, `src/features/shell-fs/content/shell.yaml`)
-// — every one of these is read from its own explicit
-// `?raw` import below, one per file, not a glob.
-//
-// Each file is a static `?raw` import (inlined as a string by Vite at
-// build time) rather than a runtime `node:fs` read relative to
-// `import.meta.url`: Astro's static build bundles this module into
-// `dist/.prerender/chunks/`, which moves it well away from `src/features/*/content/` on
-// disk, so a `readFileSync(dirname(import.meta.url) + "../features/.../content/...")` path
-// resolves under `dist/` and 404s (ENOENT) exactly once real pages start
-// calling these getters. `?raw` imports have no such problem: Vite resolves
-// and inlines the file content at the *import's* location during bundling,
-// independent of where the chunk ends up at runtime.
+// Build-time loader for the site's copy/labels yaml, read via explicit `?raw` imports rather than a runtime `node:fs` read, since Astro's static build bundles this module away from the source directory on disk.
 import YAML from "yaml";
 import type { CollectionEntry } from "astro:content";
 import siteRaw from "../content/site.yaml?raw";
@@ -61,9 +43,7 @@ function loadYaml<T>(file: string): T {
   return parsed;
 }
 
-// ---------------------------------------------------------------------------
 // site.yaml
-// ---------------------------------------------------------------------------
 
 export interface WindowEntry {
   number: number;
@@ -106,9 +86,7 @@ export interface SiteData {
 
 export const getSite = (): SiteData => loadYaml<SiteData>("site.yaml");
 
-// ---------------------------------------------------------------------------
 // dashboard.yaml
-// ---------------------------------------------------------------------------
 
 export interface MenuEntry {
   id: string;
@@ -125,14 +103,9 @@ export interface DashboardData {
 
 export const getDashboard = (): DashboardData => loadYaml<DashboardData>("dashboard.yaml");
 
-// ---------------------------------------------------------------------------
 // notifications.yaml (chrome) + src/features/notifications/content/*.md (pool)
-// ---------------------------------------------------------------------------
 
-/** A notification pool entry (src/features/notifications/lib/notification-store.ts's `PoolEntry`,
- * re-declared here rather than imported so this build-time loader stays
- * framework/runtime agnostic — same convention every other *Data interface
- * in this file follows). */
+/** A notification pool entry, re-declared here (not imported) so this build-time loader stays framework/runtime agnostic. */
 export interface NotificationPoolEntry {
   id: string;
   sev: "alert" | "warn" | "info";
@@ -141,11 +114,7 @@ export interface NotificationPoolEntry {
   src: string;
 }
 
-/** Builds the pool from the `notifications` content collection, sorted by
- * each entry's frontmatter `order` — the pool's array position feeds the
- * seeded per-visit pick (src/features/notifications/lib/notification-store.ts's `pickRandomUnseen`),
- * so this order must stay stable across a rebuild even though the loader's
- * own directory-read order isn't guaranteed to be. */
+/** Builds the pool from the `notifications` content collection, sorted by frontmatter `order`, since the seeded per-visit pick depends on stable array position across rebuilds. */
 export const buildNotificationPool = (
   entries: CollectionEntry<"notifications">[],
 ): NotificationPoolEntry[] =>
@@ -197,9 +166,7 @@ export const buildNotifications = (entries: CollectionEntry<"notifications">[]):
   return { ui, pool: buildNotificationPool(entries) };
 };
 
-// ---------------------------------------------------------------------------
 // tracker.yaml
-// ---------------------------------------------------------------------------
 
 export interface MapLabel {
   label: string;
@@ -233,9 +200,7 @@ export interface TrackerData {
 
 export const getTracker = (): TrackerData => loadYaml<TrackerData>("tracker.yaml");
 
-// ---------------------------------------------------------------------------
 // src/features/profile/content/*.md
-// ---------------------------------------------------------------------------
 
 export interface ProfileField {
   label: string;
@@ -307,9 +272,7 @@ export const buildProfile = (entry: CollectionEntry<"profile">): ProfileData => 
   };
 };
 
-// ---------------------------------------------------------------------------
 // repositories.yaml
-// ---------------------------------------------------------------------------
 
 export interface RepoBrowserEntry {
   icon: string;
@@ -327,10 +290,7 @@ export interface RepoBrowserData {
   emptyText: string;
 }
 
-/** Panel [3]'s virtual "all-projects" row — every
- * project's .md doc in one browsable tree, backed by
- * public/generated/repos/all-projects.json (src/features/repositories/tests/ui/support/repos/all-projects.json
- * in a fixture build). Not a real repo: no branch to track, no commits. */
+/** Panel [3]'s virtual "all-projects" row, backed by public/generated/repos/all-projects.json; not a real repo, so no branch to track and no commits. */
 export interface AllProjectsData {
   name: string;
   branch: string;
@@ -400,9 +360,7 @@ export interface RepositoriesData {
 
 export const getRepositories = (): RepositoriesData => loadYaml<RepositoriesData>("repositories.yaml");
 
-// ---------------------------------------------------------------------------
 // grep.yaml
-// ---------------------------------------------------------------------------
 
 export interface GrepData {
   leftPane: { titlePrefix: string; titleTilde: string; promptIcon: string; cursorGlyph: string };
@@ -419,14 +377,11 @@ export interface GrepData {
 
 export const getGrep = (): GrepData => loadYaml<GrepData>("grep.yaml");
 
-// ---------------------------------------------------------------------------
 // personnel.yaml
-// ---------------------------------------------------------------------------
 
 export interface PersonnelData {
   breadcrumb: string;
-  /** Personnel collection top-level dir segment (org) -> 2-3 char row tag,
-   * e.g. "memorial-university" -> "mun". See EmploymentRecords.svelte v2. */
+  /** Personnel collection top-level dir segment (org) to its 2-3 char row tag, e.g. "memorial-university" -> "mun". */
   orgTags: Record<string, string>;
   index: {
     orgsLabel: string;
@@ -449,22 +404,16 @@ export interface PersonnelData {
 
 export const getPersonnel = (): PersonnelData => loadYaml<PersonnelData>("personnel.yaml");
 
-// ---------------------------------------------------------------------------
 // src/features/help/content/help.yaml + src/features/help/content/*.md
-// ---------------------------------------------------------------------------
 
-/** One keymap row: a short `name`, a plain-language one-line `desc`
- * (renders on its own line under `name` — never wraps, see HelpView.svelte's
- * layout comment), and the literal key chip(s) that trigger it. */
+/** One keymap row: a short `name`, a one-line `desc` that never wraps (see HelpView.svelte), and the key chip(s) that trigger it. */
 export interface HelpRow {
   name: string;
   desc: string;
   keys: string[];
 }
 
-/** One sidebar scope — both a "SCOPES" tab (HelpView derives its count from
- * `rows.length`) and a content section under that tab. `hint` is the short
- * label shown next to the section header (e.g. "Ctrl-b, then a key"). */
+/** One sidebar scope: both a "SCOPES" tab and its content section; `hint` is the short label next to the section header. */
 export interface HelpScope {
   id: string;
   label: string;
@@ -496,9 +445,7 @@ export const buildHelp = (entries: CollectionEntry<"help">[]): HelpData => {
   return { ...getHelpChrome(), scopes };
 };
 
-// ---------------------------------------------------------------------------
-// boot.yaml (config) + src/content/boot/log.md (log text)
-// ---------------------------------------------------------------------------
+// boot.yaml (config) + src/features/boot/content/log.md (log text)
 
 export interface BootHandshakeData {
   label: string;
@@ -588,13 +535,9 @@ export const buildBoot = (entries: CollectionEntry<"boot">[]): BootData => {
   return { ...config, log };
 };
 
-// ---------------------------------------------------------------------------
 // cmdline.yaml
-// ---------------------------------------------------------------------------
 
-/** Shape matches src/common/lib/cmdline.ts's own `CommandDef` structurally (kept as
- * a separate declaration rather than importing it here so that pure,
- * DOM-free module has zero dependency on this build-time YAML loader). */
+/** Shape matches cmdline.ts's own `CommandDef`, kept as a separate declaration so that pure module has zero dependency on this build-time loader. */
 export interface CmdlineCommandDef {
   name: string;
   aliases?: string[];
@@ -625,9 +568,7 @@ export interface CmdlineData {
 
 export const getCmdline = (): CmdlineData => loadYaml<CmdlineData>("cmdline.yaml");
 
-// ---------------------------------------------------------------------------
 // helpsearch.yaml
-// ---------------------------------------------------------------------------
 
 export interface HelpSearchData {
   title: string;
@@ -640,9 +581,7 @@ export interface HelpSearchData {
 
 export const getHelpSearch = (): HelpSearchData => loadYaml<HelpSearchData>("helpsearch.yaml");
 
-// ---------------------------------------------------------------------------
 // shell.yaml
-// ---------------------------------------------------------------------------
 
 export interface ShellErrors {
   commandNotFoundTemplate: string;
@@ -714,9 +653,7 @@ export interface ShellData {
 
 export const getShell = (): ShellData => loadYaml<ShellData>("shell.yaml");
 
-// ---------------------------------------------------------------------------
 // choosetree.yaml
-// ---------------------------------------------------------------------------
 
 export interface ChooseTreeData {
   titlePrefix: string;

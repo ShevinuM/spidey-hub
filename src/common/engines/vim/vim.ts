@@ -1,18 +1,6 @@
-// Pure vim-lite motion/word/search/visual-range engine for Editor.svelte.
-// Deliberately has zero DOM dependency so it is unit-testable in isolation
-// (tests/unit/vim.test.ts) —
-// Editor.svelte owns all state (cursor position, mode, pending timers,
-// scroll sync) and calls into these pure functions for the actual motion
-// math. Every position is `{ line, col }` with a 1-based `line` (matching
-// the rest of the codebase's existing line-cursor convention) and a 0-based
-// `col` (a plain character index into that line's string), converted to a
-// 1-based display
-// column only at the UI layer (`positionTemplate`'s `{col}`).
+// Pure vim-lite motion/word/search/visual-range engine for Editor.svelte, with zero DOM dependency so it is unit-testable in isolation.
 //
-// `lines` throughout is a plain `string[]` (0-indexed, `lines[line - 1]` is
-// the text of 1-based `line`) — Editor.svelte derives this from its
-// `EditorLine[]` prop (`lines.map((l) => l.t)`) once per render via
-// `$derived`, not per keystroke.
+// Every position is `{ line, col }`, a 1-based `line` and a 0-based `col`, converted to a 1-based display column only at the UI layer.
 
 export interface CursorPos {
   line: number;
@@ -37,14 +25,7 @@ export interface SearchMatch {
   length: number;
 }
 
-// ---------------------------------------------------------------------------
-// Word-class helpers (vim's own `w`/`b`/`e` word definition: a "word" is a
-// maximal run of keyword characters OR a maximal run of other non-blank
-// characters; whitespace runs — including line breaks, treated as a single
-// space character here via the `col >= line.length` sentinel below — are
-// always skipped between words, except that landing on a truly empty line
-// always counts as a stop, exactly like real vim).
-// ---------------------------------------------------------------------------
+// Word-class helpers for vim's own `w`/`b`/`e` word definition: a "word" is a maximal run of keyword characters or of other non-blank characters, and landing on an empty line always counts as a stop.
 
 type CharClass = "word" | "punct" | "space";
 
@@ -60,9 +41,7 @@ function classAt(lines: string[], line: number, col: number): CharClass {
   return charClass(text[col]);
 }
 
-/** One character step across the whole buffer, treating the gap between a
- * line's last column and the next line's column 0 as crossing a newline.
- * Returns `null` at the very start/end of the buffer. */
+/** One character step across the whole buffer, treating the gap between lines as crossing a newline; returns `null` at the very start/end. */
 function step(lines: string[], pos: CursorPos, dir: 1 | -1): CursorPos | null {
   const { line, col } = pos;
   if (dir === 1) {
@@ -169,9 +148,7 @@ export function wordEnd(lines: string[], pos: CursorPos, count = 1): CursorPos {
   return cur;
 }
 
-// ---------------------------------------------------------------------------
 // 0 / ^ / $ and clamping
-// ---------------------------------------------------------------------------
 
 /** `^` — first non-blank character of the line, or column 0 if the line is
  * entirely blank. */
@@ -189,10 +166,7 @@ export function lineEndCol(lines: string[], line: number): number {
   return Math.max(0, text.length - 1);
 }
 
-/** Clamps a position into the buffer's bounds: line into `[1, lines.length]`
- * (or `1` for an empty buffer), then column into `[0, lineLength - 1]` (or
- * `0` for an empty line) — this is the "block cursor can't sit past the
- * last character" rule normal/visual mode both need. */
+/** Clamps a position into the buffer's bounds — the "block cursor can't sit past the last character" rule normal/visual mode both need. */
 export function clampCursor(lines: string[], pos: CursorPos): CursorPos {
   const lastLine = Math.max(1, lines.length);
   const line = Math.min(Math.max(1, pos.line), lastLine);
@@ -205,10 +179,7 @@ export function moveVertical(lines: string[], pos: CursorPos, deltaLines: number
   return clampCursor(lines, { line: pos.line + deltaLines, col: pos.col });
 }
 
-/** Generic numeric clamp — Editor.svelte's own scroll-offset math
- * (`halfPage`/`fullPage`) and its ex-command `:<number>` jump both need a
- * plain `[lo, hi]` clamp that isn't buffer-position-shaped like
- * `clampCursor` above. */
+/** Generic numeric clamp for callers needing a plain `[lo, hi]` clamp that isn't buffer-position-shaped like `clampCursor` above. */
 export function clamp(n: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, n));
 }
@@ -217,9 +188,7 @@ export function moveHorizontal(lines: string[], pos: CursorPos, deltaCols: numbe
   return clampCursor(lines, { line: pos.line, col: pos.col + deltaCols });
 }
 
-// ---------------------------------------------------------------------------
 // Counts (numeric prefixes — `5j`, `3w`, `3yy`)
-// ---------------------------------------------------------------------------
 
 export function isCountStartDigit(key: string): boolean {
   return key >= "1" && key <= "9";
@@ -237,18 +206,13 @@ export function parseCount(digits: string): number {
   return Number.isFinite(n) && n > 0 ? n : 1;
 }
 
-// ---------------------------------------------------------------------------
 // Visual-mode range normalization (charwise `v` / linewise `V`)
-// ---------------------------------------------------------------------------
 
 export function comparePos(a: CursorPos, b: CursorPos): number {
   return a.line !== b.line ? a.line - b.line : a.col - b.col;
 }
 
-/** Orders an anchor/cursor pair into a `{start, end}` range regardless of
- * which one is "before" the other (the user can select in either
- * direction). Inclusive of both endpoints, matching vim's own charwise
- * visual selection semantics. */
+/** Orders an anchor/cursor pair into a `{start, end}` range regardless of selection direction, inclusive of both endpoints like vim's own charwise selection. */
 export function normalizeCharRange(anchor: CursorPos, cursor: CursorPos): VisualRange {
   const [a, b] = comparePos(anchor, cursor) <= 0 ? [anchor, cursor] : [cursor, anchor];
   return { startLine: a.line, startCol: a.col, endLine: b.line, endCol: b.col };
@@ -258,10 +222,7 @@ export function normalizeLineRange(anchor: CursorPos, cursor: CursorPos): LineRa
   return { startLine: Math.min(anchor.line, cursor.line), endLine: Math.max(anchor.line, cursor.line) };
 }
 
-/** The literal text a charwise visual selection would yank — used both for
- * the paste-buffer payload and unit tests. Newlines are re-inserted between
- * spanned lines (multi-line selections), matching vim's own yanked-text
- * shape. */
+/** The literal text a charwise visual selection would yank, re-inserting newlines between spanned lines to match vim's own yanked-text shape. */
 export function extractCharRange(lines: string[], range: VisualRange): string {
   const first = lines[range.startLine - 1] ?? "";
   if (range.startLine === range.endLine) {
@@ -281,16 +242,13 @@ export function extractLineRange(lines: string[], range: LineRange): string {
   return lines.slice(range.startLine - 1, range.endLine).join("\n") + "\n";
 }
 
-// ---------------------------------------------------------------------------
 // In-buffer search (`/`, `n`/`N`)
-// ---------------------------------------------------------------------------
 
-/** Case-sensitive substring search across every line — vim's own default
- * (`:set noignorecase`); deliberately not mirroring grep.ts's
- * case-insensitive convention, which is a different feature (`src/lib/
- * grep.ts`'s file/content search) with its own contract. Overlapping
- * matches are not produced (each match consumes its own length before the
- * next search starts), matching vim's `/` behavior. */
+/**
+ * Case-sensitive substring search across every line, vim's own default, deliberately not mirroring grep.ts's case-insensitive convention.
+ *
+ * Overlapping matches are not produced, matching vim's `/` behavior.
+ */
 export function findMatches(lines: string[], query: string): SearchMatch[] {
   if (!query) return [];
   const matches: SearchMatch[] = [];
@@ -307,9 +265,7 @@ export function findMatches(lines: string[], query: string): SearchMatch[] {
   return matches;
 }
 
-/** `n`/`N` — the next match strictly after (or, for `-1`, strictly before)
- * `from`, wrapping around the buffer's ends. Returns `null` only when there
- * are no matches at all. */
+/** `n`/`N` — the next match strictly after (or, for `-1`, before) `from`, wrapping around the buffer's ends; `null` only when there are no matches at all. */
 export function nextMatch(matches: SearchMatch[], from: CursorPos, direction: 1 | -1): SearchMatch | null {
   if (matches.length === 0) return null;
   if (direction === 1) {

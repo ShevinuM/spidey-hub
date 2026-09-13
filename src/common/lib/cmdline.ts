@@ -1,16 +1,6 @@
-// Pure parser/completion logic for the site-wide floating Cmdline
-// (unit-testable: parse, match/filter, complete). No DOM, no
-// Svelte state, no side effects — src/common/components/Cmdline.svelte and
-// Terminal.svelte own the stateful/effectful parts (open/close, text state,
-// dispatching a resolved command to a view switch / grep open / window
-// mutation / etc.), exactly the same split Editor.svelte already uses for
-// src/common/engines/vim/vim.ts.
+// Pure parser/completion logic for the cmdline; Cmdline.svelte and Terminal.svelte own the stateful/effectful parts, the same split Editor.svelte uses for vim.ts.
 
-/** One entry in src/common/content/cmdline.yaml's `commands`/`exCommands`/
- * `tmuxCommands` arrays. `action` is an internal identifier the caller
- * switches on (never rendered) for the site-wide list; ex/tmux commands are
- * matched by `name` itself (parseExCommand/parseTmuxCommand below) rather
- * than an `action` id, so it's optional here. */
+/** One entry in cmdline.yaml's `commands`/`exCommands`/`tmuxCommands` arrays; `action` is only used by the site-wide list, since ex/tmux commands match by `name` instead. */
 export interface CommandDef {
   name: string;
   aliases?: string[];
@@ -20,22 +10,14 @@ export interface CommandDef {
 }
 
 export interface ParsedInput {
-  /** The first whitespace-delimited token, lowercased-comparison-ready but
-   * NOT itself lowercased (callers that need case-insensitive matching do
-   * that themselves, e.g. resolveCommand below) — kept verbatim so a
-   * command that legitimately cares about case in its own name (none do
-   * today) isn't silently mangled. */
+  /** The first whitespace-delimited token, kept verbatim (not lowercased) so callers needing case-insensitive matching do that themselves. */
   name: string;
   /** Everything after the first run of whitespace, trimmed. Empty string
    * when there's no argument. */
   args: string;
 }
 
-/** Splits raw cmdline text into a command name + its argument string. A
- * leading ":" is tolerated and stripped (callers may pass either the raw
- * text after the box's own prompt glyph, which never includes it, or a
- * full ex-command-style string that does) so this is safe to reuse from
- * either direction. */
+/** Splits raw cmdline text into a command name + argument string; a leading ":" is tolerated and stripped so this is safe to reuse from either the box's text or a full ex-command string. */
 export function parseInput(input: string): ParsedInput {
   const trimmed = input.trim().replace(/^:+/, "").trim();
   const spaceIdx = trimmed.search(/\s/);
@@ -52,10 +34,7 @@ export function resolveCommand(commands: CommandDef[], name: string): CommandDef
   );
 }
 
-/** Prefix-filters `commands` against `prefix` (matched against the name OR
- * any alias, case-insensitively) — the live suggestion list under the
- * input. An empty prefix returns every command, unfiltered
- * (the box's own resting state: nothing typed yet). */
+/** Prefix-filters `commands` against `prefix` (name or alias, case-insensitive); an empty prefix returns every command unfiltered. */
 export function filterSuggestions(commands: CommandDef[], prefix: string): CommandDef[] {
   const p = prefix.toLowerCase();
   if (!p) return commands;
@@ -64,13 +43,11 @@ export function filterSuggestions(commands: CommandDef[], prefix: string): Comma
   );
 }
 
-/** Tab completion: completes the unique/first match.
- * Completes only the COMMAND NAME token, leaving any already-typed
- * argument text untouched; returns `null` when there's nothing to complete
- * (empty input, or no command matches the typed prefix). An exact
- * case-insensitive match short-circuits to itself (so completing an
- * already-complete name is a no-op rather than jumping to some other
- * matching entry earlier in the list). */
+/**
+ * Tab completion: completes only the command-name token, leaving any already-typed argument text untouched.
+ *
+ * An exact case-insensitive match short-circuits to itself, so completing an already-complete name is a no-op.
+ */
 export function completeInput(commands: CommandDef[], input: string): string | null {
   const { name, args } = parseInput(input);
   if (!name) return null;
@@ -81,22 +58,11 @@ export function completeInput(commands: CommandDef[], input: string): string | n
   return args ? `${target.name} ${args}` : target.name;
 }
 
-/** zsh-style repeated-Tab cycling: the suggestions list UI is gone from
- * Cmdline.svelte, so this is now the
- * only way multiple Tab-matches are still reachable from the keyboard.
- * `prev` is the state this same function returned on the IMMEDIATELY
- * preceding Tab press, or `null` on the first Tab press for a given typed
- * prefix (the caller — Cmdline.svelte — resets to `null` on every non-Tab
- * keydown, so `prev` being non-null is exactly "the last thing that
- * happened was also a Tab").
+/**
+ * zsh-style repeated-Tab cycling, the only way multiple Tab-matches stay reachable from the keyboard; `prev` is the state returned by the immediately preceding Tab press, or `null` on the first press of a new prefix.
  *
- * First press (`prev === null`): completes to the first match for the
- * current text's command-name token (same "nothing to complete" cases as
- * completeInput — empty name, or no matches — return `null`). Each
- * following press with `prev` supplied advances to the NEXT match in that
- * same fixed match list, wrapping around — it does NOT re-derive matches
- * from whatever `input` currently is, since by construction `input` is
- * always exactly what the previous press already wrote there. */
+ * Each press with `prev` supplied advances to the next match in that same fixed match list, wrapping around, rather than re-deriving matches from the current input.
+ */
 export interface TabCycleState {
   args: string;
   matches: CommandDef[];
@@ -123,23 +89,17 @@ export function cycleComplete(
   return { text: args ? `${target.name} ${args}` : target.name, state };
 }
 
-/** Merges two command lists for DISPLAY (suggestions), preferring `primary`
- * on a name collision — used to build the editor ex-mode suggestion list,
- * where editor context wins: `exCommands`' own `q`/`w`
- * entries shadow `commands`' site-wide `q` (kill-window) so the box shows
- * the EDITOR meaning while one is open. Execution order is independent of
- * this — parseExCommand always gets first refusal regardless of what the
- * suggestion list displays — this only prevents the same name from
- * appearing twice with two different descriptions. */
+/**
+ * Merges two command lists for display, preferring `primary` on a name collision, so the editor's `exCommands` can shadow a site-wide command sharing a name (e.g. `q`).
+ *
+ * This only affects what the suggestion list shows; parseExCommand always gets first refusal at execution time.
+ */
 export function mergeCommandLists(primary: CommandDef[], secondary: CommandDef[]): CommandDef[] {
   const primaryNames = new Set(primary.map((c) => c.name.toLowerCase()));
   return [...primary, ...secondary.filter((c) => !primaryNames.has(c.name.toLowerCase()))];
 }
 
-// ---------------------------------------------------------------------
-// Ex-command parsing — a pure function shared between Editor.svelte's
-// execution and this file's own unit tests.
-// ---------------------------------------------------------------------
+// Ex-command parsing, a pure function shared between Editor.svelte's execution and this file's own unit tests.
 
 export type ExCommand =
   | { kind: "close" }
@@ -149,25 +109,15 @@ export type ExCommand =
 
 export function parseExCommand(cmd: string): ExCommand {
   if (cmd === "q" || cmd === "q!") return { kind: "close" };
-  // "w!"/"wq!" are treated exactly like "w"/"wq" — this viewer never writes
-  // regardless of the bang, so there is no distinct "force" behavior to
-  // implement; the bang variants exist in real vim only to override the
-  // readonly refusal `writeError` already reports.
+  // "w!"/"wq!" behave exactly like "w"/"wq", since this viewer never writes regardless of the bang.
   if (cmd === "w" || cmd === "wq" || cmd === "w!" || cmd === "wq!") return { kind: "writeError" };
   if (/^\d+$/.test(cmd)) return { kind: "jump", line: Number.parseInt(cmd, 10) };
   return { kind: "unknown" };
 }
 
-// ---------------------------------------------------------------------
 // tmux command-prompt parsing (`Ctrl-b :`).
-// ---------------------------------------------------------------------
 
-/** The 7 preset names `select-layout` accepts. Deliberately its OWN small
- * literal list, not an import of
- * src/common/engines/tmux/tmux.ts's `LAYOUT_NAMES` — mirrors src/common/lib/shell.ts's documented
- * decoupling convention (that file's own `pickMostRecentUnattached` comment:
- * these small pure modules stay independent of tmux.ts's shape, duplicating
- * a short constant rather than adding a cross-module dependency). */
+/** The preset names `select-layout` accepts, deliberately its own literal list rather than importing tmux.ts's `LAYOUT_NAMES`, per shell.ts's decoupling convention. */
 const LAYOUT_NAMES = [
   "even-horizontal",
   "even-vertical",

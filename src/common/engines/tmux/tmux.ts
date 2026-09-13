@@ -1,38 +1,18 @@
-// tmux client/session/window/pane model — 100% pure, no DOM, no Svelte
-// imports, unit-testable exactly like src/common/engines/vim/vim.ts/boot.ts.
-// Terminal.svelte owns exactly one `$state` `Client` object and calls into
-// the operations below to mutate it; every operation mutates its
-// argument(s) in place and leaves the client fully consistent at return (no
-// intermediate state where e.g. `windows` has shrunk but
-// `activeWindowIdx`/`lastWindowIdx` still point past the end) — that
-// in-place mutation works identically whether the object passed in is a
-// plain object (unit tests) or a Svelte 5 `$state` proxy (Terminal.svelte).
+// tmux client/session/window/pane model — 100% pure, no DOM, no Svelte imports, unit-testable like vim.ts.
 //
-// Pane ids are a deterministic function of (windowId, index) — never a
-// module-level counter or `Math.random()` — so a `reboot()` factory rebuild
-// is byte-for-byte reproducible and every id is stable within a given tree
-// shape.
+// Every operation mutates its argument(s) in place and leaves the client fully consistent at return, whether the object is a plain object (unit tests) or a Svelte 5 `$state` proxy (Terminal.svelte).
+//
+// Pane ids are a deterministic function of (windowId, index), never a module-level counter or `Math.random()`, so a `reboot()` rebuild is byte-for-byte reproducible.
 
 import { createShellState, type ShellLine, type ShellState } from "../../lib/shell";
 
-/** A pane's currently-running program. "shell" is the in-window shell a
- * program's `:q` drops back to (real tmux's own semantics: a pane's default
- * program is a shell, and its auto-rename text follows — see
- * `programDisplayName` below) — every OTHER value is one of bootstrap's
- * registered window ids, injected by the caller (site.yaml's window seeds,
- * see `FactoryOptions.windows` below), never hardcoded here (architecture
- * R007: this engine knows no feature names). */
+/** A pane's currently-running program; "shell" is the in-window shell a program's `:q` drops back to, and every other value is one of bootstrap's registered window ids, injected by the caller (architecture R007: this engine knows no feature names). */
 export type ProgramName = string;
 
 export interface Pane {
   id: string;
   program: ProgramName;
-  /** Every pane carries its own shell buffer from creation, not just once it
-   * becomes a shell: any pane can `:q` its program away and back, and the
-   * buffer must survive that round-trip (and switching away from/back to
-   * the window entirely) exactly like a real tmux pane's scrollback — only
-   * `reboot()`/a page reload resets it. Lives here (not component-local
-   * Svelte state) for exactly that reason. */
+  /** Every pane carries its own shell buffer from creation, since a pane's program can `:q` away and back and the buffer must survive that round-trip like a real tmux pane's scrollback. */
   shell: ShellState;
 }
 
@@ -41,17 +21,11 @@ export interface PaneLeaf {
   pane: Pane;
 }
 
-/** A real tmux split: N children laid
- * out along `direction` (`"row"` = side by side, left→right, real tmux's
- * `split-window -h`; `"column"` = stacked, top→bottom, `-v`), each taking the
- * parallel fraction in `sizes` (same index, always summing to ~1 and always
- * the same length as `children` — every op below that mutates a split node
- * maintains this invariant, unit-tested directly). N-ary (not strictly
- * binary) so a single split node can represent an ENTIRE preset layout's row
- * or column in one level (e.g. `tiled`'s grid is a column-of-rows, each row
- * one split node with as many children as that row has panes) — real tmux's
- * own layout cell tree is shaped the same way. A manual `|`/`-` split
- * (`splitPane` below) still only ever inserts ONE new child at a time. */
+/**
+ * A real tmux split: N children laid out along `direction` (`"row"` = side by side, `"column"` = stacked), each taking the parallel fraction in `sizes`, always summing to ~1.
+ *
+ * N-ary, not strictly binary, so a single split node can represent an entire preset layout's row or column in one level, though a manual split still only ever inserts one new child at a time.
+ */
 export interface SplitNode {
   type: "split";
   direction: "row" | "column";
@@ -65,44 +39,26 @@ export interface Window {
   id: string;
   number: number;
   name: string;
-  /** True until a manual `Ctrl-b ,` rename — while true, `setPaneProgram`
-   * below keeps `name` synced to whichever program the window's focused
-   * pane is running; `renameWindowManual` flips this to false permanently
-   * for that window. */
+  /** True until a manual `Ctrl-b ,` rename; while true, `setPaneProgram` keeps `name` synced to the focused pane's program. */
   autoName: boolean;
   root: PaneNode;
-  /** Which pane (by id) is focused for keyboard delegation within this
-   * window. Written by pane-focus navigation (`o`/arrow/`;`) below whenever
-   * focus moves. */
+  /** Which pane (by id) is focused for keyboard delegation within this window. */
   activePaneId: string;
-  /** Prefix `;` (last-pane), the pane-focus twin of `Session.lastWindowIdx`.
-   * The pane that was focused immediately before the CURRENT one; bookkept
-   * by every op that reassigns `activePaneId` below. Undefined until the
-   * window's focus has actually moved at least once (fresh window: nothing
-   * to jump back to). */
+  /** Prefix `;`'s target: the pane focused immediately before the current one, undefined until focus has moved at least once. */
   lastPaneId?: string | undefined;
-  /** Every pane id currently in this window's tree, in CREATION order:
-   * index 0 is the "main" pane for `main-horizontal`/`main-vertical`
-   * layouts (documented tmux fidelity choice — real tmux uses the
-   * first-created pane the same way), and a pane's live position in this
-   * array is its `pane_index` for the `kill-pane {pane_index}? (y/n)`
-   * prompt. Deliberately RENUMBERED on every kill (indices always `0..n-1`,
-   * no gaps) rather than preserving each pane's original creation number;
-   * layout application never reorders this array, only split/kill do. */
+  /**
+   * Every pane id currently in this window's tree, in creation order; index 0 is the "main" pane for the main-* layouts, and a pane's position here is its `pane_index` in the kill-pane prompt.
+   *
+   * Renumbered on every kill (indices always `0..n-1`, no gaps); layout application never reorders this array.
+   */
   paneOrder: string[];
-  /** A monotonic per-window counter (never reused, never derived from
-   * `paneOrder.length`) backing every new pane id this window ever creates
-   * (`${windowId}#${paneSeq++}`), so a kill-then-split sequence can never
-   * mint an id that collides with a pane still alive in the tree (deriving
-   * the next index from `paneOrder.length` would do exactly that). Starts
-   * at 1 — index 0 is always the window's original factory-seeded pane. */
+  /** A monotonic per-window counter backing every new pane id, never derived from `paneOrder.length`, so a kill-then-split sequence can never mint a colliding id. */
   paneSeq: number;
-  /** The last preset applied via `Ctrl-b Space`/`select-layout` (undefined =
-   * "never applied one yet", the fidelity reference's "lastLayout = -1" —
-   * the next bare Space starts the cycle at index 0, `even-horizontal`). A
-   * manual split does NOT reset this — real tmux only tracks the last
-   * APPLIED preset, a hand split just makes the window's actual geometry
-   * diverge from it until Space (or `select-layout`) is used again. */
+  /**
+   * The last preset applied via `Ctrl-b Space`/`select-layout`; undefined means never applied, so the next bare Space starts the cycle at `even-horizontal`.
+   *
+   * A manual split does not reset this — real tmux only tracks the last applied preset.
+   */
   lastLayout?: LayoutName;
 }
 
@@ -111,59 +67,33 @@ export interface Session {
   name: string;
   windows: Window[];
   activeWindowIdx: number;
-  /** The index of whichever window was active immediately before the
-   * CURRENT one (real tmux's "last window", surfaced as the `-` flag on the
-   * status line). Bookkept by every operation that changes
-   * `activeWindowIdx` below; rendering the flag itself is done elsewhere —
-   * this file only keeps the index correct. */
+  /** The index of whichever window was active immediately before the current one — real tmux's "last window", surfaced as the `-` status-bar flag. */
   lastWindowIdx: number;
-  /** Frozen page-clock epoch (ms) this session was created at — `tmux ls`'s
-   * "created {ctime}" column — never `Date.now()` read again after
-   * creation (determinism rules). */
+  /** Frozen page-clock epoch this session was created at, for `tmux ls`'s "created {ctime}" column. */
   createdAt: number;
-  /** "Most recently used unattached session" (bare `tmux a`/`attach`, and
-   * the kill-cascade's own "switch to the most recent remaining session"
-   * fidelity rule) needs a RECENCY ordering across sessions. A logical
-   * counter (`Client.attachSeq`, bumped by `attachSession` below), never a
-   * frozen-clock epoch — under a pinned test clock every session's
-   * `createdAt`/`Date.now()` read would collapse to the identical instant,
-   * degrading "most recent" into "insertion order" and silently
-   * miscomputing the pick (a `tmux new -s test` + detach + `tmux a`
-   * sequence would otherwise reattach the DEFAULT session instead of
-   * `test`). Sortable, deterministic under fixtures, no clock dependence.
-   * `0` until a session has ever been attached (unreachable via `tmux a`'s
-   * own candidate set in practice — every session that exists was created
-   * via an attach-and-create flow — kept only so the field always has a
-   * well-defined initial value). */
+  /**
+   * A logical recency counter for "most recently used unattached session", not a clock read, since a pinned test clock would collapse every session's `createdAt` to the same instant and miscompute the pick.
+   *
+   * `0` until a session has ever been attached.
+   */
   lastAttachedSeq: number;
 }
 
 export interface Client {
   sessions: Session[];
-  /** Null once detached — no session owns the keyboard; the host shell
-   * (`Client.hostPane` below) does instead. */
+  /** Null once detached; the host shell (`Client.hostPane`) owns the keyboard instead. */
   attachedSessionId: string | null;
-  /** Monotonic counter backing `Session.lastAttachedSeq` above — bumped by
-   * every `attachSession()` call (including the kill-cascade's own silent
-   * switch-to-most-recent-remaining), never read directly by callers. */
+  /** Monotonic counter backing `Session.lastAttachedSeq`, bumped by every `attachSession()` call. */
   attachSeq: number;
-  /** The detached HOST shell's own pane, deliberately modeled as a REAL
-   * `Pane` (not a bare `ShellState`) living directly on the client rather
-   * than inside any session/window: this is what lets
-   * src/features/shell-fs/components/Shell.svelte mount it with its existing `pane: Pane`
-   * prop contract unchanged (the exact same `pane.shell = {...}`
-   * write-through Svelte reactivity every other pane already relies on).
-   * `program` is always "shell" here (never read meaningfully; kept only
-   * because `Pane` requires it). Survives detach/re-attach cycles within
-   * the page's lifetime; `createFactoryClient()` (reboot) is the only thing
-   * that resets it.
+  /**
+   * The detached host shell's own pane, modeled as a real `Pane` (not a bare `ShellState`) so Shell.svelte can mount it with its existing `pane: Pane` prop contract unchanged.
+   *
+   * Survives detach/re-attach cycles; only `createFactoryClient()` (reboot) resets it.
    */
   hostPane: Pane;
 }
 
-// ---------------------------------------------------------------------------
 // Pane-tree helpers (written against the PaneNode union).
-// ---------------------------------------------------------------------------
 
 /** Every pane reachable from `node`, in tree order (depth-first, children in
  * array order). */
@@ -189,21 +119,13 @@ export function windowOfPane(session: Session, paneId: string): Window | undefin
   return session.windows.find((w) => allPanes(w.root).some((p) => p.id === paneId));
 }
 
-// ---------------------------------------------------------------------------
-// Pane-tree rewrite helpers — `splitPane`/`killPaneInWindow` below each walk
-// the tree by paneId (never by object identity) and rebuild new objects
-// back up to the root, structural-sharing every untouched subtree — see
-// `insertSplit`'s own comment (further down, right beside `splitPane`) for
-// the split-side rebuild.
-// ---------------------------------------------------------------------------
+// Pane-tree rewrite helpers: `splitPane`/`killPaneInWindow` walk the tree by paneId and rebuild new objects back up to the root, structural-sharing every untouched subtree.
 
-/** Removes the leaf pane `paneId` from `node`, renormalizing its parent
- * split's `sizes` to still sum to ~1 over the remaining children, and
- * collapsing a split down to a bare node once it has only one child left
- * (real tmux: the sibling simply takes over the freed space — there is no
- * such thing as a 1-child split). Returns `null` when `node` itself WAS the
- * pane being removed (the caller's own window has no pane left — "kill the
- * last pane" cascades to kill-window, handled by the caller, never here). */
+/**
+ * Removes the leaf pane `paneId` from `node`, renormalizing its parent split's `sizes` to still sum to ~1, and collapsing a split down to a bare node once only one child remains.
+ *
+ * Returns `null` when `node` itself was the pane being removed; the caller handles the "kill the last pane" cascade.
+ */
 function removePaneNode(node: PaneNode, paneId: string): PaneNode | null {
   if (node.type === "leaf") return node.pane.id === paneId ? null : node;
 
@@ -212,8 +134,7 @@ function removePaneNode(node: PaneNode, paneId: string): PaneNode | null {
 
   const rewritten = removePaneNode(node.children[idx], paneId);
   if (rewritten === null) {
-    // The pane WAS the direct child at `idx` — drop it and its parallel size,
-    // then renormalize the remaining shares to sum back to 1.
+    // The pane was the direct child at `idx`; drop it and renormalize the remaining shares to sum back to 1.
     const remainingChildren = node.children.filter((_, i) => i !== idx);
     const remainingSizesRaw = node.sizes.filter((_, i) => i !== idx);
     const total = remainingSizesRaw.reduce((a, b) => a + b, 0) || 1;
@@ -222,29 +143,20 @@ function removePaneNode(node: PaneNode, paneId: string): PaneNode | null {
     return { ...node, children: remainingChildren, sizes: remainingSizes };
   }
 
-  // The pane was deeper down — splice the rewritten subtree back in place,
-  // this node's own children count/sizes are unaffected.
+  // The pane was deeper down; splice the rewritten subtree back in place.
   const children = [...node.children];
   children[idx] = rewritten;
   return { ...node, children };
 }
 
-/** The window's currently-focused pane (`activePaneId`) — falls back to the
- * tree's first pane defensively (should never be needed in practice: nothing
- * ever sets `activePaneId` to a paneId absent from its own window's tree). */
+/** The window's currently-focused pane, falling back to the tree's first pane defensively. */
 export function focusedPane(window: Window): Pane {
   return findPaneById(window.root, window.activePaneId) ?? allPanes(window.root)[0];
 }
 
-// ---------------------------------------------------------------------------
-// Pane focus / navigation (prefix `o`/arrows/`;`). Every one of these
-// bookkeeps `lastPaneId` the same way
-// `selectWindowIndex` bookkeeps `Session.lastWindowIdx` — a single shared
-// primitive (`focusPane`) so that invariant has one home.
-// ---------------------------------------------------------------------------
+// Pane focus / navigation (prefix `o`/arrows/`;`), all routed through `focusPane` so `lastPaneId` bookkeeping has one home.
 
-/** Moves focus to `paneId` — a no-op (no `lastPaneId` bookkeeping either) if
- * it's already the focused pane, or isn't part of this window at all. */
+/** Moves focus to `paneId`, a no-op if it's already focused or isn't part of this window at all. */
 function focusPane(window: Window, paneId: string): void {
   if (paneId === window.activePaneId) return;
   if (!findPaneById(window.root, paneId)) return;
@@ -252,8 +164,7 @@ function focusPane(window: Window, paneId: string): void {
   window.activePaneId = paneId;
 }
 
-/** Prefix `o` — next pane, cycling through `paneOrder` (creation order,
- * wrapping). A no-op on a single-pane window. */
+/** Prefix `o` — next pane, cycling through `paneOrder`, wrapping; a no-op on a single-pane window. */
 export function cycleNextPane(window: Window): void {
   const order = window.paneOrder;
   if (order.length <= 1) return;
@@ -262,21 +173,14 @@ export function cycleNextPane(window: Window): void {
   focusPane(window, order[nextIdx]);
 }
 
-/** Prefix `;` — jumps back to whichever pane was focused immediately before
- * the current one (real tmux: pressing it again toggles back, since
- * `focusPane` above always records the pane being LEFT as the new
- * `lastPaneId`). A no-op if nothing to jump to yet, or that pane has since
- * been killed. */
+/** Prefix `;` — jumps back to whichever pane was focused immediately before the current one; a no-op if nothing to jump to yet, or that pane has since been killed. */
 export function focusLastPane(window: Window): void {
   const target = window.lastPaneId;
   if (!target) return;
   focusPane(window, target);
 }
 
-/** A pane's on-screen rect as FRACTIONS of the window's own content area
- * (0..1) — purely geometric, no pixels, no DOM: directional nav (below) only
- * ever needs relative position, and this is exactly the fraction
- * PaneTree.svelte's flex rendering itself uses for `sizes`. */
+/** A pane's on-screen rect as fractions (0..1) of the window's content area, purely geometric with no pixels or DOM involved. */
 export interface PaneRect {
   x: number;
   y: number;
@@ -307,33 +211,11 @@ export function computePaneRects(node: PaneNode, rect: PaneRect = { x: 0, y: 0, 
 
 export type PaneDirection = "up" | "down" | "left" | "right";
 
-/** Geometric directional pick — picks the nearest pane in `dir` from the
- * focused pane's rect: among every OTHER pane whose
- * CENTER lies strictly in `dir` from the focused pane's center, picks the
- * one with the smallest distance along the primary axis (x for left/right,
- * y for up/down), tie-breaking on the perpendicular (secondary) axis — the
- * usual tmux-ish "closest in a row/column, then closest across" heuristic.
+/**
+ * Geometric directional pick: among panes whose center lies strictly in `dir` from the focused pane's center, picks the closest on the primary axis, tie-breaking on the secondary axis.
  *
- * A pure center-distance comparison alone misreads one common shape,
- * though: a pane spanning the FULL opposite axis (e.g. a `main-vertical`
- * layout's main pane, full-height on the left) sits roughly equidistant
- * from every pane in the column on the right, and its center can end up
- * VERTICALLY closer to one of them than that column's own neighbor is —
- * center-distance alone would then wrongly hop across columns for an
- * up/down move instead of staying within the column tmux visually put you
- * in. Fixed by preferring candidates whose rect actually OVERLAPS the
- * focused pane's rect on the perpendicular axis (the two panes share some
- * horizontal range for an up/down move, or vertical range for left/right —
- * i.e. they're plausibly "in the same row/column"). No fallback to a
- * non-overlapping candidate when none overlap: a pane spanning the FULL
- * perpendicular axis (main-vertical's main pane again) genuinely has no
- * neighbor "up"/"down" from it (it already occupies the whole column) —
- * real tmux does nothing there, which this matches by returning `undefined`
- * rather than guessing a wrong-axis hop.
- *
- * `undefined` when nothing qualifies at all (e.g. the focused pane is
- * already the rightmost one, or has no overlapping neighbor that way) — the
- * caller no-ops, matching real tmux's own silent refusal to move. */
+ * Candidates must also overlap the focused pane on the perpendicular axis, or a full-span pane (e.g. main-vertical's main pane) would wrongly out-distance its column neighbors by center-distance alone; with no overlapping candidate, this returns `undefined` rather than guessing a wrong-axis hop.
+ */
 export function findDirectionalPane(rects: Map<string, PaneRect>, fromId: string, dir: PaneDirection): string | undefined {
   const from = rects.get(fromId);
   if (!from) return undefined;
@@ -391,9 +273,7 @@ export function focusDirectional(window: Window, dir: PaneDirection): void {
   if (target) focusPane(window, target);
 }
 
-// ---------------------------------------------------------------------------
 // Session/client lookup helpers
-// ---------------------------------------------------------------------------
 
 export function activeSessionOf(client: Client): Session | undefined {
   if (client.attachedSessionId === null) return undefined;
@@ -404,14 +284,9 @@ export function activeWindowOf(session: Session): Window {
   return session.windows[session.activeWindowIdx];
 }
 
-// ---------------------------------------------------------------------------
 // Window selection / cycling
-// ---------------------------------------------------------------------------
 
-/** Selects `index` directly (status-bar click, digit prefix targets,
- * `select-window`). A no-op — including no `lastWindowIdx` bookkeeping — when
- * `index` is out of range or already active, exactly like real tmux
- * selecting the window it's already on. */
+/** Selects `index` directly; a no-op, with no `lastWindowIdx` bookkeeping, when out of range or already active. */
 export function selectWindowIndex(session: Session, index: number): void {
   if (index < 0 || index >= session.windows.length) return;
   if (index === session.activeWindowIdx) return;
@@ -426,12 +301,9 @@ export function cycleWindow(session: Session, dir: 1 | -1): void {
   selectWindowIndex(session, (session.activeWindowIdx + dir + len) % len);
 }
 
-// ---------------------------------------------------------------------------
 // Rename / kill
-// ---------------------------------------------------------------------------
 
-/** `Ctrl-b ,` commit — disables auto-rename for this window permanently (see
- * `Window.autoName`'s own comment). A no-op if `windowId` doesn't exist. */
+/** `Ctrl-b ,` commit — disables auto-rename for this window permanently; a no-op if `windowId` doesn't exist. */
 export function renameWindowManual(session: Session, windowId: string, name: string): void {
   const win = session.windows.find((w) => w.id === windowId);
   if (!win) return;
@@ -442,14 +314,9 @@ export function renameWindowManual(session: Session, windowId: string, name: str
 export type KillWindowResult = { ok: true } | { ok: false; reason: "only-window" };
 
 /**
- * `Ctrl-b &` / `:kill-window` — refuses (no mutation at all) when this is the
- * session's last window, matching today's exact behavior (site.yaml's
- * `killLastWindowMessage`, rendered by the caller). Otherwise removes the
- * window; if it was the active one, falls back to whichever window now sits
- * at its old array position (`remaining[idx] ?? remaining[0]` — the window
- * that sat right after it, or wraps to the first remaining window if
- * it was last) so the "kill every window down to the
- * last one" e2e sequence produces byte-identical results.
+ * `Ctrl-b &` / `:kill-window` — refuses outright when this is the session's last window.
+ *
+ * Otherwise removes the window, falling back the active index to whichever window now sits at its old array position, wrapping to the first if it was last.
  */
 export function killWindow(session: Session, windowId: string): KillWindowResult {
   if (session.windows.length <= 1) return { ok: false, reason: "only-window" };
@@ -470,9 +337,7 @@ export function killWindow(session: Session, windowId: string): KillWindowResult
     if (idx < session.lastWindowIdx) session.lastWindowIdx -= 1;
   }
 
-  // Defensive clamp — every branch above should already leave both indices
-  // valid; this just guarantees the "fully consistent at return" invariant
-  // holds even if a future edge case slips through the branches above.
+  // Defensive clamp, guaranteeing the "fully consistent at return" invariant even if an edge case slips through above.
   if (session.activeWindowIdx >= session.windows.length) {
     session.activeWindowIdx = Math.max(0, session.windows.length - 1);
   }
@@ -483,17 +348,13 @@ export function killWindow(session: Session, windowId: string): KillWindowResult
   return { ok: true };
 }
 
-// ---------------------------------------------------------------------------
 // Splits (`Ctrl-b |`/`%` and `-`/`"`)
-// ---------------------------------------------------------------------------
 
-/** `|`/`%` (row — side by side) or `-`/`"` (column — stacked): real tmux's
- * own rule is "insert as a sibling if the target pane's immediate parent
- * split is already the same orientation, otherwise wrap the target pane in
- * a brand new split of the requested orientation" — walks `node` looking for
- * `targetPaneId` and applies exactly that rule the moment it's found,
- * rebuilding new objects back up to the root (functional, no in-place
- * mutation — same convention `removePaneNode` above uses). */
+/**
+ * Real tmux's split rule: insert as a sibling if the target pane's immediate parent split already matches `direction`, otherwise wrap the target in a brand-new split of that direction.
+ *
+ * Rebuilds new objects back up to the root rather than mutating in place, the same convention `removePaneNode` uses.
+ */
 function insertSplit(node: PaneNode, targetPaneId: string, direction: "row" | "column", newLeaf: PaneLeaf): PaneNode {
   if (node.type === "leaf") {
     if (node.pane.id !== targetPaneId) return node;
@@ -505,10 +366,7 @@ function insertSplit(node: PaneNode, targetPaneId: string, direction: "row" | "c
 
   const child = node.children[idx];
   if (child.type === "leaf" && child.pane.id === targetPaneId && node.direction === direction) {
-    // Same-orientation parent, target is a DIRECT child — insert the new
-    // pane as an adjacent sibling, halving the target's own share (every
-    // OTHER sibling's share is untouched — splitting one pane never resizes
-    // panes it isn't adjacent to, exactly like real tmux).
+    // Same-orientation parent and target is a direct child: insert as an adjacent sibling, halving only the target's own share.
     const oldSize = node.sizes[idx];
     const half = oldSize / 2;
     const children = [...node.children];
@@ -519,21 +377,14 @@ function insertSplit(node: PaneNode, targetPaneId: string, direction: "row" | "c
     return { ...node, children, sizes };
   }
 
-  // Either the target is deeper down, or it's a direct child but the parent
-  // split's orientation doesn't match — recursing into a leaf child hits the
-  // top branch above, wrapping just that leaf in a brand-new split of the
-  // requested direction, which this call then splices back in place.
+  // Either the target is deeper down, or its parent's orientation doesn't match; recursing wraps just that leaf in a new split, spliced back in place.
   const rewrittenChild = insertSplit(child, targetPaneId, direction, newLeaf);
   const children = [...node.children];
   children[idx] = rewrittenChild;
   return { ...node, children };
 }
 
-/** `Ctrl-b |`/`%` (direction "row") and `Ctrl-b -`/`"` (direction "column")
- * — splits the window's own FOCUSED pane, always 50/50 with a brand-new
- * SHELL pane, which becomes the newly focused pane. A no-op if the window's
- * `activePaneId` has somehow gone
- * stale (defensive — should be unreachable). */
+/** `Ctrl-b |`/`%`/`-`/`"` — splits the focused pane 50/50 with a brand-new shell pane, which becomes the newly focused pane. */
 export function splitPane(window: Window, direction: "row" | "column"): void {
   const focusedId = window.activePaneId;
   if (!findPaneById(window.root, focusedId)) return;
@@ -549,30 +400,20 @@ export function splitPane(window: Window, direction: "row" | "column"): void {
   window.activePaneId = newPaneId;
 }
 
-// ---------------------------------------------------------------------------
 // Kill-pane
-// ---------------------------------------------------------------------------
 
-/** A pane's stable, LIVE-renumbered position within its window (0-based,
- * `Window.paneOrder`'s own creation-order list) — the `{pane_index}` in the
- * `kill-pane {pane_index}? (y/n)` confirm prompt. `-1` if `paneId` isn't in
- * this window at all (defensive). */
+/** A pane's stable, live-renumbered position within its window, the `{pane_index}` in the `kill-pane {pane_index}? (y/n)` confirm prompt. */
 export function paneIndexInWindow(window: Window, paneId: string): number {
   return window.paneOrder.indexOf(paneId);
 }
 
 export type KillPaneResult = { kind: "pane-removed" } | { kind: "last-pane" };
 
-/** Removes `paneId` from `window`'s tree (`Ctrl-b x` ALWAYS prompts
- * kill-pane, even on a single-pane window — the caller is the one that
- * decides what "the last pane" cascades to, this function only
- * ever handles the "more than one pane" case and reports back when it
- * wasn't). Collapsing a split down to its last remaining child, and
- * renormalizing sibling `sizes`, are handled by `removePaneNode` itself.
- * Moves focus (if the killed pane was focused) to whichever pane sat right
- * BEFORE it in creation order, wrapping to the new first pane if it was
- * itself first — a pane-scoped mirror of `killWindow`'s own "fall back to
- * whichever now sits at its old position" convention. */
+/**
+ * Removes `paneId` from `window`'s tree; the caller decides what the "last pane" case cascades to, this function only handles "more than one pane" and reports back when it wasn't.
+ *
+ * Moves focus, if the killed pane was focused, to whichever pane sat right before it in creation order, wrapping to the new first pane if it was itself first.
+ */
 export function killPaneInWindow(window: Window, paneId: string): KillPaneResult {
   if (window.paneOrder.length <= 1) return { kind: "last-pane" };
 
@@ -592,9 +433,7 @@ export function killPaneInWindow(window: Window, paneId: string): KillPaneResult
   return { kind: "pane-removed" };
 }
 
-// ---------------------------------------------------------------------------
 // Layout engine (the 7 tmux presets and `Ctrl-b Space` / `select-layout`)
-// ---------------------------------------------------------------------------
 
 export const LAYOUT_NAMES = [
   "even-horizontal",
@@ -612,13 +451,7 @@ export function isLayoutName(name: string): name is LayoutName {
   return (LAYOUT_NAMES as readonly string[]).includes(name);
 }
 
-/** The "big main pane" fraction for `main-horizontal(-mirrored)`/
- * `main-vertical(-mirrored)` — the main pane plus others along the opposite
- * edge. Real tmux sizes its main pane with an ABSOLUTE
- * `main-pane-height`/`main-pane-width` (a fixed row/column count), not a
- * percentage, so there is no single "exact" fraction to port — 60/40 is a
- * deliberate choice that keeps the main pane visibly bigger than the rest
- * without claiming false precision. */
+/** The "big main pane" fraction for the main-* layouts; real tmux sizes its main pane with an absolute row/column count, not a percentage, so 60/40 is a deliberate approximation, not a ported exact value. */
 const MAIN_PANE_FRACTION = 0.6;
 
 function leafOf(pane: Pane): PaneLeaf {
@@ -637,14 +470,7 @@ function columnOf(children: PaneNode[], sizes: number[]): SplitNode {
   return { type: "split", direction: "column", children, sizes };
 }
 
-/** Pure tree-builder for all 7 presets — takes `panes` in the window's
- * STABLE `paneOrder` (creation order; index 0 is the "main" pane for the two
- * main-* families, a documented tmux-fidelity choice — see `Window.
- * paneOrder`'s own comment) and returns a BRAND NEW root, discarding
- * whatever the window's tree shape was before (real tmux: applying a preset
- * always rebuilds the whole layout from scratch, it doesn't try to preserve
- * a manually-split arrangement). A single pane is always just a bare leaf —
- * nothing to arrange. */
+/** Pure tree-builder for all 7 presets, taking `panes` in the window's stable `paneOrder` and returning a brand-new root, discarding whatever tree shape existed before. */
 export function buildLayoutTree(panes: Pane[], layoutName: LayoutName): PaneNode {
   if (panes.length === 1) return leafOf(panes[0]);
 
@@ -688,21 +514,12 @@ export function buildLayoutTree(panes: Pane[], layoutName: LayoutName): PaneNode
     }
 
     case "tiled": {
-      // Near-even grid: cols = ceil(sqrt(n)), rows = ceil(n/cols) — matches
-      // real tmux's own tiled arrangement for 2-5 panes. Any short final
-      // row simply has fewer, evenly-widened columns (its own row-split
-      // only has as many children as it has panes) — real tmux's own
-      // behavior for a non-perfect grid. When every pane fits in a SINGLE
-      // row (cols >= n, e.g. n=2 → cols=2), the
-      // grid degenerates to a plain row — returned directly rather than
-      // wrapped in a column split with only one child (this file's own "no
-      // 1-child splits" invariant, see `removePaneNode`'s comment).
+      // Near-even grid, cols = ceil(sqrt(n)) and rows = ceil(n/cols), matching real tmux's tiled arrangement for 2-5 panes.
       const n = panes.length;
       const cols = Math.ceil(Math.sqrt(n));
       const rowsOfPanes: Pane[][] = [];
       for (let i = 0; i < n; i += cols) rowsOfPanes.push(panes.slice(i, i + cols));
-      // Same "no 1-child splits" rule applies PER ROW: a short final row of
-      // exactly one pane is that pane's bare leaf, not a 1-child row split.
+      // The "no 1-child splits" invariant applies per row too: a short final row of exactly one pane is a bare leaf, not a 1-child row split.
       const rowNodes = rowsOfPanes.map((rowPanes) =>
         rowPanes.length === 1 ? leafOf(rowPanes[0]) : rowOf(rowPanes.map(leafOf), evenSizes(rowPanes.length)),
       );
@@ -712,12 +529,7 @@ export function buildLayoutTree(panes: Pane[], layoutName: LayoutName): PaneNode
   }
 }
 
-/** `select-layout <name>` (named form) — applies `layoutName` to `window`
- * RIGHT NOW, rebuilding its tree from the current `paneOrder`, and records
- * it as `lastLayout` so a FOLLOWING bare `Ctrl-b Space`/`select-layout`
- * continues the cycle/reapplication from here (the named form and the cycle
- * share one piece of state). A no-op if the window somehow has
- * no panes at all (defensive, unreachable — every window always has ≥1). */
+/** `select-layout <name>` — applies `layoutName` to `window` now, rebuilding its tree from the current `paneOrder`, and records it as `lastLayout` so a following bare `Ctrl-b Space` continues from here. */
 export function applyLayout(window: Window, layoutName: LayoutName): void {
   const panes = window.paneOrder.map((id) => findPaneById(window.root, id)).filter((p): p is Pane => !!p);
   if (panes.length === 0) return;
@@ -725,43 +537,27 @@ export function applyLayout(window: Window, layoutName: LayoutName): void {
   window.lastLayout = layoutName;
 }
 
-/** `Ctrl-b Space` — applies the NEXT preset in the fidelity-verified cycle,
- * wrapping around, starting at index 0 (`even-horizontal`) the first time
- * it's ever pressed on a window (`lastLayout` unset — the fidelity
- * reference's "lastLayout = -1" rule). */
+/** `Ctrl-b Space` — applies the next preset in the cycle, wrapping around, starting at `even-horizontal` the first time it's pressed on a window. */
 export function nextLayout(window: Window): void {
   const currentIdx = window.lastLayout ? LAYOUT_NAMES.indexOf(window.lastLayout) : -1;
   const next = LAYOUT_NAMES[(currentIdx + 1) % LAYOUT_NAMES.length];
   applyLayout(window, next);
 }
 
-/** Bare `select-layout` (no name) — reapplies whatever preset was last
- * applied, recomputed fresh against the CURRENT pane list (e.g. after a
- * manual split diverged the tree from it — real tmux fidelity: `select-
- * layout` with no argument means "reapply the current layout"); a silent
- * no-op if no preset has ever been applied to this window. */
+/** Bare `select-layout` — reapplies whatever preset was last applied, recomputed fresh against the current pane list; a silent no-op if none has ever been applied. */
 export function reapplyLastLayout(window: Window): void {
   if (!window.lastLayout) return;
   applyLayout(window, window.lastLayout);
 }
 
-// ---------------------------------------------------------------------------
 // Sessions
-// ---------------------------------------------------------------------------
 
-/** Bare `tmux a`/`attach` (no `-t`) fidelity rule: "most recently used
- * unattached session" — the highest `lastAttachedSeq` among `sessions`.
- * `undefined` for an empty list (`no sessions`, rendered by the caller). */
+/** Bare `tmux a`/`attach`'s "most recently used unattached session": the highest `lastAttachedSeq`, or `undefined` for an empty list. */
 function pickMostRecentSession(sessions: Session[]): Session | undefined {
   return [...sessions].sort((a, b) => b.lastAttachedSeq - a.lastAttachedSeq)[0];
 }
 
-/** Attaches the client to an EXISTING session by id (a no-op if `sessionId`
- * doesn't exist) — bumps the recency counter so this session becomes the new
- * "most recently used" for the next bare `tmux a`. Used by both a resolved
- * `tmux a [-t name]` and the immediate attach half of `tmux new [-s name]`
- * (real tmux: starting a brand-new session from outside BOTH creates and
- * attaches). */
+/** Attaches the client to an existing session by id, bumping the recency counter so it becomes the new "most recently used" for the next bare `tmux a`. */
 export function attachSession(client: Client, sessionId: string): void {
   const session = client.sessions.find((s) => s.id === sessionId);
   if (!session) return;
@@ -770,24 +566,16 @@ export function attachSession(client: Client, sessionId: string): void {
   session.lastAttachedSeq = client.attachSeq;
 }
 
-/** `Ctrl-b d` — no session owns the keyboard
- * afterward; the caller (Terminal.svelte) is the one that appends the
- * `[detached (from session {name})]` line to `Client.hostPane`'s own shell
- * buffer (this file stays free of shell.yaml string content). */
+/** `Ctrl-b d` — no session owns the keyboard afterward; the caller appends the detached-message line to `Client.hostPane`'s shell buffer. */
 export function detachClient(client: Client): void {
   client.attachedSessionId = null;
 }
 
-/** `tmux new [-s name]` (host mode only — a pane shell always refuses
- * before reaching this) — creates a
- * brand-new session with exactly one window (`0:zsh`, auto-named, running a
- * shell — real tmux's own behavior for a session nobody has launched a
- * program in yet). Does NOT attach on its own; the caller pairs this with
- * `attachSession()` immediately after, matching real tmux's combined
- * create-and-attach. `name` must already be validated (non-duplicate) by
- * the caller (src/common/lib/shell.ts's own `runCommand` — duplicate-name
- * rejection needs the exact `duplicate session: {name}` string, which lives
- * in shell.yaml, not here). */
+/**
+ * `tmux new [-s name]` — creates a brand-new session with exactly one window (`0:zsh`, auto-named, running a shell).
+ *
+ * Does not attach on its own; the caller pairs this with `attachSession()` immediately after. `name` must already be validated as non-duplicate by the caller.
+ */
 export function createSession(client: Client, name: string, epoch: number): Session {
   const sessionId = `session:${name}`;
   const windowId = `${sessionId}#w0`;
@@ -815,23 +603,11 @@ export function createSession(client: Client, name: string, epoch: number): Sess
   return session;
 }
 
-/** `Ctrl-b c` — tmux new-window: appends a
- * brand-new, auto-named `zsh` window running the in-window shell program to
- * `session`, numbered one past the highest window number currently in the
- * session (so it always coexists with whatever fixed digit targets a given
- * caller has bound — the site's own six seed windows are numbered 0-5, so a
- * fresh window here always lands at 6+ without colliding). Deliberately
- * does NOT touch `activeWindowIdx`/`lastWindowIdx` itself — same "create,
- * caller activates" split `createSession`/`attachSession` already use above
- * — so the one function that owns that invariant (`selectWindowIndex`) is
- * still the only place it's bookkept; the caller pairs this with
- * `selectWindowIndex(session, session.windows.length - 1)` immediately
- * after, matching real tmux's own "new window is created AND focused" combo
- * the same way `tmux new -s name` is create-and-attach. Window ids stay
- * deterministic (never a module-level counter or `Math.random()`,
- * determinism rules) — a number can be reused after its window is killed
- * and a new one created (the old window's state is fully gone by then), so
- * `${session.id}#w${number}` never collides with anything still alive. */
+/**
+ * `Ctrl-b c` — appends a brand-new, auto-named `zsh` window to `session`, numbered one past the highest window number currently in the session.
+ *
+ * Deliberately does not touch `activeWindowIdx`/`lastWindowIdx` itself; the caller pairs this with `selectWindowIndex(session, session.windows.length - 1)` immediately after, so `selectWindowIndex` stays the only place that invariant is bookkept.
+ */
 export function createWindow(session: Session): Window {
   const highest = session.windows.reduce((max, w) => Math.max(max, w.number), -1);
   const number = highest + 1;
@@ -853,20 +629,10 @@ export function createWindow(session: Session): Window {
 
 export type KillWindowCascadeResult =
   | { kind: "window-removed" }
-  /** `detachedToHost: true` — no sessions remain; the client is now fully
-   * detached (`[exited]`, rendered by the caller). `false` — another session
-   * still existed, and the client was silently switched to the most
-   * recently used one (shows nothing special to the user). */
+  /** `detachedToHost: true` means no sessions remain and the client is now fully detached; `false` means the client was silently switched to the most recently used remaining session. */
   | { kind: "session-destroyed"; detachedToHost: boolean };
 
-/** Shared tail of "a session is being destroyed outright" — removes it from
- * `client.sessions`, and, ONLY if it was the attached one, either switches
- * silently to the most-recently-used REMAINING session or, if none remain,
- * detaches the client entirely (`[exited]`, rendered by the caller). Used by
- * both `killWindowCascade` (killing a session's last window) and
- * `killSession` (choose-tree `x` on a session row) — the exact same
- * "session is gone" bookkeeping either way, just reached from two
- * different triggers. */
+/** Shared tail of "a session is being destroyed outright", removing it from `client.sessions` and, if it was the attached one, switching to the most-recently-used remaining session or detaching entirely if none remain. */
 function destroySession(client: Client, sessionId: string): { detachedToHost: boolean } {
   client.sessions = client.sessions.filter((s) => s.id !== sessionId);
   if (client.attachedSessionId !== sessionId) return { detachedToHost: false };
@@ -882,15 +648,9 @@ function destroySession(client: Client, sessionId: string): { detachedToHost: bo
 }
 
 /**
- * `Ctrl-b &` / `:kill-window` / shell `exit` in the LAST pane of a window —
- * unlike the plain `killWindow()` above (which refuses to kill a session's
- * only window), this cascades. Killing a window that ISN'T the session's
- * last one still just removes it (delegates to `killWindow`, which never
- * refuses when `windows.length > 1`). Killing the session's LAST window destroys the
- * session outright (real tmux: killing the last window kills the session);
- * if the destroyed session was the attached one, the client either switches
- * silently to the most-recently-used REMAINING session, or, if none remain,
- * detaches to the host shell (`[exited]`).
+ * `Ctrl-b &` / `:kill-window` / shell `exit` in the last pane of a window — unlike the plain `killWindow()` above, this cascades.
+ *
+ * Killing a window that isn't the session's last one just removes it; killing the last window destroys the session outright, real tmux's own behavior.
  */
 export function killWindowCascade(client: Client, session: Session, windowId: string): KillWindowCascadeResult {
   if (session.windows.length <= 1) {
@@ -901,20 +661,13 @@ export function killWindowCascade(client: Client, session: Session, windowId: st
   return { kind: "window-removed" };
 }
 
-/** choose-tree `x` on a SESSION row — kills every window in `sessionId` at
- * once, i.e. the whole session, in one step (unlike `killWindowCascade`,
- * which only ever destroys a session as a SIDE EFFECT of its last window
- * dying). The TYPED `kill-session` cmdline/tmux command is excluded from
- * this site; only this overlay action reaches it. Reuses the exact same
- * "destroy a session" bookkeeping `killWindowCascade` falls back to. */
+/** choose-tree `x` on a session row — kills the whole session in one step, unlike `killWindowCascade`, which only destroys a session as a side effect of its last window dying. */
 export function killSession(client: Client, sessionId: string): { kind: "session-destroyed"; detachedToHost: boolean } {
   const { detachedToHost } = destroySession(client, sessionId);
   return { kind: "session-destroyed", detachedToHost };
 }
 
-// ---------------------------------------------------------------------------
 // Program launch/exit
-// ---------------------------------------------------------------------------
 
 /** A window's auto-rename text for a given program — every program's own
  * name verbatim, except the in-window shell, which is real tmux's own
@@ -923,11 +676,7 @@ export function programDisplayName(program: ProgramName): string {
   return program === "shell" ? "zsh" : program;
 }
 
-/** Sets `paneId`'s running program and, if its window hasn't been manually
- * renamed, updates the window's auto-rename text to match. The shared
- * plumbing under both `launchProgram` and
- * `exitProgram` below — single source of the auto-rename bookkeeping. A
- * no-op if `paneId` doesn't exist in this session. */
+/** Sets `paneId`'s running program and, if its window hasn't been manually renamed, updates the window's auto-rename text to match; shared plumbing under both `launchProgram` and `exitProgram`. */
 export function setPaneProgram(session: Session, paneId: string, program: ProgramName): void {
   const win = windowOfPane(session, paneId);
   if (!win) return;
@@ -937,24 +686,17 @@ export function setPaneProgram(session: Session, paneId: string, program: Progra
   if (win.autoName) win.name = programDisplayName(program);
 }
 
-/** Launches `program` in `paneId` — any pane can launch any program, even
- * one already running elsewhere; typing a
- * program's bare name into an in-window shell, or relaunching one from
- * Cmdline/HelpSearch/dashboard menu, all funnel through this one function. */
+/** Launches `program` in `paneId`; any pane can launch any program, even one already running elsewhere. */
 export function launchProgram(session: Session, paneId: string, program: ProgramName): void {
   setPaneProgram(session, paneId, program);
 }
 
-/** `:q` / cmdline `q` — drops `paneId`'s program back to an in-window
- * shell. Idempotent: exiting an already-shell pane just re-sets the same
- * program (harmless). */
+/** `:q` / cmdline `q` — drops `paneId`'s program back to an in-window shell; idempotent, since exiting an already-shell pane just re-sets the same program. */
 export function exitProgram(session: Session, paneId: string): void {
   setPaneProgram(session, paneId, "shell");
 }
 
-// ---------------------------------------------------------------------------
 // Factory ("reboot = factory state")
-// ---------------------------------------------------------------------------
 
 export interface WindowSeed {
   id: string;
@@ -963,41 +705,21 @@ export interface WindowSeed {
 }
 
 export interface FactoryOptions {
-  /** Bare session name (e.g. "10.42.7.13") — NOT the status bar's own
-   * "Session: {name}" display string (that formatting stays in site.yaml /
-   * StatusBar.svelte; this file only ever holds the bare name). */
+  /** Bare session name, not the status bar's own "Session: {name}" display string. */
   sessionName: string;
-  /** Seed window list — site.yaml's `statusBar.windows`, content-driven (no
-   * window names hardcoded in this file). Every seed's `id` doubles as the
-   * window's initial program AND its permanent identity: a window's
-   * identity never changes even once its pane runs some other program or a
-   * shell. This engine places no constraint on which ids are valid — that's
-   * entirely bootstrap's registry (architecture R007). */
+  /** Seed window list; every seed's `id` doubles as the window's initial program and its permanent identity, which never changes even once its pane runs some other program or a shell. */
   windows: WindowSeed[];
-  /** Frozen page-clock epoch (src/common/lib/clock.ts's `resolvePageEpoch()`) —
-   * this file never calls `Date.now()` itself (determinism rules). */
+  /** Frozen page-clock epoch; this file never calls `Date.now()` itself. */
   epoch: number;
-  /** Which window is active on creation — defaults to the first seed
-   * (index 0) when omitted or not found. Terminal.svelte passes the route
-   * the page was SSR'd with here so the very first client build doesn't
-   * need a follow-up `selectWindowIndex` call (and the pushState that would
-   * imply) just to reach the window matching `initialView`. */
+  /** Which window is active on creation, defaulting to the first seed when omitted or not found. */
   activeWindowId?: string;
   sessionId?: string;
-  /** The detached host shell's pre-seeded scrollback (shell.ts's
-   * `seedHostNarrative()`, itself sourced from shell.yaml's
-   * `host.narrative` rows — content-driven, this file
-   * only ever holds whatever `ShellLine[]` the caller hands it). Defaults to
-   * empty so every existing unit test's `createFactoryClient()` call (none
-   * of which pass this) keeps working unchanged. */
+  /** The detached host shell's pre-seeded scrollback; defaults to empty. */
   hostNarrative?: ShellLine[];
 }
 
 function makePane(windowId: string, index: number, program: ProgramName): Pane {
-  // Deterministic id — a pure function of (windowId, index), never a
-  // module-level counter or Math.random() (determinism rules): a factory
-  // rebuild (reboot) always reproduces the exact same ids for the exact same
-  // tree shape.
+  // Deterministic id, a pure function of (windowId, index), so a factory rebuild always reproduces the same ids for the same tree shape.
   return { id: `${windowId}#${index}`, program, shell: createShellState() };
 }
 
@@ -1031,11 +753,7 @@ export function createFactoryClient(opts: FactoryOptions): Client {
     activeWindowIdx: activeIdx,
     lastWindowIdx: activeIdx,
     createdAt: opts.epoch,
-    // Attached immediately at creation — the one and only session this
-    // factory build knows about is, by construction, the "most recently
-    // used" one (matters the moment a second session is created via `tmux
-    // new` and later killed, at which point the cascade needs to pick
-    // between this one and that one).
+    // Attached immediately at creation, so this session is the "most recently used" one by construction.
     lastAttachedSeq: 1,
   };
 

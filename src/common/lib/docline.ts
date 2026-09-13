@@ -1,21 +1,3 @@
-// Classifies raw markdown body lines into the prototype's rendering "kinds"
-// (Homepage.dc.html Component.doc / Component.xp[].roles[].doc arrays use
-// tuples of [text, kind]).
-//
-// Rules (mirrors the prototype's hand-authored kind arrays exactly — see
-// src/common/tests/unit/docline.fixtures.json, extracted verbatim from the 4
-// fixture project docs + 7 personnel role docs):
-//   - a line starting with one or more "#" followed by a space -> "h"
-//     (both "# Title" and "## Section" headings).
-//   - project docs only: the single line immediately following a
-//     "## Status" heading -> "c" (the status text itself).
-//   - personnel docs only: line index 1 (the line right after the title,
-//     e.g. "Enaimco · Toronto, ON · Jul 2024 – Present") -> "m".
-//   - personnel docs only: a line whose content starts with a backtick
-//     (the "`typescript` `node` ..." stack line) -> "c".
-//   - a line starting with "- " -> "b" (bullets).
-//   - everything else (including blank lines) -> "p".
-
 export type DocKind = "h" | "m" | "p" | "b" | "c";
 export type DocMode = "project" | "personnel";
 
@@ -59,10 +41,7 @@ export interface DocLine {
 
 /** Split a markdown body into lines and classify them in one step. */
 export function classifyBody(body: string, mode: DocMode): DocLine[] {
-  // Content collections hand us the body with a single trailing newline;
-  // split-then-drop-one-trailing-empty-line keeps the line count identical
-  // to the source doc arrays (see src/features/repositories/tests/ui/support/repositories/*.md, generated with
-  // `doc.map(l => l[0]).join("\n") + "\n"`).
+  // Content collections add a single trailing newline, so this drops it to keep the line count matching the source doc arrays.
   const raw = body.replace(/\n$/, "").split("\n");
   const kinds = classifyDoc(raw, mode);
   return raw.map((text, i) => ({ t: text === "" ? " " : text, kind: kinds[i] }));
