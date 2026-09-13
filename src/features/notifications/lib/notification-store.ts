@@ -1,11 +1,3 @@
-// Pure notification-state logic (no Svelte runes, no DOM/localStorage
-// access except inside the explicitly-guarded load/save wrappers) — same
-// split src/features/notifications/lib/toast-seed.ts established for the old toast picker:
-// this file is importable from `node --test` (which cannot compile runes)
-// and from Playwright specs that need to compute expected state themselves.
-// Notifications.svelte owns the ONLY `$state` wrapping these functions —
-// every mutation re-assigns through one of the pure transitions below.
-
 export type NotificationSeverity = "alert" | "warn" | "info";
 export type NotificationFolder = "inbox" | "archive" | "spam";
 
@@ -50,10 +42,6 @@ export const TOAST_STACK_CAP = 4;
  * before its natural expiry doesn't vanish the instant the pointer leaves. */
 export const TOAST_HOVER_MIN_REMAINDER_MS = 400;
 
-/** sessionStorage override for e2e: a multiplier applied to every toast's
- * duration (e.g. 0.02 turns a 10s alert into 200ms) so specs never sleep
- * through the real severity timers. Read once at toast-spawn time, same
- * best-effort contract as src/features/notifications/lib/toast-seed.ts's old toast-seed key. */
 export const TOAST_DURATION_SCALE_STORAGE_KEY = "edith:notifications-toast-scale";
 
 /** sessionStorage override for e2e: a numeric seed pinning WHICH unseen pool
@@ -96,12 +84,6 @@ function isNotificationItem(v: unknown): v is NotificationItem {
   );
 }
 
-/** Parse a raw localStorage string into a valid state, or `null` if it's
- * missing/unparseable/shape-invalid — pure (no storage access), so
- * unit-testable without a DOM/localStorage shim, same convention as
- * src/features/notifications/lib/toast-seed.ts's `parseToastSeed`. A `null` return is the
- * caller's cue to fall back to an empty state (corrupted storage resets
- * gracefully rather than throwing). */
 export function parseStoredState(raw: string | null | undefined): NotificationState | null {
   if (raw === null || raw === undefined || raw === "") return null;
   let parsed: unknown;
@@ -143,12 +125,6 @@ export function saveState(state: NotificationState): void {
     // best-effort — same contract as loadState()/boot-state.ts
   }
 }
-
-// ---------------------------------------------------------------------------
-// mulberry32 (public-domain PRNG, same algorithm src/features/notifications/lib/toast-seed.ts
-// used for the old toast pick) — deterministic when seeded, good enough for
-// picking pool entries, not cryptographic.
-// ---------------------------------------------------------------------------
 
 export function mulberry32(seed: number): () => number {
   let a = seed >>> 0;
@@ -289,10 +265,6 @@ export function unreadInboxCount(state: NotificationState): number {
 }
 
 // ---------------------------------------------------------------------------
-// Relative-time formatting
-// ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
 // Toast timing helpers
 // ---------------------------------------------------------------------------
 
@@ -351,10 +323,7 @@ export function resolveInjectRand(): () => number {
 }
 
 // ---------------------------------------------------------------------------
-// Determinism fixture: a fixed, hand-authored state for golden capture — never touches localStorage, never injects, never spawns toasts.
-// `now` is the caller's current Date.now() (frozen by Playwright's faked
-// clock during a golden capture), so `ago` labels resolve deterministically
-// without hardcoding an absolute timestamp here.
+// Determinism fixture: a hand-authored state for golden capture, whose relative "ago" labels resolve deterministically only because the caller passes a frozen `now`.
 // ---------------------------------------------------------------------------
 
 export function buildFixtureState(now: number): NotificationState {

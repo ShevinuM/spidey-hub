@@ -1,19 +1,4 @@
 <script lang="ts">
-  // Signal-inbox bell/panel/toast layer (Mockup B — "SpideyHub Notifications
-  // .dc.html"). The bell/panel/toasts are dashboard-only: every element
-  // below is gated behind `view === "home"`, but the component stays
-  // mounted regardless of view so its internal state (open panel, queued
-  // toasts) survives a view switch away and back rather than resetting.
-  //
-  // State lives in localStorage (`NOTIFICATIONS_STORAGE_KEY`,
-  // src/features/notifications/lib/notification-store.ts) — this component owns the ONE `$state`
-  // array wrapping that module's pure transitions; every mutation re-derives
-  // through `mutate()` below and persists immediately.
-  //
-  // Two deliberate deviations from the mockup: a third per-row action (mark
-  // as spam, since real persistence needs a way to move an item into
-  // web·trap); the footer hint drops the mockup's unwired "x dismiss" (this
-  // build's dismissal is a per-row button, not a bare key).
   import type { NotificationsData } from "../../../common/lib/data";
   import type { ViewId } from "../../../common/lib/views";
   import { NotificationsState } from "./notificationsState.svelte";
@@ -29,10 +14,7 @@
      * per-visit injection, no toasts, and every infinite CSS animation
      * disabled, for deterministic golden capture. */
     fixtureMode: boolean;
-    /** Terminal.svelte's `bootRef?.isActive?.()` closure — passed through
-     * unchanged to NotificationsState so a toast's dismiss timer never arms
-     * while the boot overlay is still hiding it. Optional so a caller with
-     * no boot concept (none exists today) gets today's un-gated behavior. */
+    /** Passed straight through, unmodified, to `NotificationsState`'s `bootActiveFn` (see there for the default-fallback behavior). */
     bootActive?: () => boolean;
   }
 
