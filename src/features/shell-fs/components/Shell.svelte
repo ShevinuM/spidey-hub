@@ -1,29 +1,12 @@
 <script lang="ts">
-  // In-window shell — one instance per shell PANE (`bind:this` registered
-  // into PaneTree's ref registry, same contract every other program
-  // component uses). A program's `:q` drops its pane's `program` to "shell"
-  // (src/common/engines/tmux/tmux.ts's `exitProgram`); this component then renders whatever
-  // that pane's own `Pane.shell` buffer holds. Also serves as the detached
-  // HOST shell (`mode: "host"`, fullscreen, no status bar): `tmux
-  // new`/`attach`, and `open <view>`/bare-name attaching instead of
-  // launching, are all live in host mode via `onAttach`/`onCreateAndAttach`/
-  // `onAttachView` below.
-  //
-  // Owns exactly the stateful/effectful half of the split with
-  // src/common/lib/shell.ts: keydown handling, the lazy fetch+cache of the generated fs/
-  // grep/repo indexes (src/features/shell-fs/lib/shell-index.ts), scroll-to-bottom, and
-  // dispatching a resolved `ShellEffect` (launch/exit-pane/reboot) to
-  // Terminal.svelte via props — shell.ts's own `runCommand` never touches
-  // the DOM, fetch, or tmux.ts directly.
-  //
-  // Svelte 5 hazard: the async index-warming work never
-  // lives inside an `$effect` that also reads `pane.shell` — it's triggered
-  // directly from the Enter-key handler (`submit()`, an ordinary async
-  // event handler), which reads `pane.shell.input` once up front and writes
-  // the result back exactly once at the end. The one real `$effect` below
-  // (auto-scroll) only reads `pane.shell.lines.length` and writes to a DOM
-  // node's `scrollTop` — never back into `pane.shell` — so there is no
-  // read-then-write-the-same-$state loop.
+  // In-window shell — one instance per pane, plus the detached HOST
+  // instance (`mode: "host"`, fullscreen, no status bar) that drives `tmux
+  // new`/`attach`/`open <view>` via `onAttach`/`onCreateAndAttach`/
+  // `onAttachView` below. Owns the stateful/effectful half of the split
+  // with `src/common/lib/shell.ts`: keydown handling, lazy index warm-up
+  // (`lib/shell-index.ts`), scroll-to-bottom, and dispatching a resolved
+  // `ShellEffect` to Terminal.svelte — shell.ts's own `runCommand` never
+  // touches the DOM, fetch, or tmux.ts directly.
   import type { ShellData } from "../../../common/lib/data";
   import type { Pane } from "../../../common/engines/tmux/tmux";
   import {
@@ -79,16 +62,10 @@
     /** `open <view>` / `edith` — HOST mode only, same reasoning as
      * `onAttach`. */
     onAttachView?: (sessionId: string, view: string, windowExists: boolean) => void;
-    /** Whether THIS pane is the window's currently-focused one (always
-     * `true` for the one host-mode instance, which has no siblings). Gates
-     * `data-copy-source` AND the `Ctrl-b ]` paste-target registration
-     * below: with splits, more than one shell pane can be mounted at once,
-     * each with its own stable paste-target id (`shell:${pane.id}`) —
-     * without this gate, whichever one mounted/re-ran its effect LAST would
-     * sit on top of the shared paste-target stack regardless of which pane
-     * is actually focused. Defaults to `true` so the one call site that
-     * doesn't pass it explicitly (none today — both PaneTree and
-     * Terminal's host-mode instance always do) never silently breaks. */
+    /** Whether THIS pane is the window's focused one — gates
+     * `data-copy-source` and the `Ctrl-b ]` paste-target registration below
+     * so only the focused pane's paste-target id (`shell:${pane.id}`) stays
+     * active when multiple shell panes are mounted. Defaults to `true`. */
     isFocused?: boolean;
   }
 
@@ -112,10 +89,9 @@
   let fsEntries = $state<FsEntry[] | null>(null);
 
   /** Warms the fs-index cache at most once per page (module-level cache in
-   * shellIndex.ts) — called from `submit()` directly, never from an
-   * `$effect` (see file header). Falls back to an empty index on fetch
-   * failure so a command still runs (reporting "missing" for everything)
-   * rather than hanging. */
+   * `shell-index.ts`); falls back to an empty index on fetch failure so a
+   * command still runs, reporting "missing" for everything, rather than
+   * hanging. */
   async function ensureFsEntries(): Promise<FsEntry[]> {
     if (fsEntries) return fsEntries;
     try {
@@ -182,17 +158,6 @@
     }
   }
 
-  // -----------------------------------------------------------------------
-  // `vim`/`vi`/`nvim <file>` — reuses the
-  // exact same "editorFile local state + embedded <Editor>" pattern
-  // Repositories.svelte/EmploymentRecords.svelte already use for the read-only file
-  // viewer, so it gets the SAME site-wide Cmdline ex-mode / Ctrl-d/u/f/b
-  // scroll-chord integration those two already have for free (Terminal.
-  // svelte's generic per-pane ref registry only needs `isEditorOpen`/
-  // `runEditorExCommand` exported below, same capability-check contract
-  // every other pane program's ref already follows).
-  // -----------------------------------------------------------------------
-
   interface EditorFileState {
     path: string;
     content: string;
@@ -248,29 +213,10 @@
     return editorRef.runExCommand(cmd);
   }
 
-  // Enter-key submission is fire-and-forget from handleKey's own
-  // perspective (a keydown handler can't be awaited by its caller), but its
-  // OWN work — warming the fs/grep/repo index caches, and for `cat`,
-  // fetching whatever content that implies — is genuinely async. Left as a
-  // single `await`-laden function called directly on every Enter, a user
-  // (or, more reliably, a fast scripted test) typing a SECOND command
-  // before the FIRST command's fetch resolves would race: the next
-  // keystrokes land in `pane.shell.input` while it's still holding the
-  // first command's un-cleared text, garbling the two together, and by the
-  // time either `runCommand` call finally reads `pane.shell` its history/
-  // lines/cwd may already reflect the OTHER command's not-yet-applied (or
-  // already-applied-out-of-order) effects.
-  //
-  // Fixed with two changes: (1) `submit()` itself is synchronous and
-  // clears `pane.shell.input` (and the history-browsing fields) IMMEDIATELY
-  // on Enter, before any fetch even starts — nothing can ever type into or
-  // re-observe the command that was just submitted; (2) the actual async
-  // work (`runOneCommand`) is chained onto `pendingSubmit`, a standing
-  // promise queue — so however fast Enter is pressed again, each
-  // submission's `runCommand` call only ever runs after the previous one
-  // has fully applied its result to `pane.shell`, preserving real-shell
-  // ordering (echo/output always appends in the order commands were
-  // submitted, never interleaved or dropped).
+  // `submit()` synchronously clears `pane.shell.input` on Enter before the
+  // async index warm-up/fetch starts, and chains that work (`runOneCommand`)
+  // onto `pendingSubmit`, a standing promise queue, so a fast second Enter
+  // can never race the first command's still-unresolved input or output.
   let pendingSubmit: Promise<unknown> = Promise.resolve();
 
   function submit() {
@@ -292,12 +238,9 @@
       fsEntries: entries,
       resolveContent,
       mode,
-      // Determinism rules: "neofetch uptime
-      // derives from the clock module" — NOT a raw Date.now() read. With a
-      // test-pinned CLOCK_EPOCH_STORAGE_KEY, this resolves to the exact same
-      // value as the session's own `createdAt` (also `resolvePageEpoch()`,
-      // read once at client-factory/reboot time), so uptime is always "0
-      // min" under a frozen page clock — deterministic, not a live tick.
+      // `nowMs` comes from `resolvePageEpoch()`, never a raw `Date.now()`,
+      // so neofetch's uptime matches the session's own frozen `createdAt`
+      // under a test-pinned clock.
       nowMs: resolvePageEpoch(),
       session,
       sessions,
@@ -305,17 +248,10 @@
       shell,
       viewNames,
     });
-    // `runCommand` always forces `input`/`historyIndex`/`draftBeforeHistory`
-    // back to their "just submitted" values (""/null/"") as part of
-    // building its own result — correct for the command IT was given, but
-    // this call only reaches here after an `await` (warming the fs/repo
-    // index caches), during which the user may already have typed the
-    // START of their NEXT command into `pane.shell.input`. Blindly taking
-    // `outcome.state` wholesale would silently erase those already-typed
-    // characters the instant this (delayed) result lands. `pane.shell` is
-    // read fresh here — nothing async separates this line from
-    // `runCommand`'s own read of it above, so it reflects the exact same
-    // live input `runCommand` was just called with, harmlessly re-applied.
+    // `outcome.state` carries `runCommand`'s own reset input/history
+    // fields, which would erase anything typed during the preceding
+    // `await` — so those three fields are re-read fresh from `pane.shell`
+    // instead.
     pane.shell = {
       ...outcome.state,
       input: pane.shell.input,
@@ -325,11 +261,9 @@
     await applyEffect(outcome.effect, target);
   }
 
-  /** Delegation contract: consumes printable
-   * keys/Enter/Backspace/arrows BEFORE grep's `/` opener and the bare-`:`/
-   * `?` openers — `:`/`?`/`/` all type into the shell like any other
-   * character. Modifier chords (Ctrl-b prefix, etc.) fall through
-   * untouched, same convention every other ref uses. */
+  /** Consumes printable keys/Enter/Backspace/arrows before grep's `/`
+   * opener and the bare `:`/`?` openers — those characters type into the
+   * shell instead. Modifier chords fall through untouched. */
   export function handleKey(e: KeyboardEvent): boolean {
     if (editorFile) {
       return editorRef ? editorRef.handleKey(e) : false;
@@ -379,10 +313,9 @@
 
   let scrollerEl: HTMLDivElement | undefined = $state();
 
-  // Auto-scroll to the bottom on new output — reads `lines.length` (a
-  // $state read) and writes to the DOM node's own `scrollTop` (never back
-  // into `pane.shell`), so this is not the read-then-write-same-$state
-  // hazard.
+  // Auto-scroll on new output: reads `lines.length` and writes only to the
+  // DOM node's own `scrollTop`, never back into `pane.shell`, so this is
+  // not a read-then-write-same-$state loop.
   $effect(() => {
     const n = pane.shell.lines.length;
     void n;

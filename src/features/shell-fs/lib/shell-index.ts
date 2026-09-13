@@ -1,18 +1,9 @@
-// Impure fetch+cache boundary for the shell's generated indexes — `cat`
-// resolves content lazily (lazy fetch, cache). src/common/lib/shell.ts stays a
-// pure, zero-fetch module (see
-// its own header comment); every actual `fetch()` call lives here instead,
-// exactly the same split GrepOverlay.svelte/Repositories.svelte already use for
-// their own lazy index loads (this file just factors that same pattern out
-// so Shell.svelte doesn't duplicate it per pane instance, and so every
-// mounted shell pane shares ONE warm cache rather than re-fetching on every
-// window switch).
-//
-// Module-level promises (not component state): the first caller triggers
-// the fetch, every later caller (a different pane, or the same pane after
-// switching away and back) reuses the same settled promise — a genuine
-// singleton cache for the lifetime of the page, matching GrepOverlay's own
-// "fetched once, kept forever" contract.
+// Impure fetch+cache boundary for the shell's generated indexes, so
+// `src/common/lib/shell.ts` stays a pure, zero-fetch module and every mounted
+// shell pane shares ONE warm cache instead of re-fetching per instance.
+// Module-level promises, not component state: the first caller triggers
+// the fetch, every later caller reuses the same settled promise for the
+// lifetime of the page.
 import type { FsEntry } from "../../../common/lib/shell";
 import type { RepoFile, RepoIndex } from "../../../common/lib/repo-tree";
 

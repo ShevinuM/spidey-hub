@@ -1,8 +1,6 @@
-# In-window shell — a program's
-# `:q` drops its pane back to this; the detached, fullscreen HOST shell
-# reuses the exact same component/data. Every user-visible shell
-# string lives here (content-purity rule) — src/common/lib/shell.ts only
-# ever does substitution/formatting, never holds copy of its own.
+# In-window shell — every user-visible string lives here (content-purity
+# rule); src/common/lib/shell.ts only ever substitutes/formats, never holds
+# copy of its own.
 
 prompt:
   # Pane-mode prompt (a program's `:q` shell, one per window/pane) —
@@ -43,18 +41,11 @@ errors:
 # The detached HOST shell (`Ctrl-b d`,
 # same Shell.svelte component in `mode: "host"`).
 host:
-  # Pre-seeded scrollback, shown fullscreen over the dim radar on first
-  # detach — a narrative read plausibly as: the user's REAL terminal created
-  # the tmux session and attached to it (line 3), then detached from it
-  # (line 4, the same exact bracket string `detachedTemplate` below produces
-  # for every REAL detach) so they could hand it off, then ran `edith` from
-  # that now-detached real terminal (line 5, boot.yaml's own
-  # `commandLineTemplate` — this is the exact command the boot mock's own
-  # command line shows) to launch the site, which is what silently attached
-  # THIS client (the browser tab) to the session — everything the user has
-  # been looking at since is that attachment. `{session}` is substituted
-  # with the real default session name (src/common/lib/shell.ts's
-  # `seedHostNarrative()`) — never hardcoded twice.
+  # Pre-seeded scrollback shown fullscreen on first HOST detach, narrating
+  # how this session got attached (a real terminal creates and detaches it,
+  # then runs `edith`, boot.yaml's own `commandLineTemplate`). `{session}` is
+  # substituted with the real default session name (shell.ts's
+  # `seedHostNarrative()`).
   narrative:
     - text: "E.D.I.T.H shell · zsh 5.9 · session {session}"
       kind: output
@@ -93,9 +84,8 @@ viewNames:
 
 help:
   intro: "builtins:"
-  # One row per builtin, printed verbatim (in this order) by the `help`
-  # builtin. `cmd` is the literal thing you type — kept here rather than in
-  # code so a future rename never needs a code change alongside it.
+  # One row per builtin, printed verbatim in this order; `cmd` is kept here
+  # rather than in code so a future rename needs no code change alongside it.
   rows:
     - cmd: "cd <path>"
       description: "change directory"
@@ -167,13 +157,6 @@ tmux:
   duplicateSessionTemplate: "duplicate session: {name}"
   cantFindSessionTemplate: "can't find session: {name}"
 
-# Labels for the read-only vim Editor the
-# `vim`/`vi`/`nvim <file>` builtin opens over the shell pane. Byte-for-byte
-# the same block repositories.yaml's/personnel.yaml's own `editor:` sections
-# carry (Homepage.dc.html lines 317-336: "NORMAL", "⑂ main") — kept here
-# too, in this file, rather than imported, because it's the exact same
-# reproduced prototype markup, not shared storage (same convention those two
-# files' own comments already document against each other).
 editor:
   modeLabel: "NORMAL"
   modeVisualLabel: "VISUAL"

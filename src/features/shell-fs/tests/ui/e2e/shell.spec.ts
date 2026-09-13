@@ -1,15 +1,7 @@
-// Behavioral e2e suite for the in-window shell — src/features/shell-fs/components/Shell.svelte,
-// driven through Terminal.svelte exactly like every other program ref.
-// Covers: `:q` dropping a pane's program to a shell with live window
-// auto-rename,
-// relaunching a program by typing its bare name (round-tripping the
-// auto-rename), every documented builtin's real output (against the real
-// generated fs-index/grep-index/repo-index JSONs — never hardcoded copies of
-// their content, same "assert against the real data" convention
-// cmdline.spec.ts's own data-driven sweep uses), shell history (Up/Down),
-// reboot's factory-reset of BOTH the tmux client and every pane's shell
-// buffer, and the window-chrome delegation contract ("?"/":" type into a
-// focused shell instead of opening HelpSearch/Cmdline/Grep).
+// Behavioral e2e suite for the in-window shell (Shell.svelte), driven
+// through Terminal.svelte. Assertions read against the real generated
+// fs-index/grep-index/repo-index JSONs rather than hardcoded copies of
+// their content.
 import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -18,14 +10,9 @@ import { listDir, renderTree, type FsEntry } from "../../../../../common/lib/she
 
 const ROOT = join(import.meta.dirname, "../../../../../..");
 
-// Reboot replays the real (unskippable) boot sequence with real wall-clock
-// timers — a MANUAL trigger independent of the boot-seen sessionStorage flag
-// this spec's shared `context` fixture pre-seeds (see boot.spec.ts's own "r
-// on the ready dashboard replays boot, independent of the session flag").
-// The reboot test below installs a fake clock and fast-forwards through it,
-// same "install before navigation, runFor to advance" contract every other
-// boot-adjacent e2e test in this codebase uses, rather than eating ~5s of
-// real time per test run.
+// Reboot replays the real, unskippable boot sequence; the test below
+// installs a fake clock and fast-forwards through it, same convention
+// every other boot-adjacent e2e test uses, rather than eating ~5s per run.
 const BOOT_MS = 4600;
 const HARD_STOP_MS = BOOT_MS + 60;
 const OUT_MS = 760;
@@ -114,8 +101,8 @@ test.describe("`:q` exits the active pane's program to a shell", () => {
     await expect(page.locator('[data-testid="dashboard-wordmark"]')).not.toBeVisible();
     await expect(shellPrompt(page)).toBeVisible();
     await expect(statusWindow(page, "dashboard")).toHaveText("0:zsh*");
-    // URL is frozen — Architecture notes: pushState only for canonical
-    // program windows, and "shell" isn't one.
+    // URL is frozen — pushState only fires for canonical program windows,
+    // and "shell" isn't one.
     await expect(page).toHaveURL(/\/$/);
   });
 });
@@ -243,9 +230,6 @@ test.describe("shell builtins", () => {
     for (const field of shellYaml.neofetch.fields) {
       await expect(scroller(page)).toContainText(`${field.label}: ${field.value}`);
     }
-    // Determinism rules: nowMs derives from the same frozen page-clock
-    // helper as the session's own createdAt, so under a fast test run the
-    // computed uptime is always "0 min" — never a live wall-clock tick.
     await expect(scroller(page)).toContainText("Uptime: 0 min");
 
     await runInShell(page, "sudo rm -rf /");
@@ -347,10 +331,6 @@ test.describe("shell history (Up/Down arrows)", () => {
   }) => {
     await dropToShell(page);
     await runInShell(page, "whoami");
-    // Waits for the FIRST command's own (async — it warms the fs-index
-    // cache) output before submitting the second: `runCommand` only ever
-    // appends "whoami" to `pane.shell.history` once that resolves, so
-    // pressing Up before it lands would still see an empty history.
     await expect(scroller(page)).toContainText(shellYaml.whoami);
     await runInShell(page, "help");
     await expect(scroller(page)).toContainText(shellYaml.help.intro);
@@ -403,10 +383,6 @@ test.describe("reboot factory-resets the tmux client AND every pane's shell stat
     await expect(shellPrompt(page)).toBeVisible();
     await expect(page.locator('[data-testid="shell-line"]')).toHaveCount(0);
   });
-
-  // The old amber toast system's "reboot clears in-memory dismissals" case
-  // is retired along with it — see src/features/notifications/tests/ui/e2e/notifications.spec.ts's own
-  // reboot-closes-the-panel coverage for the Mockup-B replacement.
 });
 
 test.describe("window-chrome delegation: a focused shell owns `?`/`:`/`/`", () => {
