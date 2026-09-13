@@ -1,14 +1,6 @@
-// Harness spec — proves Profile.svelte itself works, mounted alone (no
-// Terminal kernel, no tmux chrome, no keydown delegation) against
-// `/harness/profile` (fixture build only, seeded fixture props). This is
-// deliberately NOT a copy of
-// src/features/profile/tests/ui/e2e/profile.spec.ts: that suite exercises
-// Profile through the real kernel (window switching, the `r` hotkey routed
-// through Terminal.svelte's own keydown delegation — Profile exports
-// `handleKey()` but never listens for keydown itself, so `r` does nothing
-// here). This spec instead covers mount + the component's own
-// self-contained behavior: content rendering and the live meter's
-// independent rAF loop.
+// Mounts Profile.svelte standalone (no Terminal kernel), so `r` does
+// nothing here — the hotkey is routed through Terminal.svelte's keydown
+// delegation, exercised instead by profile.spec.ts's e2e suite.
 import { expect, test } from "@playwright/test";
 import { ProfilePage } from "../pages/ProfilePage";
 

@@ -1,7 +1,3 @@
-// Behavioral e2e suite for the Profile ("Agent Profile") view. Against the
-// real-content build (pnpm build -> astro preview, same as every other
-// tests/e2e spec — see nav.spec.ts's header comment).
-//
 // Uses real timers throughout (no `page.clock.install`): the live meter's
 // rAF loop and 2500ms probe interval are exactly the thing under test here,
 // and src/features/profile/tests/ui/visual/identical.spec.ts already covers
@@ -57,16 +53,7 @@ async function openProfile(page: Page) {
 test.describe("Profile: resume hotkey + CV link", () => {
   test("r opens the resume PDF in a new tab", async ({ page }) => {
     await openProfile(page);
-    // Record `window.open` calls instead of asserting on the resulting
-    // popup's navigated URL: headless Chromium in this sandbox never
-    // commits a navigation for `window.open()`-opened PDFs (reproduced
-    // even for a bare `page.evaluate(() => window.open(...))` with no app
-    // code involved at all — the popup page exists but its `url()` stays
-    // "" indefinitely), so the popup's own `url()`/load events are not a
-    // reliable signal here. Overriding `window.open` and asserting on its
-    // call arguments directly tests the same contract ("r opens
-    // /assets/resume.pdf via window.open, matching the prototype") without
-    // depending on that environment quirk.
+    // Headless Chromium here never navigates a `window.open()`-opened popup, so this asserts the call's own arguments instead of the popup's URL.
     await page.evaluate(() => {
       (window as unknown as { __opened: unknown[] }).__opened = [];
       window.open = ((url?: string | URL, target?: string) => {
@@ -106,11 +93,7 @@ test.describe("Profile: contact rows", () => {
     await expect(nonLink).toHaveCount(1);
     await expect(nonLink).toContainText("shevinum");
     expect(await nonLink.evaluate((el) => el.tagName)).toBe("SPAN");
-    // Belt-and-suspenders: no anchor's *exact* accessible name is the bare
-    // "shevinum" discord handle (github/linkedin links legitimately contain
-    // "shevinum" as a substring of their full URL text, e.g.
-    // "github.com/ShevinuM" — a substring-based has-text check would false
-    // -positive on those, so this matches the full text exactly instead).
+    // Matches the accessible name exactly, not by substring, since github/linkedin hrefs legitimately contain "shevinum" too (e.g. "github.com/ShevinuM").
     expect(await page.getByRole("link", { name: "shevinum", exact: true }).count()).toBe(0);
   });
 

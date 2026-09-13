@@ -1,25 +1,5 @@
 <script lang="ts">
-  // Profile ("Agent Profile") view — design/Homepage.dc.html lines 184-269.
-  // All copy comes from the `profile` content collection (ProfileData,
-  // built by src/common/lib/data.ts's `buildProfile` from src/features/profile/content);
-  // this component only supplies structure/styling and the `r`
-  // resume-download hotkey. View navigation is status-bar clicks / the
-  // tmux prefix / the dashboard menu, never a bare key or an in-view click
-  // target, so there is nothing here to close *to* the dashboard.
-  //
-  // Image src paths (portrait/field/retina-v/icon-*) are literal, same
-  // convention as Wallpaper.svelte/Dashboard.svelte's hardcoded
-  // `/assets/spiderman.svg` mask URLs — these are asset URLs, not
-  // user-visible copy, so they live here rather than in content (the
-  // per-row contact `icon` paths are the one exception, already
-  // data-driven in the profile entry's frontmatter).
-  //
-  // The SIGNAL footer row's `border-top: 1px solid rgba(224, 69, 60,
-  // 0.25)` declaration is authored here with the exact spacing the visual
-  // pipeline's SIGNAL_ROW_SELECTOR substring-matches on
-  // (tests/visual/pipeline.mjs) — this is the row the pipeline masks out
-  // (the meter's bar heights and readout text depend on real load timing,
-  // never frozen by the faked clock).
+  // Profile ("Agent Profile") view — reference/Homepage.dc.html lines 184-269.
   import type { ProfileData } from "../../../common/lib/data";
   import { downloadResume } from "../../../common/lib/resume";
   import Meter from "../../../common/components/Meter.svelte";
@@ -37,10 +17,9 @@
     return href.startsWith("mailto:");
   }
 
-  /** `bind:this` + `handleKey(): boolean` delegation contract, same shape
-   * Repositories.svelte/EmploymentRecords.svelte already use (Terminal.svelte tries this
-   * before falling back to its own generic q/Esc-to-dashboard handling —
-   * Profile has nothing else to claim, only `r`). */
+  // The SIGNAL row's `border-top` declaration below must stay byte-for-byte — pipeline.mjs's SIGNAL_ROW_SELECTOR substring-matches it.
+
+  /** Same `bind:this`/`handleKey(): boolean` delegation contract Terminal.svelte documents; Profile only claims `r`. */
   export function handleKey(e: KeyboardEvent): boolean {
     if (e.key.toLowerCase() === "r") {
       downloadResume();

@@ -1,9 +1,6 @@
-// Unit tests for src/features/profile/lib/net.ts's live meter (SIGNAL row)
-// — locks in the README's math verbatim (q/lag/hue/bar-height formulas,
-// the Resource Timing throughput sum, the netStats fallback chain, and the
-// readout format) independent of any DOM/rAF plumbing, which
-// src/features/profile/tests/ui/e2e/profile.spec.ts covers separately
-// against a live page.
+// Locks in the README's live-meter math verbatim, independent of DOM/rAF
+// plumbing — src/features/profile/tests/ui/e2e/profile.spec.ts covers that
+// separately against a live page.
 import { expect, test } from "vitest";
 import {
   barBackground,

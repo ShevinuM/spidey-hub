@@ -1,21 +1,6 @@
-// Live network meter math (Profile view SIGNAL row) — ported verbatim from
-// the reference `Component` methods `linkSpeed`/`netStats`/`probe`/
-// `startMeter` (design/Homepage.dc.html lines ~918-978) and the handoff
-// README's "Live meter (SIGNAL row)" section. Kept as pure, DOM-free
-// functions here so the math is independently testable; Meter.svelte owns
-// the one requestAnimationFrame loop that writes the results directly onto
-// the bar DOM nodes (README: "do NOT re-render 60 nodes per frame through
-// the framework").
-//
-// One deliberate deviation from the prototype's own JS, following the
-// README (behavior truth for this phase) over the sample markup: the
-// prototype's `probe()` builds the offline readout as
-// `"offline" + " · " + rtt + " ms · " + type` (line 939's ternary only
-// swaps the leading "X.X Mb/s" segment). The README instead specifies a
-// bare `"offline"` readout, and the e2e regex the plan hands us
-// (`/^(measuring…|offline|...)$/`) is anchored and only accepts the bare
-// form — so `formatReadout` below returns plain `"offline"`, not the
-// prototype's concatenated string.
+// `formatReadout` below deliberately returns bare `"offline"` instead of
+// the reference `probe()`'s `"offline · N ms · TYPE"` concatenation,
+// matching profile.spec.ts's anchored e2e status regex.
 
 const clamp = (n: number, lo: number, hi: number): number => Math.max(lo, Math.min(hi, n));
 
@@ -24,11 +9,7 @@ export interface ResourceTimingEntry {
   duration: number;
 }
 
-/** Throughput (Mb/s) estimated from Resource Timing entries, mirroring the
- * reference `linkSpeed()`: sums transferSize/duration over entries with
- * `transferSize > 2000 && duration > 1`, in bytes/ms -> Mb/s, floored at
- * 0.2. Returns null when no qualifying entries have loaded yet (matching
- * the prototype's `ms ? ... : null`). */
+/** Mirrors the reference `linkSpeed()`, floored at 0.2 Mb/s. */
 export function computeThroughputMbps(entries: readonly ResourceTimingEntry[]): number | null {
   let bytes = 0;
   let ms = 0;
@@ -53,10 +34,7 @@ export interface NetSample {
   type: string;
 }
 
-/** Ports the reference `netStats()`: prefers `navigator.connection`'s own
- * downlink/rtt when present, else falls back to the measured throughput /
- * smoothed probe RTT (or the same hardcoded defaults — 5 Mb/s, 60ms — the
- * prototype uses before any measurement exists). */
+/** Ports the reference `netStats()`, including its hardcoded pre-measurement defaults (5 Mb/s, 60ms). */
 export function netStats(
   connection: NetConnectionLike | undefined,
   measuredMbps: number | null,
@@ -110,10 +88,7 @@ export interface BarFrameParams {
   rand?: () => number;
 }
 
-/** One bar's height for this frame, [0,1] — reference `startMeter()`'s
- * per-bar `tick()` body: three detuned sines (env-scaled wobble) plus the
- * probe-injected travelling burst (gaussian centered at 0.62·barCount,
- * width 9) plus jitter, clamped to `[0.07, cap]`. */
+/** One bar's height for this frame, [0,1] — mirrors the reference `startMeter()`'s per-bar `tick()` body. */
 export function barHeight({ index: i, barCount, tSeconds: t, env, cap, burst, rand = Math.random }: BarFrameParams): number {
   const wob =
     Math.sin(t * (1.15 + i * 0.07) + i * 1.7) * 0.5 +

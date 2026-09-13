@@ -2,16 +2,11 @@ import type { Page } from "@playwright/test";
 import { StatusBarPage } from "../../../../../common/tests/ui/pages/StatusBarPage";
 
 /**
- * Page object for Profile.svelte (`e2e-testing.md` R003/R004: specs call
- * page-object getters/methods, never `page.locator(...)`/raw testid
- * strings directly). Named for the component it models, not the suite that
- * happens to use it (matching `TerminalPage`/`RepositoriesPage`
- * convention) — currently consumed only by the harness suite
- * (`tests/ui/harness/`), since the e2e suite's `profile.spec.ts` is a
- * verbatim-ported spec exempt from the page-object convention.
+ * Page object for Profile.svelte (`e2e-testing.md` R003/R004: specs call page-object getters/methods, never raw testid strings).
  *
- * Kernel-chrome locators (the status bar, etc.) are never redefined here —
- * `e2e-testing.md` R005 — this composes the shared `StatusBarPage` instead.
+ * Consumed only by the harness suite — `profile.spec.ts`'s e2e suite is a verbatim-ported spec exempt from the page-object convention.
+ *
+ * Kernel-chrome locators (the status bar, etc.) are never redefined here — `e2e-testing.md` R005 — this composes the shared `StatusBarPage` instead.
  */
 export class ProfilePage {
   readonly statusBar: StatusBarPage;
