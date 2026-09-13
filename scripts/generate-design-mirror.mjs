@@ -45,7 +45,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { serveStatic } from "../src/common/tests/ui/support/static-server.mjs";
 import { BOOT_SEEN_STORAGE_KEY } from "../src/features/boot/lib/boot-state.ts";
-import { pickPort } from "./lib/freePort.ts";
+import { pickPort } from "./lib/free-port.ts";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const OUT_ROOT = join(ROOT, "ds-bundle");

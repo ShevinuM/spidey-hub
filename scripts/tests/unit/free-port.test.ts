@@ -1,9 +1,9 @@
-// Unit tests for scripts/lib/freePort.ts — PLAN.md Phase 7.4's fix for
+// Unit tests for scripts/lib/free-port.ts — PLAN.md Phase 7.4's fix for
 // scripts/capture-screenshots.mjs's hardcoded `PORT = 4323`, which used to
 // collide silently with a running `astro dev` fallback port.
 import { expect, test } from "vitest";
 import { createServer, type AddressInfo } from "node:net";
-import { pickPort } from "../../lib/freePort";
+import { pickPort } from "../../lib/free-port";
 
 test("pickPort: returns the preferred port unchanged when it's free", async () => {
   // Ask the OS for a currently-unused port to use as "preferred" — avoids

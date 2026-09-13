@@ -1,5 +1,21 @@
 [
   {
+    "sha": "beb1d384f9eb6e1d2e37eadbe66324f08eb1a874",
+    "sha8": "beb1d384",
+    "msg": "Digest for 2026-09-13",
+    "html_url": "https://github.com/ShevinuM/daily-tech-digest/commit/beb1d384f9eb6e1d2e37eadbe66324f08eb1a874",
+    "initials": "Da",
+    "date": "2026-09-13T07:43:53Z"
+  },
+  {
+    "sha": "c6ef03293aebd5f9592085f7b1c2a050ac99ddc4",
+    "sha8": "c6ef0329",
+    "msg": "Rebuild the site UI on AstroPaper v6 and rename to Shevinu's Digest",
+    "html_url": "https://github.com/ShevinuM/daily-tech-digest/commit/c6ef03293aebd5f9592085f7b1c2a050ac99ddc4",
+    "initials": "Sh",
+    "date": "2026-09-13T07:36:15Z"
+  },
+  {
     "sha": "abeb99df51fcded33da06af0ffc32b8a0ce10c45",
     "sha8": "abeb99df",
     "msg": "Digest for 2026-09-13",
@@ -102,21 +118,5 @@
     "html_url": "https://github.com/ShevinuM/daily-tech-digest/commit/09085dbdd4a2df60c8db030993830d1fe2a55e69",
     "initials": "Da",
     "date": "2026-08-30T08:00:12Z"
-  },
-  {
-    "sha": "4d2de46a75b8292339cd4d4f3cf0a18f1b10b427",
-    "sha8": "4d2de46a",
-    "msg": "Digest for 2026-08-29",
-    "html_url": "https://github.com/ShevinuM/daily-tech-digest/commit/4d2de46a75b8292339cd4d4f3cf0a18f1b10b427",
-    "initials": "Da",
-    "date": "2026-08-29T08:41:35Z"
-  },
-  {
-    "sha": "cb1ae1f7c5e7a94550fb01ebb469f7eea1175a44",
-    "sha8": "cb1ae1f7",
-    "msg": "Digest for 2026-08-28",
-    "html_url": "https://github.com/ShevinuM/daily-tech-digest/commit/cb1ae1f7c5e7a94550fb01ebb469f7eea1175a44",
-    "initials": "Da",
-    "date": "2026-08-28T13:52:25Z"
   }
 ]
