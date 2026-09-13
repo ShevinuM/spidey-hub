@@ -1,15 +1,12 @@
 // Per-tab "has the boot sequence played this session" flag: boot plays on
-// first document load per browser tab (sessionStorage flag); reloads/deep-
-// links within the session skip it.
-// sessionStorage (not localStorage) is exactly "per browser tab" — a new
-// tab (even to the same origin) gets a fresh sessionStorage, matching the
-// spec precisely; a reload of the same tab keeps it.
+// first document load per browser tab; reloads/deep-links within the
+// session skip it. sessionStorage (not localStorage) gives a fresh flag per
+// tab while surviving a reload of the same tab.
 //
 // Guarded for SSR (no `sessionStorage` global in Astro's Node render) and
-// for browsers that throw on storage access (privacy mode / disabled
-// storage) — both must degrade to "boot plays" (the safer default: an
-// extra boot is a cosmetic replay, a wrongly-skipped one would be a silent
-// missing feature) rather than throwing into BootSequence.svelte's render.
+// for browsers that throw on storage access — both degrade to "boot plays"
+// (an extra boot is cosmetic; a wrongly-skipped one is a silent missing
+// feature) rather than throwing into BootSequence.svelte's render.
 const BOOT_SEEN_KEY = "edith:boot-seen";
 
 export function hasBootPlayed(): boolean {
@@ -20,9 +17,8 @@ export function hasBootPlayed(): boolean {
   }
 }
 
-/** Marked once a genuine (non-skipped) boot STARTS — not once it finishes —
- * so repeatedly reloading mid-boot can't loop the full sequence forever;
- * see BootSequence.svelte's header comment for the reasoning. */
+/** Marked once a genuine (non-skipped) boot STARTS, not once it finishes,
+ * so repeatedly reloading mid-boot can't loop the full sequence forever. */
 export function markBootPlayed(): void {
   try {
     if (typeof sessionStorage !== "undefined") sessionStorage.setItem(BOOT_SEEN_KEY, "1");
@@ -31,8 +27,7 @@ export function markBootPlayed(): void {
   }
 }
 
-/** Exported so both tests/e2e/fixtures.ts (Playwright `addInitScript`) and
- * tests/visual/pipeline.mjs (capture pipeline) can pre-seed the exact same
- * key a real boot completion would set, instead of a second hardcoded
- * string drifting out of sync with this module. */
+/** Exported so both src/common/tests/ui/support/fixtures.ts (Playwright
+ * `addInitScript`) and pipeline.mjs (capture pipeline) can pre-seed the
+ * exact key a real boot completion would set. */
 export const BOOT_SEEN_STORAGE_KEY = BOOT_SEEN_KEY;

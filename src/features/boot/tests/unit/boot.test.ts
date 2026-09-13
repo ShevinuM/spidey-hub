@@ -1,9 +1,4 @@
-// Unit tests for the pure boot-sequence math (src/features/boot/lib/boot.ts). Boot
-// timings/text are spot-checked against the mock source line-by-line.
-// Every assertion below reproduces a value computed
-// by hand from the mock's own `Component.pct()/progress()/renderVals()`
-// formulas (Boot Sequence.dc.html lines 369-437) — this is the guard
-// against a transcription slip in src/features/boot/lib/boot.ts, independent of
+// Unit tests for the pure boot-sequence math (lib/boot.ts), independent of
 // BootSequence.svelte or any browser.
 import { expect, test } from "vitest";
 import {
@@ -53,9 +48,8 @@ test("pct: matches the mock's eased+jittered formula at hand-computed points", (
   expect(pct(4600, 4600)).toBe(100);
 
   // p=0.5, elapsed=2300: eased = 1 - (1-0.5)^1.7 = 1 - 0.5^1.7.
-  // jitter = 2.4*sin(2300/78). Hand-computed against Math.pow/Math.sin
-  // directly (not re-deriving the formula, just checking the transcription
-  // wires them together exactly as the mock does).
+  // jitter = 2.4*sin(2300/78), hand-computed against Math.pow/Math.sin
+  // directly to check the formula is wired together exactly.
   const p = 0.5;
   const eased = 1 - Math.pow(1 - p, 1.7);
   const jitter = 2.4 * Math.sin(2300 / 78);
@@ -124,8 +118,6 @@ test("logRows: nothing before the first threshold", () => {
 
 test("logRows: reveals rows in order as progress crosses thresholds, capped to 5", () => {
   const rows = logRows(0.5, LOG);
-  // Thresholds 0.02..0.45 have all been reached (6 rows) but only the last
-  // 5 are kept, most-recent-last.
   expect(rows.length).toBe(5);
   expect(rows[rows.length - 1].label).toBe("commit snapshots");
   expect(rows[0].label).toBe("hydrating island");
@@ -190,7 +182,7 @@ test("progFillStyle: full circle at pct=100 (deg=360)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// spinnerFrame — computed but unused by BootSequence.svelte (mock parity)
+// spinnerFrame — unused by BootSequence.svelte
 // ---------------------------------------------------------------------------
 
 test("spinnerFrame: cycles the 8 braille glyphs every 90ms", () => {

@@ -1,32 +1,21 @@
-// Behavioral e2e suite for the E.D.I.T.H boot sequence (BootSequence.svelte).
-// Deliberately imports the RAW `@playwright/test`
-// (not ./fixtures.ts) — every other spec's shared `context` fixture
-// pre-seeds the boot-seen sessionStorage flag specifically so boot never
-// runs during THEIR tests; this file exists to exercise the real thing.
+// Behavioral e2e suite for the boot sequence (BootSequence.svelte).
+// Deliberately imports the RAW `@playwright/test`, not the shared `context`
+// fixture — that fixture pre-seeds the boot-seen sessionStorage flag
+// specifically so boot never runs during every OTHER spec's tests; this
+// file exists to exercise the real thing.
 //
-// Uses `page.clock` (Playwright's fake-timer API), matching the same
-// "install before navigation, runFor to advance" contract as
-// tests/visual/pipeline.mjs and tests/e2e/nav.spec.ts's live-clock test —
-// BootSequence.svelte's own timer is a wall-clock `Date.now()` +
-// `setInterval`/`setTimeout` (deliberately not requestAnimationFrame, see
-// that component's header comment) specifically so it is controllable this
-// way.
-//
-// pct/phase expectations are computed via src/features/boot/lib/boot.ts's own pure
-// functions rather than hardcoded numbers, so a future tuning of the
-// easing/threshold constants only requires updating that one module (and
-// tests/unit/boot.test.ts) — this suite would keep passing against a
-// deliberate change, and fail loudly against an accidental one (a typo'd
-// threshold here would silently duplicate the bug it's supposed to catch).
+// pct/phase expectations are computed via lib/boot.ts's own pure functions
+// rather than hardcoded numbers, so this suite keeps passing against a
+// deliberate tuning of the easing/threshold constants and fails loudly
+// against an accidental one.
 import { expect, test, type Page } from "@playwright/test";
 import { pct, phaseLabel, progress } from "../../../lib/boot";
 import { BOOT_SEEN_STORAGE_KEY } from "../../../lib/boot-state";
 
-// Must match src/features/boot/content/boot.yaml's bootMs / phaseLabels — no runtime import
-// of that file is possible here (its `?raw` imports are Vite-only syntax,
-// see src/common/lib/data.ts), so these are the same kind of hand-mirrored
-// literal every other e2e spec already uses for its view's yaml copy
-// (e.g. nav.spec.ts's WINDOWS array, tmux.spec.ts's window list).
+// Must match content/boot.yaml's bootMs / phaseLabels — no runtime import of
+// that file is possible here (its `?raw` imports are Vite-only syntax), so
+// this is the same hand-mirrored literal every other e2e spec uses for its
+// view's yaml copy.
 const BOOT_MS = 4600;
 const HARD_STOP_MS = BOOT_MS + 60;
 const OUT_MS = 760;
@@ -46,14 +35,9 @@ async function terminalReady(page: Page) {
 
 /** Fresh context, fake clock installed before navigation, no sessionStorage
  * flag pre-seeded — a genuine first-load boot plays. Waits for
- * `data-boot-running="true"` (not just the overlay's own visibility) before
- * returning: the `{#if booting}` DOM mounts on the very first render (from
- * `phase`'s initial value), strictly BEFORE BootSequence.svelte's own
- * mount effect has necessarily called `run()` and captured `t0` — under
- * heavy parallel-worker load a `clock.runFor()` issued between those two
- * points is a no-op from the timer's perspective (its `t0` gets captured
- * at the ALREADY-ADVANCED fake time once `run()` finally fires), which is
- * exactly the flake this wait eliminates. */
+ * `data-boot-running="true"`, not just the overlay's own visibility: a
+ * `clock.runFor()` issued before `run()` has captured `t0` is a no-op from
+ * the timer's perspective, which this wait eliminates. */
 async function freshBoot(page: Page, path = "/") {
   await page.clock.install({ time: CLOCK_TIME });
   await page.goto(path);
@@ -94,44 +78,16 @@ test.describe("fresh boot", () => {
     await expect(page.locator('[data-testid="grep-overlay"]')).toHaveCount(0);
     await expect(page.locator(BOOT_SEQUENCE)).toBeVisible();
 
-    // Clicking the overlay itself does nothing either (no click handlers on
-    // it at all — matches the mock's own unskippable design).
     await page.locator(BOOT_SEQUENCE).click({ position: { x: 5, y: 5 } });
     await expect(page.locator(BOOT_SEQUENCE)).toBeVisible();
   });
 
   test("pct and phase track elapsed time against src/features/boot/lib/boot.ts's own formula", async ({ page }) => {
-    // Deliberately NO `page.clock` here, unlike every other test in this
-    // file. Empirically measured (isolated repro against a bare
-    // `setInterval` in the page, outside any app code — not guesswork,
-    // injected via `page.evaluate`, independent of BootSequence.svelte
-    // entirely): once Playwright's fake clock has processed ANY control
-    // call (`runFor`/`fastForward`/`pauseAt`), it RESUMES ticking in
-    // lockstep with real wall-clock time immediately afterward, until the
-    // next control call — confirmed directly against that bare
-    // `setInterval`, so it is a property of the clock API itself, not a
-    // BootSequence.svelte bug. (An earlier round of this same debugging
-    // also saw `data-elapsed` read back as `null`/0 for several attempts
-    // in a row — that turned out to be a stale `dist/` build predating the
-    // attribute's addition, a test-environment mistake on my part, NOT a
-    // second clock-API failure mode; once rebuilt, `runFor` + a single
-    // atomic read was exact every time in isolation. It only stopped being
-    // safe to rely on once the earlier "resumes real time" behavior is
-    // factored in: a RETRYING assertion, or any second read after the
-    // first, reopens that same window.) Every OTHER test below only needs
-    // the fake clock to reach a TERMINAL state (after finish()/the outro
-    // timer have cleared their own interval/timeout, so no further ticks —
-    // real or virtual — can move anything), which is exactly where the
-    // fake clock stayed reliable across repeated stress runs; only this
-    // test reads an INTERMEDIATE, still-ticking value, which is precisely
-    // where it wasn't.
-    //
-    // Using real elapsed time instead sidesteps the fake-clock's observed
-    // unreliability entirely — this test costs ~1.5 real seconds (well
-    // under the 4600ms boot window) rather than being instant, which is an
-    // acceptable, deliberate trade for a boot-specific test (the
-    // "existing suites must not eat 4.6s each" budget targets the *other*
-    // ~450 tests via the sessionStorage skip flag, not this file's own).
+    // Deliberately no `page.clock` here, unlike every other test in this
+    // file: Playwright's fake clock resumes ticking in real time after any
+    // control call, so reading an intermediate (still-ticking) value needs
+    // real elapsed time instead — every other test below only reads a
+    // terminal state, where the fake clock stays reliable.
     await page.goto("/");
     await terminalReady(page);
     await page.locator(`${BOOT_SEQUENCE}[data-boot-running="true"]`).waitFor({ state: "attached" });
@@ -161,11 +117,9 @@ test.describe("fresh boot", () => {
 
   test("reaches 100%/READY once the hard-stop timeout has fired", async ({ page }) => {
     await freshBoot(page);
-    // Component.finish() (called either by the tick loop crossing `dur()`
-    // or, as a backstop, the hard-stop timeout) explicitly snaps
-    // `elapsed = dur()` before flipping to phase "out" — so once it has
-    // definitely fired (well past HARD_STOP_MS), pct()/phaseLabel() are
-    // exact (progress===1), not dependent on interval-tick rounding.
+    // finish() explicitly snaps `elapsed = dur()` before flipping to phase
+    // "out", so once it has definitely fired, pct()/phaseLabel() are exact
+    // (progress===1), not dependent on interval-tick rounding.
     await page.clock.runFor(HARD_STOP_MS + 10);
 
     expect(progress(BOOT_MS, BOOT_MS)).toBe(1);
@@ -227,13 +181,10 @@ test.describe("replay", () => {
 
     await page.keyboard.press("r");
     await expect(page.locator(BOOT_SEQUENCE)).toBeVisible();
-    // Progress resets to (near) the very start — checked as "well under
-    // halfway" rather than pinning an exact "0%": no `clock.runFor()` has
-    // been issued yet in this test, but real time still passes between the
-    // keypress and this read (CDP round-trips are not instantaneous), and
-    // BootSequence's interval ticks on genuine `Date.now()` deltas, so a
-    // few milliseconds of real setup/assertion overhead can legitimately
-    // put it at 1-2% rather than literally 0 under load.
+    // Checked as "well under halfway" rather than pinning an exact "0%":
+    // real time still passes between the keypress and this read, so a few
+    // milliseconds of setup/assertion overhead can legitimately put it at
+    // 1-2% rather than literally 0 under load.
     const pctAfterReplay = Number((await page.locator(BOOT_PCT).textContent())?.replace("%", ""));
     expect(pctAfterReplay).toBeLessThan(50);
 

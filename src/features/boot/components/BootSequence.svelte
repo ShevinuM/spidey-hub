@@ -1,52 +1,16 @@
 <script lang="ts">
-  // E.D.I.T.H boot sequence overlay. Source of truth:
-  // /Users/shev/Desktop/waiting-on-form-answers/project/
-  // "Boot Sequence.dc.html", the `booting`/`outroing` sc-if blocks (lines
-  // 167-276) and the `Component` class (lines 283-442) — every color,
-  // geometry value, keyframe name/duration/delay, and text string below is
-  // transcribed from that file; timing/progress/log MATH is factored out to
-  // src/features/boot/lib/boot.ts (kept pure so
-  // src/features/boot/tests/unit/boot.test.ts can spot-check
-  // the formulas without a browser), and every piece of on-screen TEXT
-  // comes from the `BootData` built from src/features/boot/content/boot.yaml's timing/tag
-  // config plus the boot log's text in src/features/boot/content/log.md — this file
-  // renders geometry + data, never hardcodes copy.
+  // E.D.I.T.H boot sequence overlay; on-screen text comes from `BootData`
+  // (content/boot.yaml + content/log.md) — this file renders geometry and
+  // data, never hardcodes copy.
   //
-  // Always mounted by Terminal.svelte (same convention as GrepOverlay/
-  // CopyMode: a `bind:this` ref with an imperative contract — here
-  // `replay()`/`isActive()` — rather than a prop-driven open/close), so it
-  // can own its own phase state machine across the app's lifetime and so
-  // Terminal can gate ALL key handling on `isActive()` at the very top of
-  // its own handleKey(), ahead of even the copy-mode overlay: boot is
-  // "unskippable... swallows nothing" (mock's own componentDidMount
-  // comment) — there is no key or click that reaches the site underneath
-  // while it's running. Clicks need no separate guard: while `booting` is
-  // true this component renders a `position:fixed;inset:0` OPAQUE layer
-  // above everything else (z-index 100 — higher than GrepOverlay's 40 and
-  // CopyMode's 50, since unlike those two boot deliberately covers the
-  // status bar too: there IS no session chrome yet, boot IS the session
-  // coming up), so pointer events on the dashboard/status-bar beneath
-  // simply never arrive; z-index 100 is a documented deviation from the
-  // mock's own z-index:30, which never had to coexist with this app's
-  // other overlay layers.
-  //
-  // Session-once behavior (see src/features/boot/lib/boot-state.ts): a genuine
-  // (non-skipped) boot marks the sessionStorage flag the moment it STARTS,
-  // not when it finishes, so
-  // reloading mid-boot can't be used to replay the full sequence
-  // indefinitely. The initial `phase` is decided by reading that flag
-  // directly inside the `$state()` initializer (not in a mount effect):
-  // Svelte re-runs a component's setup script on the client during
-  // hydration, so this reads the *real* sessionStorage value at that point
-  // even though the SSR pass (no `sessionStorage` in Astro's Node
-  // renderer) always defaults to "boot" — the server always emits the
-  // boot markup as the very first paint, and a skip-path client corrects
-  // it to "ready" as soon as its own script runs, which is what makes a
-  // same-tab reload of a deep link resolve before Playwright's own
-  // `waitUntil:"load"` navigation settles (verified in tests/e2e/boot.spec
-  // .ts). A real, un-faked browser sees at most one raw-HTML-to-hydrated
-  // frame of the boot overlay on a skip; "skips it" is judged functionally
-  // (no 4.6s wait, no timers run), not frame-perfectly.
+  // Always mounted by Terminal.svelte via a `bind:this` ref
+  // (`replay()`/`isActive()`), so it owns its own phase state machine and
+  // Terminal can gate all key handling on `isActive()` ahead of every other
+  // overlay — there is no key or click that reaches the site underneath
+  // while it's running. While `booting` is true this renders an opaque
+  // `position:fixed;inset:0` layer at z-index 100, above GrepOverlay (40)
+  // and CopyMode (50), since boot covers the status bar too: there is no
+  // session chrome yet to peek through.
   import { untrack } from "svelte";
   import type { BootData, BootStatusRow } from "../../../common/lib/data";
   import {
@@ -64,10 +28,8 @@
   interface Props {
     boot: BootData;
     desktopMode: boolean;
-    /** Fired once, the moment a real (non-skipped) boot hands off to the
-     * ready dashboard — Terminal.svelte uses it to play the `bDashIn`
-     * entrance animation on the site chrome underneath. Never fired on the
-     * skip path (there was no boot to hand off from). */
+    /** Fired once when a real (non-skipped) boot hands off to ready; never
+     * fires on the skip path. */
     onReady?: () => void;
   }
 
@@ -75,32 +37,22 @@
 
   type Phase = "boot" | "out" | "ready";
 
-  // Deliberate one-time read, see the header comment: this must run fresh
-  // on every mount (including a client hydration pass, which re-executes
-  // this initializer) to see the real sessionStorage value, not react to
-  // it changing afterward.
+  // Read directly in this initializer, not a mount effect: Svelte reruns
+  // component setup on client hydration, which is the only way to see the
+  // real (post-SSR) sessionStorage value rather than the SSR pass's always-
+  // false default.
   let phase = $state<Phase>(hasBootPlayed() ? "ready" : "boot");
-  // Rendered as `data-elapsed` below (a plain number, not user-visible
-  // copy — same category as every other `data-testid`/`data-*` hook in
-  // this codebase). tests/e2e/boot.spec.ts reads it back to derive its
-  // pct/phase expectations from whatever elapsed value the component
-  // ACTUALLY landed on, rather than the ms it asked a fake clock to
-  // advance by — Playwright's clock resumes ticking in real time after
-  // any control call (empirically confirmed, see that spec's own
-  // comment), so the exact elapsed value at read-time isn't otherwise
-  // knowable to millisecond precision from outside the page.
+  // Rendered as `data-elapsed`, a plain diagnostic number that tests read
+  // back to derive expectations from wherever the fake clock actually
+  // landed, since Playwright's clock keeps ticking in real time after any
+  // control call.
   let elapsed = $state(0);
 
-  // Testability marker only (never read by any rendering logic): the
-  // `{#if booting}` DOM mounts synchronously with `phase`'s initial value,
-  // strictly BEFORE the `$effect` below has had a chance to call `run()`
-  // (Svelte flushes effects after the render they were scheduled from) —
-  // so under a Playwright fake clock, a test that waits only for the
-  // overlay to be visible and then immediately calls `clock.runFor()` can
-  // race ahead of `run()` actually capturing `t0`, making the advance a
-  // no-op from the timer's perspective. `data-boot-running` flips true
-  // synchronously inside `run()` itself, giving tests (tests/e2e/boot.spec
-  // .ts) a deterministic point to wait for first.
+  // Testability marker only: `data-boot-running` flips true synchronously
+  // inside `run()`, giving tests a deterministic point to wait for before
+  // advancing a fake clock — the overlay itself can mount before the
+  // `$effect` below calls `run()`, so waiting on visibility alone risks
+  // racing ahead of `t0` being captured.
   let running = $state(false);
 
   let t0 = 0;
@@ -108,21 +60,18 @@
   let hardStop: ReturnType<typeof setTimeout> | undefined;
   let outTimer: ReturnType<typeof setTimeout> | undefined;
 
-  // Component.finish()'s outro hold (line 358) before flipping to "ready".
+  // Outro hold before flipping from "out" to "ready".
   const OUT_MS = 760;
 
   function dur(): number {
     return bootDuration(boot.bootMs);
   }
 
-  // Component.run() (line 338-351): wall-clock Date.now() + a 33ms
-  // setInterval, NOT requestAnimationFrame — the mock's own comment (kept
-  // verbatim in spirit): rAF pauses in a backgrounded tab, which would
-  // otherwise leave the boot frozen mid-sequence for anyone who switches
-  // away and back; the hard-stop timeout guarantees hand-off regardless.
-  // This also makes the sequence controllable by Playwright's fake clock
-  // (`page.clock`), which fires real setInterval/setTimeout callbacks
-  // against virtual time but does not drive rAF at all.
+  // Uses wall-clock Date.now() + a 33ms setInterval, not
+  // requestAnimationFrame: rAF pauses in a backgrounded tab, which would
+  // freeze the boot mid-sequence (the hard-stop timeout guarantees hand-off
+  // regardless), and this keeps the sequence controllable by Playwright's
+  // fake clock, which drives setInterval/setTimeout but not rAF.
   function run() {
     running = true;
     t0 = Date.now();
@@ -149,10 +98,8 @@
     }, OUT_MS);
   }
 
-  /** `r` on the ready dashboard, or the status-bar "reboot" control (via
-   * Terminal.svelte) — always plays a full boot regardless of the
-   * sessionStorage flag (already set from the first run; replay is a
-   * manual, repeatable action, not a second "first load"). */
+  /** Always plays a full boot regardless of the sessionStorage flag —
+   * replay is a manual, repeatable action, not a second "first load". */
   export function replay(): void {
     clearInterval(tick);
     clearTimeout(hardStop);
@@ -168,19 +115,11 @@
     return phase !== "ready";
   }
 
-  // Gated to desktopMode like every other timer/listener in the app
-  // (Terminal.svelte's own keydown/popstate effect, StatusBar's clock).
-  // `untrack` on the `phase` read is load-bearing: finish()/replay()
-  // mutate `phase` from OUTSIDE this effect
-  // (an interval callback, an exported method) — if this effect's body
-  // read `phase` as a tracked dependency, the write it triggers on
-  // transition to "out" would re-run the effect, whose cleanup closure
-  // reads the OUTER `let outTimer` at cleanup-call time (not at
-  // effect-creation time) and would clear the timer finish() had *just*
-  // created, before it ever fires — silently killing the hand-off to
-  // "ready". Reading `phase` untracked keeps this effect's dependency list
-  // to `desktopMode` alone, so it only (re)runs on mount or a genuine
-  // desktop-mode flip.
+  // Gated to desktopMode like every other timer/listener in the app.
+  // `untrack` on the `phase` read is load-bearing: without it, the write to
+  // `phase` from finish()/replay() (called outside this effect) would
+  // re-run the effect and clear the timer finish() just created before it
+  // fires, silently killing the hand-off to "ready".
   $effect(() => {
     if (!desktopMode) return;
     untrack(() => {

@@ -1,30 +1,16 @@
-// Cold-boot coverage for the surfaces still untested from both directions
-// even with tests/e2e/notifications-boot.spec.ts in place:
-// `src/common/tests/ui/support/fixtures.ts`'s shared `context` fixture pre-seeds
-// the boot-seen sessionStorage flag for every spec except `boot.spec.ts`,
-// and `boot.spec.ts` itself never mentions notifications — so a real
-// first-time visitor's bell/ring state and the dashboard's basic
-// first-paint chrome were never exercised together with a genuine
-// (non-skipped) boot.
+// Cold-boot coverage for surfaces the shared `context` fixture's boot-seen
+// pre-seed otherwise hides: a real first-time visitor's bell/ring state and
+// the dashboard's first-paint chrome, exercised together with a genuine
+// (non-skipped) boot. Does not re-cover notifications-boot.spec.ts's own
+// subject (a toast surviving the boot overlay).
 //
-// Deliberately does NOT re-cover notifications-boot.spec.ts's own subject
-// (a toast surviving the boot overlay) — see that file for the toast/drain
-// assertions. This file covers the OTHER cold-boot surfaces: the unread
-// bell + its `senseRing` ring (the ring was entirely dead until commit
-// `b885c18` fixed it, and nothing else in this suite would catch a
-// regression back to that state), and first-paint sanity (boot actually
-// clears, and the dashboard chrome it hands off to is real, not a
-// blank/broken frame).
-//
-// Deliberately imports the RAW `@playwright/test` (not ./fixtures.ts),
-// same reason boot.spec.ts and notifications-boot.spec.ts do: the shared
-// `context` fixture pre-seeds the boot-seen flag specifically so boot
-// never runs during every OTHER spec's tests.
+// Deliberately imports the RAW `@playwright/test`, not the shared fixture:
+// that fixture pre-seeds the boot-seen flag specifically so boot never runs
+// during every OTHER spec's tests.
 import { expect, test, type Page } from "@playwright/test";
 
-// Hand-mirrored from src/features/boot/content/boot.yaml / BootSequence.svelte — same
-// convention boot.spec.ts and notifications-boot.spec.ts already use (no
-// runtime import of the yaml is possible from a Playwright-only module).
+// Hand-mirrored from content/boot.yaml / BootSequence.svelte — no runtime
+// import of the yaml is possible from a Playwright-only module.
 const BOOT_MS = 4600;
 const HARD_STOP_MS = BOOT_MS + 60;
 const OUT_MS = 760;
@@ -41,8 +27,7 @@ async function terminalReady(page: Page) {
 
 /** Fresh context, fake clock installed before navigation, no sessionStorage
  * flag pre-seeded — a genuine first-load boot plays, then fast-forwarded
- * through in full (main sequence + outro hold), same contract as
- * boot.spec.ts's `freshBoot` / notifications-boot.spec.ts's own copy. */
+ * through in full (main sequence + outro hold). */
 async function coldBootToReady(page: Page) {
   await page.route("**/api.github.com/**", (route) => route.abort());
   await page.clock.install({ time: CLOCK_TIME });
@@ -70,15 +55,9 @@ test.describe("cold boot: unread bell + senseRing ring", () => {
       const ring = page.locator(SENSE_RING);
       await expect(ring).toBeVisible();
 
-      // `getComputedStyle().animationName` reports a dead reference as a
-      // non-"none" string just as readily as a live one — it returns the
-      // declared keyframe name whether or not that name actually resolves
-      // to a registered `@keyframes` rule (same insight
-      // src/common/tests/ui/e2e/animations.spec.ts's own header explains). The
-      // discriminating check is `getAnimations().length > 0`, safe here
-      // specifically because `senseRing` is declared `infinite`
-      // (tests/e2e/animations.spec.ts's header comment on why this check
-      // is unsafe for one-shot animations does not apply to this element).
+      // `getComputedStyle().animationName` reports a name whether or not it
+      // resolves to a live `@keyframes` rule; `getAnimations().length > 0`
+      // is the safe check here since `senseRing` is declared `infinite`.
       const liveCount = await ring.evaluate((el) => (el as HTMLElement).getAnimations().length);
       expect(liveCount).toBeGreaterThan(0);
     });
@@ -94,10 +73,7 @@ test.describe("cold boot: first paint is a real, interactive dashboard", () => {
     await expect(page.locator('[data-testid="dashboard-wordmark"]')).toBeVisible();
     await expect(page.locator('[data-testid="status-bar-windows"]')).toBeVisible();
 
-    // Not a blank/frozen frame: the keydown listener is live immediately,
-    // the same property BootSequence's own "unskippable" tests confirm is
-    // absent DURING boot (tests/e2e/boot.spec.ts) — here confirming the
-    // mirror-image is true once boot has actually finished.
+    // Not a blank/frozen frame: the keydown listener is live immediately.
     await page.keyboard.down("Control");
     await page.keyboard.press("b");
     await page.keyboard.up("Control");

@@ -1,12 +1,7 @@
-// Unit tests for src/features/boot/lib/boot-state.ts — the per-tab
-// "has the boot sequence played this session" flag. Pure Vitest, no DOM: the
-// module reads/writes a real `sessionStorage` global (present as a built-in
-// in this Node runtime, unlike `localStorage`'s absence — see
-// src/features/notifications/tests/unit/notification-store.test.ts's own `withLocalStorage` stub for the
-// sibling convention this mirrors), so every test below installs its own
-// explicit stub via `globalThis` rather than relying on whatever storage
-// state Node happens to provide, keeping each case deterministic and
-// independent of Node version/environment.
+// Unit tests for boot-state.ts's per-tab "has boot played this session"
+// flag. Pure Vitest, no DOM: sessionStorage is a real Node global (unlike
+// localStorage), so each test installs its own explicit stub via
+// `globalThis` for determinism rather than relying on ambient Node state.
 import { afterEach, expect, test } from "vitest";
 import { BOOT_SEEN_STORAGE_KEY, hasBootPlayed, markBootPlayed } from "../../lib/boot-state";
 
@@ -38,14 +33,13 @@ function installWorkingSessionStorage(): Map<string, string> {
 }
 
 /** Simulates the Astro Node SSR render, where there is no `sessionStorage`
- * global at all (`bootState.ts`'s own header comment: "Guarded for SSR"). */
+ * global at all. */
 function removeSessionStorage() {
   delete (globalThis as Record<string, unknown>).sessionStorage;
 }
 
 /** Simulates a browser that throws on storage access (private/incognito
- * mode with storage disabled, or a quota error) — `bootState.ts`'s own
- * header comment: "for browsers that throw on storage access". */
+ * mode with storage disabled, or a quota error). */
 function installThrowingSessionStorage() {
   const stub = {
     getItem: () => {

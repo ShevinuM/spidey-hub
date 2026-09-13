@@ -1,20 +1,14 @@
-# E.D.I.T.H boot sequence copy + config.
-# Source: /Users/shev/Desktop/waiting-on-form-answers/project/
-# "Boot Sequence.dc.html", the `booting` sc-if block (lines 167-276) and its
-# `Component` class props/LOG array (lines 283-442). Geometry (ring sizes,
-# tick-mark positions/rotations, keyframe timings/delays) stays inline in
-# BootSequence.svelte, matching Wallpaper.svelte's own convention (ring/tick
-# geometry inline, only textual content here) — everything below is either
-# text a viewer actually reads or a config knob the mock exposed as an
-# editable prop (bootMs/coreTint/showBootLog). The boot log's own text
-# (label/val) has moved to src/features/boot/content/log.md — `log:` below keeps
-# only that row's timing/tag, joined to the content file by `id`.
+# E.D.I.T.H boot sequence copy + config. Geometry (ring sizes, tick-mark
+# positions/rotations, keyframe timings/delays) stays inline in
+# BootSequence.svelte, matching Wallpaper.svelte's convention — only textual
+# content and config knobs (bootMs/coreTint/showBootLog) live here. The boot
+# log's own text (label/val) lives in content/log.md; `log:` below keeps
+# only each row's timing/tag, joined by `id`.
 
 bootMs: 4600
-# "cyan" is the only variant actually rendered — the mock exposed
-# `coreTint` as a 3-way design-tool enum prop; `tints` below keeps all three
-# palettes on file so a future change of this one value is a data edit, not
-# a code change, even though only `tints[coreTint]` is ever painted.
+# "cyan" is the only variant actually rendered; `tints` below keeps all
+# three palettes on file so a future change of this value is a data edit,
+# not a code change.
 coreTint: cyan
 showBootLog: true
 
@@ -25,8 +19,6 @@ commandLineTemplate: "$ edith --boot --session {session}"
 handshake:
   label: "e.d.i.t.h core handshake ....... "
   ready: "OK · 0.94 / 0.91"
-  # The mock appends 1-3 "." to this while negotiating (Component.
-  # renderVals()'s `handshake`, src/features/boot/lib/boot.ts's handshakeText()).
   negotiating: "negotiating"
 
 phaseLabels:
@@ -48,12 +40,10 @@ compass:
   right: "▶"
   degrees: ["000", "090", "180", "270"]
 
-# e.d.i.t.h status box (lines 248-254): the `┌─…─┐`/`└─…─┘` border rows are
-# stored verbatim; each data row's `prefix` is the literal text up to (not
-# including) the 16-char padded value, so the box's fixed-width alignment
-# is exactly the mock's own ASCII art, unchanged by any of this file's
-# other content. `threshold`/`onlineText` feed
-# src/features/boot/lib/boot.ts's statusRowValue().
+# The `┌─…─┐`/`└─…─┘` border rows are stored verbatim; each row's `prefix`
+# is the literal text up to (not including) the 16-char padded value, so
+# the box's fixed-width alignment stays exact. `threshold`/`onlineText`
+# feed lib/boot.ts's statusRowValue().
 statusBox:
   top: "┌─ e.d.i.t.h ───────────────────────┐"
   bottom: "└───────────────────────────────────┘"
@@ -78,11 +68,9 @@ statusBox:
 bootLogTitle: "── boot log ──────────────────"
 
 # Boot log timing/tag config, in display order. `threshold` is the 0..1
-# progress fraction at which the row becomes visible; `tag` picks the
-# row's glyph/color. The row's actual text (label/val) is content now, in
-# src/features/boot/content/log.md, matched to a row here by `id`. src/features/boot/lib/boot.ts's
-# logRows() keeps only the rows reached so far, most-recent-last, capped to
-# the last 5.
+# progress fraction at which a row becomes visible; `tag` picks its
+# glyph/color. Row text (label/val) lives in content/log.md, matched by
+# `id`.
 log:
   - id: mounting-shell
     threshold: 0.02
@@ -121,12 +109,10 @@ log:
     threshold: 0.96
     tag: done
 
-# Full palette per tint (lines 217-237); only `tints[coreTint]` above is
-# ever rendered. Named fields map 1:1 onto the mock's inline styles for the
-# core-readout circle: `border`/`glowStart`/`glowEnd` build the
-# `radial-gradient(...)` background, `shadowInset`/`shadowOuter` the
-# box-shadow, `labelColor` the small "E.D.I.T.H" caption, `pctColor` the big
-# percentage, `phaseColor` the phase word underneath.
+# Full palette per tint; only `tints[coreTint]` above is ever rendered.
+# Fields map onto the core-readout circle's inline styles: border/glowStart/
+# glowEnd build the radial-gradient, shadowInset/shadowOuter the box-shadow,
+# labelColor/pctColor/phaseColor the caption/percentage/phase text.
 tints:
   cyan:
     border: "rgba(95,198,180,.55)"
