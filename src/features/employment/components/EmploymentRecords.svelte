@@ -1,18 +1,4 @@
 <script lang="ts">
-  // Employment Records view — flat, newest-first list of employment
-  // records + a service-history timeline + a live-following file preview.
-  // Built directly in the orchestrator + state-class + panel-children
-  // pattern, replacing an older hierarchical drill-down file browser
-  // (tree/`../`/`f`-filter) this folder used to hold — that browser's
-  // entire reactive core (a depth-generic tree walker) has no equivalent
-  // here.
-  //
-  // Keyboard model: j/k/arrows move the selection; the preview panel and
-  // timeline both follow it live; Enter opens the selected record's
-  // role.md in the shared vim-lite Editor.svelte. The old drill-down/
-  // `f`-filter/`../` are gone, but Enter's open-in-editor behavior stays —
-  // this is safe ("harmless-open") because the buffer is always readonly,
-  // so it can never desync from the live preview/timeline.
   import type { CollectionEntry } from "astro:content";
   import type { PersonnelData } from "../../../common/lib/data";
   import Editor from "../../../common/components/editor/Editor.svelte";

@@ -1,15 +1,8 @@
 <script lang="ts">
-  // Middle column: vertical service-history timeline hanging off a
-  // spiderweb glyph, one node per record (newest at the top, oldest = 1).
-  // Only four keyframes are live here (`spin`/`rspin`/`spark`/`dash`) —
-  // `pls`/`blink`/`webglow` are not implemented.
-  //
-  // All four infinite keyframe animations run live in every build, fixture
-  // included — golden determinism comes from Playwright's capture-time
-  // `animations:"disabled"` alone, not from a fixtureMode gate. The
-  // continuous *transitions* (marker/ring/dot easing on selection change)
-  // are unrelated either way: they only ever fire on a selection change,
-  // and fixture/golden captures never trigger one mid-capture.
+  // Middle column: vertical timeline with one node per record; only
+  // spin/rspin/spark/dash keyframes are implemented (pls/blink/webglow are
+  // not), and golden determinism comes from Playwright's capture-time
+  // `animations:"disabled"` rather than a fixture-mode gate.
   import type { EmploymentRecordsState } from "./employmentRecordsState.svelte";
 
   interface Props {

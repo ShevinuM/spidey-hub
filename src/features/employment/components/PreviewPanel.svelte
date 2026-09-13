@@ -1,9 +1,7 @@
 <script lang="ts">
-  // Right panel: selected record's role.md body, syntax-colored the same
-  // way src/common/lib/docline.ts colors every other doc pane on the site
-  // ("personnel" mode). The line container scrolls vertically when the
-  // body is taller than the panel, and each line wraps instead of clipping
-  // so no character is ever hidden.
+  // Right panel: selected record's role.md body, syntax-colored via
+  // src/common/lib/docline.ts's "personnel" mode, scrolling vertically and
+  // wrapping each line instead of clipping.
   import PanelBadge from "../../../common/components/PanelBadge.svelte";
   import type { EmploymentRecordsState } from "./employmentRecordsState.svelte";
 

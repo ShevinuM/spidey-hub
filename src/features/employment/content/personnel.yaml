@@ -1,13 +1,8 @@
-# Employment Records (flat list + service timeline) view copy. This page
-# replaced an older hierarchical drill-down file browser.
-
 breadcrumb: "~/employment-records"
 
-# 2-3 char org tag shown in each row's dim column. Not mechanically
-# derivable from the personnel collection's org directory slug
-# ("memorial-university" is "mun", not "mem") — hand authored here, keyed
-# by the collection's top-level directory segment
-# (src/features/employment/content/personnel/<key>/...).
+# 2-3 char org tag shown in each row's dim column, hand-authored since it
+# isn't mechanically derivable from the org directory slug (e.g.
+# "memorial-university" -> "mun", not "mem").
 orgTags:
   enaimco: ena
   memorial-university: mun
@@ -36,14 +31,6 @@ badge:
 
 previewLineCountTemplate: "{n} lines"
 
-# Enter opens the selected record's role.md in the shared vim-lite editor
-# ("j/k/enter selection stays" — the filter/drill-down/`../` are what's
-# dropped, not Enter's existing open-in-editor behavior). Mirrors
-# repositories.yaml's `editor:` block field-for-field (EditorLabels requires
-# every field for Editor.svelte's shared status line); defined independently
-# here since this file has no dependency on repositories.yaml. The role doc
-# pane never scrolls past one screen in practice, so topLabel/bottomLabel/
-# percentTemplate only ever render "Top" here.
 editor:
   modeLabel: "NORMAL"
   modeVisualLabel: "VISUAL"

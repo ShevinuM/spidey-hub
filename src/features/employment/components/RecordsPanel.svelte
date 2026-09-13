@@ -1,8 +1,7 @@
 <script lang="ts">
-  // Left panel: index block + breadcrumb + flat, newest-first record rows,
-  // top-stacked inside the bordered box with explicit `gap` between the
-  // three blocks. The row list is the one block that grows/scrolls when its
-  // content exceeds the box's remaining height.
+  // Left panel: index block + breadcrumb + flat, newest-first record rows
+  // stacked in the bordered box, where only the row list grows/scrolls once
+  // content exceeds the box's height.
   import PanelBadge from "../../../common/components/PanelBadge.svelte";
   import type { EmploymentRecordsState } from "./employmentRecordsState.svelte";
 
