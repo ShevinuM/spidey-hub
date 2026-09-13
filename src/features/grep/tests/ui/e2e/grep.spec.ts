@@ -4,12 +4,11 @@
 // search()/formatCount() port the component itself uses
 // (src/features/grep/lib/grep.ts), never hardcoded.
 import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
-// This spec's `context` fixture (imported
-// from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
-// sessionStorage flag before every navigation, so BootSequence.svelte's
-// ~4.6s unskippable sequence never runs for these tests — see that
-// file's header comment for why this is a context-fixture override
-// rather than a per-goto-helper change.
+// This spec's `context` fixture (imported from
+// src/common/tests/ui/support/fixtures.ts, not raw "@playwright/test")
+// pre-seeds the boot-seen sessionStorage flag before every navigation, so
+// BootSequence.svelte's ~4.6s unskippable sequence never runs for these
+// tests.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { search, formatCount, type RepoFile } from "../../../lib/grep";
