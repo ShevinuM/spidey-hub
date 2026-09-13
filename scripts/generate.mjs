@@ -290,7 +290,15 @@ const GREP_ROOT_FILES = [
   "README.md",
 ];
 
-function generateGrepIndex() {
+/**
+ * Computes the grep index's file list (path + content lines, sorted by
+ * path) by walking its sources fresh from disk. Factored out of
+ * generateGrepIndex() so collectIconFilenames() can call it as a paths-only
+ * prewalk *before* generateFileIcons() runs (see that function's header) —
+ * generateGrepIndex() then calls this again afterward, re-reading disk and
+ * picking up the file-icons.json bytes generateFileIcons() just wrote.
+ */
+function collectGrepFiles() {
   const files = [];
   for (const sub of GREP_ROOT_SUBDIRS) {
     const dir = join(ROOT, sub);
@@ -304,6 +312,11 @@ function generateGrepIndex() {
     files.push({ path: rel, lines: content.split("\n") });
   }
   files.sort((a, b) => a.path.localeCompare(b.path));
+  return files;
+}
+
+function generateGrepIndex() {
+  const files = collectGrepFiles();
   mkdirSync(join(ROOT, "public/generated"), { recursive: true });
   writeFileSync(join(ROOT, "public/generated/grep-index.json"), JSON.stringify(files) + "\n");
   console.log(`[generate] public/generated/grep-index.json — ${files.length} files`);
@@ -380,7 +393,15 @@ function walkStructure(dir, root, collected, extraSkipDirs) {
   }
 }
 
-function generateFsIndex() {
+/**
+ * Computes the fs index's entry list (path + size, sorted by path) by
+ * walking its sources fresh from disk. Factored out of generateFsIndex() so
+ * collectIconFilenames() can call it as a paths-only prewalk *before*
+ * generateFileIcons() runs (see that function's header) — generateFsIndex()
+ * then calls this again afterward, re-reading disk and picking up the
+ * file-icons.json size generateFileIcons() just wrote.
+ */
+function collectFsEntries() {
   const entries = [];
 
   for (const sub of FS_INDEX_SUBDIRS) {
@@ -418,6 +439,11 @@ function generateFsIndex() {
   }
 
   entries.sort((a, b) => a.path.localeCompare(b.path));
+  return entries;
+}
+
+function generateFsIndex() {
+  const entries = collectFsEntries();
   mkdirSync(join(ROOT, "public/generated"), { recursive: true });
   writeFileSync(join(ROOT, "public/generated/fs-index.json"), JSON.stringify({ entries }) + "\n");
   console.log(`[generate] public/generated/fs-index.json — ${entries.length} entries`);
@@ -633,6 +659,21 @@ async function generateContributions() {
 // checks `byName[basename]` first, then `byExt[ext]`, then `fallback`.
 // ---------------------------------------------------------------------------
 
+/**
+ * Collects every filename (basename only) that could show up anywhere the
+ * site renders a file icon: the per-repo indexes, plus a paths-only prewalk
+ * of the grep and fs indexes' own sources (collectGrepFiles()/
+ * collectFsEntries() — the same functions generateGrepIndex()/
+ * generateFsIndex() call, re-invoked fresh here rather than read back from
+ * their JSON output). This runs BEFORE those two indexes are generated (see
+ * main()) precisely so it doesn't depend on them existing yet — it only
+ * needs the *paths* those walks would produce, which the walk itself
+ * already knows how to compute without either index having been written.
+ * Insertion order matters (icons/byExt/byName are plain objects, so key
+ * order is part of the committed bytes): repos/*.json in readdirSync order,
+ * then the grep sources in their sorted order, then the fs sources in
+ * theirs — the same order the old read-back-the-indexes version produced.
+ */
 function collectIconFilenames() {
   const names = new Set();
   const reposDir = join(ROOT, "public/generated/repos");
@@ -643,15 +684,8 @@ function collectIconFilenames() {
       for (const f of index.files) names.add(basename(f.path));
     }
   }
-  const grepIndexPath = join(ROOT, "public/generated/grep-index.json");
-  if (existsSync(grepIndexPath)) {
-    for (const f of JSON.parse(readFileSync(grepIndexPath, "utf8"))) names.add(basename(f.path));
-  }
-  const fsIndexPath = join(ROOT, "public/generated/fs-index.json");
-  if (existsSync(fsIndexPath)) {
-    const { entries } = JSON.parse(readFileSync(fsIndexPath, "utf8"));
-    for (const e of entries) names.add(basename(e.path));
-  }
+  for (const f of collectGrepFiles()) names.add(basename(f.path));
+  for (const e of collectFsEntries()) names.add(basename(e.path));
   return names;
 }
 
@@ -712,14 +746,22 @@ async function main() {
   // grouped next to the other GitHub-fetching step purely for narrative
   // order.
   await generateContributions();
+  // File icons run here — after generateRepoIndexes() (needs the per-repo
+  // JSONs it wrote for repos/* filenames) but BEFORE generateGrepIndex()/
+  // generateFsIndex() (see collectIconFilenames()'s header): those two
+  // indexes embed file-icons.json's content and byte size respectively, so
+  // file-icons.json must already hold its final bytes before either of them
+  // is generated, or the pair can never reach a fixed point — each run
+  // would change what the other embedded the run before. Icons only need
+  // *paths*, which collectIconFilenames()'s own prewalk gets by calling the
+  // same source walks generateGrepIndex()/generateFsIndex() use, so no
+  // read-back of either index's output is needed here.
+  generateFileIcons();
   generateGrepIndex();
   // Must run after generateRepoIndexes(): reads the per-repo JSONs it just
   // wrote for the repos/* path-only subtrees (see generateFsIndex's own
   // header comment).
   generateFsIndex();
-  // File icons run last: it reads back every index generated above to find
-  // every filename actually shown anywhere in the site.
-  generateFileIcons();
 }
 
 main().catch((err) => {
