@@ -1,5 +1,5 @@
 import { expect, type Page } from "@playwright/test";
-import { StatusBarPage } from "../../../../../../common/tests/ui/pages/StatusBarPage";
+import { StatusBarPage } from "../../../../../common/tests/ui/pages/StatusBarPage";
 
 /**
  * Page object for the employment feature's harness mount

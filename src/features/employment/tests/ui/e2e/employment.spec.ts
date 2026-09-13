@@ -21,16 +21,16 @@
 // content edit doesn't silently desync this suite from the truth it's
 // supposed to check.
 import type { Locator } from "@playwright/test";
-import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
+import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = join(import.meta.dirname, "../../../../../..");
 const PERSONNEL_DIR = join(ROOT, "src/features/employment/content/personnel");
 
-// Matches common/tests/ui/e2e/nav.spec.ts's/sessions.spec.ts's own CLOCK_TIME
+// Matches src/common/tests/ui/e2e/nav.spec.ts's/sessions.spec.ts's own CLOCK_TIME
 // literal — the visual suite's frozen "now"
-// (common/tests/ui/support/recipes.ts). Not installed by every test below
+// (src/common/tests/ui/support/recipes.ts). Not installed by every test below
 // (most don't care about live durations), only the ones that assert
 // index/timeline values computed against "now".
 const CLOCK_TIME = "2026-08-15T23:34:00";
@@ -304,7 +304,7 @@ test.describe("Employment: selection — j/k/arrows sync preview and timeline li
   }) => {
     // "j/k/enter selection stays" drops the `f` filter/drill-down/`../`, not
     // Enter's existing open-in-editor behavior — see
-    // common/tests/ui/e2e/editor-vim.spec.ts's "Employment" entry point,
+    // src/common/tests/ui/e2e/editor-vim.spec.ts's "Employment" entry point,
     // which parametrizes the same editor suite over this page. "Harmless-
     // open" describes why this is safe, not that Enter does nothing: the
     // buffer is always readonly.

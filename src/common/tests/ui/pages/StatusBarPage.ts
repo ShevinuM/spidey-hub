@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 
 /**
  * Shared page object for kernel-chrome status-bar locators
- * (`StatusBar.svelte`) — lives in `common/tests/ui/pages/` per
+ * (`StatusBar.svelte`) — lives in `src/common/tests/ui/pages/` per
  * `e2e-testing.md` R005: a feature's own page object may never redefine a
  * kernel-chrome locator, since every feature's harness spec needs the exact
  * same "no kernel chrome mounted alongside this feature in isolation" proof.

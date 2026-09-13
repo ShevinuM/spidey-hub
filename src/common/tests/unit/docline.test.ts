@@ -13,9 +13,9 @@
 import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { classifyDoc, docColors, xpColors } from "../../../src/common/lib/docline";
+import { classifyDoc, docColors, xpColors } from "../../lib/docline";
 
-const ROOT = join(import.meta.dirname, "../../..");
+const ROOT = join(import.meta.dirname, "../../../..");
 const fixturesPath = join(import.meta.dirname, "docline.fixtures.json");
 const expected = JSON.parse(readFileSync(fixturesPath, "utf8")) as {
   docColors: Record<string, string>;

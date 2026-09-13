@@ -15,7 +15,7 @@
 // than switching to the fixture tree) to force real content to overflow.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
+import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
 
 const ROOT = join(import.meta.dirname, "../../../../../..");
 const PERSONNEL_DIR = join(ROOT, "src/features/employment/content/personnel");

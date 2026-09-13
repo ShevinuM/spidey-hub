@@ -1,10 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
-import { viewports } from "./common/tests/ui/support/recipes";
+import { viewports } from "./src/common/tests/ui/support/recipes";
 
 // Two viewport projects (PLAN.md "Visual-regression harness"), used by
 // tests/visual/identical.spec.ts (and its per-context splits, e.g.
 // common-visual-<viewport> — 00-phases.md D21).
-// common/tests/ui/support/capture-goldens.mjs is a standalone
+// src/common/tests/ui/support/capture-goldens.mjs is a standalone
 // script (not run through the Playwright test runner) and manages its own
 // browser/server, so it does not go through this config.
 export default defineConfig({
@@ -13,15 +13,15 @@ export default defineConfig({
   // build) and test:visual (fixture build) share the port-4322 webServer
   // entry below with `reuseExistingServer: true`, so a stale server left
   // over from the other suite would otherwise serve the wrong
-  // PORTFOLIO_FIXTURES mode with no signal. See common/tests/ui/support/check-fixture-flag.ts.
-  globalSetup: "./common/tests/ui/support/check-fixture-flag.ts",
+  // PORTFOLIO_FIXTURES mode with no signal. See src/common/tests/ui/support/check-fixture-flag.ts.
+  globalSetup: "./src/common/tests/ui/support/check-fixture-flag.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: "html",
   // tests/visual/identical.spec.ts uses `expect(png).toMatchSnapshot({name})`
   // (not `toHaveScreenshot`, so the capture pipeline contract in
-  // common/tests/ui/support/pipeline.mjs stays the single source of truth
+  // src/common/tests/ui/support/pipeline.mjs stays the single source of truth
   // for how the screenshot itself is taken) — this points its lookup at the
   // already-committed goldens (tests/visual/goldens/<viewport>/<recipe>.png),
   // where <viewport> is each project's own name (see `viewports` above:
@@ -71,7 +71,7 @@ export default defineConfig({
     // viewports can't share one project name).
     ...viewports.map((viewport) => ({
       name: `common-${viewport.name}`,
-      testDir: "./common/tests/ui/e2e",
+      testDir: "./src/common/tests/ui/e2e",
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: viewport.width, height: viewport.height },
@@ -95,8 +95,8 @@ export default defineConfig({
     // reuses this same per-project-template shape, not `{projectName}`.
     ...viewports.map((viewport) => ({
       name: `common-visual-${viewport.name}`,
-      testDir: "./common/tests/ui/visual",
-      snapshotPathTemplate: `common/tests/ui/visual/goldens/${viewport.name}/{arg}{ext}`,
+      testDir: "./src/common/tests/ui/visual",
+      snapshotPathTemplate: `src/common/tests/ui/visual/goldens/${viewport.name}/{arg}{ext}`,
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: viewport.width, height: viewport.height },
@@ -123,7 +123,7 @@ export default defineConfig({
     // `snapshotPathTemplate` with the viewport hardcoded as a literal, not
     // derived from `{projectName}` — only the path prefix differs, since
     // feature tests nest under `src/features/<f>/tests/` rather than
-    // common's top-level `common/tests/`.
+    // common's `src/common/tests/`.
     ...viewports.map((viewport) => ({
       name: `profile-visual-${viewport.name}`,
       testDir: "./src/features/profile/tests/ui/visual",
@@ -298,7 +298,7 @@ export default defineConfig({
     // viewport hardcoded as a literal, not derived from `{projectName}`.
     // "08-tracker" (also owned by this phase's original goal line) is NOT
     // here — phase-07 R1 ruled it common's; it moved into
-    // common/tests/ui/visual/ instead, under the existing
+    // src/common/tests/ui/visual/ instead, under the existing
     // `common-visual-<viewport>` projects.
     ...viewports.map((viewport) => ({
       name: `dashboard-visual-${viewport.name}`,
@@ -527,14 +527,14 @@ export default defineConfig({
       // (port 4322 below) directly against the committed goldens via
       // `expect(png).toMatchSnapshot(...)` + `snapshotPathTemplate` — it
       // never fetches this server. This entry only serves
-      // common/tests/ui/support/capture-goldens.mjs's historical/guarded
+      // src/common/tests/ui/support/capture-goldens.mjs's historical/guarded
       // vendored-prototype regeneration path (see that script's own header
       // comment), which is not run as part of normal development; it is
       // started here regardless (unconditionally, alongside the port-4322
       // entry) because Playwright's `webServer` array has no per-project
       // conditional wiring — confirmed empirically in phase 02's D21(b)
       // read of identical.spec.ts/adversarial-fixtures.spec.ts.
-      command: "node common/tests/ui/support/static-server.mjs reference 4400",
+      command: "node src/common/tests/ui/support/static-server.mjs reference 4400",
       url: "http://localhost:4400/Homepage.dc.html",
       reuseExistingServer: !process.env.CI,
     },
@@ -547,14 +547,14 @@ export default defineConfig({
       // was most recently produced.
       //
       // Uses the same dependency-free static server as the reference
-      // (common/tests/ui/support/static-server.mjs), not `astro preview`:
+      // (src/common/tests/ui/support/static-server.mjs), not `astro preview`:
       // Astro 7.2.2's `astro preview` daemonizes (forks a detached
       // background process; the launching process exits within ~1s), which
       // Playwright's `webServer` treats as a crash ("Process from
       // config.webServer exited early") since it monitors that launching
       // process. The build output is fully static, so a plain file server
       // (with directory→index.html resolution) serves it identically.
-      command: "node common/tests/ui/support/static-server.mjs dist 4322",
+      command: "node src/common/tests/ui/support/static-server.mjs dist 4322",
       url: "http://localhost:4322",
       reuseExistingServer: !process.env.CI,
     },

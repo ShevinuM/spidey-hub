@@ -36,8 +36,8 @@
 // vendored-prototype path is retired to historical/guarded status (see its
 // own header comment) and is never run as part of normal development.
 import { expect, test } from "@playwright/test";
-import { bootRecipes, cmdlineRecipes, extraRecipes, iteration3Recipes, notificationsRecipes, recipes } from "../../common/tests/ui/support/recipes.ts";
-import { captureBootState, captureState } from "../../common/tests/ui/support/pipeline.mjs";
+import { bootRecipes, cmdlineRecipes, extraRecipes, iteration3Recipes, notificationsRecipes, recipes } from "../../src/common/tests/ui/support/recipes.ts";
+import { captureBootState, captureState } from "../../src/common/tests/ui/support/pipeline.mjs";
 
 // The 19 standard (key/type replay) recipes, captured via captureState().
 // bootRecipes are handled by their own describe block below via
@@ -50,7 +50,7 @@ import { captureBootState, captureState } from "../../common/tests/ui/support/pi
 // Instructions/01-pre-phase/recipe-feature-map.md's "owning phase" column —
 // "06-editor" (recipes), "15-cmdline" (cmdlineRecipes), "18-split" and
 // "19-choose-tree" (iteration3Recipes) — and now runs them itself under
-// common/tests/ui/visual/ (common-visual-<viewport> projects) against its
+// src/common/tests/ui/visual/ (common-visual-<viewport> projects) against its
 // own goldens/ tree. Phase 03 (profile) similarly owns "07-profile", now run
 // under src/features/profile/tests/ui/visual/ (profile-visual-<viewport>
 // projects). Phase 04 (help) owns "11-help" (extraRecipes) and
@@ -69,7 +69,7 @@ import { captureBootState, captureState } from "../../common/tests/ui/support/pi
 // projects). "08-tracker" (also `recipes`) is NOT dashboard's — 00-phases.md
 // D17/phase-07 R1 ruled it common's (its sole renderer is
 // common/components/Wallpaper.svelte, which paints it on every view), so it
-// joined common/tests/ui/visual/'s own goldens/ tree instead
+// joined src/common/tests/ui/visual/'s own goldens/ tree instead
 // (common-visual-<viewport> projects) rather than a dashboard-visual one.
 // Phase 08 (employment) owns "04-employment-l0" and "05-employment-l1"
 // (recipes), now run under src/features/employment/tests/ui/visual/
@@ -124,7 +124,7 @@ const keyRecipes = [...recipes, ...extraRecipes, ...cmdlineRecipes, ...iteration
 // SAME implementation), that specific rationale is gone; every recipe here
 // starts at `maxDiffPixels: 0` again. Any entry added back to the set below
 // must cite fresh forensics from an actual three-run determinism check
-// (which pixels, how many, why — e.g. the README-PIPELINE.md-documented GPU
+// (which pixels, how many, why — e.g. the src/common/tests/ui/support/README-PIPELINE.md-documented GPU
 // blur-rasterization jitter, which is capture-vs-capture and can in
 // principle still surface here), not prototype-skew reasoning.
 const RATIO_RELAXED = new Set<string>([]);

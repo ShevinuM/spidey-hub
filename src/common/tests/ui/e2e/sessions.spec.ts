@@ -4,16 +4,16 @@
 // `a [-t name]`/`edith`/`open <view>` builtins, the kill-cascade rules that
 // destroy a session outright once its last window dies, and the host `exit`
 // (`logout` + reload). Companion to src/features/shell-fs/tests/ui/e2e/shell.spec.ts (the in-window
-// shell) and common/tests/ui/e2e/tmux.spec.ts (the prefix state machine, including its
+// shell) and src/common/tests/ui/e2e/tmux.spec.ts (the prefix state machine, including its
 // own updated "w/0 still go home, d now detaches" and "[exited]" cascade
 // coverage) — this file is the one that actually exercises SESSIONS.
 import { expect, test, type Page } from "../support/fixtures";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
-import { formatCtime } from "../../../../src/common/lib/clock";
+import { formatCtime } from "../../../lib/clock";
 
-const ROOT = join(import.meta.dirname, "../../../..");
+const ROOT = join(import.meta.dirname, "../../../../..");
 
 interface ShellYaml {
   host: {

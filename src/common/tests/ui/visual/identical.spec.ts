@@ -10,14 +10,14 @@
 // original goal line). Split out of tests/visual/identical.spec.ts
 // (00-phases.md D21) so every recipe is captured exactly once as later
 // phases do the same for their own owned recipes. Same capture pipeline
-// (common/tests/ui/support/pipeline.mjs), same recipes source
-// (common/tests/ui/support/recipes.ts), same real-implementation build
+// (src/common/tests/ui/support/pipeline.mjs), same recipes source
+// (src/common/tests/ui/support/recipes.ts), same real-implementation build
 // (port 4322) — see tests/visual/identical.spec.ts's own header comment for
 // the full mechanism this reuses verbatim.
 //
 // Goldens resolve via this project's own `snapshotPathTemplate`
 // (playwright.config.ts, "common-visual-<viewport>" projects) to
-// common/tests/ui/visual/goldens/<viewport>/<recipe>.png — hardcoded per
+// src/common/tests/ui/visual/goldens/<viewport>/<recipe>.png — hardcoded per
 // project rather than derived from `{projectName}`, since the project name
 // now carries a "common-visual-" context prefix that the viewport-only
 // literal directory name must not (D21(a)).

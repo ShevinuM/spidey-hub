@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { StatusBarPage } from "../../../../../../common/tests/ui/pages/StatusBarPage";
+import { StatusBarPage } from "../../../../../common/tests/ui/pages/StatusBarPage";
 
 /**
  * Page object for Profile.svelte (`e2e-testing.md` R003/R004: specs call

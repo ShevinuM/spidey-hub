@@ -3,7 +3,7 @@
 // TOAST_AUTO_DISMISS_MS) was retired along with Toasts.svelte — the bell/
 // panel/toast system now lives in Notifications.svelte, backed by
 // src/features/notifications/lib/notification-store.ts. Only this one key
-// survives: common/tests/ui/support/pipeline.mjs still imports it to
+// survives: src/common/tests/ui/support/pipeline.mjs still imports it to
 // pre-seed a sessionStorage value for every golden capture, and removing
 // the export would break that import with no way to fix it from here. It
 // is otherwise unread by any current code path.

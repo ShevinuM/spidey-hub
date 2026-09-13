@@ -390,7 +390,7 @@ function generateAllProjectsIndex() {
 // README.md.
 //
 // The vendored, never-shipped design handoff copy lives at the repo root
-// (`reference/`, see tests/visual/README-PIPELINE.md) — outside every subdir
+// (`reference/`, see src/common/tests/ui/support/README-PIPELINE.md) — outside every subdir
 // this walker visits (GREP_ROOT_SUBDIRS below), so it is never walked and
 // needs no skip entry. It is ~3MB of third-party HTML/JS/images that is
 // never shipped (not in src/public); including it would flood the live grep

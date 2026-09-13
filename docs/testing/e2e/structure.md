@@ -68,7 +68,7 @@ class RepositoriesPage {
 }
 ```
 
-## `common/tests/ui/pages/` — shared page objects
+## `src/common/tests/ui/pages/` — shared page objects
 
 UI pieces reused across features — the kernel chrome (status bar, shared overlays) — get their own page-object class here rather than being redefined per feature. A feature's own page object composes the shared one as a property instead of duplicating its locators.
 

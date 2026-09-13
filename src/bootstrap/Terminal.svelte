@@ -355,7 +355,7 @@
   // Real, imperative (rather than `<svelte:window>`) listener attachment so
   // the mobile-block guard is literal: outside desktop+fine-pointer, no
   // keydown/popstate listener is ever registered, not merely a handler that
-  // early-returns (verified by e2e, common/tests/ui/e2e/tmux.spec.ts's
+  // early-returns (verified by e2e, src/common/tests/ui/e2e/tmux.spec.ts's
   // mobile-block checks).
   $effect(() => {
     if (!desktopMode) return;

@@ -5,7 +5,7 @@
 // this file proves the operations themselves are correct independent of
 // that wrapping).
 import { expect, test } from "vitest";
-import { createShellState } from "../../../src/common/lib/shell";
+import { createShellState } from "../../lib/shell";
 import {
   activeSessionOf,
   activeWindowOf,
@@ -47,7 +47,7 @@ import {
   type Session,
   type Window,
   type WindowSeed,
-} from "../../../src/common/engines/tmux/tmux";
+} from "../../engines/tmux/tmux";
 
 const SIX_WINDOWS: WindowSeed[] = [
   { number: 0, id: "dashboard", name: "dashboard" },
@@ -234,7 +234,7 @@ test("killWindow on the active LAST window wraps to the first remaining window",
 });
 
 test("killWindow reproduces the exact 'kill down to one' sequence byte-for-byte", () => {
-  // Mirrors common/tests/ui/e2e/tmux.spec.ts's "killing every window down to
+  // Mirrors src/common/tests/ui/e2e/tmux.spec.ts's "killing every window down to
   // the last one is refused" sequence: always kill whatever is CURRENTLY
   // active.
   const session = freshSession();

@@ -1,5 +1,5 @@
 // Pixel-regression suite for the two recipes boot owns: "13-boot-mid" and
-// "14-boot-ready" (both live in `common/tests/ui/support/recipes.ts`'s
+// "14-boot-ready" (both live in `src/common/tests/ui/support/recipes.ts`'s
 // `bootRecipes` array — a separate `BootRecipe` shape, `{ name,
 // clockOffsetMs }`, with no `actions`/`check` fields, unlike every other
 // recipe). Split out of tests/visual/identical.spec.ts the same way
@@ -24,8 +24,8 @@
 // hardcoded per project rather than derived from `{projectName}`, same
 // reasoning as common's/profile's/help's own split projects.
 import { expect, test } from "@playwright/test";
-import { bootRecipes } from "../../../../../../common/tests/ui/support/recipes";
-import { captureBootState } from "../../../../../../common/tests/ui/support/pipeline.mjs";
+import { bootRecipes } from "../../../../../common/tests/ui/support/recipes";
+import { captureBootState } from "../../../../../common/tests/ui/support/pipeline.mjs";
 
 const BOOT_OWNED_RECIPE_NAMES = new Set(["13-boot-mid", "14-boot-ready"]);
 const keyRecipes = bootRecipes.filter((recipe) => BOOT_OWNED_RECIPE_NAMES.has(recipe.name));

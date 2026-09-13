@@ -28,7 +28,7 @@
 import { expect, test } from "@playwright/test";
 import { BootPage } from "../pages/BootPage";
 import { pct, phaseLabel } from "../../../lib/boot";
-import { BOOT_HARD_STOP_MS, BOOT_MS, BOOT_OUT_MS } from "../../../../../../common/tests/ui/support/recipes";
+import { BOOT_HARD_STOP_MS, BOOT_MS, BOOT_OUT_MS } from "../../../../../common/tests/ui/support/recipes";
 
 // Hand-mirrored from src/features/boot/content/boot.yaml — same "no runtime
 // import of that file is possible here" convention

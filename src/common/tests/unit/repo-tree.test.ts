@@ -17,9 +17,9 @@ import {
   flattenVisible,
   type RepoFile,
   type RepoIndex,
-} from "../../../src/common/lib/repo-tree";
+} from "../../lib/repo-tree";
 
-const ROOT = join(import.meta.dirname, "../../..");
+const ROOT = join(import.meta.dirname, "../../../..");
 const dailyTechDigest = JSON.parse(
   readFileSync(join(ROOT, "public/generated/repos/daily-tech-digest.json"), "utf8"),
 ) as RepoIndex;

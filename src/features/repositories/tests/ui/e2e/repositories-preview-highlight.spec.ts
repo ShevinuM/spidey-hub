@@ -16,7 +16,7 @@
 // copy. Trees/Trie/word_search_ii.java
 // (Data-Structures-And-Algorithms) is that file: real Java keyword/type/
 // comment tokens (multiple palette colours) on line 31 alone.
-import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
+import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
 
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);

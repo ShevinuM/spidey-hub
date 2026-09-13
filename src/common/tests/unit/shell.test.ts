@@ -2,7 +2,7 @@
 // — src/common/lib/shell.ts. No DOM, no fetch: a
 // small fixture fs index + a hand-built ShellData-shaped fixture (same
 // "structurally equivalent fixture, not the real yaml" convention
-// common/tests/unit/cmdline.test.ts already uses) stand in for the generated
+// src/common/tests/unit/cmdline.test.ts already uses) stand in for the generated
 // index and src/features/shell-fs/content/shell.yaml.
 import { expect, test } from "vitest";
 import {
@@ -27,9 +27,9 @@ import {
   type RunContext,
   type SessionRosterEntry,
   type ShellState,
-} from "../../../src/common/lib/shell";
-import type { ShellData } from "../../../src/common/lib/data";
-import { formatCtime } from "../../../src/common/lib/clock";
+} from "../../lib/shell";
+import type { ShellData } from "../../lib/data";
+import { formatCtime } from "../../lib/clock";
 
 const FS: FsEntry[] = [
   { path: "package.json", size: 100 },

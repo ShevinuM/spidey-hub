@@ -13,7 +13,7 @@
 // own `n` toggle (routed by the harness wrapper, not Terminal), and toast
 // appearance/auto-dismiss.
 //
-// Imports the SHARED e2e fixture (common/tests/ui/support/fixtures.ts),
+// Imports the SHARED e2e fixture (src/common/tests/ui/support/fixtures.ts),
 // unlike help/boot's own harness specs: help needs no seeding at all, and
 // boot's harness deliberately avoids the shared fixture (a seeded
 // boot-seen flag there would skip the very sequence it exists to test).
@@ -21,7 +21,7 @@
 // pinned injection seed and a shortened toast-duration scale — so reusing
 // it here is the single source of that seeding mechanism rather than a
 // second copy of its `addInitScript`.
-import { expect, test, E2E_TOAST_DURATION_SCALE } from "../../../../../../common/tests/ui/support/fixtures";
+import { expect, test, E2E_TOAST_DURATION_SCALE } from "../../../../../common/tests/ui/support/fixtures";
 import { TOAST_DURATION_MS } from "../../../lib/notification-store";
 import { NotificationsPage } from "../pages/NotificationsPage";
 

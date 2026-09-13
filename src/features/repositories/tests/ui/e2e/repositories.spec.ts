@@ -31,7 +31,7 @@
 // the real source" convention nav.spec.ts's toast-dismissal suite uses. The
 // repo COUNT/order/names above are structural, not live-refreshable, and
 // stay asserted directly.
-import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
+import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
 // This spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's

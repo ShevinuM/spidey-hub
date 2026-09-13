@@ -1,6 +1,6 @@
 import { expect, type Page } from "@playwright/test";
-import { StatusBarPage } from "../../../../../../common/tests/ui/pages/StatusBarPage";
-import { BOOT_HARD_STOP_MS, CLOCK_TIME } from "../../../../../../common/tests/ui/support/recipes";
+import { StatusBarPage } from "../../../../../common/tests/ui/pages/StatusBarPage";
+import { BOOT_HARD_STOP_MS, CLOCK_TIME } from "../../../../../common/tests/ui/support/recipes";
 
 /**
  * Page object for the boot feature's harness mount (`BootSequence.svelte`,
@@ -13,7 +13,7 @@ import { BOOT_HARD_STOP_MS, CLOCK_TIME } from "../../../../../../common/tests/ui
  * `e2e-testing.md` R005 — this composes the shared `StatusBarPage` instead.
  *
  * Owns the fake-clock protocol boot's own capture pipeline
- * (`common/tests/ui/support/pipeline.mjs`'s `captureBootState()`) already
+ * (`src/common/tests/ui/support/pipeline.mjs`'s `captureBootState()`) already
  * proved deterministic: `clock.install()` then `clock.pauseAt(t0)` BEFORE
  * `page.goto()` pins `Date.now()` through navigation and hydration exactly,
  * rather than the ordinary "install then advance after load" sequence

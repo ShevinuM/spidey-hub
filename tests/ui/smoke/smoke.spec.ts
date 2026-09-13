@@ -7,11 +7,11 @@
 //
 // Deliberately imports the raw `@playwright/test` (same reasoning as
 // `tests/e2e/boot.spec.ts`'s own header comment), not the shared
-// `common/tests/ui/support/fixtures.ts` boot-skip helper — this suite exists
+// `src/common/tests/ui/support/fixtures.ts` boot-skip helper — this suite exists
 // specifically to prove the real (unskipped) boot sequence completes on a
 // fresh tab for every route, not just that the app renders past it.
 import { test, expect } from "@playwright/test";
-import { TerminalPage } from "../../../common/tests/ui/pages/TerminalPage";
+import { TerminalPage } from "../../../src/common/tests/ui/pages/TerminalPage";
 
 const ROUTES = ["/", "/repositories", "/employment", "/retina-v", "/profile", "/help"];
 
@@ -26,7 +26,7 @@ for (const route of ROUTES) {
 
     await page.goto(route);
     // The boot overlay swallows all input and plays a full ~4.6s unskippable
-    // sequence on a fresh tab (see common/tests/ui/support/fixtures.ts's own
+    // sequence on a fresh tab (see src/common/tests/ui/support/fixtures.ts's own
     // header comment) — wait it out for real rather than pre-seeding the
     // skip flag, since "the terminal boots" is exactly what this check
     // proves. Generous timeout: this is the real (non-fixture) build, and a

@@ -1,6 +1,6 @@
 // Cold-boot coverage for the surfaces still untested from both directions
 // even with tests/e2e/notifications-boot.spec.ts in place:
-// `common/tests/ui/support/fixtures.ts`'s shared `context` fixture pre-seeds
+// `src/common/tests/ui/support/fixtures.ts`'s shared `context` fixture pre-seeds
 // the boot-seen sessionStorage flag for every spec except `boot.spec.ts`,
 // and `boot.spec.ts` itself never mentions notifications — so a real
 // first-time visitor's bell/ring state and the dashboard's basic
@@ -74,7 +74,7 @@ test.describe("cold boot: unread bell + senseRing ring", () => {
       // non-"none" string just as readily as a live one — it returns the
       // declared keyframe name whether or not that name actually resolves
       // to a registered `@keyframes` rule (same insight
-      // common/tests/ui/e2e/animations.spec.ts's own header explains). The
+      // src/common/tests/ui/e2e/animations.spec.ts's own header explains). The
       // discriminating check is `getAnimations().length > 0`, safe here
       // specifically because `senseRing` is declared `infinite`
       // (tests/e2e/animations.spec.ts's header comment on why this check

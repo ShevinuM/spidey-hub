@@ -6,8 +6,8 @@
 // tests/visual/identical.spec.ts the same way common's/profile's/help's/
 // boot's own recipes were split — every recipe is captured exactly once,
 // never twice and never dropped, as each context/feature owns its own
-// rendered recipes. Same capture pipeline (common/tests/ui/support/
-// pipeline.mjs), same recipes source (common/tests/ui/support/recipes.ts),
+// rendered recipes. Same capture pipeline (src/common/tests/ui/support/
+// pipeline.mjs), same recipes source (src/common/tests/ui/support/recipes.ts),
 // same real-implementation build (port 4322) — see
 // tests/visual/identical.spec.ts's own header comment for the full
 // mechanism this reuses verbatim.
@@ -19,10 +19,10 @@
 // the project name now carries a "notifications-visual-" context prefix
 // that the viewport-only literal directory name must not. Feature tests
 // nest under src/features/<f>/tests/ (unlike common's top-level
-// common/tests/).
+// src/common/tests/).
 import { expect, test } from "@playwright/test";
-import { notificationsRecipes } from "../../../../../../common/tests/ui/support/recipes";
-import { captureState } from "../../../../../../common/tests/ui/support/pipeline.mjs";
+import { notificationsRecipes } from "../../../../../common/tests/ui/support/recipes";
+import { captureState } from "../../../../../common/tests/ui/support/pipeline.mjs";
 
 const NOTIFICATIONS_OWNED_RECIPE_NAMES = new Set(["21-notifications-panel-open"]);
 const keyRecipes = notificationsRecipes.filter((recipe) => NOTIFICATIONS_OWNED_RECIPE_NAMES.has(recipe.name));

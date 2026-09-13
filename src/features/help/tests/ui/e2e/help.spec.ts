@@ -7,15 +7,15 @@
 // src/features/help/content/help.yaml chrome + src/features/help/content/*.md
 // scopes (read directly, same pattern as grep.spec.ts's real-index
 // comparisons) so this suite can never drift from the actual copy.
-import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
-// This spec's `context` fixture (imported from common/tests/ui/support/fixtures,
+import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
+// This spec's `context` fixture (imported from src/common/tests/ui/support/fixtures,
 // not raw "@playwright/test") pre-seeds the boot-seen sessionStorage flag
 // before every navigation, so BootSequence.svelte's unskippable sequence
 // never runs for these tests.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
-import { readContentDir } from "../../../../../../common/tests/ui/support/content-fixtures";
+import { readContentDir } from "../../../../../common/tests/ui/support/content-fixtures";
 
 const ROOT = join(import.meta.dirname, "../../../../../..");
 

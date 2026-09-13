@@ -11,7 +11,7 @@ What belongs in the e2e suite, and how a spec/page object is organized. Playwrig
 
 - [ ] **R003** All locators and page interactions live inside a page-object class — a spec calls page-object methods, never `page.locator(...)` directly.
 - [ ] **R004** Locators are exposed as getters, not fields, so they resolve lazily on access rather than being captured once at construction time (before the element may even exist).
-- [ ] **R005** A UI piece shared across features (the kernel chrome — `StatusBar`, `PaneTree`, `Cmdline`) gets its own shared page-object class living in `common/tests/ui/pages/`, composed as a property into each feature's page object — never redefined per feature.
+- [ ] **R005** A UI piece shared across features (the kernel chrome — `StatusBar`, `PaneTree`, `Cmdline`) gets its own shared page-object class living in `src/common/tests/ui/pages/`, composed as a property into each feature's page object — never redefined per feature.
 - [ ] **R006** Action methods are atomic — one logical interaction per method (`openRepo(name)`, `submitSearch(query)`), never a combined multi-step method that hides what actually happened when a test fails partway through it.
 - [ ] **R007** Assertions live in the spec, not the page object. The one exception is a convenience method whose name states the expected outcome (`expectRepoOpened(name)`) — its whole job is that assertion, so folding it into the page object doesn't hide anything.
 - [ ] **R008** No "god" page object — a class approaching a few dozen methods splits into smaller component classes (mirroring the panel split a feature's own components already have, e.g. one page-object class per panel in `repositories`).
@@ -19,7 +19,7 @@ What belongs in the e2e suite, and how a spec/page object is organized. Playwrig
 ## Naming & file placement
 
 - [ ] **R009** Page-object files are PascalCase (`RepositoriesPage.ts`); locator getters are camelCase (`repoRow`, `filesPanel`); action methods are verb-based camelCase (`openRepo`, `expandTree`); spec files are kebab-case (`repositories.spec.ts`) — matching the naming already used across the repo.
-- [ ] **R010** A feature's e2e specs live inside that feature's own `tests/ui/e2e/` folder, and its page objects live in `tests/ui/pages/` — a sibling of `e2e/` and `visual/`, not nested inside either, since a page object serves both suites — never in a shared top-level `tests/` tree a change to one feature has to search through. Page objects for kernel/shared chrome live under `common/tests/ui/pages/` instead.
+- [ ] **R010** A feature's e2e specs live inside that feature's own `tests/ui/e2e/` folder, and its page objects live in `tests/ui/pages/` — a sibling of `e2e/` and `visual/`, not nested inside either, since a page object serves both suites — never in a shared top-level `tests/` tree a change to one feature has to search through. Page objects for kernel/shared chrome live under `src/common/tests/ui/pages/` instead.
 - [ ] **R011** Feature-specific test data (seed content, expected strings) lives beside the specs that use it, in that feature's own `tests/ui/support/` — not a shared top-level `data/` folder, unless two or more features genuinely need the same data. This folder is shared by e2e and visual specs for the same reason `pages/` is (R010) — the data isn't e2e-specific.
 
 ## Behavioral assertions specific to this codebase

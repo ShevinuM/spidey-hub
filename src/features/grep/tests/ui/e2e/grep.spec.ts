@@ -10,7 +10,7 @@
 // port the component itself uses (src/features/grep/lib/grep.ts, already unit-tested in
 // src/features/grep/tests/unit/grep.test.ts) — never hardcoded — so this suite can't drift
 // from the index's real contents as the site's own source grows.
-import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
+import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
 // This spec's `context` fixture (imported
 // from ./fixtures.ts, not raw "@playwright/test") pre-seeds the boot-seen
 // sessionStorage flag before every navigation, so BootSequence.svelte's

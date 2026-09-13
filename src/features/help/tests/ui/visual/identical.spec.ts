@@ -6,8 +6,8 @@
 // tests/visual/identical.spec.ts the same way common's and profile's own
 // recipes were split — every recipe is captured exactly once, never twice
 // and never dropped, as each context/feature owns its own rendered recipes.
-// Same capture pipeline (common/tests/ui/support/pipeline.mjs), same
-// recipes source (common/tests/ui/support/recipes.ts), same
+// Same capture pipeline (src/common/tests/ui/support/pipeline.mjs), same
+// recipes source (src/common/tests/ui/support/recipes.ts), same
 // real-implementation build (port 4322) — see tests/visual/identical.spec.ts's
 // own header comment for the full mechanism this reuses verbatim.
 //
@@ -17,10 +17,10 @@
 // hardcoded per project rather than derived from `{projectName}`, since the
 // project name now carries a "help-visual-" context prefix that the
 // viewport-only literal directory name must not. Feature tests nest under
-// src/features/<f>/tests/ (unlike common's top-level common/tests/).
+// src/features/<f>/tests/ (unlike common's src/common/tests/).
 import { expect, test } from "@playwright/test";
-import { extraRecipes, iteration3Recipes } from "../../../../../../common/tests/ui/support/recipes";
-import { captureState } from "../../../../../../common/tests/ui/support/pipeline.mjs";
+import { extraRecipes, iteration3Recipes } from "../../../../../common/tests/ui/support/recipes";
+import { captureState } from "../../../../../common/tests/ui/support/pipeline.mjs";
 
 const HELP_OWNED_RECIPE_NAMES = new Set(["11-help", "20-help-search"]);
 const keyRecipes = [...extraRecipes, ...iteration3Recipes].filter((recipe) => HELP_OWNED_RECIPE_NAMES.has(recipe.name));

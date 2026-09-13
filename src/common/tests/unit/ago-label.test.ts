@@ -4,7 +4,7 @@
 // src/features/repositories/components/repositoriesState.svelte.ts, which
 // is why it lives in common/lib/ rather than inside either feature.
 import { expect, test } from "vitest";
-import { agoLabel } from "../../../src/common/lib/ago-label";
+import { agoLabel } from "../../lib/ago-label";
 
 test("agoLabel: seconds/minutes/hours/days thresholds", () => {
   const now = 1_000_000_000;

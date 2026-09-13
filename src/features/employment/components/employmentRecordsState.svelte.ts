@@ -30,7 +30,7 @@ const MONTH_NUM: Record<string, number> = {
  * via `new Date()` internally) purely so the one call site below can pass
  * a single shared instant for both halves of every record. Read at
  * component-mount time in the browser, so Playwright's `page.clock.install`
- * (common/tests/ui/support/recipes.ts CLOCK_TIME) freezes it for goldens
+ * (src/common/tests/ui/support/recipes.ts CLOCK_TIME) freezes it for goldens
  * the same way it freezes the status-bar clock — this module never
  * imports src/common/lib/clock.ts
  * itself (that module's frozen epoch is for the tmux/session layer only),
@@ -51,7 +51,7 @@ function splitDates(dates: string): [string, string] {
 
 /** Inclusive month count between two {y,m} pairs, e.g. May 2024 -> Aug 2026
  * (now) = 28mo. Verified against all six real records' durations at the
- * frozen "now" of 2026-08-15 (common/tests/ui/support/recipes.ts
+ * frozen "now" of 2026-08-15 (src/common/tests/ui/support/recipes.ts
  * CLOCK_TIME): every one matches this formula exactly. */
 function monthsBetween(start: { y: number; m: number }, end: { y: number; m: number }): number {
   return (end.y - start.y) * 12 + (end.m - start.m) + 1;
@@ -216,7 +216,7 @@ export class EmploymentRecordsState {
   // describes WHY this is safe to leave in — the buffer is always
   // readonly, so opening it can never lose the live preview/timeline sync
   // — not that Enter does nothing. Editor.svelte is entry-point-agnostic
-  // (common/tests/ui/e2e/editor-vim.spec.ts parametrizes its own suite over
+  // (src/common/tests/ui/e2e/editor-vim.spec.ts parametrizes its own suite over
   // this page and Repositories'), so this mirrors RepositoriesState's
   // editorFile/editorRef/closeEditor shape exactly, minus the async fetch
   // (a role doc is already fully loaded).

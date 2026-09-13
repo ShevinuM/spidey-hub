@@ -17,7 +17,7 @@
 // Trees/Trie/word_search_ii.java (Data-Structures-And-Algorithms) is that
 // file: 113 lines (enough to overflow vertically) with a real 574-character
 // javadoc line at line 33 (enough to overflow horizontally without the fix).
-import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
+import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
 
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);

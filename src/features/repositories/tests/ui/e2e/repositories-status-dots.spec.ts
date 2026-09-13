@@ -20,7 +20,7 @@
 // like every other row (idle two-tone, or the gold open-dot while it's the
 // active repo — true by default on load, since all-projects is
 // pinned first and auto-opened).
-import { expect, test, type Page } from "../../../../../../common/tests/ui/support/fixtures";
+import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";
 
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);

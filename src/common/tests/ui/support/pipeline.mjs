@@ -8,7 +8,7 @@
 // function for the two boot-sequence recipes only — see its own header
 // comment for why boot needs a different clock-control sequence entirely.
 //
-// Order of operations, and why (see tests/visual/README-PIPELINE.md for the
+// Order of operations, and why (see ./README-PIPELINE.md for the
 // long version):
 //   1. page.clock.install() BEFORE navigation.
 //   2. goto + wait for the "load" event.
@@ -39,8 +39,8 @@
 // "23:34" throughout, matching the prototype's hardcoded text and
 // the implementation's live clock at this same fixed instant.
 import { BOOT_HARD_STOP_MS, CLOCK_TIME, RUN_FOR_MS, TOAST_SEED } from "./recipes.ts";
-import { BOOT_SEEN_STORAGE_KEY } from "../../../../src/features/boot/lib/boot-state.ts";
-import { TOAST_SEED_STORAGE_KEY } from "../../../../src/features/notifications/lib/toast-seed.ts";
+import { BOOT_SEEN_STORAGE_KEY } from "../../../../features/boot/lib/boot-state.ts";
+import { TOAST_SEED_STORAGE_KEY } from "../../../../features/notifications/lib/toast-seed.ts";
 
 /**
  * CSS selector for the SIGNAL footer's net-readout span (Profile view).

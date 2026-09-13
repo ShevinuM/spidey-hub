@@ -13,7 +13,7 @@
 //     well before the visitor can look at it.
 //
 // Deliberately imports the RAW `@playwright/test` (not
-// common/tests/ui/support/fixtures.ts), same reason
+// src/common/tests/ui/support/fixtures.ts), same reason
 // src/features/boot/tests/ui/e2e/boot.spec.ts and
 // src/features/notifications/tests/ui/e2e/notifications-boot.spec.ts
 // do: the shared `context` fixture pre-seeds the boot-seen sessionStorage

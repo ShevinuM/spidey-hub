@@ -1,5 +1,5 @@
 import { expect, type Page } from "@playwright/test";
-import { StatusBarPage } from "../../../../../../common/tests/ui/pages/StatusBarPage";
+import { StatusBarPage } from "../../../../../common/tests/ui/pages/StatusBarPage";
 
 /**
  * Page object for the repositories feature's harness mount
@@ -8,7 +8,7 @@ import { StatusBarPage } from "../../../../../../common/tests/ui/pages/StatusBar
  * PaneTree.svelte normally own — see that wrapper's own header comment for
  * why). Named for the UI surface it models, matching
  * `StatusBarPage`/`EmploymentPage`/`DashboardPage` convention — the naming
- * `common/tests/ui/pages/TerminalPage.ts`'s own header comment names as an
+ * `src/common/tests/ui/pages/TerminalPage.ts`'s own header comment names as an
  * example, closing that file's forward reference. Currently consumed only
  * by the harness suite (`tests/ui/harness/`), since the e2e suite's
  * `repositories*.spec.ts` files are verbatim-ported specs exempt from the

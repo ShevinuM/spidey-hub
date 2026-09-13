@@ -6,7 +6,7 @@
 // PORTFOLIO_FIXTURES is unset in the unit-test environment, so
 // getCommits()/getCommitsByRepo() read the REAL table, not the fixture one.
 import { expect, test } from "vitest";
-import { getCommits, getCommitsByRepo } from "../../../src/common/lib/commits";
+import { getCommits, getCommitsByRepo } from "../../lib/commits";
 
 test("getCommits: a repo name with no snapshot yields [], not a throw", () => {
   expect(getCommits("this-repo-name-has-no-snapshot-file")).toEqual([]);

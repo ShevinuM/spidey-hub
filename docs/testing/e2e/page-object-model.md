@@ -22,7 +22,7 @@ class RepositoriesPage {
 
 A constructor that assigns locators to fields (`this.repoRow = page.locator('#repo-row')`) resolves the element immediately, before it may even exist in the DOM, and it's the pattern that quietly invites a CSS selector — the getter form is what keeps both problems out.
 
-Never expose raw locators to a spec — tests call page-object methods, not `page.locator(...)` directly. If a locator or UI piece is shared across features (the kernel chrome — a status bar, a shared overlay), extract it into a page-object class living under `common/tests/ui/pages/` and compose it into each feature's page object as a property, rather than redefining the same locator per feature.
+Never expose raw locators to a spec — tests call page-object methods, not `page.locator(...)` directly. If a locator or UI piece is shared across features (the kernel chrome — a status bar, a shared overlay), extract it into a page-object class living under `src/common/tests/ui/pages/` and compose it into each feature's page object as a property, rather than redefining the same locator per feature.
 
 A page object itself lives in `tests/ui/pages/` — a sibling of `tests/ui/e2e/` and `tests/ui/visual/`, not nested inside either, since both suites use the same page objects to reach the states they assert on (see `structure.md`).
 

@@ -25,7 +25,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Page } from "../support/fixtures";
 
-const ROOT = join(import.meta.dirname, "../../../..");
+const ROOT = join(import.meta.dirname, "../../../../..");
 
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);

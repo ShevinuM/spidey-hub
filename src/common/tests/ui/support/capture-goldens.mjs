@@ -10,7 +10,7 @@
 // tests/visual/goldens/ are SELF-baselines — captured from, and compared
 // against, our OWN implementation (`playwright test
 // tests/visual/identical.spec.ts --update-snapshots`, see
-// tests/visual/README-PIPELINE.md), at all 20 recipes (40 goldens total;
+// ./README-PIPELINE.md), at all 20 recipes (40 goldens total;
 // this script's 10-recipe vendored-prototype path cannot even attempt the
 // other 10, which
 // reach states — the help window, all-projects, the boot sequence, the
@@ -36,16 +36,16 @@ import { captureState } from "./pipeline.mjs";
 
 const RESTORE_PROTOTYPE_PARITY_FLAG = "--restore-prototype-parity";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REFERENCE_DIR = path.join(__dirname, "../../../../reference");
+const REFERENCE_DIR = path.join(__dirname, "../../../../../reference");
 // This script's own 10-recipe `recipes` array (see the header comment) only
 // ever wrote into the single tests/visual/goldens/ tree that existed before
 // 00-phases.md D21 started splitting goldens per context (phase 02 moved
-// "06-editor" out to common/tests/ui/visual/goldens/, the first split of
+// "06-editor" out to src/common/tests/ui/visual/goldens/, the first split of
 // many). Left pointed at the pre-split location since this script is
 // historical/guarded and was never updated to the new per-context split —
 // running it for real against today's tree would need that rework first,
 // on top of the existing override-flag guard below.
-const GOLDENS_DIR = path.join(__dirname, "../../../../tests/visual/goldens");
+const GOLDENS_DIR = path.join(__dirname, "../../../../../tests/visual/goldens");
 const PORT = 4400;
 
 function hasOverrideFlag() {

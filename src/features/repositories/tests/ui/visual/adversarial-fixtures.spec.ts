@@ -26,9 +26,9 @@
 // hazard this repo's test-infra rules exist to prevent; both halves keep
 // their own copy.
 import { expect, test, type Page } from "@playwright/test";
-import { BOOT_SEEN_STORAGE_KEY } from "../../../../../../common/tests/ui/support/fixtures";
+import { BOOT_SEEN_STORAGE_KEY } from "../../../../../common/tests/ui/support/fixtures";
 
-/** Same boot-skip contract common/tests/ui/support/pipeline.mjs's `captureState()`
+/** Same boot-skip contract src/common/tests/ui/support/pipeline.mjs's `captureState()`
  * uses (pre-seed via `addInitScript`, before any navigation) — this file
  * has no golden/clock determinism needs, only the boot-skip. */
 async function gotoReady(page: Page, path: string): Promise<string[]> {

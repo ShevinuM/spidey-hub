@@ -5,7 +5,7 @@ import { expect, type Page } from "@playwright/test";
  * models (the kernel/Terminal.svelte root), not the suite that happens to
  * use it (`docs/testing/e2e/page-object-model.md` convention, matching
  * `RepositoriesPage`/`StatusBarPage`); shared kernel-chrome page objects
- * live in `common/tests/ui/pages/` per `e2e-testing.md` R005. Currently
+ * live in `src/common/tests/ui/pages/` per `e2e-testing.md` R005. Currently
  * consumed only by the root smoke tier (`e2e-testing.md` R003/R004: specs
  * call page-object methods/getters, never `page.locator(...)` directly;
  * `playwright.md` R002: no raw CSS selector anywhere, ever — unconditional,
