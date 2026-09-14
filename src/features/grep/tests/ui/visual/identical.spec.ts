@@ -1,6 +1,7 @@
 // Pixel-regression suite for the 2 recipes GrepOverlay.svelte owns
-// ("09-grep-empty", "10-grep-query"); see tests/visual/identical.spec.ts's
-// own header for the shared capture pipeline this reuses verbatim.
+// ("09-grep-empty", "10-grep-query"); see
+// src/common/tests/ui/support/pipeline.mjs and recipes.ts for the shared
+// capture mechanism this reuses.
 
 // Goldens resolve via this project's own `snapshotPathTemplate` — see
 // playwright.config.ts's `common-visual` project comment for why
@@ -14,7 +15,7 @@ const keyRecipes = recipes.filter((recipe) => GREP_OWNED_RECIPE_NAMES.has(recipe
 
 test.describe("visual (grep): implementation vs goldens", () => {
   test.beforeEach(async ({ page }) => {
-    // Same network-determinism rule as tests/visual/identical.spec.ts /
+    // Same network-determinism rule as every other identical.spec.ts /
     // src/common/tests/ui/support/capture-goldens.mjs: the commit-refresh
     // island fires a fetch on Repositories mount, and fixture repos must
     // not depend on api.github.com 404-ing by luck.

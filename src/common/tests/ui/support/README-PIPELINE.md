@@ -2,9 +2,9 @@
 
 `src/common/tests/ui/support/pipeline.mjs`'s `captureState()` is the single
 implementation of the "Capture pipeline (identical for goldens and impl)"
-contract. `src/common/tests/ui/support/capture-goldens.mjs` and
-`tests/visual/identical.spec.ts` both call it so the two sides cannot drift
-apart. A second
+contract. `src/common/tests/ui/support/capture-goldens.mjs` and every
+context/feature's own `identical.spec.ts` both call it so the two sides
+cannot drift apart. A second
 function, `captureBootState()`, exists solely for the two boot-sequence
 recipes — see "Boot-sequence goldens" below.
 
@@ -28,15 +28,15 @@ HelpSearch palette), bringing the total to 20 recipes / 40 goldens; none of
 them are reachable through `capture-goldens.mjs`'s vendored-prototype path
 either, for the same reason.
 
-`tests/visual/goldens/` is captured directly
+Each context/feature's own `tests/ui/visual/goldens/` is captured directly
 from OUR implementation via:
 
 ```
-pnpm build:fixtures && playwright test tests/visual/identical.spec.ts --update-snapshots
+pnpm build:fixtures && playwright test --project=<feature>-visual-1512x945 --project=<feature>-visual-1920x1080 --update-snapshots
 ```
 
-— and `identical.spec.ts` continues to assert against those same committed
-files on every subsequent run. The goldens are now **self-baselines**: they
+— and that context's `identical.spec.ts` continues to assert against those
+same committed files on every subsequent run. The goldens are now **self-baselines**: they
 record "does the implementation still render what it rendered last time
 we deliberately accepted a change," not "does it match the vendored
 prototype." `reference/` and `capture-goldens.mjs` are kept
@@ -48,23 +48,12 @@ self-baselines with prototype screenshots and un-fix every intentional
 behavioral deviation documented throughout this codebase.
 
 **Re-baseline procedure**, whenever a deliberate UI/behavior change legitimately
-changes a golden's expected pixels:
-
-1. Make the code change.
-2. `pnpm build:fixtures && playwright test tests/visual/identical.spec.ts --update-snapshots`
-   to regenerate every affected `.png` under `tests/visual/goldens/`.
-3. Run `pnpm test:visual` **three consecutive times** and confirm all three
-   are clean (0 failures) — this is the project's determinism gate for the
-   capture pipeline itself (masks, clock control, network determinism).
-   A recipe that only fails intermittently after step 2 means the new
-   golden baked in something non-deterministic (a live measurement, a race,
-   GPU rasterization jitter) — fix the underlying nondeterminism (a mask,
-   a wait, a clock-control fix) rather than re-running `--update-snapshots`
-   until it happens to pass once.
-4. Review the diff: `git diff --stat tests/visual/goldens/` should only
-   touch the `.png` files you expected to change from your code change.
-   Inspect the new/changed PNGs yourself (not just trust the byte diff) for
-   obvious rendering defects before committing.
+changes a golden's expected pixels: see
+`../../../../../docs/testing/visual/running-tests.md`'s "Rebaselining" section
+for the current, authoritative command sequence (per-context
+`--project=<feature>-visual-<viewport> --update-snapshots`, the required
+three-consecutive-clean-runs determinism check, and manual visual inspection
+of every changed PNG before committing).
 
 ## Boot-sequence goldens (`13-boot-mid`, `14-boot-ready`)
 

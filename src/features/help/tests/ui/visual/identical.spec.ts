@@ -10,7 +10,7 @@ const keyRecipes = [...extraRecipes, ...iteration3Recipes].filter((recipe) => HE
 
 test.describe("visual (help): implementation vs goldens", () => {
   test.beforeEach(async ({ page }) => {
-    // Same network-determinism rule as tests/visual/identical.spec.ts and
+    // Same network-determinism rule as every other identical.spec.ts and
     // src/common/tests/ui/support/capture-goldens.mjs: the commit-refresh
     // island fires a fetch on Repositories mount, and fixture repos must not
     // depend on api.github.com 404-ing by luck.

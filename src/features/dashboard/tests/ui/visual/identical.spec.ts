@@ -10,7 +10,7 @@ const keyRecipes = recipes.filter((recipe) => DASHBOARD_OWNED_RECIPE_NAMES.has(r
 
 test.describe("visual (dashboard): implementation vs goldens", () => {
   test.beforeEach(async ({ page }) => {
-    // Same network-determinism rule as tests/visual/identical.spec.ts /
+    // Same network-determinism rule as every other identical.spec.ts /
     // src/common/tests/ui/support/capture-goldens.mjs: the commit-refresh
     // island fires a fetch on Repositories mount, and fixture repos must not
     // depend on api.github.com 404-ing by luck.

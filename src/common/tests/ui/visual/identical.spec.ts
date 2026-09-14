@@ -1,4 +1,4 @@
-// Captures only the recipes common owns (COMMON_OWNED_RECIPE_NAMES below); root tests/visual/identical.spec.ts captures every other recipe, so each recipe is goldened exactly once.
+// Captures only the recipes common owns (COMMON_OWNED_RECIPE_NAMES below); every recipe belongs to exactly one context's split, so each recipe is goldened exactly once.
 import { expect, test } from "@playwright/test";
 import { cmdlineRecipes, iteration3Recipes, recipes } from "../support/recipes";
 import { captureState } from "../support/pipeline.mjs";

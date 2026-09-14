@@ -1,4 +1,4 @@
-// Pixel-regression suite for the three recipes repositories owns: "02-repositories", "03-repositories-arrow", and "12-all-projects" — same capture pipeline/recipes source as tests/visual/identical.spec.ts, split out so each context captures its own recipes exactly once.
+// Pixel-regression suite for the three recipes repositories owns: "02-repositories", "03-repositories-arrow", and "12-all-projects" — same capture pipeline/recipes source (src/common/tests/ui/support/pipeline.mjs and recipes.ts) as every other context's split, each capturing its own recipes exactly once.
 //
 // Goldens resolve via this project's own `snapshotPathTemplate` — see
 // playwright.config.ts's `common-visual` project comment for why

@@ -22,8 +22,6 @@ src/
     tests/
       ui/
         pages/                    shared kernel-chrome page objects, same ones e2e uses
-fixtures/                         (or a feature's own content/fixtures/) — deterministic
-                                  content this feature's goldens are captured against
 playwright.config.ts              root config — see "Playwright projects" below
 ```
 
@@ -65,6 +63,6 @@ Each feature's fixture data lives with that feature (not a shared top-level `fix
 
 ## Golden lifecycle
 
-1. **Seed** — a feature's starting goldens come from v1's `tests/visual/goldens/` slice for that feature (see `Instructions/Planning/test-setup.md` for the pre-migration seeding procedure) or, for a genuinely new feature, from its first accepted capture.
+1. **Seed** — a feature's starting goldens come from its first accepted capture: run the feature's `<feature>-visual-<viewport>` projects with `--update-snapshots` against a rendering already visually verified correct, then commit the resulting PNGs. See `running-tests.md`'s "Rebaselining" section for the exact command sequence — seeding a brand-new feature's goldens follows the same steps as rebaselining an existing one.
 2. **Compare** — every run diffs the current render against the seeded golden via Playwright's `toHaveScreenshot`, which uses pixelmatch as its comparator internally (`../../checklist/tech-stack/playwright.md`'s "Screenshot comparison" section) — `threshold` decides what counts as a differing pixel, `maxDiffPixels`/`maxDiffPixelRatio` decide how many are tolerated, and this suite leaves both tolerance options at strict defaults rather than loosening them to paper over non-determinism.
 3. **Rebaseline** — only in the same change as a deliberate visual change, never to make a refactor's diff pass. See `running-tests.md` for the exact command sequence.

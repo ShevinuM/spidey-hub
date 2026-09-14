@@ -1,8 +1,8 @@
 import { defineConfig } from "vitest/config";
 
 // Scoped to unit-test-only trees so vitest's include glob never picks up
-// Playwright's *.spec.ts files under tests/visual or any tests/ui/ folder
-// (root, src/common/tests/ui/, src/features/*/tests/ui/).
+// Playwright's *.spec.ts files under any tests/ui/ folder (root,
+// src/common/tests/ui/, src/features/*/tests/ui/).
 export default defineConfig({
   test: {
     include: [

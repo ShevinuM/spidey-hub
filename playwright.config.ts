@@ -1,8 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 import { viewports } from "./src/common/tests/ui/support/recipes";
 
-// Two viewport projects, used by tests/visual/identical.spec.ts and its
-// per-context splits (e.g. common-visual-<viewport>).
+// Two viewports, used by every per-context visual/e2e project split (e.g.
+// common-visual-<viewport>).
 //
 // src/common/tests/ui/support/capture-goldens.mjs is a standalone script,
 // not run through the Playwright test runner -- it manages its own
@@ -18,17 +18,13 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: "html",
-  // tests/visual/identical.spec.ts uses `expect(png).toMatchSnapshot({name})`
-  // instead of `toHaveScreenshot`, keeping pipeline.mjs the single source
-  // of truth for how the screenshot is taken.
-  //
-  // This template points snapshot lookup at the already-committed goldens
-  // (tests/visual/goldens/<viewport>/<recipe>.png, matching
-  // capture-goldens.mjs's own output layout) instead of Playwright's
-  // default per-spec `-snapshots/` directory; per-context splits (e.g.
-  // `common-visual-<viewport>` below) override this with their own
-  // `snapshotPathTemplate`.
-  snapshotPathTemplate: "tests/visual/goldens/{projectName}/{arg}{ext}",
+  // Every per-context visual project (e.g. `common-visual-<viewport>`)
+  // uses `expect(png).toMatchSnapshot({name})` instead of
+  // `toHaveScreenshot`, keeping pipeline.mjs the single source of truth
+  // for how the screenshot is taken, and sets its own
+  // `snapshotPathTemplate` pointing at its own already-committed goldens
+  // directory instead of Playwright's default per-spec `-snapshots/`
+  // directory.
   use: {
     trace: "on-first-retry",
     // The app's `dist/` build, used by the visual specs and every
@@ -49,18 +45,6 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
-    // Visual-regression harness: `{projectName}` must stay exactly the
-    // viewport name for the existing goldens to resolve (see the
-    // `snapshotPathTemplate` comment above).
-    ...viewports.map((viewport) => ({
-      name: viewport.name,
-      testDir: "./tests/visual",
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: viewport.width, height: viewport.height },
-        deviceScaleFactor: 1,
-      },
-    })),
     // `common`: the 12 kernel+editor specs, one project per viewport -- a
     // Playwright project is 1:1 with one `use` config, so two viewports
     // can't share one project name.
@@ -77,11 +61,8 @@ export default defineConfig({
     // "19-choose-tree", and "08-tracker" (whose sole renderer is
     // src/common/components/Wallpaper.svelte, not Dashboard.svelte).
     //
-    // Because `{projectName}` here is `common-visual-<viewport>` rather
-    // than the bare viewport, it can't feed `snapshotPathTemplate`'s
-    // `{projectName}` token the way the un-split visual projects above do,
-    // so each project sets its own `snapshotPathTemplate` with the
-    // viewport hardcoded as a literal to reproduce
+    // Each project sets its own `snapshotPathTemplate` with the viewport
+    // hardcoded as a literal to reproduce
     // `.../goldens/<viewport>/<recipe>.png` byte-identically; every later
     // context/feature's `<context>-visual-<viewport>` project reuses this
     // same per-project-template shape.
@@ -105,9 +86,7 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `profile-visual`: owns recipe "07-profile" (excluded from the
-    // un-split visual projects above via
-    // tests/visual/identical.spec.ts's SPLIT_OWNED_RECIPE_NAMES filter);
+    // `profile-visual`: owns recipe "07-profile" (not common-visual);
     // reuses common-visual's per-project snapshotPathTemplate shape, with
     // only the path prefix differing since feature tests nest under
     // `src/features/<f>/tests/` rather than `src/common/tests/`.
@@ -145,9 +124,9 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `help-visual`: owns recipes "11-help" and "20-help-search" (excluded
-    // from the un-split visual projects via SPLIT_OWNED_RECIPE_NAMES);
-    // reuses common-visual's per-project snapshotPathTemplate shape.
+    // `help-visual`: owns recipes "11-help" and "20-help-search" (not
+    // common-visual); reuses common-visual's per-project
+    // snapshotPathTemplate shape.
     ...viewports.map((viewport) => ({
       name: `help-visual-${viewport.name}`,
       testDir: "./src/features/help/tests/ui/visual",
@@ -181,9 +160,8 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `boot-visual`: owns recipes "13-boot-mid" and "14-boot-ready"
-    // (excluded from the un-split visual projects via
-    // SPLIT_OWNED_RECIPE_NAMES); reuses common-visual's per-project
+    // `boot-visual`: owns recipes "13-boot-mid" and "14-boot-ready" (not
+    // common-visual); reuses common-visual's per-project
     // snapshotPathTemplate shape.
     ...viewports.map((viewport) => ({
       name: `boot-visual-${viewport.name}`,
@@ -220,8 +198,7 @@ export default defineConfig({
       },
     })),
     // `notifications-visual`: owns recipe "21-notifications-panel-open"
-    // (excluded from the un-split visual projects via
-    // SPLIT_OWNED_RECIPE_NAMES); reuses common-visual's per-project
+    // (not common-visual); reuses common-visual's per-project
     // snapshotPathTemplate shape.
     ...viewports.map((viewport) => ({
       name: `notifications-visual-${viewport.name}`,
@@ -256,9 +233,8 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `dashboard-visual`: owns recipe "01-dashboard" (excluded from the
-    // un-split visual projects via SPLIT_OWNED_RECIPE_NAMES); reuses
-    // common-visual's per-project snapshotPathTemplate shape.
+    // `dashboard-visual`: owns recipe "01-dashboard" (not common-visual);
+    // reuses common-visual's per-project snapshotPathTemplate shape.
     //
     // "08-tracker" is owned by `common-visual` instead, not here -- see
     // src/common/tests/ui/visual/ under the `common-visual-<viewport>`
@@ -297,9 +273,8 @@ export default defineConfig({
       },
     })),
     // `employment-visual`: owns recipes "04-employment-l0" and
-    // "05-employment-l1" (excluded from the un-split visual projects via
-    // SPLIT_OWNED_RECIPE_NAMES); reuses common-visual's per-project
-    // snapshotPathTemplate shape.
+    // "05-employment-l1" (not common-visual); reuses common-visual's
+    // per-project snapshotPathTemplate shape.
     ...viewports.map((viewport) => ({
       name: `employment-visual-${viewport.name}`,
       testDir: "./src/features/employment/tests/ui/visual",
@@ -336,9 +311,8 @@ export default defineConfig({
       },
     })),
     // `repositories-visual`: owns recipes "02-repositories",
-    // "03-repositories-arrow", and "12-all-projects" (excluded from the
-    // un-split visual projects via SPLIT_OWNED_RECIPE_NAMES); reuses
-    // common-visual's per-project snapshotPathTemplate shape.
+    // "03-repositories-arrow", and "12-all-projects" (not common-visual);
+    // reuses common-visual's per-project snapshotPathTemplate shape.
     ...viewports.map((viewport) => ({
       name: `repositories-visual-${viewport.name}`,
       testDir: "./src/features/repositories/tests/ui/visual",
@@ -371,9 +345,8 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `grep-visual`: owns recipes "09-grep-empty" and "10-grep-query"
-    // (excluded from the un-split visual projects via
-    // SPLIT_OWNED_RECIPE_NAMES); reuses common-visual's per-project
+    // `grep-visual`: owns recipes "09-grep-empty" and "10-grep-query" (not
+    // common-visual); reuses common-visual's per-project
     // snapshotPathTemplate shape.
     ...viewports.map((viewport) => ({
       name: `grep-visual-${viewport.name}`,
@@ -419,9 +392,8 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `shell-fs-visual`: owns recipes "16-shell" and "17-host-shell"
-    // (excluded from the un-split visual projects via
-    // SPLIT_OWNED_RECIPE_NAMES); reuses common-visual's per-project
+    // `shell-fs-visual`: owns recipes "16-shell" and "17-host-shell" (not
+    // common-visual); reuses common-visual's per-project
     // snapshotPathTemplate shape.
     ...viewports.map((viewport) => ({
       name: `shell-fs-visual-${viewport.name}`,
@@ -441,7 +413,7 @@ export default defineConfig({
       // hits the actual page path -- the two are mutually exclusive in
       // Playwright's webServer schema.
       //
-      // Not fetched by tests/visual/identical.spec.ts (or its
+      // Not fetched by any per-context visual project (e.g. the
       // common-visual split), which compares the port-4322 build directly
       // against committed goldens via `toMatchSnapshot` +
       // `snapshotPathTemplate` instead; this entry only serves
