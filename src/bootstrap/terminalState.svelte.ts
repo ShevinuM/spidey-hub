@@ -178,7 +178,7 @@ export class TerminalState {
         sessionName: DEFAULT_SESSION_NAME,
         windows: this.site.statusBar.windows,
         epoch: resolvePageEpoch(),
-        activeWindowId: viewIdToProgram(initialView),
+        activeWindowId: viewActiveWindowId(initialView),
         hostNarrative: seedHostNarrative(this.shell, DEFAULT_SESSION_NAME),
       }),
     );
@@ -885,7 +885,7 @@ export class TerminalState {
   executeSiteAction(action: string | undefined, args: string): string | undefined {
     if (action?.startsWith("view:")) {
       const view = action.slice("view:".length);
-      if (view in VIEW_ROUTES) {
+      if (Object.hasOwn(VIEW_ROUTES, view)) {
         this.switchToProgram(viewIdToProgram(view as ViewId));
         return undefined;
       }
