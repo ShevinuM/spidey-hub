@@ -4,51 +4,11 @@
 // The sixth status-bar window.
 import Layout from "../bootstrap/Layout.astro";
 import Terminal from "../bootstrap/Terminal.svelte";
-import { getCollection } from "astro:content";
-import { getSite, getDashboard, getTracker, getRepositories, getPersonnel, getGrep, getCmdline, getHelpSearch, getShell, getChooseTree, buildProfile, buildHelp, buildNotifications, buildBoot } from "../common/lib/data";
-import { getCommitsByRepo } from "../common/lib/commits";
+import { loadTerminalProps } from "../bootstrap/loadAll";
 
-const site = getSite();
-const dashboard = getDashboard();
-const tracker = getTracker();
-const repositories = getRepositories();
-const personnel = getPersonnel();
-const grep = getGrep();
-const cmdline = getCmdline();
-const helpSearch = getHelpSearch();
-const shell = getShell();
-const chooseTree = getChooseTree();
-const projects = await getCollection("repositories");
-const personnelEntries = await getCollection("personnel");
-const profile = buildProfile((await getCollection("profile"))[0]);
-const help = buildHelp(await getCollection("help"));
-const notifications = buildNotifications(await getCollection("notifications"));
-const boot = buildBoot(await getCollection("boot"));
-const commitsByRepo = getCommitsByRepo(projects);
-const notificationsFixtureMode = process.env.PORTFOLIO_FIXTURES === "1";
+const props = await loadTerminalProps();
 ---
 
 <Layout title="Help — shevinum.dev">
-  <Terminal
-    client:load
-    initialView="help"
-    {site}
-    {dashboard}
-    {notifications}
-    {notificationsFixtureMode}
-    {tracker}
-    {profile}
-    {repositories}
-    {personnel}
-    {grep}
-    {help}
-    {boot}
-    {cmdline}
-    {helpSearch}
-    {shell}
-    {chooseTree}
-    {projects}
-    {personnelEntries}
-    {commitsByRepo}
-  />
+  <Terminal client:load initialView="help" {...props} />
 </Layout>
