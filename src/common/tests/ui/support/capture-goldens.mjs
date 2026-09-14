@@ -19,8 +19,8 @@ import { captureState } from "./pipeline.mjs";
 const RESTORE_PROTOTYPE_PARITY_FLAG = "--restore-prototype-parity";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REFERENCE_DIR = path.join(__dirname, "../../../../../reference");
-// Historical/guarded, so left pointed at the original single tree rather
-// than updated to match the per-context goldens/ split used everywhere else.
+// Points at the root tests/visual/goldens/ tree, not the per-context split,
+// since this script is historical/guarded.
 const GOLDENS_DIR = path.join(__dirname, "../../../../../tests/visual/goldens");
 const PORT = 4400;
 
