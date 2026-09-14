@@ -71,7 +71,7 @@ changes a golden's expected pixels:
 These two recipes (`recipes.ts`'s `bootRecipes`) are captured
 by a SEPARATE function, `captureBootState()`, not `captureState()` — a
 still-running, elapsed-time-driven overlay needs a different clock-control
-sequence to be deterministic than every other recipe (all 13 of which
+sequence to be deterministic than every other recipe (all 19 of which
 capture a settled view with boot already skipped via the sessionStorage
 flag). Two hazards, found by direct empirical probing rather than assumed
 from `captureState()`'s existing shape, drove that design — both are
