@@ -1,6 +1,6 @@
 # Visual test suite structure
 
-How golden-image test code is organized across the feature-context rewrite, and how that maps onto Playwright's `projects` mechanism. The checkable rules this doc explains live in `../../checklist/testing/visual-testing.md` and `../../checklist/tech-stack/playwright.md`; on any disagreement between this doc and the checklist, fix both in the same change rather than trusting one over the other.
+How golden-image test code is organized across the feature-context rewrite, and how that maps onto Playwright's `projects` mechanism. The checkable rules this doc explains live in `../../rules/testing/visual-testing.md` and `../../rules/tech-stack/playwright.md`; on any disagreement between this doc and the rules, fix both in the same change rather than trusting one over the other.
 
 ## Folder structure
 
@@ -27,7 +27,7 @@ playwright.config.ts              root config — see "Playwright projects" belo
 
 Visual and e2e share `tests/ui/pages/` and `tests/ui/support/` as siblings — a visual spec never reaches *into* `e2e/`'s own folder for a page object, because the page object was never e2e's to own in the first place; it belongs to the feature's UI tests generally. See `../e2e/structure.md` for the full rationale.
 
-Each feature owns its own `goldens/` — never a shared top-level golden dump. A change to one feature's fixture data or markup should only ever touch that feature's own PNGs; if it touches another feature's, the fixtures weren't actually feature-local (see `../../checklist/testing/visual-testing.md` R003).
+Each feature owns its own `goldens/` — never a shared top-level golden dump. A change to one feature's fixture data or markup should only ever touch that feature's own PNGs; if it touches another feature's, the fixtures weren't actually feature-local (see `../../rules/testing/visual-testing.md` R003).
 
 ## Playwright projects — visual is its own tier, not an e2e variant
 
@@ -55,14 +55,14 @@ test('repositories: file preview, adversarial long file', async ({ page }) => {
 });
 ```
 
-If reaching a state genuinely requires interaction Playwright's `goto` can't express (a keyboard shortcut with no direct URL), that's a signal the feature needs a dedicated fixture-seeded route/prop for it — not a license to replay the full e2e flow inside a visual spec (see `../../checklist/testing/visual-testing.md` R002).
+If reaching a state genuinely requires interaction Playwright's `goto` can't express (a keyboard shortcut with no direct URL), that's a signal the feature needs a dedicated fixture-seeded route/prop for it — not a license to replay the full e2e flow inside a visual spec (see `../../rules/testing/visual-testing.md` R002).
 
 ## Fixtures — feature-local and adversarial
 
-Each feature's fixture data lives with that feature (not a shared top-level `fixtures/`), and it deliberately includes adversarial cases — an overflowing record, an unbroken long line, an empty collection — so clipping and empty-state bugs can't hide behind a small, always-comfortable dataset. See `../../checklist/testing/visual-testing.md` R003–R004 for the exact requirement.
+Each feature's fixture data lives with that feature (not a shared top-level `fixtures/`), and it deliberately includes adversarial cases — an overflowing record, an unbroken long line, an empty collection — so clipping and empty-state bugs can't hide behind a small, always-comfortable dataset. See `../../rules/testing/visual-testing.md` R003–R004 for the exact requirement.
 
 ## Golden lifecycle
 
 1. **Seed** — a feature's starting goldens come from its first accepted capture: run the feature's `<feature>-visual-<viewport>` projects with `--update-snapshots` against a rendering already visually verified correct, then commit the resulting PNGs. See `running-tests.md`'s "Rebaselining" section for the exact command sequence — seeding a brand-new feature's goldens follows the same steps as rebaselining an existing one.
-2. **Compare** — every run diffs the current render against the seeded golden via Playwright's `toHaveScreenshot`, which uses pixelmatch as its comparator internally (`../../checklist/tech-stack/playwright.md`'s "Screenshot comparison" section) — `threshold` decides what counts as a differing pixel, `maxDiffPixels`/`maxDiffPixelRatio` decide how many are tolerated, and this suite leaves both tolerance options at strict defaults rather than loosening them to paper over non-determinism.
+2. **Compare** — every run diffs the current render against the seeded golden via Playwright's `toHaveScreenshot`, which uses pixelmatch as its comparator internally (`../../rules/tech-stack/playwright.md`'s "Screenshot comparison" section) — `threshold` decides what counts as a differing pixel, `maxDiffPixels`/`maxDiffPixelRatio` decide how many are tolerated, and this suite leaves both tolerance options at strict defaults rather than loosening them to paper over non-determinism.
 3. **Rebaseline** — only in the same change as a deliberate visual change, never to make a refactor's diff pass. See `running-tests.md` for the exact command sequence.

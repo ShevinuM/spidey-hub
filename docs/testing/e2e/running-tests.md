@@ -5,7 +5,7 @@ There's no backend, database, or login flow in this app — every command below 
 ## Prerequisites
 
 - `pnpm install` at the repo root.
-- `pnpm build` for a real build (e2e/smoke), or the fixture-build equivalent for visual tests (see `../checklist/testing/visual-testing.md` for why visual needs its own build).
+- `pnpm build` for a real build (e2e/smoke), or the fixture-build equivalent for visual tests (see `../../rules/testing/visual-testing.md` for why visual needs its own build).
 
 ## Intended test modes
 

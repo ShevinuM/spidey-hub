@@ -2,7 +2,7 @@
 
 Locators that resolve through the accessibility tree or visible user-facing text survive markup churn. Locators that resolve through implementation details (CSS classes, DOM structure, XPath) break the moment a developer refactors a `<div>` — which happens constantly in a feature-context rewrite where components get relocated between features and `common/`.
 
-The ranking below runs from most to least preferred. Pick the highest-ranked strategy that can uniquely and reliably identify the element — don't reach for #4 when #1 works. The checkable form of this ranking lives in `../checklist/tech-stack/playwright.md`.
+The ranking below runs from most to least preferred. Pick the highest-ranked strategy that can uniquely and reliably identify the element — don't reach for #4 when #1 works. The checkable form of this ranking lives in `../../rules/tech-stack/playwright.md`.
 
 > **Hard rule for generating tests:** if the element has no accessible role, no user-facing label/text, and no existing `data-testid` (steps 1–3 all fail), **add a `data-testid` to the component.** Never fall through to a CSS selector or XPath to work around a missing test hook. Step 4 is not a fallback — it's to be avoided at all costs, because it silently couples the test to markup that has no contract to stay stable.
 

@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - `pnpm install` at the repo root.
-- A fixture build — the visual suite never runs against the real build, since goldens need deterministic content (seeded fixtures, animations frozen at capture; see `structure.md`'s "Fixtures" section and `../../checklist/testing/visual-testing.md` R007).
+- A fixture build — the visual suite never runs against the real build, since goldens need deterministic content (seeded fixtures, animations frozen at capture; see `structure.md`'s "Fixtures" section and `../../rules/testing/visual-testing.md` R007).
 
 ## Intended test modes
 
@@ -34,12 +34,12 @@
 
 ## Rebaselining — the procedure, not just the flag
 
-Never rebaseline to make a refactor's diff pass — a diff on a change advertised as "no behavior change" is a regression to find and fix, not a snapshot to update (`../../checklist/testing/visual-testing.md` R005). When a change *does* deliberately alter what a feature renders:
+Never rebaseline to make a refactor's diff pass — a diff on a change advertised as "no behavior change" is a regression to find and fix, not a snapshot to update (`../../rules/testing/visual-testing.md` R005). When a change *does* deliberately alter what a feature renders:
 
 1. Build that feature's fixtures and update its goldens in the same commit as the rendering change:
    ```sh
    pnpm exec playwright test --project=<feature>-visual-1512x945 --project=<feature>-visual-1920x1080 --update-snapshots
    ```
 2. Run that feature's visual project **three consecutive times** and confirm all three pass clean — a golden that only passes intermittently after `--update-snapshots` baked in something non-deterministic (a live measurement, an un-flushed timer, GPU rasterization jitter), and the fix is to root-cause that non-determinism, not to re-run `--update-snapshots` until it happens to stick.
-3. Visually inspect every changed `.png` yourself — not just the byte diff — for rendering defects a passing pixel-count threshold wouldn't catch (see `../../checklist/tech-stack/playwright.md` R011 on reading a diff image).
-4. Never hand-edit a golden PNG (`../../checklist/testing/visual-testing.md` R006).
+3. Visually inspect every changed `.png` yourself — not just the byte diff — for rendering defects a passing pixel-count threshold wouldn't catch (see `../../rules/tech-stack/playwright.md` R011 on reading a diff image).
+4. Never hand-edit a golden PNG (`../../rules/testing/visual-testing.md` R006).

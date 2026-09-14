@@ -1,6 +1,6 @@
 # Page object model conventions
 
-The checkable form of every rule below lives in `../checklist/testing/e2e-testing.md`. This doc is the rationale and the worked example.
+The checkable form of every rule below lives in `../../rules/testing/e2e-testing.md`. This doc is the rationale and the worked example.
 
 ## Locators
 

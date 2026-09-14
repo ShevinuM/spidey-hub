@@ -1,6 +1,6 @@
 # e2e test suite structure
 
-How e2e/visual test code is organized across the feature-context rewrite, and how that maps onto Playwright's own `projects` mechanism. The checkable rules this doc explains live in `../checklist/testing/e2e-testing.md`, `../checklist/testing/visual-testing.md`, and `../checklist/tech-stack/playwright.md`; on any disagreement between this doc and the checklist, fix both in the same change rather than trusting one over the other.
+How e2e/visual test code is organized across the feature-context rewrite, and how that maps onto Playwright's own `projects` mechanism. The checkable rules this doc explains live in `../../rules/testing/e2e-testing.md`, `../../rules/testing/visual-testing.md`, and `../../rules/tech-stack/playwright.md`; on any disagreement between this doc and the rules, fix both in the same change rather than trusting one over the other.
 
 ## Folder structure
 
@@ -46,7 +46,7 @@ There is one root `playwright.config.ts`, and every tier is a Playwright `projec
 | `<feature>` (one per feature) | `src/features/<feature>/tests/ui/e2e/**` | The thorough tier for that feature's own behavior, against the real build. There's no separate "acceptance" tier, because a feature project already scopes depth by feature rather than by an arbitrary shallow/deep split. |
 | `<feature>-visual` (one per feature) | `src/features/<feature>/tests/ui/visual/**` | Golden pixel comparison against the fixture build, with `animations: "disabled"` — a project-wide `use` option the e2e project doesn't set. |
 
-Running `pnpm exec playwright test --project=repositories` runs only that feature's e2e specs; `--project=smoke` runs only the cross-feature health checks. This is the actual mechanism behind `../checklist/testing/README.md`'s "each feature's tests live inside its own folder" rule — the projects array is what turns that folder layout into independently runnable suites.
+Running `pnpm exec playwright test --project=repositories` runs only that feature's e2e specs; `--project=smoke` runs only the cross-feature health checks. This is the actual mechanism behind `../../rules/testing/README.md`'s "each feature's tests live inside its own folder" rule — the projects array is what turns that folder layout into independently runnable suites.
 
 The tier decision when adding a new spec: *is this deep, feature-specific behavior?* → the feature's own `tests/ui/e2e/`. *Is this a broad, whole-app check cheap enough to run on every single PR regardless of what changed?* → root `tests/ui/smoke/`.
 
@@ -89,12 +89,12 @@ Feature-specific test data (expected strings, seed content) lives beside the spe
 
 ## `tests/ui/smoke/` and `tests/audits/` — root-level
 
-`tests/ui/smoke/` holds the cross-feature health checks described above — grouped under `ui/` because it's Playwright-driven like every feature's e2e/visual suites. `tests/audits/` holds the coverage audit (does every feature have the unit/e2e/visual tests its manifest declares) and the architecture boundary fitness tests (no-feature-imports-feature, no-common-imports-feature, etc.) — these aren't browser tests, so they stay outside `ui/` — see `../checklist/testing/README.md` for both.
+`tests/ui/smoke/` holds the cross-feature health checks described above — grouped under `ui/` because it's Playwright-driven like every feature's e2e/visual suites. `tests/audits/` holds the coverage audit (does every feature have the unit/e2e/visual tests its manifest declares) and the architecture boundary fitness tests (no-feature-imports-feature, no-common-imports-feature, etc.) — these aren't browser tests, so they stay outside `ui/` — see `../../rules/testing/README.md` for both.
 
 ## Best practices
 
 - Keep test assertions in specs, not page objects (exception: a convenience method whose name states its own assertion).
 - Write short, focused tests — one flow per test.
 - Avoid hardcoded values — use feature-local test data.
-- Minimize manual waits — Playwright auto-waits by default; see `../checklist/tech-stack/playwright.md` for the exact rules on web-first assertions and when a wait is ever justified.
+- Minimize manual waits — Playwright auto-waits by default; see `../../rules/tech-stack/playwright.md` for the exact rules on web-first assertions and when a wait is ever justified.
 - No shared state between tests — each test builds its own state via its page object and fixtures.
