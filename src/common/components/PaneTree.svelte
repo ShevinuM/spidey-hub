@@ -3,9 +3,10 @@
   // of its children (each sized by its parallel `sizes` fraction),
   // recursing into itself via `<svelte:self>` for each child. A "leaf" node
   // renders the shared focus-ring wrapper and delegates the actual
-  // per-program content to the caller-supplied `paneLeaf` snippet — this
-  // file names no feature (architecture R007): the concrete leaf registry
-  // lives with the caller (bootstrap/Terminal.svelte), not here.
+  // per-program content to the caller-supplied `paneLeaf` snippet.
+  //
+  // This file names no feature (architecture R004): the concrete leaf
+  // registry lives with the caller (bootstrap/Terminal.svelte), not here.
   //
   // `refs` is a PROP, not a component-local Map, because Terminal.svelte
   // creates it once and threads the same object through every recursive
@@ -34,12 +35,14 @@
     refs: Map<string, unknown>;
     /** Renders one leaf's per-program content — owned by the caller
      * (bootstrap/Terminal.svelte's program→component switch), never by this
-     * file (R007). Receives the leaf's own `pane`, its computed
-     * `isFocused`, a getter and a setter for THIS `<svelte:self>`
-     * instance's own `leafRef` (wired via a component's `bind:this={get,
-     * set}` function binding), so the ref registration `$effect` below
-     * keeps registering/unregistering exactly the instance this recursion
-     * level actually rendered — never a registry shared across leaves. */
+     * file (R004).
+     *
+     * Receives the leaf's own `pane`, its computed `isFocused`, a getter
+     * and a setter for THIS `<svelte:self>` instance's own `leafRef`
+     * (wired via a component's `bind:this={get, set}` function binding),
+     * so the ref registration `$effect` below keeps
+     * registering/unregistering exactly the instance this recursion level
+     * actually rendered — never a registry shared across leaves. */
     paneLeaf: Snippet<[pane: Pane, isFocused: boolean, getLeafRef: () => unknown, setLeafRef: (ref: unknown) => void]>;
   }
 

@@ -790,8 +790,9 @@
         bootActive={() => bootRef?.isActive?.() ?? false}
       />
 
-      <!-- The program→component switch PaneTree.svelte itself no longer owns
-           (R007): PaneTree renders the shared leaf wrapper/focus ring and
+      <!-- This composition root owns the program→component switch (R004:
+           common/ never depends on a feature, so only bootstrap may name
+           one) — PaneTree renders the shared leaf wrapper/focus ring and
            calls this snippet with the leaf's own `pane`, its computed
            `isFocused`, and a getter/setter pair for THAT `<svelte:self>`
            instance's own `leafRef` — a Svelte 5 function binding
