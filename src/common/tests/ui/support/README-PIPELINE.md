@@ -1,9 +1,10 @@
 # Visual-regression capture pipeline
 
-`tests/visual/pipeline.mjs`'s `captureState()` is the single implementation
-of the "Capture pipeline (identical for goldens and impl)" contract.
-`tests/visual/capture-goldens.mjs` and `tests/visual/identical.spec.ts`
-both call it so the two sides cannot drift apart. A second
+`src/common/tests/ui/support/pipeline.mjs`'s `captureState()` is the single
+implementation of the "Capture pipeline (identical for goldens and impl)"
+contract. `src/common/tests/ui/support/capture-goldens.mjs` and
+`tests/visual/identical.spec.ts` both call it so the two sides cannot drift
+apart. A second
 function, `captureBootState()`, exists solely for the two boot-sequence
 recipes — see "Boot-sequence goldens" below.
 
@@ -11,7 +12,7 @@ recipes — see "Boot-sequence goldens" below.
 
 Originally, `tests/visual/goldens/` was captured from, and compared
 against, a vendored copy of the ORIGINAL design prototype
-(`tests/visual/reference/Homepage.dc.html`) — `capture-goldens.mjs` produced
+(`reference/Homepage.dc.html`) — `capture-goldens.mjs` produced
 the goldens from that prototype, and `identical.spec.ts` asserted our own,
 still-being-built implementation matched them pixel-for-pixel. That made
 sense while the implementation was still catching up to a fixed target, but
@@ -38,7 +39,7 @@ pnpm build:fixtures && playwright test tests/visual/identical.spec.ts --update-s
 files on every subsequent run. The goldens are now **self-baselines**: they
 record "does the implementation still render what it rendered last time
 we deliberately accepted a change," not "does it match the vendored
-prototype." `tests/visual/reference/` and `capture-goldens.mjs` are kept
+prototype." `reference/` and `capture-goldens.mjs` are kept
 only as a HISTORICAL record of how the very first baseline was
 produced — `capture-goldens.mjs` refuses to run without an explicit
 `--restore-prototype-parity` override flag for exactly this reason (see
@@ -67,7 +68,7 @@ changes a golden's expected pixels:
 
 ## Boot-sequence goldens (`13-boot-mid`, `14-boot-ready`)
 
-These two recipes (`tests/visual/recipes.ts`'s `bootRecipes`) are captured
+These two recipes (`recipes.ts`'s `bootRecipes`) are captured
 by a SEPARATE function, `captureBootState()`, not `captureState()` — a
 still-running, elapsed-time-driven overlay needs a different clock-control
 sequence to be deterministic than every other recipe (all 13 of which
@@ -89,35 +90,21 @@ pipeline.mjs:
    `pauseAt` calls (one just past the hard-stop, one past the outro hold),
    not one straight to the target offset.
 
-Fidelity target for reviewing these two goldens: the `Boot Sequence.dc.html`
-SOURCE that `BootSequence.svelte`/`boot.ts`/`boot.yaml` were transcribed
-from (styles, geometry, keyframe timings, copy) — NOT
-`project/ref/*.png`, which are screenshots
-of an earlier, contradicted design (a skippable boot, a
-different command line, an extra status-box row).
-
 ## Order of operations
 
 0. `page.addInitScript(...)` pre-seeds two sessionStorage keys before
-   navigation: the boot-skip flag and the
-   toast-seed key (`TOAST_SEED_STORAGE_KEY`, `recipes.ts`'s fixed
-   `TOAST_SEED`) — the dashboard's seeded 2-of-pool toast pick
-   would otherwise read a live `Date.now()` and pick a
-   different, non-deterministic pair every capture. This matters for more
-   recipes than just `01-dashboard`: the dashboard WINDOW keeps its own id
-   (and Toasts stays mounted) even once its running PROGRAM is a shell
-   (e.g. `16-shell`, reached via `:q`), so any recipe that ever touches
-   window 0 needs this pin. **Toast auto-dismiss update**: Toasts now auto-dismiss
-   after `TOAST_AUTO_DISMISS_MS` (4000ms, `src/features/notifications/lib/toast-seed.ts`), and
-   the pipeline's total fake-clock advance is `2 * RUN_FOR_MS` (10000ms,
-   see step 6 below) — comfortably past that window. So the seed no longer
-   controls what's *visible* in any committed golden (every capture now
-   happens well after the seeded pair has dismissed itself); it only pins
-   *which pair would have briefly rendered* mid-capture, keeping any
-   incidental layout/timing side effect deterministic. No goldens in this
-   repo show a toast on screen — that is expected, not a capture-pipeline
-   gap (see `tests/e2e/nav.spec.ts` for toast-visible/auto-dismiss coverage
-   under real, non-frozen timing instead).
+   navigation: the boot-skip flag and the toast-seed key
+   (`TOAST_SEED_STORAGE_KEY`, `recipes.ts`'s fixed `TOAST_SEED`). The
+   toast-seed key is written but currently inert: every golden capture
+   builds with `PORTFOLIO_FIXTURES=1` (`pnpm build:fixtures`), and in that
+   mode `NotificationsState` renders `buildFixtureState()`'s hand-authored,
+   fixed item list directly, with no per-visit pool injection — so no toast
+   is ever spawned during capture, and nothing in the current
+   implementation reads `TOAST_SEED_STORAGE_KEY`. No goldens in this repo
+   show a toast on screen — that is expected, not a capture-pipeline gap
+   (see `src/features/notifications/tests/ui/e2e/notifications.spec.ts` for
+   toast-visible/auto-dismiss coverage under real, non-frozen timing
+   instead).
 1. `page.clock.install({ time: '2026-08-15T23:34:00' })` — **before** navigation.
 2. `page.goto(url, { waitUntil: 'load' })`.
 3. `page.clock.runFor(RUN_FOR_MS)` (5000ms by default, from `recipes.ts`).
@@ -192,8 +179,9 @@ Now that the goldens are self-baselines (both sides of every comparison are
 this same implementation, see "History" above), that row is just static,
 deterministic text with nothing else timing-sensitive about it, so the mask
 was deleted rather than carried forward as dead weight —
-`tests/e2e/nav.spec.ts` still asserts the exact windows text for the
-tracker view independently of any screenshot, so no coverage was lost.
+`src/common/tests/ui/e2e/nav.spec.ts` still asserts the exact windows text
+for the tracker view independently of any screenshot, so no coverage was
+lost.
 
 ## Determinism check (historical, original prototype baseline)
 
@@ -245,7 +233,7 @@ accepting a re-baseline (see "Re-baseline procedure" above):
   the GPU blur-rasterization jitter documented above for the original
   baseline did not reproduce in any of the three runs this time.
 - `RATIO_RELAXED` (identical.spec.ts) was therefore left EMPTY rather than
-  carrying forward the earlier "02-builds"/"03-builds-j"/"06-editor"
+  carrying forward the earlier "02-repositories"/"03-repositories-arrow"/"06-editor"
   relaxations — those existed only to reconcile the vendored prototype's
   own AA rendering against ours (a discrepancy that no longer exists once
   both sides of the comparison are this same implementation); see
@@ -253,8 +241,8 @@ accepting a re-baseline (see "Re-baseline procedure" above):
   reasoning and the bar any future addition must clear (fresh
   three-run forensics, not the retired prototype-skew rationale).
 - Every new/changed golden (`11-help`, `12-all-projects`, `13-boot-mid`,
-  `14-boot-ready`, `15-cmdline`, plus the corrected `03-builds-j`/
-  `05-personnel-l1`/`06-editor`) was also inspected visually (not just
+  `14-boot-ready`, `15-cmdline`, plus the corrected `03-repositories-arrow`/
+  `05-employment-l1`/`06-editor`) was also inspected visually (not just
   byte-diffed) for rendering defects — blank panels, clipped text, missing
   overlays — before being accepted; none were found. `14-boot-ready` is
   visually identical to `01-dashboard`, as expected: the boot hand-off
@@ -289,7 +277,7 @@ re-baseline, not after it:
 
 After `pnpm build:fixtures && playwright test tests/visual/identical.spec.ts
 --update-snapshots` (run twice — once for the initial 20-recipe capture,
-once more after a `src/data/help.yaml` content addition changed `11-help`/
+once more after a `src/features/help/content/help.yaml` content addition changed `11-help`/
 `20-help-search`'s expected pixels), `pnpm test:visual` was run **three
 consecutive times** against the final committed goldens with no changes in
 between:
@@ -300,9 +288,8 @@ between:
   reproduce in any of the three runs.
 - Every new/changed golden was inspected visually (not just byte-diffed):
   the SPIDEY-HUB wordmark + blur on `01-dashboard`/`15-cmdline`/`16-shell`/
-  `18-split` (the seeded Vim/Tmux toast pair itself is NOT visible in any
-  of these — see the "Toast auto-dismiss update" note on step 0 above: toasts now
-  auto-dismiss well before the pipeline's capture point); the deterministic
+  `18-split` (no toast is visible in any of these — see the note on step 0
+  above: fixture-mode captures never spawn a toast at all); the deterministic
   `neofetch` output
   (`Uptime: 0 min`) and renamed `0:zsh*` window on `16-shell`; the dim
   (non-blurred) radar + pre-seeded narrative + `[detached (from session
@@ -352,7 +339,7 @@ index." string in panel [2] — an unmistakable tell that something was
 wrong, not a legitimate new golden). Fixed by dropping the now-unnecessary
 `k` and re-activating `all-projects` directly (`{key:"b"},{key:"3"},
 {key:"Enter"}`), which still keeps this golden meaningfully distinct from
-`"02-builds"` (that one leaves panel [3] unfocused, so no row is
+`"02-repositories"` (that one leaves panel [3] unfocused, so no row is
 highlighted) while correctly exercising the all-projects state. See the
 recipe's own updated comment in `recipes.ts` for the full account.
 
@@ -367,32 +354,27 @@ final committed goldens with no changes in between:
   area than any prior iteration).
 - Every changed golden was inspected visually (not just byte-diffed): the
   blurred+darkened wallpaper and edge-to-edge flat chrome on `01-dashboard`/
-  `02-builds`/`03-builds-j`/`04-personnel-l0`/`05-personnel-l1`/`11-help`/
+  `02-repositories`/`03-repositories-arrow`/`04-employment-l0`/`05-employment-l1`/`11-help`/
   `16-shell`/`18-split`; the plate-free white-fill/red-stroke SPIDEY-HUB
   wordmark and absent `invert` cursor block on `01-dashboard`/`15-cmdline`/
   `16-shell`/`18-split`; the `ls -l`-style personnel preview (permissions,
   owner, date, name-last, folder/file icons, no `personnel-path`
-  breadcrumb) on `04-personnel-l0`/`05-personnel-l1`; the corrected
+  breadcrumb) on `04-employment-l0`/`05-employment-l1`; the corrected
   `12-all-projects` (all-projects row highlighted + activated, see above);
   and the one-line editor statusline surviving unchanged on `06-editor`.
   None showed rendering defects (no blank panels, no clipped text, no
   missing overlays). No toast is visible on screen in any golden — expected
-  per the "Toast auto-dismiss update" note under "Order of operations" step 0
-  above, since `TOAST_AUTO_DISMISS_MS` (4000ms) elapses well before the
-  pipeline's `2 * RUN_FOR_MS` (10000ms) capture point.
+  per the note under "Order of operations" step 0 above: fixture-mode
+  captures never spawn a toast at all.
 - `RATIO_RELAXED` (identical.spec.ts) stays EMPTY — no recipe needed a
   tolerance relaxation, including the newly-blurred wallpaper layer.
 
 ## Current baseline: 21 recipes / 42 goldens
 
-The counts in the determinism-check sections above (20 recipes / 40 goldens)
-are accurate as of the re-baselines they each describe — left as-is rather
-than rewritten, since they're historical records of what was true at that
-point. Since the last of those, the sitewide `builds`→`repositories` /
-"Personnel Files"→"Employment Records" rename rebaselined every recipe
-that touches either
-view's status-bar/copy text without changing the recipe count, and one more
-recipe was added: `21-notifications-panel-open` (the signal-inbox panel open
-on the dashboard — see its own header comment in
+Since the last determinism check above, the sitewide `builds`→`repositories`
+/ "Personnel Files"→"Employment Records" rename rebaselined every recipe
+that touches either view's status-bar/copy text without changing the recipe
+count, and one more recipe was added: `21-notifications-panel-open` (the
+signal-inbox panel open on the dashboard — see its own header comment in
 `recipes.ts`). The current total is **21 recipes / 42 goldens**, and that is
 the number any future re-baseline's "N/N passed" report should match.
