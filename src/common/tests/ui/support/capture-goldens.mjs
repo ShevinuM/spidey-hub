@@ -1,31 +1,13 @@
-// `pnpm goldens` — regenerates tests/visual/goldens/<viewport>/<state>.png
-// from the vendored, network-independent reference (tests/visual/reference)
-// using the exact same capture pipeline (tests/visual/pipeline.mjs) and
-// state recipes (tests/visual/recipes.ts) that tests/visual/identical.spec.ts
-// also replays against the real implementation.
+// `pnpm goldens` regenerates tests/visual/goldens/<viewport>/<state>.png from
+// the vendored, network-independent reference/ using pipeline.mjs and this
+// file's 10-recipe `recipes` array (10 recipes x 2 viewports = 20 PNGs).
 //
-// 10 recipes x 2 viewports = 20 PNGs.
-//
-// HISTORICAL / GUARDED: the goldens in
-// tests/visual/goldens/ are SELF-baselines — captured from, and compared
-// against, our OWN implementation (`playwright test
-// tests/visual/identical.spec.ts --update-snapshots`, see
-// ./README-PIPELINE.md), at all 20 recipes (40 goldens total;
-// this script's 10-recipe vendored-prototype path cannot even attempt the
-// other 10, which
-// reach states — the help window, all-projects, the boot sequence, the
-// cmdline box, real panes/layouts/choose-tree/sessions/shell, the `?`
-// HelpSearch palette — the prototype predates entirely). Running this
-// script would silently overwrite those self-baselines with screenshots of
-// the (frozen, unpatched) vendored PROTOTYPE instead, un-fixing the
-// intentional deviations documented throughout this codebase (e.g. the
-// tracker window-ordering bug fix) and reintroducing a structural mismatch
-// that tests/visual/identical.spec.ts would then fail against. `pnpm
-// goldens` is kept only as a historical record of how the original
-// baseline was produced — running it for real (rather than reading it)
-// requires an explicit override flag that names what it does, so nobody
-// fat-fingers `pnpm goldens` expecting a self-baseline refresh and silently
-// regresses the whole suite's authority.
+// HISTORICAL / GUARDED: tests/visual/goldens/ is now self-baselined against
+// our own implementation across all 21 recipes / 42 goldens (see
+// README-PIPELINE.md), not the vendored prototype this script still reads
+// from — running it for real would overwrite those self-baselines with
+// prototype screenshots and undo intentional implementation deviations, so
+// it refuses to run without an explicit override flag naming what it does.
 import { chromium } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -37,14 +19,8 @@ import { captureState } from "./pipeline.mjs";
 const RESTORE_PROTOTYPE_PARITY_FLAG = "--restore-prototype-parity";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REFERENCE_DIR = path.join(__dirname, "../../../../../reference");
-// This script's own 10-recipe `recipes` array (see the header comment) only
-// ever wrote into the single tests/visual/goldens/ tree that existed before
-// 00-phases.md D21 started splitting goldens per context (phase 02 moved
-// "06-editor" out to src/common/tests/ui/visual/goldens/, the first split of
-// many). Left pointed at the pre-split location since this script is
-// historical/guarded and was never updated to the new per-context split —
-// running it for real against today's tree would need that rework first,
-// on top of the existing override-flag guard below.
+// Historical/guarded, so left pointed at the original single tree rather
+// than updated to match the per-context goldens/ split used everywhere else.
 const GOLDENS_DIR = path.join(__dirname, "../../../../../tests/visual/goldens");
 const PORT = 4400;
 

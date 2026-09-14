@@ -1,20 +1,8 @@
-// Minimal dependency-free static file server used to serve the vendored
-// visual-regression reference (tests/visual/reference) for both
-// `pnpm goldens` (capture-goldens.mjs) and playwright.config.ts's webServer
-// entries — both webServer entries (the reference AND the
-// real implementation's `dist/`, per the comment above `serveStatic`
-// below) use it. No third-party static-server package is added so the pinned
-// dependency set in package.json stays exactly the intended "exact stack"
-// list.
-//
-// This also replaces `astro preview` as the impl-preview
-// webServer command. Astro 7.2.2's `astro preview` daemonizes (it forks a
-// detached background process and the launching process exits within
-// ~1s), which Playwright's `webServer` cannot use — it monitors the
-// *launching* process and treats that early exit as a crash ("Process from
-// config.webServer exited early"). Since the build output is fully static,
-// a plain file server needs no proxying/SSR behavior `astro preview`
-// provides; only directory→index.html resolution had to be added below.
+// Minimal dependency-free static file server: serves both the vendored
+// visual-regression reference (`reference/`) for `pnpm goldens` and the
+// real `dist/` build for playwright.config.ts's webServer entries, replacing
+// `astro preview` because it daemonizes and Playwright's webServer treats
+// the launching process's early exit as a crash.
 import { createServer } from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import { extname, join, normalize, sep } from "node:path";
@@ -87,8 +75,8 @@ export function serveStatic(rootDir, port) {
   });
 }
 
-// Allow `node tests/visual/static-server.mjs <rootDir> <port>` for use as a
-// playwright.config.ts webServer `command`.
+// Allow `node src/common/tests/ui/support/static-server.mjs <rootDir> <port>`
+// for use as a playwright.config.ts webServer `command`.
 if (import.meta.url === `file://${process.argv[1]}`) {
   const [rootDir, portArg] = process.argv.slice(2);
   if (!rootDir || !portArg) {
