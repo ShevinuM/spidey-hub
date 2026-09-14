@@ -1,22 +1,20 @@
 ---
-// Feature harness route: a fixture-build-only route that mounts just ONE
-// feature's own top-level component with seeded fixture props, no Terminal
-// kernel, no tmux chrome, isolating a feature's tests from the kernel
-// entirely.
+// Feature harness route: a fixture-build-only route that mounts one
+// feature's top-level component with seeded fixture props, no Terminal
+// kernel, isolating a feature's tests from the kernel entirely.
 //
-// Uses `Layout` directly, NOT `Terminal.svelte` — a declared exception to
+// Uses `Layout` directly, not `Terminal.svelte` — a declared exception to
 // the usual "pages import only from bootstrap" convention, made so a
 // harness spec can prove a feature works without the kernel present.
 //
-// getStaticPaths returns [] unless PORTFOLIO_FIXTURES=1, so a real build's
-// `dist/` never carries any `harness/` output at all.
+// `getStaticPaths` returns `[]` unless `PORTFOLIO_FIXTURES=1`, so a real
+// build's `dist/` never carries any `harness/` output.
 //
-// Per-feature component + prop assembly lives in this one file as a small
-// switch — plain `feature === "<name>"` conditionals, not a
-// registry/plugin system — making this one of the few places allowed to
-// know about every feature, same as `bootstrap/Terminal.svelte`. A
+// Per-feature component + prop assembly lives here as a plain
+// `feature === "<name>"` switch, one of the few places (with
+// `bootstrap/Terminal.svelte`) allowed to know about every feature; a
 // feature's content collection fixture-switches itself wherever its own
-// loader calls for that; `profile` isn't fixture-switched at all, so
+// loader calls for that, and `profile` isn't fixture-switched at all, so
 // `getCollection("profile")` needs no extra handling here.
 import Layout from "../../bootstrap/Layout.astro";
 import Profile from "../../features/profile/components/Profile.svelte";
@@ -63,9 +61,7 @@ const repositories = feature === "repositories" ? getRepositories() : undefined;
 const projects = feature === "repositories" ? await getCollection("repositories") : undefined;
 const commitsByRepo = feature === "repositories" && projects ? getCommitsByRepo(projects) : undefined;
 const grep = feature === "grep" ? getGrep() : undefined;
-// Named `shellFs`, not `shell`: `const shell` above already names help's
-// own `getShell()` result, so reusing that name here would be a duplicate
-// `const` and fail to compile.
+// Named `shellFs`, not `shell`, since `const shell` above already holds help's `getShell()` result.
 const shellFs = feature === "shell-fs" ? getShell() : undefined;
 ---
 
@@ -84,8 +80,8 @@ const shellFs = feature === "shell-fs" ? getShell() : undefined;
     // Mounted directly (no wrapper): BootSequence is already boot's own
     // self-contained orchestrator, and this harness's assertions (mount,
     // phase/progress advancing under a driven clock, reaching "ready")
-    // never need `onReady`/`bind:this`. `desktopMode={true}` is required —
-    // see BootSequence's own header for why its `$effect` gates on it.
+    // never need `onReady`/`bind:this`. `desktopMode={true}` is required:
+    // BootSequence's own `$effect` no-ops without it.
     feature === "boot" && boot !== undefined && <BootSequence client:load {boot} desktopMode={true} />
   }
   {
@@ -108,18 +104,17 @@ const shellFs = feature === "shell-fs" ? getShell() : undefined;
   }
   {
     // Wrapped for the same keydown-delegation reason as notifications
-    // above. The `personnel` collection fixture-switches itself
-    // (content.config.ts's own `base:` ternary), so no special fixture
-    // handling is needed here beyond the two data fetches above.
+    // above. The `personnel` collection fixture-switches itself via
+    // content.config.ts's own `base:` ternary, so no special handling is
+    // needed here beyond the two data fetches above.
     feature === "employment" &&
       personnel !== undefined &&
       personnelEntries !== undefined && <EmploymentHarness client:load {personnel} {personnelEntries} />
   }
   {
     // Wrapped for the same keydown-delegation reason as notifications
-    // above. The `repositories` collection fixture-switches itself
-    // (content.config.ts's own `base:` ternary), so no special fixture
-    // handling is needed here beyond the three data fetches above.
+    // above; `repositories` fixture-switches the same way `personnel`
+    // does above.
     feature === "repositories" &&
       repositories !== undefined &&
       projects !== undefined &&
@@ -134,10 +129,9 @@ const shellFs = feature === "shell-fs" ? getShell() : undefined;
   }
   {
     // Wrapped for the same keydown-delegation reason as notifications above
-    // (see ShellFsHarness's own header for why it only ever mounts a
-    // PANE-mode instance, never the host shell). Shell has no content
-    // collection — its yaml is a plain `?raw` data file — so `getShell()`
-    // alone is enough, same as grep's `getGrep()` above.
+    // (see ShellFsHarness's own header for why it mounts PANE mode only).
+    // No content collection, same as grep above, so `getShell()` alone is
+    // enough.
     feature === "shell-fs" && shellFs !== undefined && <ShellFsHarness client:load shell={shellFs} />
   }
 </Layout>

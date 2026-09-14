@@ -28,7 +28,6 @@
   font-display: swap;
 }
 
-/* Design tokens — see design_handoff_shevinum_dev/README.md "Design tokens". */
 @theme {
   --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
 
@@ -70,7 +69,7 @@
   --radius-plate: 10px;
 }
 
-/* Prototype base styles, verbatim (design/Homepage.dc.html lines 12-18). */
+/* Prototype base styles, verbatim (reference/Homepage.dc.html lines 28-34). */
 body {
   margin: 0;
   background: #0b0f14;
@@ -120,12 +119,9 @@ a:hover {
   }
 }
 
-/* Boot-sequence keyframes (design/"Boot Sequence.dc.html" lines 16-26).
-   `swpR` is `swp`'s reverse — the mock defines it alongside `swp` for
-   rings that spin counter-clockwise; `bFlick` is defined by the mock but
-   never referenced by its own template (dead keyframe) — kept here anyway
-   for 1:1 fidelity with "every keyframe", never applied by
-   BootSequence.svelte. */
+/* `swpR` is `swp`'s reverse, for rings that spin counter-clockwise;
+   `bFlick` is unused by BootSequence.svelte but kept for keyframe-set
+   completeness. */
 @keyframes swpR {
   to {
     transform: rotate(-360deg);

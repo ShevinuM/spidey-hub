@@ -1,5 +1,4 @@
 <script lang="ts">
-  // Left pane: query prompt + result list.
   import type { GrepData } from "../../../common/lib/data";
   import type { GrepOverlayState, Row } from "./grepOverlayState.svelte";
 

@@ -1,6 +1,5 @@
 # Shared, cross-view copy: the tmux status bar and global keymap hints.
-# Source: design/Homepage.dc.html lines 427-446 (status bar), README.md
-# "Mobile policy" (mobile-block card), "Keymap (global)".
+# Source: reference/Homepage.dc.html lines 427-446 (status bar).
 
 statusBar:
   # The left
@@ -35,10 +34,8 @@ statusBar:
       id: help
       name: help
   grepHint: "[/] grep"
-  # ↻ reboot — status-bar right-cluster control
-  # that replays the boot sequence from any view. Explicitly "reboot", not
-  # the mock's own "↻ replay boot" (user's own wording, Homepage.dc.html
-  # line 157's mock equivalent renamed per direct request).
+  # ↻ reboot — status-bar right-cluster control that replays the boot
+  # sequence from any view.
   rebootLabel: "↻ reboot"
   # tmux-style status-line prompt templates.
   # `{...}` placeholders are the same convention every other data.ts template

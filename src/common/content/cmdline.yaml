@@ -1,29 +1,16 @@
-# Site-wide floating Cmdline. One noice.nvim-style
-# floating box (src/common/components/Cmdline.svelte) — same visual family as
-# GrepOverlay (bordered box, box-drawing inset title, `>` prompt + block
-# cursor, existing palette) — shared by THREE entry contexts:
+# Site-wide floating Cmdline (src/common/components/Cmdline.svelte), same
+# visual family as GrepOverlay. Shared by three entry contexts:
+#   (a) editor ex mode (`:` in an open Repositories/Personnel file editor):
+#       the q/q!/w/wq/:<n> state machine (src/common/lib/cmdline.ts's
+#       parseExCommand, executed by Editor.svelte) is tried first and wins
+#       on overlapping names, falling through to `commands` below otherwise.
+#   (b) site mode (`:` everywhere else): `commands` below only.
+#   (c) tmux command-prompt mode (`Ctrl-b :`): `tmuxCommands` below only,
+#       executed through terminalState.svelte.ts's own rename/kill/select-window logic.
 #
-#   (a) editor ex mode (`:` while a Repositories/Personnel file editor is open):
-#       the existing q/q!/w/wq/:<n> ex-command state machine (PARSED by
-#       src/common/lib/cmdline.ts's parseExCommand, EXECUTED by Editor.svelte's own
-#       runExCommand — only its
-#       PRESENTATION lives in this box) tried first, falling through to
-#       `commands` below on anything it doesn't recognize — "editor context
-#       wins": `:q` while an editor is open always closes the editor, never
-#       kills the window, even though `commands` below also defines a
-#       site-wide `q`.
-#   (b) site mode (`:` everywhere else, no other text input active — `:`
-#       stays a literal character inside the grep query / personnel filter /
-#       rename prompt, which all already own the keyboard while active):
-#       `commands` below only.
-#   (c) tmux command-prompt mode (`Ctrl-b :`, real tmux's own
-#       "command-prompt" binding): `tmuxCommands` below only, executed
-#       through the existing rename/kill/select-window implementations
-#       in Terminal.svelte — never duplicated here.
-#
-# `commands[].action`/`exCommands` entries with no `action` are internal
-# identifiers Terminal.svelte/Cmdline.svelte switch on — never rendered —
-# same convention as src/common/lib/views.ts's menu/window ids.
+# `commands[].action`/`exCommands` entries with no `action` are internal ids
+# switched on by Terminal.svelte/Cmdline.svelte (src/common/lib/views.ts's
+# menu/window ids follow the same convention), never rendered.
 
 title: "─ Cmdline ─"
 
@@ -92,11 +79,10 @@ commands:
     description: "quit the current program to a shell in this window"
     action: "exit-program"
 
-# tmux command-prompt mode (Ctrl-b :). A distinct, smaller
-# vocabulary matching real tmux's own command-prompt commands; EXECUTED
-# through the existing rename/kill/select-window implementations
-# (Terminal.svelte's renameWindow/killWindow/killPaneOrWindow/setView) —
-# never duplicated here.
+# tmux command-prompt mode (Ctrl-b :). A distinct, smaller vocabulary
+# matching real tmux's own command-prompt commands; executed through the
+# existing rename/kill/select-window implementations in
+# terminalState.svelte.ts — never duplicated here.
 tmuxCommands:
   - name: "rename-window"
     description: "rename-window <name> — rename the current window"
@@ -113,9 +99,8 @@ tmuxCommands:
     takesArgs: true
 
 # Error/usage strings the box itself renders (as opposed to the editor's own
-# E21/E45 bell messages, which stay in src/features/repositories/content/repositories.yaml /
-# src/data/personnel.yaml — those only ever fire from inside an already-open
-# editor, so they keep using that editor instance's own labels).
+# E21/E45 bell messages, which stay in repositories.yaml/personnel.yaml since
+# those only ever fire from inside an already-open editor).
 errors:
   # The unknown-command message is reused verbatim
   # (same wording as repositories.yaml/personnel.yaml's own

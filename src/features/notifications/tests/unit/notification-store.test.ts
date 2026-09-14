@@ -176,10 +176,10 @@ test("injectVisit: never re-injects an id already present in state", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Pool-exhaustion re-circulation: once every pool entry has been seen,
-// injectVisit revives the oldest archived (non-spam) entry back to the
-// inbox instead of picking a fresh one from the pool.
+// Pool-exhaustion re-circulation
 // ---------------------------------------------------------------------------
+// Once every pool entry has been seen, injectVisit revives the oldest
+// archived (non-spam) entry to the inbox instead of picking from the pool.
 
 test("oldestArchivedEntry: returns null when nothing is archived", () => {
   const items = POOL.map((p) => item({ id: p.id, folder: "inbox" }));
@@ -209,8 +209,6 @@ test("injectVisit: exhausted pool re-injects exactly one oldest archived non-spa
   const { state, injected } = injectVisit(before, POOL, 5000, Math.random);
   expect(injected.length).toBe(1);
   expect(injected[0].id).toBe("pool-0"); // ts 100, the lowest among the 3 archived
-  // Re-circulation revives in place — total item count is unchanged (one
-  // item MOVES from archive to inbox, none is newly created from the pool).
   expect(state.items.length).toBe(existing.length);
 });
 

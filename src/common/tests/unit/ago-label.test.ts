@@ -1,8 +1,6 @@
-// Unit tests for src/common/lib/ago-label.ts — a pure, zero-import
-// "42s"/"6m"/"1h"/"3d" formatter with two real consumers,
+// agoLabel lives in common/lib/ because it has two consumers:
 // src/features/notifications/components/notificationsState.svelte.ts and
-// src/features/repositories/components/repositoriesState.svelte.ts, which
-// is why it lives in common/lib/ rather than inside either feature.
+// src/features/repositories/components/repositoriesState.svelte.ts.
 import { expect, test } from "vitest";
 import { agoLabel } from "../../lib/ago-label";
 

@@ -1,10 +1,10 @@
 # Wallpaper / E.D.I.T.H: Retina-V (tracker) copy + map data.
-# Source: design/Homepage.dc.html lines 20-100 (wallpaper, shared with the
+# Source: reference/Homepage.dc.html lines 20-100 (wallpaper, shared with the
 # full-screen tracker view) and line 161 (tracker view back pill).
 # left/top are literal percentages of the map container exactly as authored
-# (design/Homepage.dc.html lines 29-45); this is the same wallpaper markup
+# (reference/Homepage.dc.html lines 29-45); this is the same wallpaper markup
 # behind every view (at wallOpacity) and the full-screen Retina-V view (at
-# opacity 1) per README "Global shell" / "5. E.D.I.T.H: Retina-V".
+# opacity 1).
 
 map:
   title: "── latveria.map · scale 1:250k ──"
@@ -68,10 +68,8 @@ commandBox:
 # Two ASCII HUD panels flanking the bottom of the map (lines 80-92). Stored
 # as line arrays (not one block-scalar string) so the exact column spacing
 # is unambiguous per line; render each array joined with "\n" inside a <pre>.
-# The header's "─" fill is re-padded (6 more dashes than the old
-# "spider-tracker" label needed) so every line — including the closing
-# "└...┘" — stays exactly 37 code points wide (verified by
-# src/common/tests/unit/tracker-hud.test.ts).
+# Every line — including the closing "└...┘" — stays exactly 37 code
+# points wide (verified by src/common/tests/unit/tracker-hud.test.ts).
 hud:
   left:
     - "┌─ retina-v ────────────────────────┐"
@@ -94,8 +92,8 @@ hud:
 # of the map's width/height added to the 50%/48% center, e.g. for SPIDER-01
 # `left: calc(50% + <leftFrac> * mapWidth - 32px)`,
 # `top: calc(48% + <topFrac> * mapHeight - 66px)` (SPIDER-02 additionally
-# flips its card above-left of the marker via transform, see README "5.
-# E.D.I.T.H: Retina-V" and the vendored reference for the exact calc()).
+# flips its card above-left of the marker via transform; see the vendored
+# reference for the exact calc()).
 subjects:
   - id: SPIDER-01
     threat: none
