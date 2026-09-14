@@ -403,7 +403,7 @@ export interface BootLogEntry {
 /** boot.yaml's own `log[]` shape — timing/tag config only, joined to its
  * text (label/val) in the `boot` content collection by `id`, in
  * `src/features/boot/lib/data.ts`'s `buildBoot`. */
-export interface BootLogConfigRow {
+interface BootLogConfigRow {
   id: string;
   threshold: number;
   tag: "ok" | "warn" | "done";

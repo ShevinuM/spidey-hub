@@ -7,7 +7,7 @@
   // copy with the fixture snapshot as its last build step, so the same
   // bundle serves both goldens and production.
   import type { ViewId } from "../../../common/lib/views";
-  import { grepPathToView } from "../../../common/lib/views";
+  import { grepPathToView } from "../lib/routing";
   import type { GrepData } from "../../../common/lib/data";
   import { STATUS_BAR_HEIGHT_PX } from "../../../common/lib/layout";
   import { GrepOverlayState, type Row } from "./grepOverlayState.svelte";
