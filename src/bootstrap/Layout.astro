@@ -1,26 +1,16 @@
 ---
-// Global shell: fonts (via global.css's @fontsource imports) + Tailwind
-// theme/utilities, wired through the real Astro/Vite pipeline. Every route
-// page wraps its Terminal.svelte island in this layout so the five static
-// pages share one <head>/base-style setup.
+// Global shell: fonts (via global.css's @fontsource imports) and Tailwind
+// utilities, wired through the Astro/Vite pipeline — every route page wraps
+// its Terminal.svelte island here so all six pages share one <head>.
 //
-// Mobile-block card (README "Mobile policy"): server-
-// rendered here (not a Svelte island — it needs no interactivity beyond a
-// static link) and CSS-gated by a `(max-width: 899px), (pointer: coarse)`
-// media query that hides `.terminal-root` (the Terminal island + its
-// wallpaper/status bar) and shows `.mobile-block` in its place, plus the
-// mirror-image default (card hidden, terminal shown) for desktop+fine
-// pointer. This is the CSS half of the guard; Terminal.svelte (and
-// StatusBar/Meter) carry the matching JS half — no keydown listener, no
-// clock/meter timer ever attaches outside that same media query, checked
-// via `window.matchMedia` (see Terminal.svelte's `desktopMode` effect) —
-// so a blocked-mode visitor gets a page that is inert by construction, not
-// merely visually hidden.
+// Mobile-block card: server-rendered (not a Svelte island — it needs no
+// interactivity beyond a static link) and CSS-gated by a `(max-width:
+// 899px), (pointer: coarse)` media query that hides `.terminal-root` and
+// shows `.mobile-block` in its place; Terminal.svelte's `desktopMode`
+// effect carries the matching JS guard.
 //
-// Copy comes from src/data/site.yaml's `mobileBlock` (no user-visible
-// string is hardcoded here), read
-// directly via getSite() rather than threaded through as a prop from each
-// of the five route pages (this file is the only consumer).
+// Copy comes from src/common/content/site.yaml's `mobileBlock`, read
+// directly via getSite() since this file is the only consumer.
 import "../styles/global.css";
 import { getSite } from "../common/lib/data";
 
@@ -35,16 +25,10 @@ interface Props {
 const { title } = Astro.props;
 const { mobileBlock } = getSite();
 
-// Server-computed once per build, same convention every route page already
-// repeats for `notificationsFixtureMode` — mirrored here (not threaded as a
-// prop) because this is the ONE file every route shares, making it the
-// single DOM location a build's actual PORTFOLIO_FIXTURES mode can be read
-// back from at runtime. See playwright.config.ts's `globalSetup`
-// (tests/checkFixtureFlag.ts): both `pnpm test:e2e` and `pnpm test:visual`
-// share one webServer definition (port 4322) with `reuseExistingServer:
-// true`, so a stray server left over from the other suite — or a `dist/`
-// built by the wrong script — would otherwise serve the wrong mode with no
-// signal anywhere. This attribute is that signal.
+// data-fixture-mode exposes the build's actual PORTFOLIO_FIXTURES mode at
+// runtime, read by src/common/tests/ui/support/check-fixture-flag.ts's
+// globalSetup to catch a stray server or wrong-mode dist/ answering on the
+// shared webServer port.
 const fixtureMode = process.env.PORTFOLIO_FIXTURES === "1";
 ---
 
@@ -85,7 +69,7 @@ const fixtureMode = process.env.PORTFOLIO_FIXTURES === "1";
     display: none;
   }
 
-  /* README "Mobile policy": <900px width OR coarse pointer (whichever
+  /* Triggers below 900px width OR coarse pointer (whichever
      fires first — an OR of two media features via a comma-separated
      list). No scaled-down layout, no hamburger, no attempt to reflow the
      terminal's own panes — the terminal subtree is removed from view

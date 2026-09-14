@@ -1,32 +1,21 @@
 // Content collections (Astro 7 / astro:content).
 //
-// `repositories` is fixture-switched: when PORTFOLIO_FIXTURES=1 (set by
-// `pnpm build:fixtures` / the visual-regression harness) it loads the 4
-// sample projects under src/features/repositories/tests/ui/support/repositories/
-// (extracted verbatim from Homepage.dc.html) instead of the 8 real ones under
-// src/features/repositories/content/repositories/, so 100% pixel comparisons
-// against the goldens are possible. See src/common/lib/commits.ts for how the
-// matching per-repo commit snapshots are resolved the same way.
+// `repositories` and `personnel` are both fixture-switched: under
+// PORTFOLIO_FIXTURES=1 (set by `pnpm build:fixtures` / the visual-regression
+// harness) each loads its fixture tree — 4 sample repos extracted verbatim
+// from Homepage.dc.html instead of the 8 real ones, a fictional employment
+// history instead of the user's real one — so 100% pixel comparisons against
+// the goldens are possible without real resume data ever reaching a
+// fixture/visual build. See src/common/lib/commits.ts for how matching
+// per-repo commit snapshots are resolved the same way.
 //
-// `personnel` IS fixture-switched, the same way `repositories` is just
-// above: `src/features/employment/tests/ui/support/personnel/*` under
-// `PORTFOLIO_FIXTURES=1`, `src/features/employment/content/personnel/` (the
-// user's real employment history) otherwise. Real employment copy never
-// leaks into a fixture/visual-golden build, which also means an adversarial
-// (long/overflowing) record can be added without corrupting the user's
-// actual resume. The fixture tree mirrors the real tree's variable-depth
-// SHAPE (see below), not just its record count.
-//
-// Personnel content is a
-// variable-depth, path-driven tree (`enaimco/software-developer/{role.md,
-// full-time/role.md, part-time/role.md, co-op/role.md}` and
-// `memorial-university/<role-slug>/role.md` × 5 — mirrored in fixture mode
-// by `oscorp/research-technician/{role.md,co-op,full-time,part-time}` and
-// `damage-control/<role-slug>/role.md` × 5) — EmploymentRecords.svelte
-// derives the whole tree from each entry's `filePath`, so grouping is no
-// longer a frontmatter concern. The old `company`/`employmentType` fields
-// (used by the fixed 3-level company->type->role model) are gone; a role's
-// position in the tree comes entirely from its directory path now.
+// Personnel content is a variable-depth, path-driven tree
+// (`enaimco/software-developer/{role.md, full-time/role.md,
+// part-time/role.md, co-op/role.md}` and `memorial-university/<role-slug>/
+// role.md` × 5, mirrored in fixture mode by `oscorp/research-technician/...`
+// and `damage-control/<role-slug>/role.md` × 5); EmploymentRecords.svelte
+// derives the whole tree from each entry's `filePath`, and a role's position
+// in the tree comes entirely from its directory path.
 import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
 
@@ -42,15 +31,10 @@ const repositories = defineCollection({
   loader: glob({
     pattern: "**/*.md",
     base: useFixtures ? "src/features/repositories/tests/ui/support/repositories" : "src/features/repositories/content/repositories",
-    // Astro's default `generateId` lowercases the slug (getContentEntryIdAndSlug's
-    // slugify step), which silently turns "SafePass.md" into entry id
-    // "safepass" — invisible until the Repositories Files panel started
-    // rendering `${project.id}.md` as that file's displayed name, where it
-    // renders as the wrong filename ("safepass.md" instead of "SafePass.md"). All of
-    // our project filenames are already the exact string we want to display
-    // (see src/features/repositories/tests/ui/support/repositories/*.md and
-    // src/features/repositories/content/repositories/*.md), so this
-    // just uses the entry's own basename verbatim, case and all.
+    // Astro's default generateId lowercases the slug, silently turning
+    // "SafePass.md" into "safepass" — wrong once the Repositories Files
+    // panel renders `${project.id}.md` as the displayed filename; this uses
+    // the entry's own basename verbatim, case and all, instead.
     generateId: ({ entry }) => entry.replace(/\.md$/, ""),
   }),
   schema: z.object({
@@ -64,10 +48,8 @@ const personnel = defineCollection({
   loader: glob({
     pattern: "**/*.md",
     base: useFixtures ? "src/features/employment/tests/ui/support/personnel" : "src/features/employment/content/personnel",
-    // Same rationale as `projects` above: directory/file names in this tree
-    // are already the literal, lowercase strings we want to display, so this
-    // just preserves the on-disk relative path (minus extension) as-is rather than trusting
-    // Astro's default slugify step.
+    // Same rationale as `repositories` above: preserves the on-disk relative
+    // path (minus extension) as-is rather than trusting Astro's slugify step.
     generateId: ({ entry }) => entry.replace(/\.md$/, ""),
   }),
   schema: z.object({
