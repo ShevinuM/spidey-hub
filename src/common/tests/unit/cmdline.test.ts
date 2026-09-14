@@ -1,10 +1,4 @@
-// Unit tests for the pure parser/completion logic behind the site-wide
-// floating Cmdline — src/common/lib/cmdline.ts. No
-// DOM, no Svelte state: parse, prefix-filter, alias resolution, Tab
-// completion, the lifted ex-command machine, and the tmux
-// command-prompt grammar, each exercised directly against fixture command
-// lists (not the real cmdline.yaml, so this suite can't drift silently if
-// the yaml's wording changes — only its SHAPE matters here).
+// Exercises src/common/lib/cmdline.ts against fixture command lists, not the real cmdline.yaml, so only the data's shape matters here, not its wording.
 import { expect, test } from "vitest";
 import {
   completeInput,
@@ -124,9 +118,7 @@ test("completeInput returns null for empty input or no match", () => {
 });
 
 // ---------------------------------------------------------------------
-// cycleComplete (zsh-style repeated-Tab cycling: the only way multiple Tab
-// matches are still reachable now that Cmdline.svelte no longer renders a
-// suggestions list)
+// cycleComplete (zsh-style repeated-Tab cycling: Cmdline.svelte renders no suggestions list, so this is the only way to reach multiple Tab matches)
 // ---------------------------------------------------------------------
 
 const ambiguousKill: CommandDef[] = [

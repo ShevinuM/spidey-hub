@@ -1,12 +1,4 @@
-// Locks grepPathToView() (src/common/lib/views.ts) against the real grep index
-// (public/generated/grep-index.json, refreshed by `pnpm generate`) — the
-// no-false-positive property requires real-index rules to be
-// segment-anchored so a future real file
-// can never be mis-routed by an incidental substring match (e.g. a bare
-// `/info/i` catching a hypothetical `src/lib/info.ts`). This test mirrors
-// what the verifier checked by hand — every path in the *current* real
-// index maps to exactly the view an explicit, hand-audited whitelist says
-// it should, and nothing else.
+// Locks grepPathToView() against public/generated/grep-index.json (refreshed by `pnpm generate`): its rules must stay segment-anchored so a future real file is never mis-routed by an incidental substring match.
 import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -17,14 +9,7 @@ const realIndex = JSON.parse(readFileSync(join(ROOT, "public/generated/grep-inde
   path: string;
 }[];
 
-/**
- * Hand-audited whitelist of every real-index path that should route
- * somewhere, as of this writing. Anything in the real
- * index NOT matched by one of these patterns must map to `null` — that's
- * the actual "no false positive" property: every one of the ~70 other real
- * paths (data/*.yaml, lib/*.ts, pages/*.astro, tests/**, root configs) is
- * asserted null below, not merely spot-checked.
- */
+/** Hand-audited whitelist of every real-index path that should route somewhere; anything else must map to `null`. */
 function expectedView(path: string): "employment" | "repositories" | "retina-v" | "profile" | null {
   if (path.startsWith("src/features/employment/content/personnel/")) return "employment";
   if (path.startsWith("src/features/repositories/content/repositories/")) return "repositories";
@@ -58,11 +43,7 @@ test("routed paths are exactly the personnel content dir, the repositories conte
 });
 
 test("a hypothetical future real path containing the legacy bare words does NOT mis-route", () => {
-  // These are exactly the kind of path the old unanchored regex
-  // (`/info/i`, `/xp|Yazi/i`, `/projects|Lazygit/i`, `/Tracker|Radar|
-  // subjects/i`) would have wrongly routed had a real file like this ever
-  // been added — none of them exist in the real index today, but the
-  // tightened rules must reject them regardless of the index's contents.
+  // None of these paths exist in the real index today, but the segment-anchored rules must reject them regardless of the index's contents.
   expect(grepPathToView("src/lib/info.ts")).toBe(null);
   expect(grepPathToView("src/lib/xp-utils.ts")).toBe(null);
   expect(grepPathToView("src/data/projects-notes.md")).toBe(null);
@@ -71,13 +52,7 @@ test("a hypothetical future real path containing the legacy bare words does NOT 
 });
 
 test("variable-depth personnel content paths (path-derived tree) route to employment", () => {
-  // grepPathToView's real-index rule is a depth-agnostic prefix match
-  // (`(^|\/)content\/personnel\/`), so the
-  // variable-depth tree (2-5 path segments — enaimco/software-developer/
-  // role.md vs. enaimco/software-developer/full-time/role.md vs.
-  // memorial-university/<slug>/role.md) needs no code change here — this
-  // test locks that in explicitly rather than relying solely on the
-  // generated-index comparison above.
+  // grepPathToView's real-index rule is a depth-agnostic prefix match (`(^|\/)content\/personnel\/`), so this locks in the variable-depth personnel tree (2-5 path segments) explicitly.
   expect(grepPathToView("src/features/employment/content/personnel/enaimco/software-developer/role.md")).toBe(
     "employment",
   );
@@ -92,11 +67,7 @@ test("variable-depth personnel content paths (path-derived tree) route to employ
 });
 
 test("fixture-only legacy paths (all under src/) never route via the bare-word fallback", () => {
-  // src/features/grep/tests/ui/support/grep-index.json's own paths, gated out because they live
-  // under src/ — the real rules above own that prefix unconditionally, so
-  // these fall through to null rather than the prototype's original
-  // bare-word regex (which has zero test coverage anyway — the visual
-  // recipes never press Enter in the grep overlay).
+  // src/features/grep/tests/ui/support/grep-index.json's paths live under src/, but the real-index rules above own that prefix unconditionally, so these fall through to null.
   for (const p of [
     "src/pages/xp.astro",
     "src/pages/projects.astro",

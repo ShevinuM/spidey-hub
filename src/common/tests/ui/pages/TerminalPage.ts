@@ -1,22 +1,9 @@
 import { expect, type Page } from "@playwright/test";
 
 /**
- * Page object for the booted terminal shell — named for the UI surface it
- * models (the kernel/Terminal.svelte root), not the suite that happens to
- * use it (`docs/testing/e2e/page-object-model.md` convention, matching
- * `RepositoriesPage`/`StatusBarPage`); shared kernel-chrome page objects
- * live in `src/common/tests/ui/pages/` per `e2e-testing.md` R005. Currently
- * consumed only by the root smoke tier (`e2e-testing.md` R003/R004: specs
- * call page-object methods/getters, never `page.locator(...)` directly;
- * `playwright.md` R002: no raw CSS selector anywhere, ever — unconditional,
- * so even the readiness locator itself must resolve via `getByTestId`, not
- * the `data-terminal-ready` attribute selector).
+ * Page object for the booted terminal shell, named for the UI surface it models rather than the suite that uses it.
  *
- * `data-testid="terminal-ready"` is a STATIC id on the same root element
- * `data-terminal-ready` already lives on (`Terminal.svelte`) — it locates
- * the element regardless of boot state; the actual readiness signal is the
- * separate `data-terminal-ready` attribute's value, asserted below via
- * `toHaveAttribute` (Playwright's own auto-waiting, not a manual `waitFor`).
+ * `data-testid="terminal-ready"` is a static id on Terminal.svelte's root — it locates the element regardless of boot state, while the separate `data-terminal-ready` attribute's value, asserted below via `toHaveAttribute`, is the actual readiness signal.
  */
 export class TerminalPage {
   constructor(private readonly page: Page) {}

@@ -1,10 +1,4 @@
-// Unit test for src/common/content/tracker.yaml's ASCII HUD box (labeled
-// "retina-v", 6 characters shorter than "spider-tracker"). The header
-// line's "─" fill was hand re-padded so the box's width/alignment survives
-// the shorter label — this test makes that claim durable
-// (referenced from tracker.yaml's own comment) by asserting every line in
-// the box, including the re-padded header and the untouched closing edge,
-// is exactly the same code-point width.
+// Guards tracker.yaml's HUD box: every hud.left line must stay the same code-point width the hand re-padded header relies on.
 import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";

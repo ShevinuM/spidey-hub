@@ -1,9 +1,4 @@
-// Unit tests for the pure vim-lite engine (src/common/engines/vim/vim.ts) — engine purity,
-// covering word-boundary motions across
-// punctuation/whitespace/line boundaries, numeric counts, 0/^/$ semantics,
-// visual-range normalization (charwise + linewise) and their yanked text,
-// and search + wraparound. Editor.svelte (DOM-dependent, e2e-covered
-// instead) is deliberately untested here.
+// Editor.svelte (DOM-dependent, e2e-covered instead) is deliberately untested here — only the pure engine in src/common/engines/vim/vim.ts is.
 import { expect, test } from "vitest";
 import {
   clampCursor,

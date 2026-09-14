@@ -1,26 +1,4 @@
-// Pixel-regression suite for the recipes phase 02 (common) owns per
-// Instructions/01-pre-phase/recipe-feature-map.md's "owning phase" column:
-// "06-editor" (the shared vim editor, D9), "15-cmdline" (the floating
-// command box, D10 kernel chrome), "18-split" (pane-tree layout cycling —
-// tmux engine + PaneTree.svelte, D10), "19-choose-tree" (ChooseTree,
-// D10), and "08-tracker" (the wallpaper/Retina-V tracker map, added late by
-// phase 07's R1 ruling — 00-phases.md D17/phase-07 R1: its sole renderer is
-// common/components/Wallpaper.svelte, which paints it on every view, not
-// Dashboard.svelte, so it never belonged to the dashboard feature phase's
-// original goal line). Split out of tests/visual/identical.spec.ts
-// (00-phases.md D21) so every recipe is captured exactly once as later
-// phases do the same for their own owned recipes. Same capture pipeline
-// (src/common/tests/ui/support/pipeline.mjs), same recipes source
-// (src/common/tests/ui/support/recipes.ts), same real-implementation build
-// (port 4322) — see tests/visual/identical.spec.ts's own header comment for
-// the full mechanism this reuses verbatim.
-//
-// Goldens resolve via this project's own `snapshotPathTemplate`
-// (playwright.config.ts, "common-visual-<viewport>" projects) to
-// src/common/tests/ui/visual/goldens/<viewport>/<recipe>.png — hardcoded per
-// project rather than derived from `{projectName}`, since the project name
-// now carries a "common-visual-" context prefix that the viewport-only
-// literal directory name must not (D21(a)).
+// Captures only the recipes common owns (COMMON_OWNED_RECIPE_NAMES below); root tests/visual/identical.spec.ts captures every other recipe, so each recipe is goldened exactly once.
 import { expect, test } from "@playwright/test";
 import { cmdlineRecipes, iteration3Recipes, recipes } from "../support/recipes";
 import { captureState } from "../support/pipeline.mjs";
@@ -32,10 +10,7 @@ const keyRecipes = [...recipes, ...cmdlineRecipes, ...iteration3Recipes].filter(
 
 test.describe("visual (common): implementation vs goldens", () => {
   test.beforeEach(async ({ page }) => {
-    // Same network-determinism rule as tests/visual/identical.spec.ts /
-    // tests/visual/capture-goldens.mjs: the commit-refresh island fires a
-    // fetch on Repositories mount, and fixture repos must not depend on
-    // api.github.com 404-ing by luck.
+    // Abort api.github.com: the Repositories view fetches it on mount, and fixture captures must not depend on that request failing by luck.
     await page.route("**/api.github.com/**", (route) => route.abort());
   });
 

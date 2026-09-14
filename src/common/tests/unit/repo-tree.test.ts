@@ -1,11 +1,4 @@
-// Unit tests for src/common/lib/repo-tree.ts's repo browsing.
-// Exercised against the real generated index for one of the 8 repos
-// (public/generated/repos/daily-tech-digest.json — has genuine nested
-// subdirectories, unlike transcript-tts which is flat at the root) so the
-// directory-synthesis logic is checked against real data, not a hand-rolled
-// fixture. Run via `pnpm test:unit` / `node --test` (requires `pnpm generate`
-// to have produced public/generated/repos/*.json first, same precondition
-// as the rest of the suite).
+// Exercised against public/generated/repos/daily-tech-digest.json, which has genuine nested subdirectories, so `pnpm generate` must have produced public/generated/repos/*.json before this runs.
 import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -69,14 +62,7 @@ test("findFile returns the exact file record; joinPath round-trips a path's segm
   expect(joinPath([])).toBe("");
 });
 
-// ---------------------------------------------------------------------------
-// buildTree / flattenVisible (lazygit-style
-// Files panel: nested tree, all dirs expanded by default, no `../` entry).
-// A small hand-rolled fixture makes the collapse-behavior assertions
-// deterministic; the real daily-tech-digest index (genuine nested dirs, e.g.
-// site/src/content/digests/) exercises the build/flatten round-trip against
-// real data, same convention as the listDir tests above.
-// ---------------------------------------------------------------------------
+// buildTree / flattenVisible: a hand-rolled fixture keeps the collapse-behavior assertions below deterministic; the real daily-tech-digest index exercises the build/flatten round-trip against real data.
 
 const fixtureFiles: RepoFile[] = [
   { path: "README.md", lines: [] },

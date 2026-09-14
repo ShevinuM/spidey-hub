@@ -1,10 +1,4 @@
-// Unit tests for src/common/lib/commits.ts — a build-time commit-snapshot
-// loader that lives in common/lib/ because it has real consumers outside
-// any one feature (six route pages' frontmatter, plus type-only imports
-// elsewhere). These two tests exercise the module's real (non-fixture) glob
-// against the checked-in src/generated/commits/*.json snapshots —
-// PORTFOLIO_FIXTURES is unset in the unit-test environment, so
-// getCommits()/getCommitsByRepo() read the REAL table, not the fixture one.
+// PORTFOLIO_FIXTURES is unset here, so these tests read the real src/generated/commits/*.json snapshots, not the fixture table.
 import { expect, test } from "vitest";
 import { getCommits, getCommitsByRepo } from "../../lib/commits";
 

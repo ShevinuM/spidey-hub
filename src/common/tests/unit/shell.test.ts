@@ -1,9 +1,4 @@
-// Unit tests for the pure shell parser/builtins/fs-navigation logic
-// — src/common/lib/shell.ts. No DOM, no fetch: a
-// small fixture fs index + a hand-built ShellData-shaped fixture (same
-// "structurally equivalent fixture, not the real yaml" convention
-// src/common/tests/unit/cmdline.test.ts already uses) stand in for the generated
-// index and src/features/shell-fs/content/shell.yaml.
+// A small fixture fs index and a hand-built ShellData-shaped fixture stand in for the generated index and src/features/shell-fs/content/shell.yaml.
 import { expect, test } from "vitest";
 import {
   backspace,
@@ -199,12 +194,7 @@ test("renderTree: connectors, and depth cap 3 replaces deeper children with a �
   const lines = renderTree(FS, ["src"]);
   expect(lines[0]).toBe("src");
   expect(lines.some((l) => l.startsWith("├── ") || l.startsWith("└── "))).toBeTruthy();
-  // src/lib/deep/a/b/c.ts is 4 levels below src/lib (deep -> a -> b -> c.ts)
-  // — capped at depth 3, so "b" (the 3rd level down) shows a … instead of
-  // descending into its own child. (Not `.trim() === "…"`: a `…` line's own
-  // indent can itself contain a "│" continuation glyph from a sibling still
-  // to come, e.g. "    │       …" — trim() only strips actual whitespace,
-  // so the marker is asserted with `endsWith` instead.)
+  // Asserted with `endsWith`, not `.trim() === "…"`, because a truncated line's indent can itself contain a "│" continuation glyph that trim() won't strip.
   expect(lines.some((l) => l.endsWith("…"))).toBeTruthy();
   expect(!lines.some((l) => l.includes("c.ts"))).toBeTruthy();
 });

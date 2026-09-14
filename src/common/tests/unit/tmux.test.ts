@@ -1,9 +1,4 @@
-// Unit tests for the tmux client/session/window/pane model
-// — src/common/engines/tmux/tmux.ts. No DOM, no Svelte state:
-// every operation is exercised directly against plain-object Session/Client
-// values (the same shape Terminal.svelte's `$state` proxy wraps at runtime —
-// this file proves the operations themselves are correct independent of
-// that wrapping).
+// Exercises src/common/engines/tmux/tmux.ts against plain-object Session/Client values, the same shape Terminal.svelte's `$state` proxy wraps at runtime.
 import { expect, test } from "vitest";
 import { createShellState } from "../../lib/shell";
 import {
@@ -70,10 +65,7 @@ function freshWindow(): Window {
   return activeWindowOf(freshSession());
 }
 
-/** Splits `window`'s CURRENT focused pane `n` times in `direction`,
- * returning the sizes of the parent split's own `children` array so a test
- * can assert the arithmetic without hand-deriving it — every call splits
- * whatever is focused NOW, matching a real `Ctrl-b |` pressed repeatedly. */
+/** Splits `window`'s current focused pane `n` times in `direction`, matching a real `Ctrl-b |` pressed repeatedly. */
 function splitTimes(window: Window, direction: "row" | "column", n: number): void {
   for (let i = 0; i < n; i++) splitPane(window, direction);
 }
