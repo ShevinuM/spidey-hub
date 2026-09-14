@@ -1,17 +1,7 @@
-// TerminalState — Terminal.svelte's reactive core (the tmux `Client` model,
-// every derived read model over it, and every window/pane/session/cmdline
-// action) extracted during the folder+state-class relocation refactor. See
-// Terminal.svelte's own header comment for the view's behavior; every
-// `$state`/`$derived` here (and its accompanying comment) is moved verbatim
-// from the original monolith — no reactivity, timing, or behavior change.
-// The keymap itself (handleKey/handlePrefixedKey/onPopState), the global
-// keydown/popstate listener registration, and every `bind:this` ref stay on
-// Terminal.svelte, the orchestrator — see that file's own comment. Every
-// function here that Terminal.svelte's template passes by bare reference
-// as a child callback prop (e.g. `onWindowSwitch={state.switchToProgram}`)
-// is declared as an arrow-function field so `this` stays bound once the
-// reference leaves this class; functions only ever invoked via `state.foo()`
-// from within Terminal.svelte's own dispatch code are plain methods.
+// A function passed by bare reference as a child callback prop (e.g.
+// `onWindowSwitch={core.switchToProgram}`) must be declared as an
+// arrow-function field so `this` stays bound once the reference leaves the
+// class; functions only ever invoked as `core.foo()` are plain methods.
 import { tick } from "svelte";
 import type { SiteData, ShellData, CmdlineData } from "../common/lib/data";
 import type { ViewId } from "../common/lib/views";
@@ -134,9 +124,8 @@ interface NotificationsRef {
 const DEFAULT_SESSION_ID = "default";
 export const DEFAULT_SESSION_NAME = "10.42.7.13";
 
-// tmux prefix timeout — Ctrl-b arms a 2s window during which the very next
-// key is a window-switch command instead of reaching any view. See the
-// `armPrefix`/`disarmPrefix` methods' own section comment below.
+// How long an armed Ctrl-b prefix stays live before disarming — see the
+// tmux-prefix section below for the full arm/disarm behavior.
 const PREFIX_TIMEOUT_MS = 2000;
 
 export class TerminalState {
@@ -216,9 +205,8 @@ export class TerminalState {
   });
 
   /** "Which WINDOW (screen) is on-screen" — keyed off the window's own
-   * stable id, NOT the program its pane currently runs (see this file's own
-   * header comment on why those differ, since a pane can run any program
-   * in any window). Drives Wallpaper's opacity/blur knob and the
+   * stable id, NOT the program its pane currently runs, since a pane can
+   * run any program in any window. Drives Wallpaper's opacity/blur knob and the
    * dashboard-only hotkey gate below. `undefined` while detached — there
    * is no "on-screen window" then. */
   view = $derived(this.activeWindow ? windowIdToView(this.activeWindow.id) : undefined);
@@ -286,22 +274,12 @@ export class TerminalState {
       : { name: "", windowCount: 0, createdAt: resolvePageEpoch(), attached: false };
   });
 
-  /** Digit/`?` prefix targets, recomputed from the live window list so a
-   * killed window's digit stops doing anything (tmux-faithful: an unbound
-   * prefixed key is silently swallowed) — holding window ids, keyed off
-   * each window's own `number` field (`Ctrl-b c` new-window included)
-   * rather than a hardcoded 1-5 map — behavior-identical for the six fixed
-   * seed windows (every one of them has `number === its own fixed digit`,
-   * present-gated either way) AND the only way a window `createWindow()`
-   * appends later (numbered 6+, see that function's own comment) gets a
-   * digit slot of its own for free, without this needing to know that any
-   * such window exists. `0`'s own dedicated handling (both the plain
-   * `e.key === "0"` branch below and `executeTmuxCommand`'s `select-window
-   * 0` special case) is untouched by this — dashboard's window always has
-   * `number === 0` too, so including it here would just be a redundant,
-   * behavior-identical second path to the exact same result. Empty while
-   * detached — the prefix is inert then anyway (`armPrefix()`'s own gate),
-   * so this is never consulted, but must still not throw. */
+  /** Digit/`?` prefix targets, recomputed from the live window list and
+   * keyed off each window's own `number` field, so a killed window's digit
+   * stops doing anything and a window `createWindow()` appends later gets
+   * a digit slot for free. `0` has its own dedicated handling elsewhere
+   * and is deliberately absent here; empty while detached, when the prefix
+   * is inert anyway. */
   prefixTargets = $derived.by((): Partial<Record<string, string>> => {
     const targets: Partial<Record<string, string>> = {};
     for (const w of this.statusWindows) {
@@ -316,15 +294,10 @@ export class TerminalState {
   // -----------------------------------------------------------------------
 
   /** Window-chrome contract ("close BEFORE the same-view early return") —
-   * closes grep/cmdline/help-palette/choose-tree unconditionally. Called at
-   * the top of every window-switch/kill/reboot path below, so an open
-   * overlay never survives ANY of them, even ones that end up no-op'ing
-   * (e.g. selecting the already-active window, or a kill that gets
-   * refused). Choose-tree's own Enter-switch already calls its own
-   * `close()` directly, but every OTHER window-switch entry point (status-
-   * bar click, prefix digit/n/p, dashboard hotkeys, `Ctrl-b d` detach) goes
-   * through this helper — closing it here too means choose-tree never
-   * survives any of THOSE either. */
+   * closes grep/cmdline/help-palette/choose-tree unconditionally at the top
+   * of every window-switch/kill path below, so an open overlay never
+   * survives even a no-op switch (e.g. selecting the already-active
+   * window). */
   closeWindowChrome(): void {
     this.getGrepRef()?.close?.();
     this.getCmdlineRef()?.close?.();
@@ -398,28 +371,12 @@ export class TerminalState {
     });
   }
 
-  /** Status-bar ↻ reboot control — replays
-   * boot from ANY window by first switching to the dashboard. Cancels a
-   * stray status-bar prompt and a stray copy-mode overlay first (a
-   * rename/confirm prompt would otherwise survive the switch bound to the
-   * old window, and copy-mode's own z-index sits above the status bar so
-   * it would occlude the freshly-replayed boot). `switchToProgram` already
-   * closes a stray grep/cmdline/help-palette overlay.
-   *
-   * "Reboot (all triggers) = factory state + boot replay" — REPLACES
-   * `client` wholesale with a fresh `createFactoryClient()` call (the exact
-   * same shape the initial `$state` seed above uses) rather than merely
-   * switching the EXISTING client back to the dashboard window —
-   * every window/pane/program/shell buffer resets, not just the active
-   * one. The signal-inbox PANEL (open/closed, queued toasts) is in-memory,
-   * ephemeral UI state, closed here alongside every other overlay — the
-   * persisted read/unread/archive/spam data in localStorage is untouched
-   * (reboot resets the session, not the visitor's inbox history).
-   * `grepRef` is closed explicitly
-   * here (unlike every other window-switch entry point, which gets it for
-   * free from `switchActiveWindow`'s own `closeWindowChrome()` — reboot no
-   * longer routes through that helper now that it rebuilds `client`
-   * directly instead of switching the old one). */
+  /** Status-bar ↻ reboot control — closes every overlay ref (status-bar
+   * prompt, copy-mode, cmdline, help-search, choose-tree, grep,
+   * notifications) individually, then replaces `client` wholesale with a
+   * fresh `createFactoryClient()` seeded to the dashboard window, resetting
+   * every window/pane/program/shell buffer, not just the active one; the
+   * persisted signal-inbox history in localStorage is untouched. */
   reboot = (): void => {
     this.getStatusBarRef()?.cancelPrompt?.();
     this.getCopyModeRef()?.close?.();
@@ -442,19 +399,7 @@ export class TerminalState {
 
   // ---------------------------------------------------------------------
   // tmux prefix. Ctrl-b arms a 2s window during which the very next key is
-  // a window-switch command instead of reaching any view. `prefixArmed`'s
-  // dispatch branch is checked FIRST in handleKey() below, and the *arm*
-  // check (bare Ctrl-b itself) is checked SECOND — ahead of grep
-  // delegation, tmux-faithful — so the prefix works even while the grep
-  // overlay is open (needed for `Ctrl-b ]`'s paste into the grep query):
-  // while armed, the prefix consumes the next key before grep ever sees
-  // it, exactly like every other view.
-  //
-  // "Ctrl-b ," / "&" / "x" / "[" / "]" — rename-window, kill-window,
-  // kill-pane, copy-mode, and paste-buffer — are all dispatched from
-  // `handlePrefixedKey` below alongside the digit/n/p/d/w/0 targets, since
-  // they're all "the single key following an armed Ctrl-b" in exactly the
-  // same way.
+  // a window-switch command instead of reaching any view.
   // ---------------------------------------------------------------------
 
   prefixArmed = $state(false);
@@ -494,16 +439,10 @@ export class TerminalState {
     this.client.hostPane.shell = { ...this.client.hostPane.shell, lines: [...this.client.hostPane.shell.lines, { text, kind }] };
   }
 
-  /** Ctrl-b & (and the Repositories single-pane Ctrl-b x fallback, a kill-pane
-   * that emptied the last Repositories panel, and shell `exit` in the last pane)
-   * — routed through tmux.ts's `killWindowCascade` instead of the bare
-   * `killWindow` op: killing a window that ISN'T the session's last one
-   * still just removes it; killing the LAST window destroys the session
-   * outright (see `killWindowCascade`'s own header comment). If that
-   * cascade leaves NO session attached, the client has detached to the
-   * host shell — append the exact `[exited]` line there. If another
-   * session was silently switched to instead, nothing further happens
-   * here (shows nothing special to the user). */
+  /** Ctrl-b & — routed through tmux.ts's `killWindowCascade` instead of the
+   * bare `killWindow` op, since killing the session's LAST window destroys
+   * the session outright rather than just removing it; appends `[exited]`
+   * to the host shell if that cascade leaves no session attached. */
   killWindowById(id: string): void {
     this.closeWindowChrome();
     const session = this.activeSession!;
@@ -514,20 +453,12 @@ export class TerminalState {
     this.syncUrl();
   }
 
-  /** Shell.svelte's `onLaunch` — a bare view-name command or
-   * `open <view>` typed into a pane's shell: launches `program` IN THAT
-   * PANE (tmux.ts's own `launchProgram`), never a window switch — any pane
-   * can launch any program. `program` arrives pre-validated by shell.ts's
-   * own `runCommand` (checked against `VIEW_NAMES`), so the cast is safe.
-   * Syncs the URL only when the launch happened in the currently ACTIVE
-   * pane — a window can have more than one pane (splits), and a launch in
-   * a NON-focused pane must not push a route for content that isn't even
-   * on screen. Closes grep/cmdline/palette first, unconditionally — same
-   * window-chrome contract every other switch/launch/kill entry point
-   * follows (`switchActiveWindow`, `exitActiveProgram`, `killWindowById`):
-   * a launch changes what's on screen just as much as a window switch
-   * does, so any open chrome from the PREVIOUS pane content must not
-   * survive it. */
+  /** Shell.svelte's `onLaunch` — launches `program` IN THAT PANE (tmux.ts's
+   * own `launchProgram`), never a window switch, and syncs the URL only
+   * when the launch happened in the currently ACTIVE pane, since a launch
+   * in a non-focused pane (splits) must not push a route for content that
+   * isn't on screen. `program` arrives pre-validated by shell.ts's own
+   * `runCommand` (checked against `VIEW_NAMES`), so the cast below is safe. */
   onLaunchInPane = (paneId: string, program: string): void => {
     this.closeWindowChrome();
     launchProgram(this.activeSession!, paneId, program as ProgramName);
@@ -561,9 +492,8 @@ export class TerminalState {
    * ALREADY-shell pane, which has no program left to drop and so still
    * cascades to kill-window). Closes
    * chrome first (same convention as every other window-affecting action)
-   * and re-syncs the URL, which freezes in place: `programToViewId("shell")`
-   * is null, so `syncUrl()` no-ops, satisfying Verify 4's "URL unchanged
-   * while in shell" probe. */
+   * and re-syncs the URL, which freezes in place since `programToViewId
+   * ("shell")` is null, so `syncUrl()` no-ops. */
   exitActiveProgram(): void {
     this.closeWindowChrome();
     exitProgram(this.activeSession!, this.activePane!.id);
@@ -774,19 +704,9 @@ export class TerminalState {
     else reapplyLastLayout(win);
   }
 
-  /** `Ctrl-b c` — tmux new-window: creates a
-   * new window running the in-window shell program and switches focus to it
-   * immediately (real tmux's own combined "create and select" behavior for
-   * this binding — distinct from `createSession`'s create-only split, which
-   * a SEPARATE `attachSession()` call finishes; here `selectWindowIndex` is
-   * that second call, run right after `createWindow` appends it). Closes
-   * window chrome first, same convention every other window-affecting
-   * action follows (`switchActiveWindow`, `killWindowById`, `detachSession`)
-   * — including choose-tree, which is not otherwise gated for this key
-   * (same free-close treatment as the digit/n/p window-switch keys,
-   * nothing to starve). `syncUrl()` no-ops for the newly-shelled
-   * window exactly like `:q`'s `exitActiveProgram` does (`programToViewId
-   * ("shell")` is null) — the URL freezes wherever it already was. */
+  /** `Ctrl-b c` — tmux new-window: creates a new window running the
+   * in-window shell program and switches focus to it immediately, real
+   * tmux's own combined "create and select" behavior for this binding. */
   createWindowInSession(): void {
     this.closeWindowChrome();
     const session = this.activeSession;
