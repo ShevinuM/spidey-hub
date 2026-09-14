@@ -4,12 +4,14 @@
 // This is that test.
 //
 // It scans source text instead of walking a resolved module graph because two
-// whole classes of edge are invisible to a resolver-based tool here:
-// `common/lib/data.ts` reaches into nine feature content files through Vite
-// `?raw` query-suffixed specifiers, and a large share of the crossings live in
-// `.astro` files. A graph tool that drops the query suffix or skips `.astro`
-// reports a clean tree while those edges keep crossing. A text scan reads every
-// scanned file type alike and keeps each specifier verbatim.
+// whole classes of edge are invisible to a resolver-based tool here: a
+// `?raw` query-suffixed specifier crossing a layer boundary (as
+// `common/lib/data.ts` did into nine feature content files, until phase 15
+// step 7 moved each loader feature-local), and a large share of the
+// crossings living in `.astro` files. A graph tool that drops the query
+// suffix or skips `.astro` reports a clean tree while those edges keep
+// crossing. A text scan reads every scanned file type alike and keeps each
+// specifier verbatim.
 //
 // What the scan matches, and nothing else: `from "…"`, bare `import "…"`,
 // dynamic `import("…")` and `` import(`…`) ``, and `import.meta.glob("…")` —
@@ -104,9 +106,6 @@ type AllowlistEntry = {
   reason: string;
 };
 
-const CONTENT_LOADER_REASON =
-  "`common/lib/data.ts` is the single loader for every feature's YAML content, so it reaches into each feature's `content/` folder.";
-
 const PANE_TREE_REASON =
   "`common/components/PaneTree.svelte` statically imports each feature's top-level view to render whichever pane is active, so the shared pane container knows the concrete feature set.";
 
@@ -121,25 +120,6 @@ const TEST_SUPPORT_REASON =
   "Shared Playwright fixtures must seed the same storage keys the features read, and duplicating those constants would let them drift silently. The reach-in stops being drift and becomes a decision with a date on it.";
 
 const ALLOWLIST: AllowlistEntry[] = [
-  // Nine content-loading reach-ins from the shared YAML loader.
-  ...[
-    "../../features/dashboard/content/dashboard.yaml?raw",
-    "../../features/repositories/content/repositories.yaml?raw",
-    "../../features/grep/content/grep.yaml?raw",
-    "../../features/employment/content/personnel.yaml?raw",
-    "../../features/help/content/help.yaml?raw",
-    "../../features/boot/content/boot.yaml?raw",
-    "../../features/help/content/helpsearch.yaml?raw",
-    "../../features/notifications/content/notifications.yaml?raw",
-    "../../features/shell-fs/content/shell.yaml?raw",
-  ].map((specifier) => ({
-    source: "src/common/lib/data.ts",
-    specifier,
-    added: "2026-09-14",
-    disposition: "TEMPORARY (deleted by phase 15 step 7)",
-    reason: CONTENT_LOADER_REASON,
-  })),
-
   // Six view reach-ins from the shared pane container.
   ...[
     "../../features/dashboard/components/Dashboard.svelte",

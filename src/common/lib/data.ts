@@ -1,47 +1,13 @@
-// Build-time loader for the site's copy/labels yaml, read via explicit `?raw` imports rather than a runtime `node:fs` read, since Astro's static build bundles this module away from the source directory on disk.
-import YAML from "yaml";
-import type { CollectionEntry } from "astro:content";
+// The shared type contract every feature's data is built against, plus the
+// four loaders for common's own copy/labels yaml (site, tracker, cmdline,
+// choosetree). Every feature-owned loader/builder — and the `?raw` import it
+// reads — lives in that feature's own `lib/data.ts` instead; see
+// `src/common/lib/yaml.ts` for the shared parse cache both sides call into.
 import siteRaw from "../content/site.yaml?raw";
-import dashboardRaw from "../../features/dashboard/content/dashboard.yaml?raw";
 import trackerRaw from "../content/tracker.yaml?raw";
-import repositoriesRaw from "../../features/repositories/content/repositories.yaml?raw";
-import grepRaw from "../../features/grep/content/grep.yaml?raw";
-import personnelRaw from "../../features/employment/content/personnel.yaml?raw";
-import helpRaw from "../../features/help/content/help.yaml?raw";
-import bootRaw from "../../features/boot/content/boot.yaml?raw";
 import cmdlineRaw from "../content/cmdline.yaml?raw";
-import helpsearchRaw from "../../features/help/content/helpsearch.yaml?raw";
-import notificationsRaw from "../../features/notifications/content/notifications.yaml?raw";
-import shellRaw from "../../features/shell-fs/content/shell.yaml?raw";
 import choosetreeRaw from "../content/choosetree.yaml?raw";
-
-const RAW: Record<string, string> = {
-  "site.yaml": siteRaw,
-  "dashboard.yaml": dashboardRaw,
-  "tracker.yaml": trackerRaw,
-  "repositories.yaml": repositoriesRaw,
-  "grep.yaml": grepRaw,
-  "personnel.yaml": personnelRaw,
-  "help.yaml": helpRaw,
-  "boot.yaml": bootRaw,
-  "cmdline.yaml": cmdlineRaw,
-  "helpsearch.yaml": helpsearchRaw,
-  "notifications.yaml": notificationsRaw,
-  "shell.yaml": shellRaw,
-  "choosetree.yaml": choosetreeRaw,
-};
-
-const cache = new Map<string, unknown>();
-
-function loadYaml<T>(file: string): T {
-  const cached = cache.get(file);
-  if (cached !== undefined) return cached as T;
-  const raw = RAW[file];
-  if (raw === undefined) throw new Error(`src/common/lib/data.ts: no ?raw import registered for "${file}"`);
-  const parsed = YAML.parse(raw) as T;
-  cache.set(file, parsed);
-  return parsed;
-}
+import { parseYaml } from "./yaml";
 
 // site.yaml
 
@@ -84,7 +50,7 @@ export interface SiteData {
   };
 }
 
-export const getSite = (): SiteData => loadYaml<SiteData>("site.yaml");
+export const getSite = (): SiteData => parseYaml<SiteData>(siteRaw, "site.yaml");
 
 // dashboard.yaml
 
@@ -101,8 +67,6 @@ export interface DashboardData {
   footer: { syncLineTemplate: string; switchingTemplate: string };
 }
 
-export const getDashboard = (): DashboardData => loadYaml<DashboardData>("dashboard.yaml");
-
 // notifications.yaml (chrome) + src/features/notifications/content/*.md (pool)
 
 /** A notification pool entry, re-declared here (not imported) so this build-time loader stays framework/runtime agnostic. */
@@ -113,15 +77,6 @@ export interface NotificationPoolEntry {
   body: string;
   src: string;
 }
-
-/** Builds the pool from the `notifications` content collection, sorted by frontmatter `order`, since the seeded per-visit pick depends on stable array position across rebuilds. */
-export const buildNotificationPool = (
-  entries: CollectionEntry<"notifications">[],
-): NotificationPoolEntry[] =>
-  entries
-    .slice()
-    .sort((a, b) => a.data.order - b.data.order)
-    .map((e) => ({ id: e.id, sev: e.data.sev, title: e.data.title, body: (e.body ?? "").trim(), src: e.data.src }));
 
 export interface NotificationsFooterHint {
   key: string;
@@ -157,14 +112,11 @@ export interface NotificationsData {
   pool: NotificationPoolEntry[];
 }
 
-interface NotificationsChrome {
+/** notifications.yaml's own shape — chrome (`ui`) only, joined to the built
+ * pool by `buildNotifications` in `src/features/notifications/lib/data.ts`. */
+export interface NotificationsChrome {
   ui: NotificationsUi;
 }
-
-export const buildNotifications = (entries: CollectionEntry<"notifications">[]): NotificationsData => {
-  const { ui } = loadYaml<NotificationsChrome>("notifications.yaml");
-  return { ui, pool: buildNotificationPool(entries) };
-};
 
 // tracker.yaml
 
@@ -198,7 +150,7 @@ export interface TrackerData {
   subjects: Subject[];
 }
 
-export const getTracker = (): TrackerData => loadYaml<TrackerData>("tracker.yaml");
+export const getTracker = (): TrackerData => parseYaml<TrackerData>(trackerRaw, "tracker.yaml");
 
 // src/features/profile/content/*.md
 
@@ -253,24 +205,6 @@ export interface ProfileData {
   education: { title: string; rows: EducationRow[] };
   signal: { label: string; coords: string; initialReadout: string };
 }
-
-/** Splits a markdown body into paragraphs on blank lines — the profile
- * entry's body holds only plain-prose paragraphs (no lists/headings), so
- * this needs no markdown rendering. */
-function splitParagraphs(body: string): string[] {
-  return body
-    .split(/\n\s*\n/)
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0);
-}
-
-export const buildProfile = (entry: CollectionEntry<"profile">): ProfileData => {
-  const { dossierHeading, ...rest } = entry.data;
-  return {
-    ...rest,
-    dossier: { heading: dossierHeading, paragraphs: splitParagraphs(entry.body ?? "") },
-  };
-};
 
 // repositories.yaml
 
@@ -358,8 +292,6 @@ export interface RepositoriesData {
   editor: EditorLabels;
 }
 
-export const getRepositories = (): RepositoriesData => loadYaml<RepositoriesData>("repositories.yaml");
-
 // grep.yaml
 
 export interface GrepData {
@@ -374,8 +306,6 @@ export interface GrepData {
   fileLinesTemplate: string;
   footer: { hintsLeft: string; closeHint: string };
 }
-
-export const getGrep = (): GrepData => loadYaml<GrepData>("grep.yaml");
 
 // personnel.yaml
 
@@ -402,8 +332,6 @@ export interface PersonnelData {
   editor: EditorLabels;
 }
 
-export const getPersonnel = (): PersonnelData => loadYaml<PersonnelData>("personnel.yaml");
-
 // src/features/help/content/help.yaml + src/features/help/content/*.md
 
 /** One keymap row: a short `name`, a one-line `desc` that never wraps (see HelpView.svelte), and the key chip(s) that trigger it. */
@@ -422,7 +350,8 @@ export interface HelpScope {
 }
 
 /** Page chrome only (title/filter/legend) — `scopes` is assembled from the
- * `help` content collection by `buildHelp` below. */
+ * `help` content collection by `buildHelp` in
+ * `src/features/help/lib/data.ts`. */
 export interface HelpChrome {
   title: string;
   filterPlaceholder: string;
@@ -434,16 +363,6 @@ export interface HelpChrome {
 export interface HelpData extends HelpChrome {
   scopes: HelpScope[];
 }
-
-export const getHelpChrome = (): HelpChrome => loadYaml<HelpChrome>("help.yaml");
-
-export const buildHelp = (entries: CollectionEntry<"help">[]): HelpData => {
-  const scopes = entries
-    .slice()
-    .sort((a, b) => a.data.order - b.data.order)
-    .map((e) => ({ id: e.id, label: e.data.label, hint: e.data.hint, rows: e.data.rows }));
-  return { ...getHelpChrome(), scopes };
-};
 
 // boot.yaml (config) + src/features/boot/content/log.md (log text)
 
@@ -482,8 +401,9 @@ export interface BootLogEntry {
 }
 
 /** boot.yaml's own `log[]` shape — timing/tag config only, joined to its
- * text (label/val) in the `boot` content collection by `id`. */
-interface BootLogConfigRow {
+ * text (label/val) in the `boot` content collection by `id`, in
+ * `src/features/boot/lib/data.ts`'s `buildBoot`. */
+export interface BootLogConfigRow {
   id: string;
   threshold: number;
   tag: "ok" | "warn" | "done";
@@ -500,7 +420,7 @@ export interface BootTintPalette {
   phaseColor: string;
 }
 
-interface BootConfig {
+export interface BootConfig {
   bootMs: number;
   coreTint: "cyan" | "red" | "gold";
   showBootLog: boolean;
@@ -519,21 +439,6 @@ interface BootConfig {
 export interface BootData extends Omit<BootConfig, "log"> {
   log: BootLogEntry[];
 }
-
-export const buildBoot = (entries: CollectionEntry<"boot">[]): BootData => {
-  const config = loadYaml<BootConfig>("boot.yaml");
-  const textById = new Map(entries.flatMap((e) => e.data.entries).map((row) => [row.id, row]));
-  const log = config.log.map((row) => {
-    const text = textById.get(row.id);
-    if (!text) throw new Error(`src/common/lib/data.ts: boot.yaml log id "${row.id}" has no matching src/content/boot entry`);
-    return { threshold: row.threshold, tag: row.tag, label: text.label, val: text.val };
-  });
-  const unmatched = [...textById.keys()].filter((id) => !config.log.some((row) => row.id === id));
-  if (unmatched.length > 0) {
-    throw new Error(`src/common/lib/data.ts: src/content/boot has entries with no matching boot.yaml log id: ${unmatched.join(", ")}`);
-  }
-  return { ...config, log };
-};
 
 // cmdline.yaml
 
@@ -566,7 +471,7 @@ export interface CmdlineData {
   errors: CmdlineErrors;
 }
 
-export const getCmdline = (): CmdlineData => loadYaml<CmdlineData>("cmdline.yaml");
+export const getCmdline = (): CmdlineData => parseYaml<CmdlineData>(cmdlineRaw, "cmdline.yaml");
 
 // helpsearch.yaml
 
@@ -578,8 +483,6 @@ export interface HelpSearchData {
   keymapHint: string;
   footer: { hint: string };
 }
-
-export const getHelpSearch = (): HelpSearchData => loadYaml<HelpSearchData>("helpsearch.yaml");
 
 // shell.yaml
 
@@ -651,8 +554,6 @@ export interface ShellData {
   editor: EditorLabels;
 }
 
-export const getShell = (): ShellData => loadYaml<ShellData>("shell.yaml");
-
 // choosetree.yaml
 
 export interface ChooseTreeData {
@@ -672,4 +573,4 @@ export interface ChooseTreeData {
   killSessionPromptTemplate: string;
 }
 
-export const getChooseTree = (): ChooseTreeData => loadYaml<ChooseTreeData>("choosetree.yaml");
+export const getChooseTree = (): ChooseTreeData => parseYaml<ChooseTreeData>(choosetreeRaw, "choosetree.yaml");

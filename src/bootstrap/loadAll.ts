@@ -2,8 +2,17 @@
 // page calls loadTerminalProps() instead of constructing data itself, so the
 // loader set lives in one place rather than being repeated six times.
 import { getCollection } from "astro:content";
-import { getSite, getDashboard, getTracker, getRepositories, getPersonnel, getGrep, getCmdline, getHelpSearch, getShell, getChooseTree, buildProfile, buildHelp, buildNotifications, buildBoot } from "../common/lib/data";
+import { getSite, getTracker, getCmdline, getChooseTree } from "../common/lib/data";
 import { getCommitsByRepo } from "../common/lib/commits";
+import { getDashboard } from "../features/dashboard/lib/data";
+import { getRepositories } from "../features/repositories/lib/data";
+import { getPersonnel } from "../features/employment/lib/data";
+import { getGrep } from "../features/grep/lib/data";
+import { getHelpSearch, buildHelp } from "../features/help/lib/data";
+import { getShell } from "../features/shell-fs/lib/data";
+import { buildProfile } from "../features/profile/lib/data";
+import { buildNotifications } from "../features/notifications/lib/data";
+import { buildBoot } from "../features/boot/lib/data";
 
 /** Builds every prop Terminal.svelte takes except `initialView`, which stays
  * per-route. The return type is inferred so a dropped or renamed field fails

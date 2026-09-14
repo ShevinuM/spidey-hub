@@ -59,9 +59,9 @@
     site: SiteData;
     dashboard: DashboardData;
     notifications: NotificationsData;
-    /** Server-computed `process.env.PORTFOLIO_FIXTURES === "1"` (read in the
-     * page's Astro frontmatter, never client-side — see Notifications.svelte's
-     * own header comment for why).
+    /** Server-computed `process.env.PORTFOLIO_FIXTURES === "1"` (read in
+     * bootstrap/loadAll.ts's loadTerminalProps, never client-side — see
+     * Notifications.svelte's own header comment for why).
      *
      * Gates the notification system into a
      * fixed, hand-authored core with no localStorage, no per-visit

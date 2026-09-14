@@ -27,8 +27,17 @@ import RepositoriesHarness from "../../features/repositories/tests/ui/harness/Re
 import GrepHarness from "../../features/grep/tests/ui/harness/GrepHarness.svelte";
 import ShellFsHarness from "../../features/shell-fs/tests/ui/harness/ShellFsHarness.svelte";
 import { getCollection } from "astro:content";
-import { buildProfile, buildHelp, buildBoot, buildNotifications, getHelpSearch, getCmdline, getShell, getDashboard, getPersonnel, getRepositories, getGrep } from "../../common/lib/data";
+import { getCmdline } from "../../common/lib/data";
 import { getCommitsByRepo } from "../../common/lib/commits";
+import { buildProfile } from "../../features/profile/lib/data";
+import { buildHelp, getHelpSearch } from "../../features/help/lib/data";
+import { buildBoot } from "../../features/boot/lib/data";
+import { buildNotifications } from "../../features/notifications/lib/data";
+import { getShell } from "../../features/shell-fs/lib/data";
+import { getDashboard } from "../../features/dashboard/lib/data";
+import { getPersonnel } from "../../features/employment/lib/data";
+import { getRepositories } from "../../features/repositories/lib/data";
+import { getGrep } from "../../features/grep/lib/data";
 
 export async function getStaticPaths() {
   if (process.env.PORTFOLIO_FIXTURES !== "1") return [];
