@@ -1,6 +1,8 @@
-// Imports the raw @playwright/test (not the shared fixtures) so a real boot plays.
+// Uses the raw @playwright/test `test`, not the shared fixtures' wrapped one, whose
+// `context` pre-seeds the boot-skip key — these specs need a real boot to play. Only
+// the key constant comes from that shared module.
 import { expect, test, type Page } from "@playwright/test";
-import { BOOT_SEEN_STORAGE_KEY } from "../../../../boot/lib/boot-state";
+import { BOOT_SEEN_STORAGE_KEY } from "../../../../../common/tests/ui/support/fixtures";
 import { TOAST_DURATION_MS } from "../../../lib/notification-store";
 
 // Hand-mirrored from src/features/boot/content/boot.yaml, since this

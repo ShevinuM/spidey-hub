@@ -113,9 +113,6 @@ const PANE_TREE_REASON =
 const METER_REASON =
   "`common/components/Meter.svelte` reads its scale helpers from the profile feature, which owns them.";
 
-const BOOT_KEY_STRAGGLER_REASON =
-  "Imports `BOOT_SEEN_STORAGE_KEY` by reaching into boot's own lib. `common/tests/ui/support/fixtures.ts` already re-exports that constant for exactly this case — a spec needing only the boot-skip key and not the wrapped `test`/`context` — and two other feature specs already take that route, so step 5b repoints these two stragglers through the `common/` surface and deletes this entry.";
-
 const FIXTURE_GLOB_REASON =
   "`common/lib/commits.ts` composes its data source at build time: an eager `import.meta.glob` over the real `src/generated/commits/` snapshots and a second one over the repositories feature's fixture snapshots, selected by `process.env.PORTFOLIO_FIXTURES`. That is the PORTFOLIO_FIXTURES build-level composition mechanism, not feature knowledge — the module is server-only (guarded against island import) and the glob never runs in a browser. `build:fixtures`, and therefore the whole visual gate, depends on the fixture branch resolving, and moving the fixtures under `common/` or duplicating them per feature would buy no decoupling at any layer that runs. Kept deliberately and permanently.";
 
@@ -166,20 +163,6 @@ const ALLOWLIST: AllowlistEntry[] = [
     disposition: "TEMPORARY (deleted by phase 15 step 8)",
     reason: METER_REASON,
   },
-
-  // Two feature specs that never adopted the `common/` re-export route.
-  ...(
-    [
-      "src/features/notifications/tests/ui/e2e/notifications-boot.spec.ts",
-      "src/features/notifications/tests/ui/e2e/toast-drain-arm.spec.ts",
-    ] as const
-  ).map((source) => ({
-    source,
-    specifier: "../../../../boot/lib/boot-state",
-    added: "2026-09-14",
-    disposition: "TEMPORARY (deleted by phase 15 step 5b)",
-    reason: BOOT_KEY_STRAGGLER_REASON,
-  })),
 
   // The build-time fixture glob in the shared commits loader.
   {

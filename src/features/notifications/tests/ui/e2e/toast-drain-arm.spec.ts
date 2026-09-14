@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { BOOT_SEEN_STORAGE_KEY } from "../../../../boot/lib/boot-state";
+import { BOOT_SEEN_STORAGE_KEY } from "../../../../../common/tests/ui/support/fixtures";
 import { TOAST_DURATION_MS, type NotificationSeverity } from "../../../lib/notification-store";
 
 const BOOT_SEQUENCE = '[data-testid="boot-sequence"]';
