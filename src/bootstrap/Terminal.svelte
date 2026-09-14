@@ -1,28 +1,6 @@
 <script lang="ts">
-  // Single Svelte island mounted by every route page: owns the tmux
-  // client/session/window/pane model (src/common/engines/tmux/tmux.ts), the global keymap,
-  // and pushState/popstate URL sync. Astro SSRs this island with
-  // `initialView` so the first paint matches the route with no client-side
-  // flash; all window switches after that are client-side only.
-  //
-  // One `client: Client` $state object (src/common/engines/tmux/tmux.ts) drives everything
-  // — sessions own windows, windows own a pane tree, panes own a running
-  // program — rendered through <PaneTree>. `view`/`activeWindowId` below
-  // are DERIVED read models over that client, kept only because
-  // Wallpaper's opacity/blur knob and the dashboard-only hotkey gate are
-  // keyed off "which WINDOW (screen) is on-screen", a concept distinct from
-  // "which PROGRAM its pane happens to be running" since a pane can run any
-  // program (or a shell) in any window.
-  //
-  // The `client` model, every derived read model over it, and every
-  // window/pane/session/cmdline action live in `./terminalState.svelte.ts`
-  // (`TerminalState`, constructed as `core` below) — extracted during the
-  // folder+core-class relocation refactor. This file keeps: every
-  // `bind:this` ref to an always-mounted overlay/status component, the
-  // single global keydown/popstate listener registration, and the keydown
-  // dispatch order/view delegation logic itself (`handleKey`/
-  // `handlePrefixedKey`/`onPopState`) — see terminalState.svelte.ts's own
-  // header comment for why the split falls there.
+  // Single Svelte island mounted by every route page: owns the tmux client/session/window/pane
+  // model (src/common/engines/tmux/tmux.ts), the global keymap, and pushState/popstate URL sync.
   import type { CollectionEntry } from "astro:content";
   import type {
     SiteData,
@@ -134,19 +112,10 @@
    * see the template's `{#if activeSession}...{:else}...{/if}` split. */
   const SHELL_MODE: ShellMode = "pane";
 
-  /** Shared, non-reactive pane-ref registry — created ONCE here and
-   * threaded down through every recursive `<PaneTree>`/`<svelte:self>`
-   * instance as a plain prop (never `$state`; consulted imperatively on
-   * keydown, never rendered through a template — same non-reactive
-   * convention PaneTree.svelte's own per-leaf registration effect already
-   * uses). A PER-COMPONENT-INSTANCE map with a `getRef(paneId)` export
-   * called only on the ROOT instance would break once a window has split
-   * panes: the root becomes a split node, every leaf lives in a CHILD
-   * instance with its OWN map, and `getRef` on the root would only ever see
-   * whichever leaf happens to render at the root — every other pane's ref
-   * would silently vanish from delegation. One shared map threaded down as
-   * a prop sidesteps that entirely: every leaf, at any depth, registers
-   * into the exact same object. */
+  /** Shared, non-reactive pane-ref registry created once here and threaded down
+   * through every recursive `<PaneTree>`/`<svelte:self>` instance as a plain prop,
+   * since a per-instance map would only ever see whichever leaf renders at the root
+   * once a window splits. */
   const paneRefs = new Map<string, unknown>();
 
   /** The one HOST-mode Shell instance — rendered directly in the template
@@ -275,25 +244,8 @@
 
   let notificationsRef = $state<{ handleKey: (e: KeyboardEvent) => boolean; close?: () => void } | null>(null);
 
-  /** The tmux `Client` model, every derived read model over it, and every
-   * window/pane/session/cmdline action — see terminalState.svelte.ts's own
-   * header comment. Constructed with getter closures for every ref above
-   * (the core class needs to reach them — e.g. `reboot()` closes every
-   * overlay — but every ref variable itself stays declared here, per this
-   * file's own role as the hub owning every `bind:this`) and for
-   * `focusedRef()` (`runEditorExCommand`'s own delegation target).
-   *
-   * Deliberately NOT named `state` (the convention Repositories/Editor/
-   * Notifications all use for their own instance): this file declares nine
-   * `$state<{...}>(...)` refs ABOVE this line with an explicit generic type
-   * argument, and naming this instance `state` breaks svelte2tsx's rune
-   * recognition for every one of them (`pnpm check` fails with "Block-
-   * scoped variable '$state' used before its declaration" +  "Untyped
-   * function calls may not accept type arguments" on each) — confirmed by
-   * renaming back and reproducing the 22 phantom errors. Repositories/Editor/
-   * Notifications never hit this because none of them have a bare-generic
-   * `$state<T>()` call textually before their own `const state = ...`. Do
-   * not rename this back to `state`. */
+  /** Constructed here as `core`, never `state`: naming it `state` breaks svelte2tsx's
+   * rune recognition for the explicit-generic `$state<{...}>()` refs declared above it. */
   const core = new TerminalState(
     site,
     shell,
@@ -384,25 +336,9 @@
 
     if (e.key === "Escape") return true; // cancel — swallowed, no action
 
-    // While a status-bar prompt (rename/confirm) is open, it OWNS the
-    // keyboard — the only prefixed key allowed through is `]` (paste into
-    // the prompt's own registered paste target). Every other prefixed
-    // command (digit targets, n/p, d/w/0, ,/&/x/[, ?) is inert here:
-    // swallowed with zero side effects, leaving the prompt bound to
-    // whatever window it was opened for. Without this gate, `Ctrl-b
-    // <anything>` while a prompt was open would run the FULL prefix system
-    // out from under it — switching the view while a stale rename prompt
-    // for the OLD window stayed open (and committed onto the NEW one), or
-    // silently replacing a rename prompt with a kill-window confirm. This
-    // check must come before every other branch below, `]` excepted.
-    //
-    // The exact same gate extends to an open Cmdline box: while it's open
-    // the prefix system treats it like the status prompts (only Ctrl-b arm
-    // + ] allowed through) — this also means a prompt already open blocks
-    // `Ctrl-b :` from opening the box at all (checked below, after this
-    // combined gate): prompts win over opening the box. The same gate
-    // extends a second time to the `?` HelpSearch palette — same modal,
-    // same treatment.
+    // While a status-bar prompt, the Cmdline box, or the `?` HelpSearch palette is
+    // open, it owns the keyboard and only Ctrl-b arm + `]` (paste) pass through the
+    // prefix system, checked before every other branch below.
     if (statusBarRef?.isPromptActive() || cmdlineRef?.isOpen?.() || helpSearchRef?.isOpen?.()) {
       if (e.key === "]") {
         e.preventDefault();
@@ -422,18 +358,10 @@
 
     const pk = e.key.toLowerCase();
 
-    // While choose-tree is open, it owns the keyboard for its OWN
-    // vocabulary via a LATER delegation slot (ChooseTree.svelte's own
-    // `handleKey`, consulted after this whole function returns). Four
-    // PREFIXED keys are gated OFF here specifically, though: `,`/`&`/`x`
-    // (status-bar rename/kill prompts) and `:` (the Cmdline box) would each
-    // pop a competing modal UNDERNEATH the overlay — since this component's
-    // handleKey runs BEFORE StatusBar's/Cmdline's in the dispatch chain, that
-    // prompt's own y/n/Enter keystrokes could never reach it, leaving it
-    // permanently starved. Window-switch keys (digits, n/p)
-    // and detach (`d`) are deliberately NOT gated — both close the overlay
-    // for free (`closeWindowChrome()`/`detachSession()` already do), so
-    // there's nothing to starve.
+    // While choose-tree is open, its own later `handleKey` slot owns its vocabulary,
+    // but prefixed `,`/`&`/`x`/`:` are gated off here since they'd pop a competing
+    // modal underneath the overlay that could never receive its own keystrokes, while
+    // window-switch/detach keys are left ungated since those already close the overlay for free.
     const chooseTreeOpen = !!chooseTreeRef?.isOpen?.();
     if (chooseTreeOpen && (e.key === "," || e.key === "&" || pk === "x" || e.key === ":")) {
       if (e.key.length === 1) e.preventDefault();
@@ -547,7 +475,7 @@
       core.navigateDirectional(dir);
       return true;
     }
-    // Item 6.4 — prefix Space cycles the 7 preset layouts.
+    // Prefix Space cycles the 7 preset layouts.
     if (e.key === " ") {
       e.preventDefault();
       core.cycleLayout();
@@ -588,25 +516,11 @@
     // ever arrives.
     if (e.key === "Control" || e.key === "Shift" || e.key === "Alt" || e.key === "Meta") return;
 
-    // Ctrl-b Ctrl-b — tmux's own default "send-prefix" binding: while
-    // armed, a SECOND Ctrl-b disarms (like any other prefixed key) but,
-    // uniquely, does NOT stop there — it falls through to the normal
-    // view-delegation chain below as a literal keydown, which is what makes
-    // vim's own Ctrl-b (full-page-back, `isEditorScrollChord` further down)
-    // reachable at all: a bare Ctrl-b is otherwise always consumed by the
-    // prefix-arm branch first. Every OTHER prefixed key instead re-arms
-    // (see `armPrefix()`'s own re-entrant reset); this one uniquely does not.
-    //
-    // Gated behind `!isPromptActive()`: dispatching a
-    // literal Ctrl-b down the view chain while a status-bar prompt is open
-    // could still reach e.g. an open editor's own Ctrl-b page-back sitting
-    // behind the prompt — a side effect the prompt-owns-the-keyboard
-    // invariant forbids just as much as a view switch. When a prompt is
-    // active this falls into the `else` branch instead, which
-    // `handlePrefixedKey`'s own prompt-active gate (above) already makes
-    // fully inert (it disarms, returns false since Ctrl-b carries
-    // `ctrlKey: true`, and the plain re-arm check below re-arms with no
-    // other observable effect).
+    // Ctrl-b Ctrl-b is tmux's own default "send-prefix" binding: a second Ctrl-b
+    // while armed disarms like any other prefixed key but uniquely falls through
+    // as a literal keydown (making vim's own Ctrl-b page-back reachable), except
+    // while a status-bar prompt is active, when the prompt-owns-the-keyboard
+    // invariant makes it fully inert instead.
     let sendPrefixLiteral = false;
     if (core.prefixArmed) {
       if (
@@ -628,76 +542,26 @@
       // to grep/view handling below as if no prefix were armed.
     }
 
-    // Ctrl-b arms the tmux prefix — checked BEFORE grep delegation,
-    // tmux-faithful: the prefix works everywhere, including while the grep
-    // overlay is open (needed for `Ctrl-b ]`'s paste into the grep query).
-    // Only Ctrl-b itself is preventDefault-ed (global keymap rule: every
-    // other modifier combo falls through untouched). Skipped when
-    // `sendPrefixLiteral` is set above — this exact Ctrl-b keydown is the
-    // second half of a send-prefix chord, not a fresh arm.
-    //
-    // While detached, the Ctrl-b prefix is INERT — no prefix arming —
-    // `activeSession` gates the arm
-    // itself (not e.g. a check inside `handlePrefixedKey`, which would only
-    // stop DISPATCH, not arming): with no arm, `prefixArmed` simply never
-    // becomes true while detached, so a bare Ctrl-b just falls through
-    // untouched (no preventDefault either) like any other unrecognized
-    // chord — the keydown reaches the host shell's own handler next, which
-    // already refuses every ctrlKey-held combo (Shell.svelte's own
-    // `handleKey` guard), so it's a true no-op, not merely "swallowed". */
+    // Ctrl-b arms the tmux prefix, checked before grep delegation so the prefix
+    // works even while the grep overlay is open (needed for `Ctrl-b ]` paste),
+    // but is inert while detached since `activeSession` gates the arm itself
+    // rather than dispatch.
     if (!sendPrefixLiteral && core.activeSession && e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "b") {
       e.preventDefault();
       core.armPrefix();
       return;
     }
 
-    // Choose-tree's own handleKey slot (documented keyboard-slot choice):
-    // right after copy-mode AND after
-    // the tmux prefix system has had its FULL turn (both dispatch of an
-    // armed prefix above, AND arming a bare Ctrl-b immediately above this),
-    // but before Cmdline/StatusBar/every view ref. Placing this AFTER the
-    // arm-check (not merely after the dispatch block) is load-bearing: a
-    // bare Ctrl-b keydown carries `ctrlKey: true`, which ChooseTree's own
-    // `handleKey` swallows unconditionally (it owns the keyboard while
-    // open) — if this check ran any earlier, a bare Ctrl-b could never even
-    // ARM while choose-tree is open, making `Ctrl-b d` (detach, which must
-    // still work) unreachable. With the slot here, the arm
-    // above already returned by the time a plain Ctrl-b would reach this
-    // line, and the FOLLOWING prefixed key still dispatches through
-    // `handlePrefixedKey` first (same "if (prefixArmed)" block above) before
-    // ever reaching choose-tree — so `Ctrl-b d` detaches (closing the
-    // overlay via `detachSession()`'s own `closeWindowChrome()` call) and
-    // `Ctrl-b <digit>/n/p` switch windows (same free close), exactly as
-    // ChooseTree.svelte's own header comment describes. Every UNPREFIXED
-    // key (bare j/k/h/l/Enter/x/q/Esc — this component's own vocabulary)
-    // reaches it here since the prefix system above is a no-op for those.
+    // Choose-tree's own handleKey slot sits right after the prefix system has had
+    // its full turn (both dispatch and arm) so a bare Ctrl-b can still arm and
+    // `Ctrl-b d`/`Ctrl-b <digit>/n/p` still detach or switch windows while
+    // choose-tree is open, closing the overlay for free.
     if (chooseTreeRef?.handleKey(e)) return;
 
-    // A status-line prompt (rename/confirm) OWNS
-    // the keyboard once it's open — but ONLY AFTER the prefix system above
-    // has had its turn. This is "prefix precedence" extended to prompts
-    // (mirroring the same rule this file already applies to GrepOverlay):
-    // a prompt-open Ctrl-b must still be able to ARM (the two checks
-    // above), and the very next prefixed key (e.g. `]`, which
-    // pasteFromBuffer() below routes into the prompt's own registered
-    // paste target) must still be able to DISPATCH — neither of which
-    // could happen if this check ran first and swallowed both keydowns
-    // before the prefix system ever saw them (that ordering bug: `Ctrl-b
-    // ]` would silently type a literal `]` into the rename box instead of
-    // pasting, because a top-of-function placement here would consume the
-    // Ctrl-b that was supposed to arm it). Every OTHER key — plain typing,
-    // Enter, Backspace, Escape — never matches the prefix system above (it
-    // only reacts to an armed prefix or a bare Ctrl-b) and so still
-    // reaches the prompt exactly as before.
-    // The Cmdline box, once open, is checked at the top alongside
-    // boot/copy-mode/status prompts — same relative position as
-    // `statusBarRef.handleKey` immediately below (after the
-    // prefix system has had its turn, for the same "Ctrl-b ] must still
-    // reach it" reason spelled out in that check's own comment), and
-    // mutually exclusive with it in practice: opening the box requires no
-    // prompt to be active (see the fallback opener further down), and
-    // opening a prompt while the box is open is impossible today (nothing
-    // currently starts a rename/kill confirm from inside an open Cmdline).
+    // A status-line prompt or the Cmdline box owns the keyboard once open, but only
+    // after the prefix system above has had its turn, so an open prompt's Ctrl-b can
+    // still arm and the following `]` can still dispatch into its paste target instead
+    // of typing a literal `]`.
     if (cmdlineRef?.handleKey(e)) return;
 
     // The `?` HelpSearch palette gets
@@ -751,25 +615,10 @@
     // (above) runs ahead of it.
     const editorIsOpen = !!activeRef()?.isEditorOpen?.();
 
-    // Focused-shell panes consume printable keys/Enter/Backspace/arrows
-    // BEFORE grep's `/` opener — a shell pane gets the exact same first-refusal treatment an
-    // open vim editor already does (both are "this pane owns its own text
-    // input right now"), so `/`/`:`/`?` all type into the shell instead of
-    // opening grep/Cmdline/HelpSearch. `editorIsOpen` itself stays scoped to
-    // "an embedded vim Editor is open" for the ex-mode/`?`-exclusion checks
-    // further down — a shell pane is never in "ex mode", it just never
-    // reaches those checks at all (Shell.svelte's handleKey claims every
-    // printable character first).
-    //
-    // Keyboard belongs to the host shell while detached — `!activeSession`
-    // extends the exact same
-    // greedy treatment to the host shell instance, which `activeRef()`
-    // above already resolves to in that case. This is also what makes the
-    // tmux prefix's own inertness complete: with the prefix never arming
-    // (see `armPrefix()`'s gate) AND every other key claimed here by the
-    // host shell, nothing below this line — grep/Cmdline/HelpSearch's own
-    // fallback openers, the dashboard hotkeys — is ever reachable while
-    // detached.
+    // Focused-shell panes (and the host shell while detached, via `!activeSession`)
+    // consume printable keys/Enter/Backspace/arrows before grep's `/` opener, the same
+    // first-refusal treatment an open vim editor gets, which is also what makes the
+    // tmux prefix's own inertness while detached complete.
     const paneIsGreedy = editorIsOpen || core.activeProgram === "shell" || !core.activeSession;
 
     if (paneIsGreedy && tryFocusedRef()) {
@@ -795,20 +644,9 @@
       return;
     }
 
-    // Fallback opener: a bare `:` that NOTHING above already consumed
-    // opens the site-wide Cmdline box. Placed here — after every
-    // text-input-owning consumer above has had its turn (grep's own query,
-    // an open editor's `/` search, Personnel's filter mode, the status-bar
-    // rename prompt) — for free: each of those already swallows every key
-    // (including `:`) while it's active, so this line is simply never
-    // reached while any of them own the keyboard, which is exactly "`:`
-    // stays literal inside grep query/personnel filter/rename prompt" with
-    // no extra core probes needed. `editorIsOpen` (computed above) picks
-    // context (a) vs (b):
-    // ex mode when a file editor is open (even though it no longer
-    // intercepts `:` itself — see Editor.svelte's own comment on that),
-    // site mode everywhere else. Shift+":" (US-layout Shift+;) must still
-    // open the box, so only meta/ctrl/alt are excluded here.
+    // Fallback opener: a bare `:` nothing above already consumed opens the
+    // site-wide Cmdline box, in ex mode when a file editor is open and site
+    // mode everywhere else, with only meta/ctrl/alt excluded so Shift+":" still opens it.
     if (!e.metaKey && !e.ctrlKey && !e.altKey && e.key === ":") {
       e.preventDefault();
       if (editorIsOpen) cmdlineRef?.openEx();
@@ -816,20 +654,10 @@
       return;
     }
 
-    // A bare `?` that NOTHING above already consumed opens the `?`
-    // HelpSearch palette — mirrors the `:` fallback opener immediately
-    // above in every way (same reasoning for why grep/cmdline/a status
-    // prompt/copy-mode/boot are all already guaranteed inactive by the
-    // time control reaches here — each of those consumes `?` itself while
-    // active, exactly like `:`), EXCEPT one: unlike `:` (which still opens
-    // Cmdline in "ex" mode while a file editor is open), `?` must NOT open
-    // anything while an editor is open ("editor open (any mode)" is a full
-    // exclusion, not a mode switch) — Editor.svelte's own handleKey already
-    // returns `false` for an unrecognized `?` (it's neither a vim motion
-    // nor a mutating key), so without this explicit `!editorIsOpen` guard
-    // the palette would incorrectly pop up over an open buffer. Shift+"/"
-    // (US-layout Shift+/) must still open the palette, so only meta/ctrl/
-    // alt are excluded here, same as `:`.
+    // A bare `?` nothing above already consumed opens the HelpSearch palette,
+    // mirroring the `:` fallback opener above except that it's fully excluded
+    // (not just mode-switched) while a file editor is open, since Editor.svelte's
+    // own handleKey already returns false for an unrecognized `?`.
     if (!e.metaKey && !e.ctrlKey && !e.altKey && e.key === "?" && !editorIsOpen) {
       e.preventDefault();
       helpSearchRef?.openPalette();
