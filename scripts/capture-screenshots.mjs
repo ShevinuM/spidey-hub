@@ -3,18 +3,17 @@
 // content, and the real live-generated contribution grid, not the
 // deterministic fixture content the visual-regression goldens use.
 //
-// Deliberately standalone rather than reusing
-// tests/visual/pipeline.mjs's `captureState()`: that pipeline's whole job is
-// PIXEL-IDENTICAL determinism for goldens — it installs a fake clock frozen
-// at a fixed instant, pre-seeds the toast pick, and pre-sets the boot-skip
-// flag before every capture. All three of those are exactly what this
-// script does NOT want (live clock, live toast pool, a real mid-boot
-// frame), so forcing reuse would mean immediately overriding most of what
-// captureState sets up. What IS reused: the proven keystroke sequences from
-// tests/visual/recipes.ts (`RecipeAction[]`) — the same sequences the visual
-// suite already verified reach each named state — so this script can't
-// silently drift from the app's real keybindings. See PLAN.md Phase I1 for
-// the sanctioned-deviation note.
+// Deliberately standalone rather than reusing the visual-regression
+// pipeline's `captureState()`: that pipeline's whole job is PIXEL-IDENTICAL
+// determinism for goldens — it installs a fake clock frozen at a fixed
+// instant, pre-seeds the toast pick, and pre-sets the boot-skip flag before
+// every capture. All three of those are exactly what this script does NOT
+// want (live clock, live toast pool, a real mid-boot frame), so forcing
+// reuse would mean immediately overriding most of what captureState sets
+// up. What IS reused: the proven keystroke sequences from recipes.ts
+// (`RecipeAction[]`) — the same sequences the visual suite already verified
+// reach each named state — so this script can't silently drift from the
+// app's real keybindings.
 import { chromium } from "@playwright/test";
 import { execSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
@@ -27,9 +26,9 @@ import { pickPort } from "./lib/free-port.ts";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const OUT_DIR = join(ROOT, "docs/screenshots");
-// PLAN.md Phase 7.4: was a hardcoded `4323`, which silently collided with
-// a running `astro dev` (Astro falls back to 4322/4323/... when 4321 is
-// taken). Resolved dynamically in main() via pickPort() instead.
+// 4323 sits inside Astro's own dev-server fallback sequence (4321, 4322,
+// 4323, ...), so a running `astro dev` can already be bound to it —
+// pickPort() in main() resolves this to an actually-free port before use.
 const PREFERRED_PORT = 4323;
 let PORT;
 const VIEWPORT = { width: 1512, height: 945 };

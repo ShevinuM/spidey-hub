@@ -1,13 +1,11 @@
-// Claude Design mirror generator (PLAN.md Phase 9.1/9.1b) — serializes each
-// built page of the app into a self-contained `.dc.html` snapshot matching
-// the format observed in `UI-Mockups/builds-page-design-review/Dashboard.dc.html`
-// (gitignored, present on disk only — read it before changing this file).
+// Claude Design mirror generator — serializes each
+// built page of the app into a self-contained `.dc.html` snapshot.
 //
 // Sibling to scripts/capture-screenshots.mjs: reuses the same
 // build+serveStatic+pickPort+boot-skip infrastructure. One deliberate
 // deviation from that script's approach: capture-screenshots.mjs reaches
-// each state by replaying tests/visual/recipes.ts keystrokes from the
-// dashboard, because a documentation screenshot wants specific *non-default*
+// each state by replaying recipe keystrokes from the dashboard, because a
+// documentation screenshot wants specific *non-default*
 // states (a selected repo row, an opened editor). A design mirror wants each
 // ROUTE's own default SSR state instead — and every one of the six routes
 // below is already its own Astro page (src/pages/*.astro, each with its own
@@ -22,19 +20,17 @@
 // build-hashed `/_astro/*.woff2`/`.woff` JetBrains Mono subset files Astro's
 // font optimizer emits (NOT all of which it inlines itself — some subsets
 // ship as external hashed files the CSS `@font-face` still points at) — gets
-// inlined as a base64 data: URI. Discovered empirically: an early version
-// of this script only inlined the known `public/` files and the Phase 9.1b
-// gate caught 404s on 6 `/_astro/jetbrains-mono-latin-*` files the browser
-// actually requested. Rather than hand-list every such build artifact, the
-// inliner below fetches whatever the live server actually returns for any
-// remaining `/`-absolute `url(...)`/`src="..."` reference and inlines that —
-// correct by construction, not by an enumerated exception list.
+// inlined as a base64 data: URI. Rather than hand-list every such build
+// artifact, the inliner below fetches whatever the live server actually
+// returns for any remaining `/`-absolute `url(...)`/`src="..."` reference
+// and inlines that — correct by construction, not by an enumerated
+// exception list.
 //
 // The one deliberate exception is `public/assets/retina-v.png` (2MB, used
 // by Profile) — emitted as a sibling binary file under `assets/` next to the
-// generated .dc.html and referenced by a relative path instead, per
-// PLAN.md Phase 9's orchestrator decision. `public/assets/resume.pdf` is
-// left as a relative link: it's an `<a href download>`, never fetched at
+// generated .dc.html and referenced by a relative path instead.
+// `public/assets/resume.pdf` is left as a relative link: it's an
+// `<a href download>`, never fetched at
 // render time, so it doesn't violate self-containment the way an
 // auto-loaded asset would — clicking it from a standalone file just won't
 // resolve, which is out of scope for this script.
@@ -57,10 +53,9 @@ const VIEWPORT = { width: 1512, height: 945 };
 /**
  * Six routes, each its own Astro page (src/pages/<x>.astro) with its own
  * `initialView` — a direct `goto` to `path` lands on that page's default
- * state. `extraWaitMs` on Dashboard mirrors capture-screenshots.mjs's own
- * comment: the seeded toast pair auto-dismisses at 4000ms on a live clock,
- * so waiting past that avoids randomly capturing a mid-dismiss toast — true
- * for both the real and fixture build, since neither pins the clock here
+ * state. `extraWaitMs` on Dashboard exists for the same toast-dismiss
+ * reason documented on capture-screenshots.mjs's "dashboard" shot — true
+ * for both the real and fixture build here, since neither pins the clock
  * (only the visual-regression pipeline does that).
  */
 const ROUTES = [
@@ -181,9 +176,7 @@ ${bodyInner}
 
 /**
  * Generates one build's mirror set into `ds-bundle/<outDir>/`.
- * `onlyRoute`, when set, restricts generation to the single named route —
- * used by the Phase 9.1b hard gate to prove Dashboard end to end before
- * spending time on the other five.
+ * `onlyRoute`, when set, restricts generation to the single named route.
  */
 async function generateBuild(buildKey, { onlyRoute } = {}) {
   const { buildCmd, outDir } = BUILDS[buildKey];

@@ -54,7 +54,7 @@ import YAML from "yaml";
 import { tokenizeFile, PaletteBuilder } from "../src/common/lib/highlight.ts";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const SIZE_CAP = 200 * 1024; // 200KB
+const SIZE_CAP = 200 * 1024;
 
 // ---------------------------------------------------------------------------
 // Text-file detection (shared by the repo indexer and the grep indexer)

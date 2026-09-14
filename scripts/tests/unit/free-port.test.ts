@@ -1,6 +1,3 @@
-// Unit tests for scripts/lib/free-port.ts — PLAN.md Phase 7.4's fix for
-// scripts/capture-screenshots.mjs's hardcoded `PORT = 4323`, which used to
-// collide silently with a running `astro dev` fallback port.
 import { expect, test } from "vitest";
 import { createServer, type AddressInfo } from "node:net";
 import { pickPort } from "../../lib/free-port";

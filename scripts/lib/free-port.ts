@@ -1,15 +1,9 @@
 // Pure Node port-picking helper — no Astro/Svelte/DOM import, so
-// scripts/tests/unit/free-port.test.ts can exercise it directly under `node --test`,
-// same "DOM-free module a unit test imports" convention `src/lib/*.ts`
-// follows (docs/agent-checklist.md's project-structure section), just rooted
-// under scripts/ instead since this is build-tooling logic, not app logic.
+// scripts/tests/unit/free-port.test.ts can import it directly.
 //
-// PLAN.md Phase 7.4 / iteration-6 post-mortem "standing hazards":
-// scripts/capture-screenshots.mjs used to hardcode PORT = 4323, which
-// silently collided with a running `astro dev` (Astro falls back to 4322,
-// 4323, ... when 4321 is taken). `pickPort` replaces that hardcoded
-// constant with a dynamic pick that prefers the given port but never fails
-// just because something else already has it.
+// Ports must be probed, not hardcoded: pickPort's caller may share a
+// machine with an already-running dev server bound to the same preferred
+// port.
 import { createServer } from "node:net";
 
 export interface PickedPort {
@@ -30,8 +24,8 @@ export interface PickedPort {
  * between the probe closing and the real caller binding the same port
  * where another process could grab it first (the same inherent race every
  * "find a free port" helper has, `get-port` included) — acceptable here
- * since this only gates a local documentation-screenshot script, not a
- * security boundary.
+ * since this only gates local dev-tooling scripts (screenshot capture,
+ * design-mirror generation), not a security boundary.
  */
 export function pickPort(preferred: number): Promise<PickedPort> {
   return new Promise((resolve, reject) => {
