@@ -12,8 +12,9 @@ export interface CommandDef {
 export interface ParsedInput {
   /** The first whitespace-delimited token, kept verbatim (not lowercased) so callers needing case-insensitive matching do that themselves. */
   name: string;
-  /** Everything after the first run of whitespace, trimmed. Empty string
-   * when there's no argument. */
+  /** Everything after the first run of whitespace, trimmed.
+   *
+   * Empty string when there's no argument. */
   args: string;
 }
 

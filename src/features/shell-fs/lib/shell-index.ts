@@ -1,6 +1,7 @@
 // Impure fetch+cache boundary for the shell's generated indexes, so
 // `src/common/lib/shell.ts` stays a pure, zero-fetch module and every mounted
 // shell pane shares ONE warm cache instead of re-fetching per instance.
+//
 // Module-level promises, not component state: the first caller triggers
 // the fetch, every later caller reuses the same settled promise for the
 // lifetime of the page.

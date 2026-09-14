@@ -1,5 +1,7 @@
 // Unit tests for boot-state.ts's per-tab "has boot played this session"
-// flag. Pure Vitest, no DOM: sessionStorage is a real Node global (unlike
+// flag.
+//
+// Pure Vitest, no DOM: sessionStorage is a real Node global (unlike
 // localStorage), so each test installs its own explicit stub via
 // `globalThis` for determinism rather than relying on ambient Node state.
 import { afterEach, expect, test } from "vitest";
@@ -20,7 +22,7 @@ afterEach(() => {
 });
 
 /** Minimal working `sessionStorage` stub — same shape as
- * notificationStore.test.ts's `withLocalStorage` stub. */
+ * notification-store.test.ts's `withLocalStorage` stub. */
 function installWorkingSessionStorage(): Map<string, string> {
   const store = new Map<string, string>();
   const stub = {

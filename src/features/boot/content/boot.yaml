@@ -1,9 +1,12 @@
-# E.D.I.T.H boot sequence copy + config. Geometry (ring sizes, tick-mark
-# positions/rotations, keyframe timings/delays) stays inline in
-# BootSequence.svelte, matching Wallpaper.svelte's convention — only textual
-# content and config knobs (bootMs/coreTint/showBootLog) live here. The boot
-# log's own text (label/val) lives in content/log.md; `log:` below keeps
-# only each row's timing/tag, joined by `id`.
+# E.D.I.T.H boot sequence copy + config.
+#
+# Geometry (ring sizes, tick-mark positions/rotations, keyframe
+# timings/delays) stays inline in BootSequence.svelte, matching
+# Wallpaper.svelte's convention — only textual content and config knobs
+# (bootMs/coreTint/showBootLog) live here.
+#
+# The boot log's own text (label/val) lives in content/log.md; `log:` below
+# keeps only each row's timing/tag, joined by `id`.
 
 bootMs: 4600
 # "cyan" is the only variant actually rendered; `tints` below keeps all
@@ -42,8 +45,9 @@ compass:
 
 # The `┌─…─┐`/`└─…─┘` border rows are stored verbatim; each row's `prefix`
 # is the literal text up to (not including) the 16-char padded value, so
-# the box's fixed-width alignment stays exact. `threshold`/`onlineText`
-# feed lib/boot.ts's statusRowValue().
+# the box's fixed-width alignment stays exact.
+#
+# `threshold`/`onlineText` feed lib/boot.ts's statusRowValue().
 statusBox:
   top: "┌─ e.d.i.t.h ───────────────────────┐"
   bottom: "└───────────────────────────────────┘"
@@ -67,10 +71,12 @@ statusBox:
 
 bootLogTitle: "── boot log ──────────────────"
 
-# Boot log timing/tag config, in display order. `threshold` is the 0..1
-# progress fraction at which a row becomes visible; `tag` picks its
-# glyph/color. Row text (label/val) lives in content/log.md, matched by
-# `id`.
+# Boot log timing/tag config, in display order.
+#
+# `threshold` is the 0..1 progress fraction at which a row becomes visible;
+# `tag` picks its glyph/color.
+#
+# Row text (label/val) lives in content/log.md, matched by `id`.
 log:
   - id: mounting-shell
     threshold: 0.02
@@ -110,6 +116,7 @@ log:
     tag: done
 
 # Full palette per tint; only `tints[coreTint]` above is ever rendered.
+#
 # Fields map onto the core-readout circle's inline styles: border/glowStart/
 # glowEnd build the radial-gradient, shadowInset/shadowOuter the box-shadow,
 # labelColor/pctColor/phaseColor the caption/percentage/phase text.

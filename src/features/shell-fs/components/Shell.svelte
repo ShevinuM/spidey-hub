@@ -2,7 +2,9 @@
   // In-window shell — one instance per pane, plus the detached HOST
   // instance (`mode: "host"`, fullscreen, no status bar) that drives `tmux
   // new`/`attach`/`open <view>` via `onAttach`/`onCreateAndAttach`/
-  // `onAttachView` below. Owns the stateful/effectful half of the split
+  // `onAttachView` below.
+  //
+  // Owns the stateful/effectful half of the split
   // with `src/common/lib/shell.ts`: keydown handling, lazy index warm-up
   // (`lib/shell-index.ts`), scroll-to-bottom, and dispatching a resolved
   // `ShellEffect` to Terminal.svelte — shell.ts's own `runCommand` never
@@ -65,7 +67,9 @@
     /** Whether THIS pane is the window's focused one — gates
      * `data-copy-source` and the `Ctrl-b ]` paste-target registration below
      * so only the focused pane's paste-target id (`shell:${pane.id}`) stays
-     * active when multiple shell panes are mounted. Defaults to `true`. */
+     * active when multiple shell panes are mounted.
+     *
+     * Defaults to `true`. */
     isFocused?: boolean;
   }
 
@@ -205,8 +209,8 @@
     return !!editorFile;
   }
 
-  /** Forwards to the embedded Editor's own `runExCommand` — Terminal.
-   * svelte's site-wide Cmdline box calls this when its ex-mode Enter fires
+  /** Forwards to the embedded Editor's own `runExCommand` —
+   * Terminal.svelte's site-wide Cmdline box calls this when its ex-mode Enter fires
    * (`:q` here drops back to this shell, never killing the pane). */
   export function runEditorExCommand(cmd: string): { recognized: boolean; error?: string } {
     if (!editorFile || !editorRef) return { recognized: false };
@@ -263,7 +267,9 @@
 
   /** Consumes printable keys/Enter/Backspace/arrows before grep's `/`
    * opener and the bare `:`/`?` openers — those characters type into the
-   * shell instead. Modifier chords fall through untouched. */
+   * shell instead.
+   *
+   * Modifier chords fall through untouched. */
   export function handleKey(e: KeyboardEvent): boolean {
     if (editorFile) {
       return editorRef ? editorRef.handleKey(e) : false;

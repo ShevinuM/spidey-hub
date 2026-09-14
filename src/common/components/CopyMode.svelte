@@ -1,7 +1,9 @@
 <script lang="ts">
   // tmux copy-mode overlay (`Ctrl-b [`) — one instance, always mounted in
-  // Terminal.svelte, reused across every view. Each view marks its own
-  // "primary pane" with a bare `data-copy-source` attribute (Editor.svelte,
+  // Terminal.svelte, reused across every view.
+  //
+  // Each view marks its own "primary pane" with a bare `data-copy-source`
+  // attribute (Editor.svelte,
   // Repositories.svelte, EmploymentRecords.svelte, Profile.svelte,
   // Wallpaper.svelte's HUD, HelpView.svelte, Dashboard.svelte), and exactly
   // one such element exists in the DOM at a time, so an untargeted
@@ -12,7 +14,9 @@
   // moveVertical/normalizeCharRange/extractCharRange) applied to captured
   // plain text instead of a live buffer, with a smaller feature set:
   // h/l/j/k/gg/G/Ctrl-d/u navigation, `v` charwise selection only, `y`/Enter
-  // yank-and-exit. Bare `q` is a valid exit key here — the one place it's
+  // yank-and-exit.
+  //
+  // Bare `q` is a valid exit key here — the one place it's
   // allowed despite being banned elsewhere as a navigation key.
   import {
     clampCursor,

@@ -46,11 +46,15 @@ import { downloadResume } from "../common/lib/resume";
  * .ts module can't import a named type from a .svelte file under `tsc`
  * (only svelte-check's virtual modules allow that, and this file is also
  * type-checked by plain tsc via `pnpm check`), so this is kept in sync by
- * shape rather than by import. Cmdline.svelte remains the source of truth. */
+ * shape rather than by import.
+ *
+ * Cmdline.svelte remains the source of truth. */
 type CmdlineMode = "site" | "ex" | "tmux";
 
 /** Mirrors Terminal.svelte's own `ProgramRef` interface structurally, same
- * reason as `CmdlineMode` above. Terminal.svelte remains the source of
+ * reason as `CmdlineMode` above.
+ *
+ * Terminal.svelte remains the source of
  * truth. */
 interface ProgramRef {
   handleKey?: (e: KeyboardEvent) => boolean;
@@ -62,7 +66,9 @@ interface ProgramRef {
  * Terminal.svelte declares for the given always-mounted overlay/status
  * component — duplicated structurally (same reasoning as `CmdlineMode`
  * above) so this file's getter-closure constructor params can be typed
- * without importing from a `.svelte` file. Terminal.svelte's own inline
+ * without importing from a `.svelte` file.
+ *
+ * Terminal.svelte's own inline
  * types remain the source of truth; TypeScript's structural typing accepts
  * Terminal's `$state<{...}> | null` ref variables wherever these are
  * expected. */
@@ -115,9 +121,12 @@ interface NotificationsRef {
 }
 
 /** The initial factory session's stable identity — a synthetic internal
- * id, distinct from its user-visible NAME ("10.42.7.13"). URL sync
+ * id, distinct from its user-visible NAME ("10.42.7.13").
+ *
+ * URL sync
  * (`syncUrl` below) only applies while this specific session is attached;
  * other sessions created via `tmux new` don't have their own routes.
+ *
  * `DEFAULT_SESSION_NAME` is also re-exported for Terminal.svelte's own
  * template (`defaultSessionName` prop threaded to PaneTree/Shell) — see
  * that file's own import of it. */
@@ -150,7 +159,9 @@ export class TerminalState {
     // page SSRs Terminal exactly once with the view matching its own URL, and
     // every subsequent view change is client-side (setView/popstate below) —
     // `initialView` itself never changes again for the lifetime of this
-    // island, so there is nothing to re-sync. (svelte-autofixer flags this
+    // island, so there is nothing to re-sync.
+    //
+    // (svelte-autofixer flags this
     // shape as `state_referenced_locally` on any `$state(prop)` seed; that is
     // the documented pattern for uncontrolled initial values and is
     // intentional here.)
@@ -172,11 +183,13 @@ export class TerminalState {
 
   /** `undefined` once detached — no
    * session owns the keyboard, the host shell does instead (see
-   * `Client.attachedSessionId`'s own comment). Every function below that
+   * `Client.attachedSessionId`'s own comment).
+   *
+   * Every function below that
    * assumes this is defined is only ever reachable from a UI path that
    * itself only exists while attached (PaneTree/StatusBar aren't even
-   * mounted while detached, and the tmux prefix is inert then too — see
-   * `armPrefix()`'s own gate) — EXCEPT `switchActiveWindow` (popstate can
+   * mounted while detached, and the tmux prefix is inert then too) —
+   * EXCEPT `switchActiveWindow` (popstate can
    * fire regardless of attachment), which guards explicitly. */
   activeSession = $derived.by(() => activeSessionOf(this.client));
   activeWindow = $derived(this.activeSession ? activeWindowOf(this.activeSession) : undefined);
@@ -191,10 +204,13 @@ export class TerminalState {
 
   /** Live pane count across every window of the active session — the
    * dashboard footer's "synced N/N panes" line reads this instead of a
-   * hardcoded number. 0 while detached (no session owns any panes then). */
+   * hardcoded number.
+   *
+   * 0 while detached (no session owns any panes then). */
   totalPaneCount = $derived(this.activeSession ? this.activeSession.windows.reduce((sum, w) => sum + allPanes(w.root).length, 0) : 0);
 
   /** StatusBar's real tmux `-` flag — the session's previously-active window.
+   *
    * Undefined on a fresh session (activeWindowIdx === lastWindowIdx) or
    * while detached, same as real tmux showing no `-` until a switch has
    * actually happened. */
@@ -206,22 +222,30 @@ export class TerminalState {
 
   /** "Which WINDOW (screen) is on-screen" — keyed off the window's own
    * stable id, NOT the program its pane currently runs, since a pane can
-   * run any program in any window. Drives Wallpaper's opacity/blur knob and the
-   * dashboard-only hotkey gate below. `undefined` while detached — there
+   * run any program in any window.
+   *
+   * Drives Wallpaper's opacity/blur knob and the
+   * dashboard-only hotkey gate below.
+   *
+   * `undefined` while detached — there
    * is no "on-screen window" then. */
   view = $derived(this.activeWindow ? windowIdToView(this.activeWindow.id) : undefined);
 
   /** Status bar's own window list, re-derived from the live model on every
    * change — same shape (`{number, id, name}`) StatusBar.svelte has always
    * taken, just sourced from `client` instead of a separate `windows` $state
-   * array. Empty while detached (StatusBar isn't even mounted then — see
+   * array.
+   *
+   * Empty while detached (StatusBar isn't even mounted then — see
    * the template). */
   statusWindows = $derived(this.activeSession ? this.activeSession.windows.map((w) => ({ number: w.number, id: w.id, name: w.name })) : []);
 
   /** Window id (a `ProgramName`) -> its live tmux window number — the
    * dashboard menu's hotkey column reads this so it always shows the real
    * `C-b N` binding for a view instead of a fixed table, even if window
-   * numbers ever shift (a window closing, a future reorder). Empty while
+   * numbers ever shift (a window closing, a future reorder).
+   *
+   * Empty while
    * detached, same as `statusWindows` above. */
   windowNumberById = $derived.by((): Record<string, number> => {
     const m: Record<string, number> = {};
@@ -231,6 +255,7 @@ export class TerminalState {
 
   /** Shell.svelte's own `session` prop (`tmux ls`'s anchor) — every
    * IN-PANE shell's anchor session (its own).
+   *
    * Falls back to a harmless zero-value shape while detached (unreachable
    * in practice — no pane is mounted then — kept only so this derived never
    * throws). */
@@ -244,7 +269,9 @@ export class TerminalState {
    * currently knows about, in the exact shape src/common/lib/shell.ts's
    * `RunContext.sessions` wants — computed fresh on every keystroke/render
    * so `tmux ls`/`new`/`a`/`attach`'s validation always sees the live
-   * roster. Threaded to BOTH pane-mode Shell instances (via PaneTree) and
+   * roster.
+   *
+   * Threaded to BOTH pane-mode Shell instances (via PaneTree) and
    * the host-mode one below — `tmux ls` works everywhere. */
   sessionsRoster = $derived.by(() =>
     this.client.sessions.map(
@@ -261,7 +288,9 @@ export class TerminalState {
   );
 
   /** The detached HOST shell's own `session` prop (neofetch's uptime
-   * anchor only — see shell.ts's `RunContext.session` doc comment). Not
+   * anchor only — see shell.ts's `RunContext.session` doc comment).
+   *
+   * Not
    * "the attached session" (there isn't one while detached) — just a
    * stable reference point so neofetch has SOME `createdAt` to compute
    * against; falls back to the page's own load epoch if every session has
@@ -277,7 +306,9 @@ export class TerminalState {
   /** Digit/`?` prefix targets, recomputed from the live window list and
    * keyed off each window's own `number` field, so a killed window's digit
    * stops doing anything and a window `createWindow()` appends later gets
-   * a digit slot for free. `0` has its own dedicated handling elsewhere
+   * a digit slot for free.
+   *
+   * `0` has its own dedicated handling elsewhere
    * and is deliberately absent here; empty while detached, when the prefix
    * is inert anyway. */
   prefixTargets = $derived.by((): Partial<Record<string, string>> => {
@@ -308,6 +339,7 @@ export class TerminalState {
   /** pushState only when the ACTIVE PANE's program is canonical (not
    * "shell") AND the default session is attached — a shelled-in pane
    * freezes the URL wherever it already was.
+   *
    * Idempotent: a no-op when the route already matches (true for every
    * within-session switch that lands back on a window it started on, and
    * for popstate, which has already updated `location.pathname` itself). */
@@ -328,6 +360,7 @@ export class TerminalState {
    * `select-window`, popstate) — closes chrome first (unconditionally, even
    * if `pickIndex` turns out to be a no-op), then applies the index
    * `pickIndex` computes from the CURRENT session, then syncs the URL.
+   *
    * `selectWindowIndex` itself already no-ops for an out-of-range or
    * already-active index, so this never needs its own guard for either. */
   switchActiveWindow(pickIndex: (session: Session) => number): void {
@@ -336,7 +369,9 @@ export class TerminalState {
     // Detached: popstate is the one caller reachable
     // regardless of attachment (a browser back/forward can fire after
     // `Ctrl-b d`) — every OTHER caller (status-bar click, prefix nav,
-    // dashboard hotkeys) only exists while attached. No session to switch
+    // dashboard hotkeys) only exists while attached.
+    //
+    // No session to switch
     // within, so this is a no-op — "maps route -> session 0 window if
     // present, else no-op" already covers "no session at all" the same way.
     if (!session) return;
@@ -351,7 +386,9 @@ export class TerminalState {
   /** Every one of the six windows' own id equals its canonical program name
    * in the default session (see tmux.ts's `FactorySeed` comment) — so
    * "switch to the window that runs program X" is just
-   * `switchToWindowById(program)`. Used by the dashboard menu, EmploymentRecords's
+   * `switchToWindowById(program)`.
+   *
+   * Used by the dashboard menu, EmploymentRecords's
    * "onDashboard", GrepOverlay's Enter-routing, and Cmdline/HelpSearch's
    * `view:*` actions — every one of them a WINDOW switch, never a program
    * launch into the current pane. */
@@ -398,7 +435,9 @@ export class TerminalState {
   };
 
   // ---------------------------------------------------------------------
-  // tmux prefix. Ctrl-b arms a 2s window during which the very next key is
+  // tmux prefix.
+  //
+  // Ctrl-b arms a 2s window during which the very next key is
   // a window-switch command instead of reaching any view.
   // ---------------------------------------------------------------------
 
@@ -420,9 +459,11 @@ export class TerminalState {
 
   /** The active window's own display name, for the rename prompt's
    * prefilled text and the kill-window/kill-pane confirm templates'
-   * `{name}` substitution. Only ever called while attached — the rename/
+   * `{name}` substitution.
+   *
+   * Only ever called while attached — the rename/
    * kill-window prompts it feeds are only reachable via the tmux prefix
-   * (inert while detached, see `armPrefix()`'s own gate) or a PaneTree/
+   * (inert while detached) or a PaneTree/
    * StatusBar interaction (neither is even mounted while detached). */
   currentWindowName(): string {
     return this.activeWindow!.name;
@@ -431,7 +472,9 @@ export class TerminalState {
   /** Appends one system line (a `[detached (from session …)]`, `[exited]`,
    * or `logout`) directly to the HOST shell's own persistent buffer
    * (`Client.hostPane`'s own persistent buffer, survives re-attach/detach
-   * cycles). These are never
+   * cycles).
+   *
+   * These are never
    * typed commands, so they never go through shell.ts's own `runCommand` —
    * this is the one place Terminal.svelte writes into a shell buffer
    * directly. */
@@ -457,7 +500,9 @@ export class TerminalState {
    * own `launchProgram`), never a window switch, and syncs the URL only
    * when the launch happened in the currently ACTIVE pane, since a launch
    * in a non-focused pane (splits) must not push a route for content that
-   * isn't on screen. `program` arrives pre-validated by shell.ts's own
+   * isn't on screen.
+   *
+   * `program` arrives pre-validated by shell.ts's own
    * `runCommand` (checked against `VIEW_NAMES`), so the cast below is safe. */
   onLaunchInPane = (paneId: string, program: string): void => {
     this.closeWindowChrome();
@@ -466,7 +511,9 @@ export class TerminalState {
   };
 
   /** Shell.svelte's `onExit` — the `exit` builtin ("pane shell: closes pane
-   * → cascades like kill-pane"). A window can have more than one pane, so
+   * → cascades like kill-pane").
+   *
+   * A window can have more than one pane, so
    * this resolves `paneId`'s OWN owning window (via `windowOfPane`, never
    * assumed to be `activeWindow` — `onExit` only ever fires from the
    * FOCUSED pane in practice, but the window it lives in is found from the
@@ -487,10 +534,14 @@ export class TerminalState {
   };
 
   /** Site-mode `:q` / cmdline `q` — drops the ACTIVE PANE's program back to a shell in the SAME window
-   * (tmux.ts's `exitProgram`); never kills the window. Distinct from
+   * (tmux.ts's `exitProgram`); never kills the window.
+   *
+   * Distinct from
    * `onExitPane` above (Shell.svelte's own `exit` builtin, typed inside an
    * ALREADY-shell pane, which has no program left to drop and so still
-   * cascades to kill-window). Closes
+   * cascades to kill-window).
+   *
+   * Closes
    * chrome first (same convention as every other window-affecting action)
    * and re-syncs the URL, which freezes in place since `programToViewId
    * ("shell")` is null, so `syncUrl()` no-ops. */
@@ -524,8 +575,10 @@ export class TerminalState {
   }
 
   /** `Ctrl-b d` — only reachable while
-   * attached (the tmux prefix never arms otherwise — see `armPrefix()`'s
-   * own gate), so the non-null assertion is safe by construction. Detaches
+   * attached (the tmux prefix never arms otherwise), so the non-null
+   * assertion is safe by construction.
+   *
+   * Detaches
    * the client, then appends the exact `[detached (from session {name})]`
    * line to the host shell's own persistent buffer — the SAME string its
    * own pre-seeded narrative already used once, now for a real, live
@@ -553,7 +606,9 @@ export class TerminalState {
   };
 
   /** `tmux new [-s name]` — `name` already resolved/validated (non-
-   * duplicate, or the next free numeric name) by shell.ts. Real tmux's own
+   * duplicate, or the next free numeric name) by shell.ts.
+   *
+   * Real tmux's own
    * "starting a new session from outside both creates and attaches". */
   onHostCreateAndAttach = (name: string): void => {
     const session = createSession(this.client, name, resolvePageEpoch());
@@ -577,7 +632,9 @@ export class TerminalState {
       // `statusBarRef` is still null here — StatusBar was UNMOUNTED (we were
       // detached) and Svelte hasn't re-rendered the `{#if activeSession}`
       // branch yet within this same synchronous tick, so `bind:this` hasn't
-      // fired. `tick()` flushes that pending render before the message is
+      // fired.
+      //
+      // `tick()` flushes that pending render before the message is
       // shown, so it actually lands on the StatusBar that just mounted
       // rather than silently no-op'ing through the `?.`.
       await tick();
@@ -618,7 +675,9 @@ export class TerminalState {
   /** Ctrl-b x — REAL kill-pane: ALWAYS prompts `kill-pane {pane_index}?
    * (y/n)`, even on a single-pane window: destroying the last pane
    * destroys the window by cascade, no separate "fall back to kill-window
-   * confirm" step. The target pane's id and its
+   * confirm" step.
+   *
+   * The target pane's id and its
    * `pane_index` (for the prompt text — `Window.paneOrder`'s own live-
    * renumbered position) are captured HERE, at confirm-OPEN time — same
    * "captured at prompt-open time" pattern as startRenamePrompt/
@@ -643,7 +702,9 @@ export class TerminalState {
   /** Ctrl-b ] — inserts the shared paste buffer
    * into whichever text input is currently registered
    * (src/common/lib/paste-targets.ts) — the grep query, the personnel
-   * filter, the rename prompt, or the editor's in-buffer search. A
+   * filter, the rename prompt, or the editor's in-buffer search.
+   *
+   * A
    * transient status message covers both "nothing is listening" and
    * "nothing's been yanked yet". */
   pasteFromBuffer(): void {
@@ -696,7 +757,9 @@ export class TerminalState {
   /** `select-layout <name>` / bare `select-layout` (`Ctrl-b :` tmux
    * command-prompt mode) — applies the named preset, or reapplies
    * whatever was last applied when no name is given (a silent no-op if none
-   * ever was). Unknown names are reported by the caller
+   * ever was).
+   *
+   * Unknown names are reported by the caller
    * (`executeTmuxCommand` below), which already has the raw typed string. */
   applyNamedLayout(name: LayoutName | undefined): void {
     const win = this.activeWindow!;
@@ -755,7 +818,9 @@ export class TerminalState {
       // Nothing left to browse — the client is now fully detached, so
       // there's no PaneTree/StatusBar left underneath this overlay either
       // (Terminal's own `{#if activeSession}...{:else}...{/if}` branch has
-      // already switched to the host shell). Close it rather than leaving
+      // already switched to the host shell).
+      //
+      // Close it rather than leaving
       // an empty tree floating over the host shell.
       this.getChooseTreeRef()?.close?.();
     }
@@ -788,7 +853,9 @@ export class TerminalState {
   /** Forwards to the focused pane's own embedded Editor if it's actually
    * open (if any) — the ex-mode entry context always
    * tries this FIRST; only a command it doesn't recognize falls through to
-   * the site-wide `commands` list below ("editor context wins"). Keyed off
+   * the site-wide `commands` list below ("editor context wins").
+   *
+   * Keyed off
    * the focused ref's own capability (same simplification as
    * killPaneOrWindow above) rather than `view === "repositories"/"employment"`
    * identity — only those two ever export `runEditorExCommand`. */
@@ -802,6 +869,7 @@ export class TerminalState {
 
   /** Executes a resolved `cmdline.yaml` `commands[]` entry by its `action`
    * id — shared by both the "site" and "ex" entry contexts.
+   *
    * Returns an error string on failure, `undefined` on success (the box
    * closes itself whenever this returns nothing, same convention as the
    * `onSubmit` prop it's called from). */
@@ -924,7 +992,9 @@ export class TerminalState {
    * runs through the exact same
    * executeSiteAction switch every `:` command already does, with no typed
    * args (the palette's own typed text is a search query, never passed
-   * through as a command argument). HelpSearch.svelte closes itself right
+   * through as a command argument).
+   *
+   * HelpSearch.svelte closes itself right
    * after calling this — this function only ever performs the action's own
    * side effect, same "dumb about presentation" split as onCmdlineSubmit. */
   onHelpSearchExecute = (action: string | undefined): void => {

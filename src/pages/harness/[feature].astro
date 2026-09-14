@@ -80,7 +80,9 @@ const shellFs = feature === "shell-fs" ? getShell() : undefined;
     // Mounted directly (no wrapper): BootSequence is already boot's own
     // self-contained orchestrator, and this harness's assertions (mount,
     // phase/progress advancing under a driven clock, reaching "ready")
-    // never need `onReady`/`bind:this`. `desktopMode={true}` is required:
+    // never need `onReady`/`bind:this`.
+    //
+    // `desktopMode={true}` is required:
     // BootSequence's own `$effect` no-ops without it.
     feature === "boot" && boot !== undefined && <BootSequence client:load {boot} desktopMode={true} />
   }
@@ -104,7 +106,9 @@ const shellFs = feature === "shell-fs" ? getShell() : undefined;
   }
   {
     // Wrapped for the same keydown-delegation reason as notifications
-    // above. The `personnel` collection fixture-switches itself via
+    // above.
+    //
+    // The `personnel` collection fixture-switches itself via
     // content.config.ts's own `base:` ternary, so no special handling is
     // needed here beyond the two data fetches above.
     feature === "employment" &&
@@ -123,6 +127,7 @@ const shellFs = feature === "shell-fs" ? getShell() : undefined;
   {
     // Wrapped for the same keydown-delegation reason as notifications above
     // (see GrepHarness's own header for why `onNavigate` is a no-op here).
+    //
     // Grep has no content collection — its yaml is a plain `?raw` data file
     // — so `getGrep()` alone is enough.
     feature === "grep" && grep !== undefined && <GrepHarness client:load {grep} />
@@ -130,6 +135,7 @@ const shellFs = feature === "shell-fs" ? getShell() : undefined;
   {
     // Wrapped for the same keydown-delegation reason as notifications above
     // (see ShellFsHarness's own header for why it mounts PANE mode only).
+    //
     // No content collection, same as grep above, so `getShell()` alone is
     // enough.
     feature === "shell-fs" && shellFs !== undefined && <ShellFsHarness client:load shell={shellFs} />

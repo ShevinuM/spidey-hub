@@ -8,9 +8,9 @@
 // boot-seen sessionStorage pre-seed (a boot golden's entire point is a
 // genuine, unskipped boot).
 //
-// Goldens resolve to goldens/<viewport>/<recipe>.png, hardcoded per project
-// rather than derived from `{projectName}` (same convention every split
-// project uses).
+// Goldens resolve via this project's own `snapshotPathTemplate` — see
+// playwright.config.ts's `common-visual` project comment for why
+// `{projectName}` can't be used here.
 import { expect, test } from "@playwright/test";
 import { bootRecipes } from "../../../../../common/tests/ui/support/recipes";
 import { captureBootState } from "../../../../../common/tests/ui/support/pipeline.mjs";

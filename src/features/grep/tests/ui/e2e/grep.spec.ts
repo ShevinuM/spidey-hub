@@ -110,6 +110,7 @@ test.describe("Grep overlay", () => {
     // A path-fragment query (not a bare filename), prefixed with "src/" so
     // it stays unique to the real file's own path rather than matching
     // other files' prose mentions or relative-import literals of it.
+    //
     // Assembled at run time rather than written verbatim, for the same
     // reason the next test builds a run-time `nonceQuery`: this spec's own
     // source is indexed too, so a literal copy would out-rank the target.

@@ -2,7 +2,9 @@
   // Radar-map wallpaper (reference/Homepage.dc.html lines 38-117), shared
   // by every view: dot grid, map labels, range rings, crosshair, conic
   // sweep, origin glyph, subject cards, command box, and the two ASCII HUD
-  // panels. The markup itself never changes across views — only its
+  // panels.
+  //
+  // The markup itself never changes across views — only its
   // container's opacity does (full at the tracker view, reduced/blurred
   // elsewhere).
   import type { TrackerData, Subject } from "../lib/data";
@@ -13,12 +15,15 @@
     view: ViewId;
     /** True while the detached HOST shell is showing fullscreen over this
      * same wallpaper; dims it well below any attached view's own opacity
-     * and overrides every `view`-keyed opacity knob below. Defaults to
-     * false. */
+     * and overrides every `view`-keyed opacity knob below.
+     *
+     * Defaults to false. */
     dim?: boolean;
     /** Whether the focused PANE (not just the window's `view`) is actually
      * running retina-v — false in a split window where a sibling shell pane
-     * has focus. Defaults to `view === "retina-v"` for single-pane windows. */
+     * has focus.
+     *
+     * Defaults to `view === "retina-v"` for single-pane windows. */
     isRetinaFocused?: boolean;
   }
 

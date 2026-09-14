@@ -46,7 +46,9 @@ export const TOAST_DURATION_SCALE_STORAGE_KEY = "edith:notifications-toast-scale
 
 /** sessionStorage override for e2e: a numeric seed pinning WHICH unseen pool
  * entries get injected on this visit, so a spec can assert on exact content
- * instead of "some 2 items appeared". Absent in production — real visits
+ * instead of "some 2 items appeared".
+ *
+ * Absent in production — real visits
  * pick randomly via `Math.random`, never deterministically. */
 export const NOTIFICATIONS_INJECT_SEED_STORAGE_KEY = "edith:notifications-inject-seed";
 
@@ -106,7 +108,9 @@ const EMPTY_STATE: NotificationState = { items: [] };
 
 /** Best-effort localStorage read — same guarded try/catch contract as
  * src/features/boot/lib/boot-state.ts (private-browsing/storage-disabled environments
- * throw on access, not just on write). Corrupted or missing storage falls
+ * throw on access, not just on write).
+ *
+ * Corrupted or missing storage falls
  * back to an empty state rather than throwing. */
 export function loadState(): NotificationState {
   try {
@@ -138,7 +142,9 @@ export function mulberry32(seed: number): () => number {
 
 // ---------------------------------------------------------------------------
 // Injection: each visit injects up to 2 unseen pool entries, chosen
-// randomly by id. Once every pool entry has been seen, a visit instead
+// randomly by id.
+//
+// Once every pool entry has been seen, a visit instead
 // re-circulates the single oldest archived (never spam-folder) entry back
 // to the inbox as a fresh unread item — only once the archive is ALSO
 // empty (or holds spam only) does a visit inject nothing.
@@ -148,6 +154,7 @@ export function mulberry32(seed: number): () => number {
  * each pick removed from the running candidate list so the result never
  * repeats an id — order is randomized via `rand` (defaults to
  * `Math.random`, override with a seeded `mulberry32` for determinism).
+ *
  * Returns fewer than `count` (down to zero) once the pool is exhausted —
  * never throws. */
 export function pickRandomUnseen(
@@ -169,9 +176,13 @@ export function pickRandomUnseen(
 
 /** Returns the oldest (lowest `ts`) archived item in `items`, or `null` if
  * the archive is empty — spam-folder items are never candidates, so a
- * spam-only archive also returns `null`. Ties broken by array order (the
+ * spam-only archive also returns `null`.
+ *
+ * Ties broken by array order (the
  * first item at the minimum `ts` wins), so the result is deterministic for
- * a given input. Used by `injectVisit`'s pool-exhaustion fallback: once
+ * a given input.
+ *
+ * Used by `injectVisit`'s pool-exhaustion fallback: once
  * every pool entry has been seen, this entry is what gets recirculated
  * back to the inbox instead of a fresh pick. */
 export function oldestArchivedEntry(items: readonly NotificationItem[]): NotificationItem | null {
@@ -191,8 +202,9 @@ export function oldestArchivedEntry(items: readonly NotificationItem[]): Notific
  * Once every pool entry has already been seen, this instead re-circulates
  * the single oldest archived entry: it's moved back to the inbox, marked
  * unread, restamped `now`, and returned in `injected` exactly like a fresh
- * pool pick — so the caller spawns a toast for it too. Spam-
- * folder entries are never eligible, so a spam-only (or empty) archive
+ * pool pick — so the caller spawns a toast for it too.
+ *
+ * Spam-folder entries are never eligible, so a spam-only (or empty) archive
  * falls through to the final no-op case: `state` unchanged, `injected: []`. */
 export function injectVisit(
   state: NotificationState,
@@ -234,7 +246,9 @@ export function dismiss(state: NotificationState, id: string): NotificationState
 }
 
 /** A third per-row action beyond the mockup's two: moves an item to the
- * web·trap tab from any folder. Read state is untouched — spam is a
+ * web·trap tab from any folder.
+ *
+ * Read state is untouched — spam is a
  * relocation, not a read/unread transition. */
 export function markSpam(state: NotificationState, id: string): NotificationState {
   return { items: state.items.map((i) => (i.id === id ? { ...i, folder: "spam" } : i)) };

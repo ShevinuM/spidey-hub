@@ -1,6 +1,12 @@
-// Pixel-regression suite for the 2 recipes EmploymentRecords.svelte owns ("04-employment-l0", "05-employment-l1"); every recipe is captured exactly once, by exactly one context.
+// Pixel-regression suite for the 2 recipes EmploymentRecords.svelte owns
+// ("04-employment-l0", "05-employment-l1").
 //
-// Goldens resolve via this project's own `snapshotPathTemplate` (playwright.config.ts, "employment-visual-<viewport>" projects) to a hardcoded per-project directory rather than one derived from `{projectName}`, since the project name carries an "employment-visual-" prefix the viewport-only goldens directory must not.
+// Every recipe is captured exactly once, by exactly one context.
+//
+// Goldens
+// resolve via this project's own `snapshotPathTemplate` — see
+// playwright.config.ts's `common-visual` project comment for why
+// `{projectName}` can't be used here.
 import { expect, test } from "@playwright/test";
 import { recipes } from "../../../../../common/tests/ui/support/recipes";
 import { captureState } from "../../../../../common/tests/ui/support/pipeline.mjs";

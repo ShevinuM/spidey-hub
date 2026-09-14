@@ -1,8 +1,10 @@
 // Shared capture pipeline for goldens and the real implementation —
 // capture-goldens.mjs and identical.spec.ts both call `captureState()` below
-// so the two sides can never drift apart. `captureBootState()`, further
-// down, is a separate function for the two boot recipes only, which need a
-// different clock-control sequence (see its own doc comment).
+// so the two sides can never drift apart.
+//
+// `captureBootState()`, further down, is a separate function for the two
+// boot recipes only, which need a different clock-control sequence (see its
+// own doc comment).
 //
 // Order of operations (see README-PIPELINE.md for the full rationale):
 // install the fake clock before navigating, wait for the dashboard mount
@@ -15,6 +17,7 @@ import { TOAST_SEED_STORAGE_KEY } from "../../../../features/notifications/lib/t
 
 /**
  * CSS selector for the SIGNAL footer's net-readout span (Profile view).
+ *
  * Note the space after the colon: the browser re-serializes inline `style`
  * attributes (e.g. "font-variant-numeric:tabular-nums" in the source
  * becomes "font-variant-numeric: tabular-nums" in the live DOM), so the
@@ -27,6 +30,7 @@ export const NET_READOUT_SELECTOR =
   'span[style*="font-variant-numeric: tabular-nums"]';
 /**
  * CSS selector for the 60-bar SIGNAL meter container (Profile view).
+ *
  * Structural canary only, not a mask target — same reasoning as
  * NET_READOUT_SELECTOR.
  */
@@ -141,7 +145,9 @@ export async function captureState(page, url, recipe) {
  * `goto()` to pin `Date.now()`, and a `clockOffsetMs` past
  * `BOOT_HARD_STOP_MS` needs two sequential `pauseAt` calls so the outro's
  * nested timeout is scheduled before it's fired (see README-PIPELINE.md for
- * the full empirical basis). No boot-seen sessionStorage pre-seed here,
+ * the full empirical basis).
+ *
+ * No boot-seen sessionStorage pre-seed here,
  * unlike `captureState()` — a boot golden's whole point is a genuine,
  * unskipped boot.
  *

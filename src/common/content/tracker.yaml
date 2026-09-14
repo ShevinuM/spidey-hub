@@ -68,8 +68,9 @@ commandBox:
 # Two ASCII HUD panels flanking the bottom of the map (lines 80-92). Stored
 # as line arrays (not one block-scalar string) so the exact column spacing
 # is unambiguous per line; render each array joined with "\n" inside a <pre>.
-# Every line — including the closing "└...┘" — stays exactly 37 code
-# points wide (verified by src/common/tests/unit/tracker-hud.test.ts).
+# Every hud.left line — including the closing "└...┘" — stays exactly 37
+# code points wide (verified by src/common/tests/unit/tracker-hud.test.ts);
+# hud.right has no such width constraint.
 hud:
   left:
     - "┌─ retina-v ────────────────────────┐"

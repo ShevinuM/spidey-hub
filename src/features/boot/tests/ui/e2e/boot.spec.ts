@@ -1,4 +1,5 @@
 // Behavioral e2e suite for the boot sequence (BootSequence.svelte).
+//
 // Deliberately imports the RAW `@playwright/test`, not the shared `context`
 // fixture — that fixture pre-seeds the boot-seen sessionStorage flag
 // specifically so boot never runs during every OTHER spec's tests; this
@@ -34,10 +35,11 @@ async function terminalReady(page: Page) {
 }
 
 /** Fresh context, fake clock installed before navigation, no sessionStorage
- * flag pre-seeded — a genuine first-load boot plays. Waits for
- * `data-boot-running="true"`, not just the overlay's own visibility: a
- * `clock.runFor()` issued before `run()` has captured `t0` is a no-op from
- * the timer's perspective, which this wait eliminates. */
+ * flag pre-seeded — a genuine first-load boot plays.
+ *
+ * Waits for `data-boot-running="true"`, not just the overlay's own
+ * visibility: a `clock.runFor()` issued before `run()` has captured `t0` is
+ * a no-op from the timer's perspective, which this wait eliminates. */
 async function freshBoot(page: Page, path = "/") {
   await page.clock.install({ time: CLOCK_TIME });
   await page.goto(path);

@@ -16,9 +16,10 @@ export interface PickedPort {
 
 /**
  * Resolves to a free TCP port on 127.0.0.1: `preferred` itself if nothing
- * is bound to it, otherwise an OS-assigned free port (`listen(0)`). Never
- * rejects merely because `preferred` is taken — only for a genuine bind
- * error on the fallback attempt.
+ * is bound to it, otherwise an OS-assigned free port (`listen(0)`).
+ *
+ * Never rejects merely because `preferred` is taken — only for a genuine
+ * bind error on the fallback attempt.
  *
  * Binds-and-releases rather than merely probing: there is a small window
  * between the probe closing and the real caller binding the same port

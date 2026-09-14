@@ -3,13 +3,14 @@
   // `Component` methods `meterRef`/`startMeter`/`stopMeter`/`probe`/
   // `netStats`/`linkSpeed`, lines ~909-978).
   //
-  // Renders the 60-bar strip and the readout span; the "SIGNAL" label and
-  // coordinates are static copy owned by Profile.svelte. One
-  // requestAnimationFrame loop writes each bar's height/background/
+  // Renders the 60-bar strip and the readout span.
+  //
+  // One requestAnimationFrame loop writes each bar's height/background/
   // box-shadow directly onto its DOM node every frame, deliberately not
-  // through Svelte reactivity. The readout text is the one piece of plain
-  // Svelte state, since it only changes once per 2.5s probe, not once per
-  // frame.
+  // through Svelte reactivity.
+  //
+  // The readout text is the one piece of plain Svelte state, since it only
+  // changes once per 2.5s probe, not once per frame.
   //
   // Gated by the same desktop/fine-pointer matchMedia guard as every other
   // timer/listener in the app — no rAF loop or interval starts in blocked

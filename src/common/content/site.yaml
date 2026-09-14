@@ -8,8 +8,8 @@ statusBar:
   # StatusBar.svelte substitutes `{name}` from the live client model.
   sessionTemplate: "Session: {name}"
   separator: "·"
-  # Window list, always rendered in this numeric order 0-5 (bug fix 1: the
-  # prototype's Retina-V view renders "...4:profile 3:retina-v*" — out of
+  # Window list, always rendered in this numeric order 0-5 (the prototype's
+  # Retina-V view renders "...4:profile 3:retina-v*" — out of
   # order — because the tracker window is appended after profile instead of
   # rendered in place; we always render 0-5 with the active one highlighted
   # in place instead of reordered). Dashboard

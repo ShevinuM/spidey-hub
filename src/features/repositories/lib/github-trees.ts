@@ -1,4 +1,5 @@
 // Client-side commit-tree browsing (unauthenticated GitHub REST, sessionStorage-cached, null-on-failure) — mirrors github-commits.ts's shape for two different endpoints.
+//
 // TODO(scaling): `truncated: true` (a repo too large for one recursive listing) isn't handled — none of the 8 tracked repos are near GitHub's ~100k-entry cap; add pagination if that changes.
 
 const TTL_MS = 10 * 60 * 1000;

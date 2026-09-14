@@ -1,4 +1,5 @@
 // Harness spec — mounts EmploymentRecords.svelte standalone against the fixture personnel tree (no Terminal kernel, no real content), deriving row truth from the fixture files on disk rather than hardcoding it.
+//
 // Assertions are web-first throughout: no `page.evaluate`/CSS-selector read is used as the assertion itself, only as an input feeding an expected value into `toHaveText`/`toHaveCount`.
 import { expect, test } from "@playwright/test";
 import { readFileSync, readdirSync } from "node:fs";

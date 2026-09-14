@@ -1,12 +1,12 @@
 // Pixel-regression suite for the one recipe Profile.svelte owns
-// ("07-profile"); reuses tests/visual/identical.spec.ts's capture pipeline
-// verbatim — see its header for the full mechanism.
+// ("07-profile").
 //
-// Goldens resolve via this project's own `snapshotPathTemplate`
-// (playwright.config.ts's "profile-visual-<viewport>" projects) to
-// src/features/profile/tests/ui/visual/goldens/<viewport>/<recipe>.png,
-// hardcoded per project because the project name carries a
-// "profile-visual-" prefix the viewport-only directory name must not.
+// Reuses tests/visual/identical.spec.ts's capture pipeline verbatim — see
+// its header for the full mechanism.
+//
+// Goldens resolve via this project's
+// own `snapshotPathTemplate` — see playwright.config.ts's `common-visual`
+// project comment for why `{projectName}` can't be used here.
 import { expect, test } from "@playwright/test";
 import { recipes } from "../../../../../common/tests/ui/support/recipes";
 import { captureState } from "../../../../../common/tests/ui/support/pipeline.mjs";

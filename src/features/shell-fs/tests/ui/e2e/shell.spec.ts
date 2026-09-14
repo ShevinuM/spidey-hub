@@ -1,5 +1,7 @@
 // Behavioral e2e suite for the in-window shell (Shell.svelte), driven
-// through Terminal.svelte. Assertions read against the real generated
+// through Terminal.svelte.
+//
+// Assertions read against the real generated
 // fs-index/grep-index/repo-index JSONs rather than hardcoded copies of
 // their content.
 import { expect, test, type Page } from "../../../../../common/tests/ui/support/fixtures";

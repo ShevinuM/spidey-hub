@@ -1,4 +1,5 @@
 // Svelte scopes `@keyframes` declared in a component `<style>` block but does not rewrite an `animation:` value written in an inline `style="..."` attribute, so a keyframe name ported verbatim into markup can silently resolve to nothing; `getComputedStyle().animationName` can't detect that (it returns the declared name regardless), so this suite cross-checks every live `animation-name` against the actual `CSSKeyframesRule`s in `document.styleSheets` instead.
+//
 // Run directly against a real build — `pnpm exec playwright test src/common/tests/ui/e2e/animations.spec.ts` against `pnpm build` + `node src/common/tests/ui/support/static-server.mjs dist 4322` — never via `pnpm test:e2e`/`pnpm test:visual`.
 import { expect, test, E2E_NOTIFICATIONS_INJECT_SEED, E2E_TOAST_DURATION_SCALE, type Page } from "../support/fixtures";
 import { BOOT_SEEN_STORAGE_KEY } from "../../../../features/boot/lib/boot-state";

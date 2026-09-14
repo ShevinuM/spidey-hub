@@ -1,8 +1,12 @@
 // Root-level smoke tier (`e2e-testing.md` R016): broad, shallow, whole-app
 // health checks — every route loads with no console error, and the terminal
-// boots. Never a feature-specific behavioral assertion; that belongs in the
-// owning feature's own `tests/ui/e2e/`. Cheap enough to run on every PR
-// regardless of what changed — the pre-merge gate.
+// boots.
+//
+// Never a feature-specific behavioral assertion; that belongs in the owning
+// feature's own `tests/ui/e2e/`.
+//
+// Cheap enough to run on every PR regardless of what changed — the pre-merge
+// gate.
 //
 // Deliberately imports the raw `@playwright/test`, not the shared
 // `src/common/tests/ui/support/fixtures.ts` boot-skip helper — this suite exists
@@ -27,7 +31,9 @@ for (const route of ROUTES) {
     // sequence on a fresh tab (see src/common/tests/ui/support/fixtures.ts's own
     // header comment) — wait it out for real rather than pre-seeding the
     // skip flag, since "the terminal boots" is exactly what this check
-    // proves. Generous timeout: this is the real (non-fixture) build, and a
+    // proves.
+    //
+    // Generous timeout: this is the real (non-fixture) build, and a
     // slow CI runner shouldn't flake a broad health check.
     await new TerminalPage(page).waitUntilBooted();
 

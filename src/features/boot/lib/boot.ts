@@ -1,8 +1,10 @@
 // Pure timing/progress/log math for the boot sequence; framework-free so
 // BootSequence.svelte is a thin renderer over this module and the formulas
-// (thresholds, easing, jitter) can be unit-tested without a browser. Do not
-// "simplify" the easing exponent, the jitter divisor, or the threshold
-// constants — they were tuned by eye against the reference screenshots.
+// (thresholds, easing, jitter) can be unit-tested without a browser.
+//
+// Do not "simplify" the easing exponent, the jitter divisor, or the
+// threshold constants — they were tuned by eye against the reference
+// screenshots.
 
 import type { BootData, BootLogEntry, BootStatusRow } from "../../../common/lib/data";
 
@@ -91,9 +93,11 @@ export function statusRowValue(pctValue: number, row: BootStatusRow): string {
   return padStatusValue(pctValue > row.threshold ? row.onlineText : "········");
 }
 
-/** The conic-gradient inline style for the progress ring. `deg` is
- * `(pct/100) * 360`; below 8deg the short "bright lead" gradient stop is
- * omitted entirely rather than emitting a degenerate 0..8deg segment. */
+/** The conic-gradient inline style for the progress ring.
+ *
+ * `deg` is `(pct/100) * 360`; below 8deg the short "bright lead" gradient
+ * stop is omitted entirely rather than emitting a degenerate 0..8deg
+ * segment. */
 export function progFillStyle(pctValue: number): string {
   const deg = (pctValue / 100) * 360;
   return (

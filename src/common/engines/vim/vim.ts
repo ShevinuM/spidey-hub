@@ -199,7 +199,9 @@ export function isCountDigit(key: string): boolean {
 }
 
 /** Parses an accumulated digit string (e.g. `"5"`, `"12"`) into a motion
- * count. An empty string (no count typed) is 1, vim's implicit default. */
+ * count.
+ *
+ * An empty string (no count typed) is 1, vim's implicit default. */
 export function parseCount(digits: string): number {
   if (!digits) return 1;
   const n = Number.parseInt(digits, 10);

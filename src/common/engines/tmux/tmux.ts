@@ -574,7 +574,9 @@ export function detachClient(client: Client): void {
 /**
  * `tmux new [-s name]` — creates a brand-new session with exactly one window (`0:zsh`, auto-named, running a shell).
  *
- * Does not attach on its own; the caller pairs this with `attachSession()` immediately after. `name` must already be validated as non-duplicate by the caller.
+ * Does not attach on its own; the caller pairs this with `attachSession()` immediately after.
+ *
+ * `name` must already be validated as non-duplicate by the caller.
  */
 export function createSession(client: Client, name: string, epoch: number): Session {
   const sessionId = `session:${name}`;

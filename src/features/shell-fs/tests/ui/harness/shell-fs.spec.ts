@@ -1,8 +1,12 @@
 // Harness spec — proves Shell.svelte works alone in PANE mode, mounted at
 // `/harness/shell-fs` against the FIXTURE fs index
 // (`src/features/shell-fs/tests/ui/support/fs-index.json`), not the real
-// generated one shell.spec.ts uses. Host mode is out of scope (see
-// ShellFsHarness.svelte). Expected values are derived from the fixture
+// generated one shell.spec.ts uses.
+//
+// Host mode is out of scope (see
+// ShellFsHarness.svelte).
+//
+// Expected values are derived from the fixture
 // plus the real `listDir`/`resolveCd` port and shell.yaml's templates,
 // never hardcoded.
 import { expect, test } from "@playwright/test";

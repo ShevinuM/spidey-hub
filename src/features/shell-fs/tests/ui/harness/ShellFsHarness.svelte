@@ -3,6 +3,7 @@
   // reproducing just the global keydown delegation into its exported
   // `handleKey()` that Terminal.svelte/PaneTree.svelte normally provide
   // (same shape GrepHarness.svelte/RepositoriesHarness.svelte reimplement).
+  //
   // Host mode is out of scope here — it needs a live session roster and
   // onAttach/onCreateAndAttach/onAttachView wiring this kernel-free harness
   // has no equivalent of.

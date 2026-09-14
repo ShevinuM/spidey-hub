@@ -1,7 +1,9 @@
 // Per-tab "has the boot sequence played this session" flag: boot plays on
 // first document load per browser tab; reloads/deep-links within the
-// session skip it. sessionStorage (not localStorage) gives a fresh flag per
-// tab while surviving a reload of the same tab.
+// session skip it.
+//
+// sessionStorage (not localStorage) gives a fresh flag per tab while
+// surviving a reload of the same tab.
 //
 // Guarded for SSR (no `sessionStorage` global in Astro's Node render) and
 // for browsers that throw on storage access — both degrade to "boot plays"

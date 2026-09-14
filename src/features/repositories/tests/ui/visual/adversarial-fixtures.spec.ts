@@ -1,6 +1,14 @@
 // Proves the adversarial fixtures actually exercise their defect classes (an unwrapped long line, an empty repo) rather than merely looking fine in a golden — no PNG comparisons here, so this file has no goldens of its own.
-// Fixture data under test: flerken-watch.md's 400-char unbroken line (via the all-projects preview), and webbing-lab's ready-but-empty repo index (no files, no commits snapshot).
-// gotoReady/prefixDigit/fitsWithin are deliberately duplicated verbatim in employment's own adversarial-fixtures.spec.ts rather than extracted into a shared module, per this repo's test-infra rules against shared-helper fragility.
+//
+// Fixture data under test: flerken-watch.md's 400-char unbroken line (via
+// the all-projects preview), and webbing-lab's ready-but-empty repo index
+// (no files, no commits snapshot).
+//
+// gotoReady/prefixDigit/fitsWithin are
+// deliberately duplicated verbatim in employment's own
+// adversarial-fixtures.spec.ts rather than extracted into a shared
+// module, per this repo's test-infra rules against shared-helper
+// fragility.
 import { expect, test, type Page } from "@playwright/test";
 import { BOOT_SEEN_STORAGE_KEY } from "../../../../../common/tests/ui/support/fixtures";
 

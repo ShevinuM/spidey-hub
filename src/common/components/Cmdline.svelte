@@ -1,8 +1,9 @@
 <script lang="ts">
   // Site-wide floating Cmdline (noice.nvim-style centered box, same visual
-  // family as GrepOverlay). Always mounted; Terminal.svelte owns a live
-  // `bind:this` ref to pick when to open it and forwards every keydown to
-  // `handleKey()`.
+  // family as GrepOverlay).
+  //
+  // Always mounted; Terminal.svelte owns a live `bind:this` ref to pick when
+  // to open it and forwards every keydown to `handleKey()`.
   //
   // Three entry contexts share this component via `mode`: "site" (`:` with
   // nothing else open — only `cmdline.commands`), "ex" (`:` with an editor

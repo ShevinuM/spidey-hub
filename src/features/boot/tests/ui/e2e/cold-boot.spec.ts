@@ -1,8 +1,10 @@
 // Cold-boot coverage for surfaces the shared `context` fixture's boot-seen
 // pre-seed otherwise hides: a real first-time visitor's bell/ring state and
 // the dashboard's first-paint chrome, exercised together with a genuine
-// (non-skipped) boot. Does not re-cover notifications-boot.spec.ts's own
-// subject (a toast surviving the boot overlay).
+// (non-skipped) boot.
+//
+// Does not re-cover notifications-boot.spec.ts's own subject (a toast
+// surviving the boot overlay).
 //
 // Deliberately imports the RAW `@playwright/test`, not the shared fixture:
 // that fixture pre-seeds the boot-seen flag specifically so boot never runs

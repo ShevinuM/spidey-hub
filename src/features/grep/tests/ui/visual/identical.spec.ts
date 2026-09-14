@@ -2,10 +2,9 @@
 // ("09-grep-empty", "10-grep-query"); see tests/visual/identical.spec.ts's
 // own header for the shared capture pipeline this reuses verbatim.
 
-// Goldens resolve via this project's own `snapshotPathTemplate` to
-// src/features/grep/tests/ui/visual/goldens/<viewport>/<recipe>.png,
-// hardcoded rather than derived from `{projectName}` since the project
-// name carries a "grep-visual-" prefix the literal directory name must not.
+// Goldens resolve via this project's own `snapshotPathTemplate` — see
+// playwright.config.ts's `common-visual` project comment for why
+// `{projectName}` can't be used here.
 import { expect, test } from "@playwright/test";
 import { recipes } from "../../../../../common/tests/ui/support/recipes";
 import { captureState } from "../../../../../common/tests/ui/support/pipeline.mjs";

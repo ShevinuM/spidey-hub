@@ -1,4 +1,5 @@
 // Server-only: `process.env.PORTFOLIO_FIXTURES` doesn't exist in the browser, so this module must never be imported from a Svelte island.
+//
 // Uses a build-time `import.meta.glob` rather than a runtime `node:fs` read, since Astro's static build bundles this module away from `src/generated/commits/` on disk.
 const REAL_GLOB = import.meta.glob("../../generated/commits/*.json", {
   eager: true,

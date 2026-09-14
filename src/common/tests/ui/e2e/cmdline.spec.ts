@@ -95,12 +95,12 @@ test.describe("Cmdline: opening", () => {
     await page.keyboard.press(":");
     await expect(overlay(page)).toBeVisible();
     // A tmux-command-prompt command works (proves the box is actually in
-    // tmux mode, not merely open) ...
+    // tmux mode, not merely open).
     await typeAndEnter(page, "select-window 1");
     await expect(overlay(page)).not.toBeVisible();
     await expect(page).toHaveURL(/\/repositories$/);
 
-    // ... but a site-wide-only command name is NOT recognized here — it
+    // A site-wide-only command name is NOT recognized here — it
     // reports the same E492 unknown-command error as any gibberish text
     // would ("Only cmdline.tmuxCommands are offered/executed" in this mode).
     await ctrlB(page);

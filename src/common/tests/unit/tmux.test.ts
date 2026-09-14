@@ -164,7 +164,9 @@ test("cycleWindow(1) advances and wraps; cycleWindow(-1) is the exact reverse", 
     cycleWindow(session, 1);
     expect(session.activeWindowIdx).toBe(i % 6);
   }
-  // Back at 0. Reverse direction from here retraces the same six windows.
+  // Back at 0.
+  //
+  // Reverse direction from here retraces the same six windows.
   for (let i = 5; i >= 0; i--) {
     cycleWindow(session, -1);
     expect(session.activeWindowIdx).toBe(i);

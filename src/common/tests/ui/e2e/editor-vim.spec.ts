@@ -1,4 +1,5 @@
 // Parametrized over both places the shared editor is mounted — Repositories and Employment — since the engine is entry-point-agnostic and both callers must behave identically.
+//
 // Reads real on-disk content at test time (like repositories.spec.ts/employment.spec.ts) rather than hardcoding line text, so this suite can't drift from the fixtures.
 import { expect, test, type Page } from "../support/fixtures";
 // This spec's `context` fixture (from ../support/fixtures.ts) pre-seeds the boot-seen flag so BootSequence's ~4.6s sequence never runs for these tests.

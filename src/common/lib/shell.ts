@@ -48,6 +48,7 @@ export function parseLine(line: string): ParsedLine {
 }
 
 // fs-index navigation over a flat {path, size?}[] list, declared as its own structurally-equivalent type rather than importing repo-tree.ts's/grep.ts's, so this stays a zero-Svelte-dependency pure module.
+//
 // `size` is absent for `repos/*` entries, which are paths only, taken from the per-repo index JSONs without an extra byte-size pass.
 
 export interface FsEntry {

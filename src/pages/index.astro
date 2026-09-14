@@ -1,8 +1,10 @@
 ---
-// Route: "/" — dashboard (home) view. All six route pages share this shape:
-// load every data source in frontmatter, then SSR the Terminal.svelte
-// island with `initialView` so the matching view is in the static HTML with
-// no client-side flash; later view switches are client-side only (pushState).
+// Route: "/" — dashboard (home) view.
+//
+// All six route pages share this shape: load every data source in
+// frontmatter, then SSR the Terminal.svelte island with `initialView` so the
+// matching view is in the static HTML with no client-side flash; later view
+// switches are client-side only (pushState).
 import Layout from "../bootstrap/Layout.astro";
 import Terminal from "../bootstrap/Terminal.svelte";
 import { getCollection } from "astro:content";

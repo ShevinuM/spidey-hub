@@ -1,10 +1,12 @@
 // Harness spec: proves BootSequence.svelte works mounted alone (no Terminal
-// kernel) at /harness/boot. Imports the raw `@playwright/test`, not the
-// shared e2e `context` fixture — that fixture pre-seeds the boot-seen
-// sessionStorage flag, which would make this mount skip straight to "ready"
-// and prove nothing. Owns the fake clock via BootPage
-// (`install()`/`pauseAt()` before `page.goto()`); see BootPage's own header
-// for the mechanism.
+// kernel) at /harness/boot.
+//
+// Imports the raw `@playwright/test`, not the shared e2e `context` fixture —
+// that fixture pre-seeds the boot-seen sessionStorage flag, which would make
+// this mount skip straight to "ready" and prove nothing.
+//
+// Owns the fake clock via BootPage (`install()`/`pauseAt()` before
+// `page.goto()`); see BootPage's own header for the mechanism.
 import { expect, test } from "@playwright/test";
 import { BootPage } from "../pages/BootPage";
 import { pct, phaseLabel } from "../../../lib/boot";
@@ -32,6 +34,7 @@ test.describe("Boot harness: mounts standalone with seeded fixture props", () =>
 
     // advanceTo() leaves the fake clock paused, so a plain locator read and
     // separate web-first assertions carry no race between them.
+    //
     // `getAttribute()` is a one-shot read used only to derive the expected
     // pct/phase from the same formula lib/boot.ts uses; the actual
     // assertions below are web-first through BootPage's own getters

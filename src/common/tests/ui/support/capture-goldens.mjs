@@ -2,12 +2,17 @@
 // the vendored, network-independent reference/ using pipeline.mjs and this
 // file's 10-recipe `recipes` array (10 recipes x 2 viewports = 20 PNGs).
 //
-// HISTORICAL / GUARDED: tests/visual/goldens/ is now self-baselined against
-// our own implementation across all 21 recipes / 42 goldens (see
-// README-PIPELINE.md), not the vendored prototype this script still reads
-// from — running it for real would overwrite those self-baselines with
-// prototype screenshots and undo intentional implementation deviations, so
-// it refuses to run without an explicit override flag naming what it does.
+// GUARDED: the 42 committed goldens are the source of truth, self-baselined
+// against our own implementation, and each context owns its own
+// `tests/ui/visual/goldens/` directory per that project's
+// `snapshotPathTemplate` (see README-PIPELINE.md).
+//
+// This script reads from the vendored prototype rather than the
+// implementation, so its output is prototype parity, not a baseline — it
+// refuses to run without an explicit override flag naming what it does.
+//
+// Its `GOLDENS_DIR` still targets the pre-split `tests/visual/goldens/`,
+// which holds no committed golden and which no Playwright project reads.
 import { chromium } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";

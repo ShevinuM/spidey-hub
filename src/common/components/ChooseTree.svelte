@@ -1,13 +1,16 @@
 <script lang="ts">
   // choose-tree overlay (`Ctrl-b w`) — a full window-content overlay (not a
   // centered box), mirroring real tmux's choose-tree replacing the entire
-  // pane area while leaving the status line visible. Always mounted, same
-  // `bind:this`/`handleKey(): boolean`/`close()`/`isOpen()` contract as
-  // GrepOverlay/CopyMode/Cmdline/HelpSearch.
+  // pane area while leaving the status line visible.
+  //
+  // Always mounted, same `bind:this`/`handleKey(): boolean`/`close()`/
+  // `isOpen()` contract as GrepOverlay/CopyMode/Cmdline/HelpSearch.
   //
   // Terminal.svelte consults this component's `handleKey()` after copy-mode
   // and the tmux prefix system, but before Cmdline/StatusBar/every view
-  // ref. While open: the prefix still arms/dispatches underneath it (so
+  // ref.
+  //
+  // While open: the prefix still arms/dispatches underneath it (so
   // `Ctrl-b d` and window-switch keys still work, and close this overlay
   // for free via `closeWindowChrome()`); Terminal's `handlePrefixedKey`
   // gates the four prefixed keys that would otherwise pop a competing modal

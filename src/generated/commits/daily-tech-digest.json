@@ -1,5 +1,13 @@
 [
   {
+    "sha": "f634edccdbc2e64a6942b8b41c53c46028485ffb",
+    "sha8": "f634edcc",
+    "msg": "Digest for 2026-09-14",
+    "html_url": "https://github.com/ShevinuM/daily-tech-digest/commit/f634edccdbc2e64a6942b8b41c53c46028485ffb",
+    "initials": "Da",
+    "date": "2026-09-14T07:38:18Z"
+  },
+  {
     "sha": "beb1d384f9eb6e1d2e37eadbe66324f08eb1a874",
     "sha8": "beb1d384",
     "msg": "Digest for 2026-09-13",
@@ -110,13 +118,5 @@
     "html_url": "https://github.com/ShevinuM/daily-tech-digest/commit/8aac4fc15f4f62dfbfd6802a76f288a6c4174d85",
     "initials": "Da",
     "date": "2026-08-31T08:12:27Z"
-  },
-  {
-    "sha": "09085dbdd4a2df60c8db030993830d1fe2a55e69",
-    "sha8": "09085dbd",
-    "msg": "Digest for 2026-08-30",
-    "html_url": "https://github.com/ShevinuM/daily-tech-digest/commit/09085dbdd4a2df60c8db030993830d1fe2a55e69",
-    "initials": "Da",
-    "date": "2026-08-30T08:00:12Z"
   }
 ]

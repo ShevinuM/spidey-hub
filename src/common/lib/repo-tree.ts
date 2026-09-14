@@ -39,9 +39,10 @@ export interface TreeEntry {
 
 /**
  * List the immediate children of `dirPath` (posix, no leading/trailing
- * slash; "" = repo root) given the repo's flat file list. Directories are
- * synthesized from path prefixes shared by two or more (or exactly one)
- * files — there is no explicit directory record to read.
+ * slash; "" = repo root) given the repo's flat file list.
+ *
+ * Directories are synthesized from path prefixes shared by two or more (or
+ * exactly one) files — there is no explicit directory record to read.
  *
  * Sort: directories before files, then case-insensitive name — a
  * conventional file-browser order (not derived from any prototype markup,

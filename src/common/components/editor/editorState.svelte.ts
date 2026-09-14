@@ -180,10 +180,12 @@ export class EditorState {
   }
 
   // ---------------------------------------------------------------------
-  // Search. Matches are only recomputed when a
-  // query COMMITS (Enter, or `lastSearchQuery` changes) — not on every
-  // keystroke of typing — so scanning the whole buffer only happens once
-  // per search, not once per character typed.
+  // Search.
+  //
+  // Matches are only recomputed when a query COMMITS (Enter, or
+  // `lastSearchQuery` changes) — not on every keystroke of typing — so
+  // scanning the whole buffer only happens once per search, not once per
+  // character typed.
   // ---------------------------------------------------------------------
 
   searchMatches = $derived(findMatches(this.rawLines, this.lastSearchQuery));

@@ -2,33 +2,39 @@
 // built page of the app into a self-contained `.dc.html` snapshot.
 //
 // Sibling to scripts/capture-screenshots.mjs: reuses the same
-// build+serveStatic+pickPort+boot-skip infrastructure. One deliberate
-// deviation from that script's approach: capture-screenshots.mjs reaches
-// each state by replaying recipe keystrokes from the dashboard, because a
-// documentation screenshot wants specific *non-default*
-// states (a selected repo row, an opened editor). A design mirror wants each
-// ROUTE's own default SSR state instead — and every one of the six routes
-// below is already its own Astro page (src/pages/*.astro, each with its own
-// `initialView`), so a direct `page.goto` to that route's URL reaches the
-// exact same state a recipe chord would have navigated to, with less
-// machinery and no dependency on keybindings unrelated to this script's job.
+// build+serveStatic+pickPort+boot-skip infrastructure.
+//
+// One deliberate deviation from that script's approach:
+// capture-screenshots.mjs reaches each state by replaying recipe keystrokes
+// from the dashboard, because a documentation screenshot wants specific
+// *non-default* states (a selected repo row, an opened editor).
+//
+// A design mirror wants each ROUTE's own default SSR state instead — and
+// every one of the six routes below is already its own Astro page
+// (src/pages/*.astro, each with its own `initialView`), so a direct
+// `page.goto` to that route's URL reaches the exact same state a recipe
+// chord would have navigated to, with less machinery and no dependency on
+// keybindings unrelated to this script's job.
 //
 // Self-containment: a `.dc.html` opened via `file://` (or hosted standalone
 // in Claude Design) cannot fetch anything at render time except a data: URI.
+//
 // Every same-origin reference the built HTML/CSS actually makes — every
 // `public/assets/*.svg`/`*.jpg`, `public/fonts/*.woff2`, AND the
 // build-hashed `/_astro/*.woff2`/`.woff` JetBrains Mono subset files Astro's
 // font optimizer emits (NOT all of which it inlines itself — some subsets
 // ship as external hashed files the CSS `@font-face` still points at) — gets
-// inlined as a base64 data: URI. Rather than hand-list every such build
-// artifact, the inliner below fetches whatever the live server actually
-// returns for any remaining `/`-absolute `url(...)`/`src="..."` reference
-// and inlines that — correct by construction, not by an enumerated
-// exception list.
+// inlined as a base64 data: URI.
+//
+// Rather than hand-list every such build artifact, the inliner below fetches
+// whatever the live server actually returns for any remaining `/`-absolute
+// `url(...)`/`src="..."` reference and inlines that — correct by
+// construction, not by an enumerated exception list.
 //
 // The one deliberate exception is `public/assets/retina-v.png` (2MB, used
 // by Profile) — emitted as a sibling binary file under `assets/` next to the
 // generated .dc.html and referenced by a relative path instead.
+//
 // `public/assets/resume.pdf` is left as a relative link: it's an
 // `<a href download>`, never fetched at
 // render time, so it doesn't violate self-containment the way an
@@ -53,7 +59,9 @@ const VIEWPORT = { width: 1512, height: 945 };
 /**
  * Six routes, each its own Astro page (src/pages/<x>.astro) with its own
  * `initialView` — a direct `goto` to `path` lands on that page's default
- * state. `extraWaitMs` on Dashboard exists for the same toast-dismiss
+ * state.
+ *
+ * `extraWaitMs` on Dashboard exists for the same toast-dismiss
  * reason documented on capture-screenshots.mjs's "dashboard" shot — true
  * for both the real and fixture build here, since neither pins the clock
  * (only the visual-regression pipeline does that).
@@ -95,7 +103,9 @@ async function fetchAsDataUri(origin, path, cache) {
 // an anchor (the resume.pdf download link, any future internal nav link)
 // is a user-initiated navigation, never fetched automatically at render
 // time, so it's out of this script's self-containment scope (see module
-// header). Excludes `data:` URIs (already inlined) and any path already
+// header).
+//
+// Excludes `data:` URIs (already inlined) and any path already
 // rewritten to a relative sibling (e.g. `assets/retina-v.png`, no leading
 // slash) by running before this pass.
 const REMOTE_REF_RE = /url\((\/[^)'"]+)\)|src="(\/[^"]+)"/g;
@@ -120,7 +130,9 @@ async function inlineRemoteRefs(text, { origin, cache }) {
 
 /** In-page DOM surgery: strip every <script>, read the two stylesheet hrefs
  * (if any), and capture the hydrated attributes/markup needed to rebuild a
- * standalone document. Done in-page rather than by regexing the serialized
+ * standalone document.
+ *
+ * Done in-page rather than by regexing the serialized
  * string afterward, so element boundaries are never guessed at.
  */
 async function extractPage(page) {
@@ -176,6 +188,7 @@ ${bodyInner}
 
 /**
  * Generates one build's mirror set into `ds-bundle/<outDir>/`.
+ *
  * `onlyRoute`, when set, restricts generation to the single named route.
  */
 async function generateBuild(buildKey, { onlyRoute } = {}) {

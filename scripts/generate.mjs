@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Build-time data generation. Produces five kinds of artifacts:
+// Build-time data generation. Produces these artifacts:
 //
 //  1. public/generated/repos/<name>.json — file tree + text contents for
 //     each of the eight repos declared in
@@ -18,13 +18,17 @@
 //     src/features/repositories/tests/ui/support/repos/all-projects.json.
 //  2. public/generated/grep-index.json — walks the site's own source so the
 //     grep overlay (`/`) can search real content.
+//  2b. public/generated/fs-index.json — the generated filesystem the
+//     in-window shell's cd/ls/tree/cat walk; repos/* subtrees are virtual,
+//     built from the per-repo indexes already written by (1) rather than
+//     disk.
 //  3. src/generated/commits/<repo>.json — a snapshot of the 15 most recent
 //     commits per repo via the GitHub REST API, imported statically so
 //     Repositories renders identically offline; on API failure the existing
 //     snapshot is kept and a warning printed. Each entry carries the full
 //     40-char `sha` alongside `sha8`, needed to fetch a commit's tree via
 //     GitHub's Git Trees API (src/features/repositories/lib/github-trees.ts).
-//  4. public/generated/contributions.json — a year of GitHub contribution
+//  3b. public/generated/contributions.json — a year of GitHub contribution
 //     levels (0-4 per day) for the Repositories Status pane's contribution
 //     grid. GraphQL when GITHUB_TOKEN is set, else scrape the public
 //     github.com/users/<OWNER>/contributions HTML fragment, else leave the
@@ -32,6 +36,9 @@
 //     src/generated/) because it is fetched client-side at runtime rather
 //     than statically imported at build time; see
 //     src/features/repositories/components/repositoriesState.svelte.ts.
+//  4. src/generated/file-icons.json — a curated ext/filename -> Material-
+//     icon-theme SVG map, resolved at generate time so the client bundle
+//     only carries icons this site actually shows.
 //
 // Run via `pnpm generate` (also wired to predev/prebuild).
 
@@ -131,7 +138,9 @@ function toPosix(p) {
 /**
  * Recursively walk `dir`, pushing {path, lines} entries (path relative to
  * `root`, posix-separated) for every file that passes isTextFile() and isn't
- * inside a directory named in `skipDirs`. Symlinks are not followed.
+ * inside a directory named in `skipDirs`.
+ *
+ * Symlinks are not followed.
  */
 function walk(dir, skipDirs, collected, root) {
   let entries;
@@ -178,6 +187,7 @@ const PROJECTS_DIR = join(ROOT, "src/features/repositories/content/repositories"
  * docs' `repos:` frontmatter arrays (schema: src/content.config.ts's
  * `repoSchema`) under src/features/repositories/content/repositories/ —
  * always the real content dir, never PORTFOLIO_FIXTURES (see file header).
+ *
  * Astro's getCollection() isn't available in a prebuild script, so
  * frontmatter is parsed by hand: split off the leading `---\n...\n---` block
  * and hand it to `yaml` (already a runtime dependency — see
@@ -206,10 +216,12 @@ const REPOS = loadProjectRepos();
 //
 // Deliberate: this reads from each repo's committed git tree — a `git
 // archive`-equivalent snapshot at a pinned SHA — never from a working
-// checkout on disk. A working checkout can carry untracked, machine-local
-// files (build tooling, editor/plugin state, anything gitignored) that were
-// never part of the repo; sourcing from the tree makes that class of
-// contamination structurally impossible.
+// checkout on disk.
+//
+// A working checkout can carry untracked, machine-local files (build
+// tooling, editor/plugin state, anything gitignored) that were never part of
+// the repo; sourcing from the tree makes that class of contamination
+// structurally impossible.
 // ---------------------------------------------------------------------------
 
 const REPOS_JSON_PATH = join(ROOT, "repos.json");
@@ -254,9 +266,11 @@ async function resolveSha(pins, name, github, branch) {
  * Ensures a SHA-keyed extraction of <github>@<sha> exists at
  * .cache/repos/<name>-<sha>/, fetching and extracting it if not already
  * cached — a cache hit costs zero network, so predev stays instant after the
- * first run. Extracts into a sibling temp directory and renames into place
- * only once extraction succeeds, so an interrupted fetch can never leave
- * behind a cache entry a later run would wrongly treat as a hit.
+ * first run.
+ *
+ * Extracts into a sibling temp directory and renames into place only once
+ * extraction succeeds, so an interrupted fetch can never leave behind a
+ * cache entry a later run would wrongly treat as a hit.
  */
 async function ensureRepoCache(name, github, sha) {
   const finalDir = join(REPO_CACHE_DIR, `${name}-${sha}`);
@@ -342,7 +356,9 @@ async function generateRepoIndexes() {
  * filename verbatim, same case-preserving rule content.config.ts's
  * generateId uses), lines = the raw file text (frontmatter included — a
  * literal file snapshot, not a parsed content-collection entry) split on
- * "\n". Same {name, files} shape as generateRepoIndexes() so
+ * "\n".
+ *
+ * Same {name, files} shape as generateRepoIndexes() so
  * src/common/lib/repo-tree.ts's listDir/findFile and the Repositories
  * component's fetch-and-browse flow work on it unmodified.
  */
@@ -403,11 +419,12 @@ const GREP_ROOT_FILES = [
 
 /**
  * Computes the grep index's file list (path + content lines, sorted by
- * path) by walking its sources fresh from disk. Factored out of
- * generateGrepIndex() so collectIconFilenames() can call it as a paths-only
- * prewalk before generateFileIcons() runs; generateGrepIndex() then calls
- * this again afterward, picking up the file-icons.json bytes
- * generateFileIcons() wrote.
+ * path) by walking its sources fresh from disk.
+ *
+ * Factored out of generateGrepIndex() so collectIconFilenames() can call it
+ * as a paths-only prewalk before generateFileIcons() runs;
+ * generateGrepIndex() then calls this again afterward, picking up the
+ * file-icons.json bytes generateFileIcons() wrote.
  */
 function collectGrepFiles() {
   const files = [];
@@ -435,27 +452,33 @@ function generateGrepIndex() {
 
 // ---------------------------------------------------------------------------
 // 2b. Shell fs-index (public/generated/fs-index.json) — the generated
-//     filesystem the in-window shell's cd/ls/tree/cat walk. A flat
-//     `{path, size?}[]` list, same convention as the grep/repo indexes'
-//     `{path, lines}[]`: src/common/lib/shell.ts derives directory structure
-//     from path prefixes, like src/common/lib/repo-tree.ts's listDir does
-//     for a single repo.
+//     filesystem the in-window shell's cd/ls/tree/cat walk.
+//
+//     A flat `{path, size?}[]` list, same convention as the grep/repo
+//     indexes' `{path, lines}[]`: src/common/lib/shell.ts derives directory
+//     structure from path prefixes, like src/common/lib/repo-tree.ts's
+//     listDir does for a single repo.
 //
 // Same skip list as the grep walker, plus `public/generated` itself (this
 // script's own output — including it would make fs-index.json list its own
 // changing byte size every run, breaking `pnpm generate` idempotency) and
-// `.DS_Store` (machine-dependent, not part of the repo). Structural:
-// isTextFile() is not consulted, every file gets a size whether text or
-// binary — `cat`'s own "binary or unindexed" case handles the content split.
+// `.DS_Store` (machine-dependent, not part of the repo).
+//
+// Structural: isTextFile() is not consulted, every file gets a size whether
+// text or binary — `cat`'s own "binary or unindexed" case handles the
+// content split.
 //
 // repos/* subtrees are entirely virtual: nothing under repos/ exists on disk
 // at all — real repo content lives at .cache/repos/<name>-<sha>/, a path the
-// shell never shows. Entries come from the per-repo index JSONs already
-// written by generateRepoIndexes() (path-only), so `cat`'s lazy per-repo
-// fetch always agrees with what `ls`/`tree` show even though `cd
-// repos/<name>` lands nowhere on the real filesystem. The virtual
-// "all-projects" entry is excluded — it has no corresponding GitHub repo, so
-// there is no `repos/all-projects` shell path to populate.
+// shell never shows.
+//
+// Entries come from the per-repo index JSONs already written by
+// generateRepoIndexes() (path-only), so `cat`'s lazy per-repo fetch always
+// agrees with what `ls`/`tree` show even though `cd repos/<name>` lands
+// nowhere on the real filesystem.
+//
+// The virtual "all-projects" entry is excluded — it has no corresponding
+// GitHub repo, so there is no `repos/all-projects` shell path to populate.
 // ---------------------------------------------------------------------------
 
 const FS_INDEX_SKIP_DIRS = new Set([
@@ -474,7 +497,9 @@ const FS_INDEX_SUBDIRS = ["src", "public", "scripts", "tests"];
  * Recursively walks `dir`, pushing {path, size} entries (path relative to
  * `root`, posix-separated) for EVERY file (text or binary) not inside a
  * directory named in `skipDirs` (checked against `extraSkipDirs` too, for
- * the one-off "public/generated" exclusion). Symlinks are not followed.
+ * the one-off "public/generated" exclusion).
+ *
+ * Symlinks are not followed.
  */
 function walkStructure(dir, root, collected, extraSkipDirs) {
   let entries;
@@ -505,10 +530,12 @@ function walkStructure(dir, root, collected, extraSkipDirs) {
 
 /**
  * Computes the fs index's entry list (path + size, sorted by path) by
- * walking its sources fresh from disk. Factored out of generateFsIndex() so
- * collectIconFilenames() can call it as a paths-only prewalk before
- * generateFileIcons() runs; generateFsIndex() then calls this again
- * afterward, picking up the file-icons.json size generateFileIcons() wrote.
+ * walking its sources fresh from disk.
+ *
+ * Factored out of generateFsIndex() so collectIconFilenames() can call it as
+ * a paths-only prewalk before generateFileIcons() runs; generateFsIndex()
+ * then calls this again afterward, picking up the file-icons.json size
+ * generateFileIcons() wrote.
  */
 function collectFsEntries() {
   const entries = [];
@@ -517,7 +544,9 @@ function collectFsEntries() {
     const dir = join(ROOT, sub);
     if (!existsSync(dir)) continue;
     // "public/generated" is this very generator's own output — see file
-    // header. No other subdir needs an exclusion.
+    // header.
+    //
+    // No other subdir needs an exclusion.
     const extraSkip = sub === "public" ? new Set(["generated"]) : new Set();
     walkStructure(dir, ROOT, entries, extraSkip);
   }
@@ -680,10 +709,11 @@ async function fetchContributionsGraphQL() {
 
 /**
  * Scrapes the public (unauthenticated, no API) HTML fragment GitHub serves
- * profile-page contribution graphs from. Matches each
- * `ContributionCalendar-day` `<td>` first, then pulls `data-date`/`data-level`
- * out of that one tag's attributes — never assumes their order relative to
- * each other or to `class` inside the tag.
+ * profile-page contribution graphs from.
+ *
+ * Matches each `ContributionCalendar-day` `<td>` first, then pulls
+ * `data-date`/`data-level` out of that one tag's attributes — never assumes
+ * their order relative to each other or to `class` inside the tag.
  */
 async function fetchContributionsScrape() {
   const url = `https://github.com/users/${OWNER}/contributions`;
@@ -761,7 +791,9 @@ async function generateContributions() {
 //
 // Two-level indirection: `icons` keyed by icon name (so extensions sharing
 // one icon store its SVG once), `byExt`/`byName` keyed by what the UI has on
-// hand. `byName` only gets an entry when a filename's icon differs from its
+// hand.
+//
+// `byName` only gets an entry when a filename's icon differs from its
 // extension's generic icon (e.g. "package.json"); callers check
 // `byName[basename]`, then `byExt[ext]`, then `fallback`.
 // ---------------------------------------------------------------------------
@@ -770,12 +802,14 @@ async function generateContributions() {
  * Collects every filename (basename only) that could show up anywhere the
  * site renders a file icon: the per-repo indexes, plus a paths-only prewalk
  * of the grep and fs indexes' own sources (collectGrepFiles()/
- * collectFsEntries()). Runs before those two indexes are generated (see
- * main()) since it only needs the paths those walks produce, not their
- * written JSON. Insertion order matters — icons/byExt/byName are plain
- * objects, so key order is part of the committed bytes: repos/*.json in
- * readdirSync order, then the grep sources sorted, then the fs sources
- * sorted.
+ * collectFsEntries()).
+ *
+ * Runs before those two indexes are generated (see main()) since it only
+ * needs the paths those walks produce, not their written JSON.
+ *
+ * Insertion order matters — icons/byExt/byName are plain objects, so key
+ * order is part of the committed bytes: repos/*.json in readdirSync order,
+ * then the grep sources sorted, then the fs sources sorted.
  */
 function collectIconFilenames() {
   const names = new Set();

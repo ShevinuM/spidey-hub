@@ -4,10 +4,12 @@
   // The window list is replaced, one state at a time, by a transient
   // auto-clearing message, an editable rename prompt, or a y/n kill
   // confirm — driven by the exported `showMessage`/`startRename`/
-  // `startConfirm` methods. Only the rename/confirm states own the
-  // keyboard (Terminal.svelte calls this component's `handleKey()` before
-  // any other view ref while one is active); a bare message does not, so
-  // `handleKey()` returns `false` for it.
+  // `startConfirm` methods.
+  //
+  // Only the rename/confirm states own the keyboard (Terminal.svelte calls
+  // this component's `handleKey()` before any other view ref while one is
+  // active); a bare message does not, so `handleKey()` returns `false` for
+  // it.
   import type { SiteData, WindowEntry } from "../lib/data";
   import { formatClockDate, formatClockTime, msUntilNextMinute } from "../lib/clock";
   import { pushPasteTarget, removePasteTarget } from "../lib/paste-targets";
@@ -21,9 +23,11 @@
     sessionName: string;
     windows: WindowEntry[];
     /** The tmux model's own active window id, passed straight through
-     * rather than derived from a `view`/ViewId. A window's id and the
-     * program its pane currently runs are not the same thing — any pane
-     * can run any program in any window — so this must be told directly. */
+     * rather than derived from a `view`/ViewId.
+     *
+     * A window's id and the program its pane currently runs are not the
+     * same thing — any pane can run any program in any window — so this
+     * must be told directly. */
     activeWindowId: string;
     /** Marks the previously active window (`Session.lastWindowIdx`) so
      * `Ctrl-b l` has something to jump back to; undefined until the
@@ -83,8 +87,9 @@
   let messageTimer: ReturnType<typeof setTimeout> | undefined;
 
   /** Transient, auto-clearing status-line message (e.g. "nothing to
-   * paste", "last remaining window"). Does NOT own the keyboard — see the
-   * file header. */
+   * paste", "last remaining window").
+   *
+   * Does NOT own the keyboard — see the file header. */
   export function showMessage(text: string): void {
     prompt = { kind: "message", text };
     clearTimeout(messageTimer);
@@ -102,8 +107,10 @@
   }
 
   /** Ctrl-b & / Ctrl-b x — `y` runs `onYes`, `n`/anything-not-y/Esc cancels
-   * with no side effect. `text` is the full prompt line, already formatted
-   * from `site.statusBar.prompts.killWindowTemplate`/`killPaneTemplate`. */
+   * with no side effect.
+   *
+   * `text` is the full prompt line, already formatted from
+   * `site.statusBar.prompts.killWindowTemplate`/`killPaneTemplate`. */
   export function startConfirm(text: string, onYes: () => void): void {
     clearTimeout(messageTimer);
     prompt = { kind: "confirm", text, onYes };
@@ -115,9 +122,10 @@
     return prompt.kind === "rename" || prompt.kind === "confirm";
   }
 
-  /** Cancels any open rename/confirm prompt; a no-op for the "message"/
-   * "none" states. Terminal.svelte's reboot handler calls this first, since
-   * the ↻ control stays clickable even while a prompt is open. */
+  /** Cancels any open rename/confirm prompt.
+   *
+   * Terminal.svelte's reboot handler calls this first, since the ↻ control
+   * stays clickable even while a prompt is open. */
   export function cancelPrompt(): void {
     clearTimeout(messageTimer);
     prompt = { kind: "none" };

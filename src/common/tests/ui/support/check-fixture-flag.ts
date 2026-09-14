@@ -1,6 +1,8 @@
-// playwright.config.ts's `globalSetup`. `pnpm test:e2e` and `pnpm test:visual`
-// share one webServer on port 4322, so a stray or wrong-mode `dist/` would
-// otherwise serve the wrong PORTFOLIO_FIXTURES dataset with no signal.
+// playwright.config.ts's `globalSetup`.
+//
+// `pnpm test:e2e` and `pnpm test:visual` share one webServer on port 4322,
+// so a stray or wrong-mode `dist/` would otherwise serve the wrong
+// PORTFOLIO_FIXTURES dataset with no signal.
 //
 // Checks the served `data-fixture-mode` attribute on `<html>` rather than
 // just "is a process listening": static-server.mjs reads `dist/` fresh off

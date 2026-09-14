@@ -9,13 +9,9 @@
     dashboard: DashboardData;
     /** Whether this mounted instance is the window's focused pane — gates `data-copy-source` so `Ctrl-b [`'s untargeted `document.querySelector` only ever matches the focused instance, never a non-focused sibling when multiple dashboard panes are mounted. */
     isFocused: boolean;
-    /** Window id (a tmux `ProgramName`) -> its live window number, so each
-     * row's hotkey column can show the real `C-b N` binding for that view
-     * instead of a fixed table. */
+    /** See `windowNumberById` on `TerminalState` (src/bootstrap/terminalState.svelte.ts). */
     windowNumbers: Record<string, number>;
-    /** Live count of every pane across every window of the active session
-     * (src/common/engines/tmux/tmux.ts `allPanes`, summed) — the footer's "synced N/N panes"
-     * reads real session state instead of a hardcoded number. */
+    /** See `totalPaneCount` on `TerminalState` (src/bootstrap/terminalState.svelte.ts). */
     paneCount: number;
     onSelect: (view: ViewId) => void;
   }

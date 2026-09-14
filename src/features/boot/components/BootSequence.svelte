@@ -7,10 +7,12 @@
   // (`replay()`/`isActive()`), so it owns its own phase state machine and
   // Terminal can gate all key handling on `isActive()` ahead of every other
   // overlay — there is no key or click that reaches the site underneath
-  // while it's running. While `booting` is true this renders an opaque
-  // `position:fixed;inset:0` layer at z-index 100, above GrepOverlay (40)
-  // and CopyMode (50), since boot covers the status bar too: there is no
-  // session chrome yet to peek through.
+  // while it's running.
+  //
+  // While `booting` is true this renders an opaque `position:fixed;inset:0`
+  // layer at z-index 100, above GrepOverlay (40) and CopyMode (50), since
+  // boot covers the status bar too: there is no session chrome yet to peek
+  // through.
   import { untrack } from "svelte";
   import type { BootData, BootStatusRow } from "../../../common/lib/data";
   import {
@@ -116,6 +118,7 @@
   }
 
   // Gated to desktopMode like every other timer/listener in the app.
+  //
   // `untrack` on the `phase` read is load-bearing: without it, the write to
   // `phase` from finish()/replay() (called outside this effect) would
   // re-run the effect and clear the timer finish() just created before it

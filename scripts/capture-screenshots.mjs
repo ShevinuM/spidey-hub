@@ -7,10 +7,13 @@
 // pipeline's `captureState()`: that pipeline's whole job is PIXEL-IDENTICAL
 // determinism for goldens — it installs a fake clock frozen at a fixed
 // instant, pre-seeds the toast pick, and pre-sets the boot-skip flag before
-// every capture. All three of those are exactly what this script does NOT
-// want (live clock, live toast pool, a real mid-boot frame), so forcing
-// reuse would mean immediately overriding most of what captureState sets
-// up. What IS reused: the proven keystroke sequences from recipes.ts
+// every capture.
+//
+// All three of those are exactly what this script does NOT want (live clock,
+// live toast pool, a real mid-boot frame), so forcing reuse would mean
+// immediately overriding most of what captureState sets up.
+//
+// What IS reused: the proven keystroke sequences from recipes.ts
 // (`RecipeAction[]`) — the same sequences the visual suite already verified
 // reach each named state — so this script can't silently drift from the
 // app's real keybindings.
@@ -48,15 +51,17 @@ async function runActions(page, actions) {
 }
 
 /**
- * Captures one named screenshot into OUT_DIR. Every non-boot shot skips the
- * boot sequence via the same sessionStorage flag the real app checks
- * (BOOT_SEEN_STORAGE_KEY), waits for the dashboard wordmark to prove the
- * keydown listener is attached (the one piece of captureState's contract
- * worth keeping — see this file's header), replays `actions`, then settles
- * on fonts + network idle before screenshotting. `boot: true` skips all of
- * that and just waits real wall-clock `waitMs` into a fresh, un-skipped
- * boot sequence — no clock control needed, this is a doc image, not a
- * pixel-gated golden.
+ * Captures one named screenshot into OUT_DIR.
+ *
+ * Every non-boot shot skips the boot sequence via the same sessionStorage
+ * flag the real app checks (BOOT_SEEN_STORAGE_KEY), waits for the dashboard
+ * wordmark to prove the keydown listener is attached (the one piece of
+ * captureState's contract worth keeping — see this file's header), replays
+ * `actions`, then settles on fonts + network idle before screenshotting.
+ *
+ * `boot: true` skips all of that and just waits real wall-clock `waitMs`
+ * into a fresh, un-skipped boot sequence — no clock control needed, this is
+ * a doc image, not a pixel-gated golden.
  */
 async function shot(context, name, { boot = false, actions = [], waitMs = 0, waitSelector } = {}) {
   const page = await context.newPage();

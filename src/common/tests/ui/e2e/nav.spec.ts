@@ -1,4 +1,5 @@
 // Runs against the real-content build (`pnpm test:e2e` builds then previews `dist/` — see playwright.config.ts's webServer entry).
+//
 // Bare q/Esc never switch views anywhere — Esc is reserved for modal-exit roles only — so navigation here goes through a status-bar click (`goDashboard()`) instead, with the q/Esc describe block asserting no navigation happens.
 import { expect, test, type Page } from "../support/fixtures";
 // This spec's `context` fixture (from ../support/fixtures.ts) pre-seeds the boot-seen flag so BootSequence's ~4.6s sequence never runs for these tests.

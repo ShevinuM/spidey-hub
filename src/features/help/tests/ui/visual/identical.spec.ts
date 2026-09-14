@@ -1,8 +1,6 @@
-// Goldens resolve via this project's own `snapshotPathTemplate`
-// (playwright.config.ts, "help-visual-<viewport>" projects) to a hardcoded
-// per-project path rather than one derived from `{projectName}`, since the
-// project name carries a "help-visual-" prefix the literal directory name
-// must not.
+// Goldens resolve via this project's own `snapshotPathTemplate` — see
+// playwright.config.ts's `common-visual` project comment for why
+// `{projectName}` can't be used here.
 import { expect, test } from "@playwright/test";
 import { extraRecipes, iteration3Recipes } from "../../../../../common/tests/ui/support/recipes";
 import { captureState } from "../../../../../common/tests/ui/support/pipeline.mjs";

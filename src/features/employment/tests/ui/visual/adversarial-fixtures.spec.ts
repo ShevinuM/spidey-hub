@@ -1,4 +1,7 @@
-// Functional (non-golden) coverage proving the adversarial fixture actually exercises the defect class it exists to catch — a tidy, fixed-length fixture dataset could pass every golden while a panel silently failed to scroll or clipped a long line.
+// Functional (non-golden) coverage proving the adversarial fixture actually exercises the defect class it exists to catch.
+//
+// A tidy, fixed-length fixture dataset could pass every golden while a
+// panel silently failed to scroll or clipped a long line.
 //
 // Fixture data under test (src/content.config.ts,
 // src/features/employment/tests/ui/support/personnel/):
@@ -6,7 +9,11 @@
 //     (the newest-dated, so it's row 0/the default selection) with an
 //     embedded 400-char unbroken (no-space) line.
 //
-// These helpers (`gotoReady`, `prefixDigit`, `fitsWithin`) are deliberately duplicated verbatim into repositories' own adversarial-fixtures.spec.ts rather than extracted into a shared support module, the rewrite-the-safety-net hazard this repo's test-infra rules exist to prevent.
+// These helpers (`gotoReady`, `prefixDigit`, `fitsWithin`) are
+// deliberately duplicated verbatim into repositories' own
+// adversarial-fixtures.spec.ts rather than extracted into a shared
+// support module, the rewrite-the-safety-net hazard this repo's
+// test-infra rules exist to prevent.
 import { expect, test, type Page } from "@playwright/test";
 import { BOOT_SEEN_STORAGE_KEY } from "../../../../../common/tests/ui/support/fixtures";
 

@@ -1,8 +1,9 @@
 <script lang="ts">
   // Shared top-straddling pill badge, rendered by every Repositories/
-  // Employment Records/Help panel. Two accents: "blue" (default —
-  // red-glow/blue-border pill, red spider glyph) and "teal" (Help's
-  // section-header pill, teal spiderman glyph).
+  // Employment Records/Help panel.
+  //
+  // Two accents: "blue" (default — red-glow/blue-border pill, red spider
+  // glyph) and "teal" (Help's section-header pill, teal spiderman glyph).
   //
   // `variant="repositories"` is the one consumer whose wrapper is
   // left-aligned, with the glyph BETWEEN the bracketed number and the
@@ -15,19 +16,23 @@
   // clicks meant for the panel underneath.
   interface Props {
     /** Panel number shown before the label — `1` in "[1] Repositories"
-     * (repositories variant) or "1 · Status" (default). Omit with `label`
-     * when using split-text (`left`/`right`) mode instead. */
+     * (repositories variant) or "1 · Status" (default).
+     *
+     * Omit with `label` when using split-text (`left`/`right`) mode
+     * instead. */
     n?: number;
     /** Panel label shown after the number. */
     label?: string;
     /** Split-text mode: renders `{left} <glyph> {right}` instead of
      * `[{n}] {label}` (Employment Records' "Employment <glyph> Records" /
-     * "File <glyph> Preview" badges). Blue accent only; pass both or
-     * neither. */
+     * "File <glyph> Preview" badges).
+     *
+     * Blue accent only; pass both or neither. */
     left?: string;
     right?: string;
-    /** "blue" (default): red-glow/blue-border pill. "teal": Help's
-     * section-header pill (teal glyph, teal border/glow). */
+    /** "blue" (default): red-glow/blue-border pill.
+     *
+     * "teal": Help's section-header pill (teal glyph, teal border/glow). */
     accent?: "blue" | "teal";
     /** Renders the pill inline instead of the default absolutely-positioned
      * wrapper that straddles a panel's top border — used by Help's section
@@ -35,8 +40,10 @@
      * straddling anything. */
     inline?: boolean;
     /** "repositories": left-aligned wrapper, glyph between the bracketed
-     * number and the label (`[N] <glyph> Label`). "default": centered
-     * wrapper, glyph before the number (or between split words). */
+     * number and the label (`[N] <glyph> Label`).
+     *
+     * "default": centered wrapper, glyph before the number (or between
+     * split words). */
     variant?: "repositories" | "default";
   }
 

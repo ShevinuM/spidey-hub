@@ -6,8 +6,10 @@
 // from Homepage.dc.html instead of the 8 real ones, a fictional employment
 // history instead of the user's real one — so 100% pixel comparisons against
 // the goldens are possible without real resume data ever reaching a
-// fixture/visual build. See src/common/lib/commits.ts for how matching
-// per-repo commit snapshots are resolved the same way.
+// fixture/visual build.
+//
+// See src/common/lib/commits.ts for how matching per-repo commit snapshots
+// are resolved the same way.
 //
 // Personnel content is a variable-depth, path-driven tree
 // (`enaimco/software-developer/{role.md, full-time/role.md,

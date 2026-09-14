@@ -3,6 +3,7 @@ import { viewports } from "./src/common/tests/ui/support/recipes";
 
 // Two viewport projects, used by tests/visual/identical.spec.ts and its
 // per-context splits (e.g. common-visual-<viewport>).
+//
 // src/common/tests/ui/support/capture-goldens.mjs is a standalone script,
 // not run through the Playwright test runner -- it manages its own
 // browser/server, so it does not go through this config.

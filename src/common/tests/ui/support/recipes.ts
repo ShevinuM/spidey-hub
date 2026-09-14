@@ -118,9 +118,13 @@ export const extraRecipes: Recipe[] = [
  * Only `identical.spec.ts` (via `captureBootState()` in pipeline.mjs) consumes this array.
  *
  * `clockOffsetMs` pins the boot's elapsed-time-driven state (pct/phase/log rows/handshake)
- * via a faked clock. An offset past the hard-stop needs two sequential `pauseAt` calls
+ * via a faked clock.
+ *
+ * An offset past the hard-stop needs two sequential `pauseAt` calls
  * (see `captureBootState()`'s header comment) so the outro's nested timeout is scheduled
- * before it fires. CSS keyframe animations are frozen separately, via
+ * before it fires.
+ *
+ * CSS keyframe animations are frozen separately, via
  * `page.screenshot({animations: "disabled"})`.
  */
 export interface BootRecipe {
@@ -149,7 +153,9 @@ export const bootRecipes: BootRecipe[] = [
 
 /**
  * Kept in its own array for the same reason as `extraRecipes`/`bootRecipes` (see their
- * header comments). Never presses Enter, so the capture has no navigation side effect baked in.
+ * header comments).
+ *
+ * Never presses Enter, so the capture has no navigation side effect baked in.
  */
 export const cmdlineRecipes: Recipe[] = [{ name: "15-cmdline", actions: [{ key: ":" }, { type: "rep" }] }];
 
@@ -158,9 +164,11 @@ export const cmdlineRecipes: Recipe[] = [{ name: "15-cmdline", actions: [{ key: 
  * kept in their own array for the same reason as the arrays above.
  *
  * A tmux prefix chord is two separate key actions: `Ctrl-b` arms the prefix, then the
- * following key is pressed alone, unmodified, as its own action. `handlePrefixedKey`
- * (Terminal.svelte) disarms the prefix on every dispatch, so repeating the same prefixed
- * key (e.g. the 5 Space presses below) needs a fresh `Control+b` before each one.
+ * following key is pressed alone, unmodified, as its own action.
+ *
+ * `handlePrefixedKey` (Terminal.svelte) disarms the prefix on every dispatch, so repeating
+ * the same prefixed key (e.g. the 5 Space presses below) needs a fresh `Control+b` before
+ * each one.
  */
 export const iteration3Recipes: Recipe[] = [
   // `neofetch` (shell.ts's builtin) is fully deterministic — fixed ASCII art plus an
@@ -216,6 +224,7 @@ export const iteration3Recipes: Recipe[] = [
  *
  * A bare `n` toggles the notifications panel while the dashboard is the active view
  * (Notifications.svelte's exported `handleKey`, wired through Terminal.svelte).
+ *
  * `check.visible` is required (not just a `url` check) because the panel is an overlay
  * on `/`, the same route the dashboard itself renders at.
  */

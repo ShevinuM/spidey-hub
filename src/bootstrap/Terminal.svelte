@@ -38,7 +38,9 @@
 
   /** Unified optional-methods contract every mounted program component's
    * `bind:this` ref may expose, since PaneTree.svelte's single ref registry
-   * looks all of them up through one shape. Every field stays optional:
+   * looks all of them up through one shape.
+   *
+   * Every field stays optional:
    * Dashboard/retina-v export no ref at all, Profile only ever exports
    * `handleKey`; HelpView also exports `isEditorOpen` (its own filter box
    * needs the same "owns the keyboard while focused" treatment an open vim
@@ -59,7 +61,9 @@
     notifications: NotificationsData;
     /** Server-computed `process.env.PORTFOLIO_FIXTURES === "1"` (read in the
      * page's Astro frontmatter, never client-side — see Notifications.svelte's
-     * own header comment for why). Gates the notification system into a
+     * own header comment for why).
+     *
+     * Gates the notification system into a
      * fixed, hand-authored core with no localStorage, no per-visit
      * injection, and no toasts, for deterministic golden capture. */
     notificationsFixtureMode: boolean;
@@ -120,13 +124,19 @@
 
   /** The one HOST-mode Shell instance — rendered directly in the template
    * below (never through PaneTree, since there's no window/pane tree to
-   * render while detached). `handleKey` is the only member `activeRef()`
+   * render while detached).
+   *
+   * `handleKey` is the only member `activeRef()`
    * below ever needs from it. */
   let hostShellRef = $state<{ handleKey: (e: KeyboardEvent) => boolean } | null>(null);
 
   /** Returns the currently-focused pane's ref (if it exposes one) — see
-   * `paneRefs`'s own comment. Recomputed fresh on every call rather than
-   * cached. `undefined` while detached (no pane is focused then) — see
+   * `paneRefs`'s own comment.
+   *
+   * Recomputed fresh on every call rather than
+   * cached.
+   *
+   * `undefined` while detached (no pane is focused then) — see
    * `activeRef()` below for the delegation target that actually covers
    * that case. */
   function focusedRef(): ProgramRef | undefined {
@@ -138,7 +148,9 @@
    * delegation slot `focusedRef()` has always occupied (key-consumption
    * checks below, `paneIsGreedy`'s own
    * `tryFocusedRef()`), just routed to the host shell instance instead of
-   * whatever pane happens to be focused. Kill-pane/rename/ex-command call
+   * whatever pane happens to be focused.
+   *
+   * Kill-pane/rename/ex-command call
    * sites deliberately keep calling `focusedRef()` directly, never this —
    * those operations are meaningless in host mode and are unreachable while
    * detached anyway (the tmux prefix is inert then too). */
@@ -179,8 +191,7 @@
   } | null>(null);
 
   /** Ctrl-b [ copy-mode overlay — same always-mounted / bind:this /
-   * handleKey():boolean contract as GrepOverlay, consulted right after the
-   * status-bar prompt. */
+   * handleKey():boolean contract as GrepOverlay. */
   let copyModeRef = $state<{
     handleKey: (e: KeyboardEvent) => boolean;
     openOverlay: () => void;
@@ -188,14 +199,18 @@
   } | null>(null);
 
   /** BootSequence.svelte — always mounted, rendered above every other
-   * overlay (see that component's own z-index note). `isActive()` gates
+   * overlay (see that component's own z-index note).
+   *
+   * `isActive()` gates
    * ALL key handling below (checked first, ahead of even copy-mode);
    * `replay()` is invoked by the dashboard's `r` hotkey and the status-bar
    * ↻ reboot control. */
   let bootRef = $state<{ replay: () => void; isActive: () => boolean } | null>(null);
 
   /** Cmdline.svelte — always mounted, same contract as GrepOverlay/CopyMode
-   * above. `isOpen()` is consulted by the tmux prefix
+   * above.
+   *
+   * `isOpen()` is consulted by the tmux prefix
    * system (handlePrefixedKey below) so an open box is gated exactly like
    * an open status-bar prompt (only the bare Ctrl-b arm and a prefixed `]`
    * paste get through); `handleKey()` is checked right alongside
@@ -231,7 +246,9 @@
 
   /** ChooseTree.svelte (`Ctrl-b w`) — same always-mounted / bind:this /
    * handleKey():boolean / isOpen()/close() contract as Cmdline/HelpSearch
-   * above. `openOverlay()` is called from the prefix `w` binding;
+   * above.
+   *
+   * `openOverlay()` is called from the prefix `w` binding;
    * `handleKey()` is consulted in its own documented slot (see ChooseTree.
    * svelte's own header comment) — after copy-mode and the prefix system,
    * before Cmdline/StatusBar/every view ref. */
@@ -265,7 +282,9 @@
   /** Plays the mock's `bDashIn` entrance animation on the site chrome the
    * moment a real boot hands off to the ready dashboard (BootSequence's
    * `onReady` callback — never fires on the sessionStorage skip path,
-   * since there's nothing to "hand off" from there). Cleared ~1.05s later
+   * since there's nothing to "hand off" from there).
+   *
+   * Cleared ~1.05s later
    * (the animation's own duration) so it doesn't linger as a stale inline
    * style or replay on an unrelated re-render. */
   let dashIn = $state(false);
@@ -283,10 +302,13 @@
   // is desktop-sized with a fine pointer — the JS half of the guard whose
   // CSS half lives in Layout.astro (see that file's own comment); the
   // mobile-block card itself is server-rendered there, not by this
-  // component. Kept reactive to live resizes.
+  // component.
+  //
+  // Kept reactive to live resizes.
   let desktopMode = $state(false);
 
   // Set once the real keydown/popstate listeners are attached (below).
+  //
   // Under real (non-faked) timers, hydration + the mobile-guard effects
   // are asynchronous relative to the initial SSR paint, so e2e tests wait
   // on `[data-terminal-ready="true"]` before dispatching any key — the SSR
@@ -321,12 +343,18 @@
     };
   });
 
-  /** The single key following an armed Ctrl-b. Always disarms. A held
+  /** The single key following an armed Ctrl-b.
+   *
+   * Always disarms.
+   *
+   * A held
    * modifier (e.g. Ctrl-d) is deliberately NOT treated as a prefix command
    * — disarm and fall through to the rest of handleKey unchanged, so e.g.
    * the Repositories/Personnel editor's own Ctrl-d/Ctrl-u half-page scroll still
    * works immediately after an (unused) Ctrl-b, and the global "modifier
-   * combos fall through untouched" rule holds even mid-prefix. (Ctrl-b
+   * combos fall through untouched" rule holds even mid-prefix.
+   *
+   * (Ctrl-b
    * itself is special-cased one level up, in handleKey(), as tmux's own
    * "send-prefix" binding — see that function's comment — so it never
    * reaches this modifier check at all on the second press.) */
@@ -393,7 +421,9 @@
     }
     if (pk === "w") {
       // `w` is real tmux choose-tree (`0` still always selects window 0,
-      // unaffected). Closes grep/cmdline/palette first (window-chrome
+      // unaffected).
+      //
+      // Closes grep/cmdline/palette first (window-chrome
       // contract) — reachable in practice only for grep (Cmdline/HelpSearch
       // being open already blocks every prefixed key including this one,
       // per the combined gate above), same "prefix precedence over grep"
@@ -438,7 +468,9 @@
       // Ctrl-b : — real tmux's own "command-prompt"
       // binding: opens the SAME floating box in its third mode
       // (tmuxCommands only — rename-window/kill-window/kill-pane/
-      // select-window/select-layout). The combined isPromptActive/
+      // select-window/select-layout).
+      //
+      // The combined isPromptActive/
       // cmdline-isOpen gate above already stops this from firing while
       // either modal system is already up.
       e.preventDefault();
@@ -492,7 +524,9 @@
   function handleKey(e: KeyboardEvent) {
     // Boot is unskippable — there is no key or click
     // that jumps past it into the site (BootSequence.svelte's own header
-    // comment). Checked before EVERYTHING else, including copy-mode, which
+    // comment).
+    //
+    // Checked before EVERYTHING else, including copy-mode, which
     // can't legitimately be open yet at this point anyway but is skipped
     // unconditionally here for the same reason the mock's own boot
     // componentDidMount only ever wires up its own `r`-on-ready check and
@@ -579,7 +613,9 @@
     // the one deliberate exception to "modifier combos fall through
     // untouched" so far (the tmux prefix above is Ctrl-b itself, which is
     // why a bare Ctrl-b never reaches this chord check: it's always
-    // consumed by the prefix-arm branch first). Everything else still
+    // consumed by the prefix-arm branch first).
+    //
+    // Everything else still
     // falls through untouched.
     const isEditorScrollChord =
       e.ctrlKey &&
@@ -590,11 +626,14 @@
     /** Tries the FOCUSED pane's own ref — the editor gate consults the
      * FOCUSED pane only, via one generic lookup through PaneTree's ref
      * registry, subject to the same "no bare modifier combos except the
-     * editor scroll chord" gate every ref has always used. Whether the
+     * editor scroll chord" gate every ref has always used.
+     *
+     * Whether the
      * widened (scroll-chord-permitting) gate applies is a CAPABILITY check
      * (does this ref export `isEditorOpen` at all?) rather than an
-     * identity check (`view === "repositories"/"employment"`) — only
-     * Repositories/EmploymentRecords ever do. Returns whether the key was consumed. */
+     * identity check (`view === "repositories"/"employment"`).
+     *
+     * Returns whether the key was consumed. */
     function tryFocusedRef(): boolean {
       const ref = activeRef();
       if (!ref?.handleKey) return false;
@@ -610,7 +649,9 @@
 
     // Delegation flip: while the focused pane's vim Editor is open, it must
     // get first refusal ahead of GrepOverlay so `/` searches the open
-    // buffer instead of opening grep — vim-faithful. Everywhere else (no
+    // buffer instead of opening grep — vim-faithful.
+    //
+    // Everywhere else (no
     // editor open), grep is consulted first, except that the tmux prefix
     // (above) runs ahead of it.
     const editorIsOpen = !!activeRef()?.isEditorOpen?.();
@@ -626,7 +667,9 @@
     }
 
     // GrepOverlay.svelte owns "/" (open) and every key while it's already
-    // open. GrepOverlay.handleKey() calls e.preventDefault() itself exactly
+    // open.
+    //
+    // GrepOverlay.handleKey() calls e.preventDefault() itself exactly
     // where the prototype's grepKey() does (see that file's header
     // comment) — never here — so an unrecognized modifier combo held while
     // the overlay is open (e.g. Cmd+L) still reaches the browser, it just
@@ -672,7 +715,9 @@
     // Signal-inbox bell/panel (dashboard view only): a bare `n`
     // toggles the panel, `Esc` closes it (Notifications.svelte's own
     // handleKey only consumes Esc while the panel is actually open, so it
-    // falls through otherwise). Placed in this same bare-key backstop
+    // falls through otherwise).
+    //
+    // Placed in this same bare-key backstop
     // section as the reboot check below so it only ever fires once every
     // pane/overlay/input above has refused the keydown — an open editor,
     // shell pane, grep query, etc. all still win first refusal over `n`/Esc.
@@ -699,7 +744,9 @@
    * route (a browser back/forward always lands on one of the six
    * canonical routes, never a mid-shell core) — maps route to session 0's
    * window if present, else no-op; no-op is automatic here since
-   * `switchToWindowById` already no-ops for a missing id. `syncUrl()`
+   * `switchToWindowById` already no-ops for a missing id.
+   *
+   * `syncUrl()`
    * inside it never re-pushes: the browser has already updated
    * `location.pathname` to match by the time this fires. */
   function onPopState() {
