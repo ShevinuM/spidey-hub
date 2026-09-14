@@ -1,12 +1,10 @@
 // Root-level smoke tier (`e2e-testing.md` R016): broad, shallow, whole-app
 // health checks — every route loads with no console error, and the terminal
 // boots. Never a feature-specific behavioral assertion; that belongs in the
-// owning feature's own `tests/ui/e2e/` (or, until each phase splits it out,
-// the bulk-imported `legacy` project). Cheap enough to run on every PR
+// owning feature's own `tests/ui/e2e/`. Cheap enough to run on every PR
 // regardless of what changed — the pre-merge gate.
 //
-// Deliberately imports the raw `@playwright/test` (same reasoning as
-// `tests/e2e/boot.spec.ts`'s own header comment), not the shared
+// Deliberately imports the raw `@playwright/test`, not the shared
 // `src/common/tests/ui/support/fixtures.ts` boot-skip helper — this suite exists
 // specifically to prove the real (unskipped) boot sequence completes on a
 // fresh tab for every route, not just that the app renders past it.

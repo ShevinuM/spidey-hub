@@ -1,10 +1,3 @@
-// Anti-drift guard for PLAN.md F1 (Iteration 7, Phase 1): a `@keyframes`
-// name declared in more than one place is exactly how the two dead
-// `ReposPanel.svelte`/`StatusPanel.svelte` `pls` duplicates went unnoticed —
-// the canonical global copy in `src/styles/global.css` kept working, so
-// nothing ever surfaced the redundant, entirely-dead component-scoped
-// copies shadowing it.
-//
 // The e2e "every animation-name resolves to a real CSSKeyframesRule" check
 // (src/common/tests/ui/e2e/animations.spec.ts) cannot catch THIS failure mode: an unused
 // `@keyframes` declaration is invisible to a resolution check — nothing
