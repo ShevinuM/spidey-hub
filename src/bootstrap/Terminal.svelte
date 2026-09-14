@@ -282,6 +282,7 @@
     () => chooseTreeRef,
     () => notificationsRef,
     focusedRef,
+    { "?": "help" },
   );
 
   /** Plays the mock's `bDashIn` entrance animation on the site chrome the

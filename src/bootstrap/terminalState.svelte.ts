@@ -5,7 +5,13 @@
 import { tick } from "svelte";
 import type { SiteData, ShellData, CmdlineData } from "../common/lib/data";
 import type { ViewId } from "../common/lib/views";
-import { VIEW_ROUTES, programToViewId, viewIdToProgram, windowIdToView } from "../common/lib/views";
+import {
+  VIEW_ROUTES,
+  activeWindowId as viewActiveWindowId,
+  programToViewId,
+  viewIdToProgram,
+  windowIdToView,
+} from "../common/lib/views";
 import type { Client, ProgramName, Session, LayoutName, PaneDirection } from "../common/engines/tmux/tmux";
 import {
   activeSessionOf,
@@ -154,6 +160,7 @@ export class TerminalState {
     private readonly getChooseTreeRef: () => ChooseTreeRef | null,
     private readonly getNotificationsRef: () => NotificationsRef | null,
     private readonly getFocusedRef: () => ProgramRef | undefined,
+    private readonly extraPrefixTargets: Record<string, string>,
   ) {
     // Deliberately an "uncontrolled" seed, not a tracked binding: each route
     // page SSRs Terminal exactly once with the view matching its own URL, and
@@ -316,7 +323,9 @@ export class TerminalState {
     for (const w of this.statusWindows) {
       if (w.number >= 1 && w.number <= 9) targets[String(w.number)] = w.id;
     }
-    if (this.statusWindows.some((w) => w.id === "help")) targets["?"] = "help";
+    for (const [key, id] of Object.entries(this.extraPrefixTargets)) {
+      if (this.statusWindows.some((w) => w.id === id)) targets[key] = id;
+    }
     return targets;
   });
 
@@ -427,7 +436,7 @@ export class TerminalState {
       sessionName: DEFAULT_SESSION_NAME,
       windows: this.site.statusBar.windows,
       epoch: resolvePageEpoch(),
-      activeWindowId: "dashboard",
+      activeWindowId: viewActiveWindowId("home"),
       hostNarrative: seedHostNarrative(this.shell, DEFAULT_SESSION_NAME),
     });
     this.syncUrl();
@@ -874,25 +883,14 @@ export class TerminalState {
    * closes itself whenever this returns nothing, same convention as the
    * `onSubmit` prop it's called from). */
   executeSiteAction(action: string | undefined, args: string): string | undefined {
+    if (action?.startsWith("view:")) {
+      const view = action.slice("view:".length);
+      if (view in VIEW_ROUTES) {
+        this.switchToProgram(viewIdToProgram(view as ViewId));
+        return undefined;
+      }
+    }
     switch (action) {
-      case "view:home":
-        this.switchToProgram("dashboard");
-        return undefined;
-      case "view:repositories":
-        this.switchToProgram("repositories");
-        return undefined;
-      case "view:employment":
-        this.switchToProgram("employment");
-        return undefined;
-      case "view:profile":
-        this.switchToProgram("profile");
-        return undefined;
-      case "view:retina-v":
-        this.switchToProgram("retina-v");
-        return undefined;
-      case "view:help":
-        this.switchToProgram("help");
-        return undefined;
       case "grep":
         this.getGrepRef()?.openWithQuery?.(args);
         return undefined;
