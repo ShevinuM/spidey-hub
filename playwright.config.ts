@@ -1,48 +1,44 @@
 import { defineConfig, devices } from "@playwright/test";
 import { viewports } from "./src/common/tests/ui/support/recipes";
 
-// Two viewport projects (PLAN.md "Visual-regression harness"), used by
-// tests/visual/identical.spec.ts (and its per-context splits, e.g.
-// common-visual-<viewport> — 00-phases.md D21).
-// src/common/tests/ui/support/capture-goldens.mjs is a standalone
-// script (not run through the Playwright test runner) and manages its own
+// Two viewport projects, used by tests/visual/identical.spec.ts and its
+// per-context splits (e.g. common-visual-<viewport>).
+// src/common/tests/ui/support/capture-goldens.mjs is a standalone script,
+// not run through the Playwright test runner -- it manages its own
 // browser/server, so it does not go through this config.
 export default defineConfig({
   testDir: "./tests",
-  // test:e2e (real
-  // build) and test:visual (fixture build) share the port-4322 webServer
-  // entry below with `reuseExistingServer: true`, so a stale server left
-  // over from the other suite would otherwise serve the wrong
-  // PORTFOLIO_FIXTURES mode with no signal. See src/common/tests/ui/support/check-fixture-flag.ts.
+  // test:e2e (real build) and test:visual (fixture build) share the
+  // port-4322 webServer entry below with `reuseExistingServer: true`, so a
+  // stale server left over from the other suite would otherwise serve the
+  // wrong PORTFOLIO_FIXTURES mode with no signal -- see check-fixture-flag.ts.
   globalSetup: "./src/common/tests/ui/support/check-fixture-flag.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: "html",
   // tests/visual/identical.spec.ts uses `expect(png).toMatchSnapshot({name})`
-  // (not `toHaveScreenshot`, so the capture pipeline contract in
-  // src/common/tests/ui/support/pipeline.mjs stays the single source of truth
-  // for how the screenshot itself is taken) — this points its lookup at the
-  // already-committed goldens (tests/visual/goldens/<viewport>/<recipe>.png),
-  // where <viewport> is each project's own name (see `viewports` above:
-  // "1512x945" / "1920x1080", matching the original
-  // capture-goldens.mjs output layout exactly) instead of Playwright's
-  // default per-spec `-snapshots/` directory. Per-context splits (e.g.
+  // instead of `toHaveScreenshot`, keeping pipeline.mjs the single source
+  // of truth for how the screenshot is taken.
+  //
+  // This template points snapshot lookup at the already-committed goldens
+  // (tests/visual/goldens/<viewport>/<recipe>.png, matching
+  // capture-goldens.mjs's own output layout) instead of Playwright's
+  // default per-spec `-snapshots/` directory; per-context splits (e.g.
   // `common-visual-<viewport>` below) override this with their own
-  // `snapshotPathTemplate` instead (D21(a)).
+  // `snapshotPathTemplate`.
   snapshotPathTemplate: "tests/visual/goldens/{projectName}/{arg}{ext}",
   use: {
     trace: "on-first-retry",
-    // The real implementation build (astro preview), used by the visual
-    // specs and every context/feature e2e project — the vendored reference
-    // (port 4400) is only ever addressed by its own full URL.
+    // The app's `dist/` build, used by the visual specs and every
+    // context/feature e2e project — the vendored reference (port 4400) is
+    // only ever addressed by its own full URL.
     baseURL: "http://localhost:4322",
   },
   projects: [
-    // Root smoke tier (e2e-testing.md R016/R017): broad, shallow,
-    // whole-app health checks — the pre-merge gate. Runs at the same
-    // primary viewport/device config as every context/feature project
-    // below.
+    // Root smoke tier: broad, shallow, whole-app health checks run as the
+    // pre-merge gate, at the same primary viewport/device config as every
+    // context/feature project below.
     {
       name: "smoke",
       testDir: "./tests/ui/smoke",
@@ -52,10 +48,9 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
-    // Visual-regression harness (unchanged names/config — see the
-    // `snapshotPathTemplate` comment above: `{projectName}` must stay
-    // exactly the viewport name for the existing goldens to resolve; D21
-    // owns any future change to this convention, not pre-phase).
+    // Visual-regression harness: `{projectName}` must stay exactly the
+    // viewport name for the existing goldens to resolve (see the
+    // `snapshotPathTemplate` comment above).
     ...viewports.map((viewport) => ({
       name: viewport.name,
       testDir: "./tests/visual",
@@ -65,10 +60,9 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `common` (D10/D20): the 12 kernel+editor specs phase 02 ported out of
-    // `legacy` — one project per viewport, same reasoning as `common-visual-<viewport>`
-    // below (a Playwright project is 1:1 with one `use` config, so two
-    // viewports can't share one project name).
+    // `common`: the 12 kernel+editor specs, one project per viewport -- a
+    // Playwright project is 1:1 with one `use` config, so two viewports
+    // can't share one project name.
     ...viewports.map((viewport) => ({
       name: `common-${viewport.name}`,
       testDir: "./src/common/tests/ui/e2e",
@@ -78,21 +72,18 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `common-visual` (D21): the 4 recipes phase 02 owns per
-    // Instructions/01-pre-phase/recipe-feature-map.md ("06-editor",
-    // "15-cmdline", "18-split", "19-choose-tree"), plus "08-tracker" (joined
-    // late via phase 07's R1 ruling — its sole renderer is
-    // common/components/Wallpaper.svelte, not Dashboard.svelte, so it never
-    // belonged to the dashboard feature phase), moved out of the
-    // viewport-named visual projects above. `{projectName}` here is
-    // `common-visual-<viewport>`, not the bare viewport, so it can no longer
-    // feed `snapshotPathTemplate`'s `{projectName}` token the way the
-    // pre-split viewport-named projects still do — each project instead
-    // gets its own `snapshotPathTemplate` with the viewport hardcoded as a
-    // literal, which is what actually reproduces
-    // `.../goldens/<viewport>/<recipe>.png` byte-identically (D21(a)). Every
-    // later context/feature's own `<context>-visual-<viewport>` project
-    // reuses this same per-project-template shape, not `{projectName}`.
+    // `common-visual`: owns recipes "06-editor", "15-cmdline", "18-split",
+    // "19-choose-tree", and "08-tracker" (whose sole renderer is
+    // src/common/components/Wallpaper.svelte, not Dashboard.svelte).
+    //
+    // Because `{projectName}` here is `common-visual-<viewport>` rather
+    // than the bare viewport, it can't feed `snapshotPathTemplate`'s
+    // `{projectName}` token the way the un-split visual projects above do,
+    // so each project sets its own `snapshotPathTemplate` with the
+    // viewport hardcoded as a literal to reproduce
+    // `.../goldens/<viewport>/<recipe>.png` byte-identically; every later
+    // context/feature's `<context>-visual-<viewport>` project reuses this
+    // same per-project-template shape.
     ...viewports.map((viewport) => ({
       name: `common-visual-${viewport.name}`,
       testDir: "./src/common/tests/ui/visual",
@@ -103,9 +94,7 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `profile` (D20): the 1 spec (profile.spec.ts) phase 03 ported out of
-    // `legacy` — one project per viewport, same reasoning as `common-<viewport>`
-    // above.
+    // `profile`: the 1 spec (profile.spec.ts), one project per viewport.
     ...viewports.map((viewport) => ({
       name: `profile-${viewport.name}`,
       testDir: "./src/features/profile/tests/ui/e2e",
@@ -115,15 +104,12 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `profile-visual` (D21): the 1 recipe phase 03 owns per
-    // Instructions/01-pre-phase/recipe-feature-map.md ("07-profile"), moved
-    // out of the viewport-named visual projects above (and out of
-    // tests/visual/identical.spec.ts's SPLIT_OWNED_RECIPE_NAMES filter).
-    // Reuses common's split-project shape verbatim (D21(a)): its own
-    // `snapshotPathTemplate` with the viewport hardcoded as a literal, not
-    // derived from `{projectName}` — only the path prefix differs, since
-    // feature tests nest under `src/features/<f>/tests/` rather than
-    // common's `src/common/tests/`.
+    // `profile-visual`: owns recipe "07-profile" (excluded from the
+    // un-split visual projects above via
+    // tests/visual/identical.spec.ts's SPLIT_OWNED_RECIPE_NAMES filter);
+    // reuses common-visual's per-project snapshotPathTemplate shape, with
+    // only the path prefix differing since feature tests nest under
+    // `src/features/<f>/tests/` rather than `src/common/tests/`.
     ...viewports.map((viewport) => ({
       name: `profile-visual-${viewport.name}`,
       testDir: "./src/features/profile/tests/ui/visual",
@@ -134,12 +120,10 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `profile-harness` (D24): the feature-harness mechanism phase 03
-    // settles for every later feature phase (04-11) to reuse verbatim.
-    // Fixture-build-only (the route's own `getStaticPaths` returns `[]`
-    // otherwise); functional assertions only (mount + core interactions),
-    // no goldens — so one project at the primary viewport suffices, same
-    // as `smoke` above, not a per-viewport pair.
+    // `profile-harness`: fixture-build-only (the route's own
+    // `getStaticPaths` returns `[]` otherwise), functional assertions only
+    // (mount + core interactions), no goldens -- one project at the primary
+    // viewport, not a per-viewport pair, same as `smoke` above.
     {
       name: "profile-harness",
       testDir: "./src/features/profile/tests/ui/harness",
@@ -149,9 +133,8 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
-    // `help` (D20): the 3 specs (help.spec.ts, help-layout.spec.ts,
-    // help-search.spec.ts) phase 04 ported out of `legacy` — one project per
-    // viewport, same reasoning as `profile-<viewport>` above.
+    // `help`: the 3 specs (help.spec.ts, help-layout.spec.ts,
+    // help-search.spec.ts), one project per viewport.
     ...viewports.map((viewport) => ({
       name: `help-${viewport.name}`,
       testDir: "./src/features/help/tests/ui/e2e",
@@ -161,13 +144,9 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `help-visual` (D21): the 2 recipes phase 04 owns per
-    // Instructions/01-pre-phase/recipe-feature-map.md ("11-help",
-    // "20-help-search"), moved out of the viewport-named visual projects
-    // above (and out of tests/visual/identical.spec.ts's
-    // SPLIT_OWNED_RECIPE_NAMES filter). Reuses common's/profile's split-project
-    // shape verbatim (D21(a)): its own `snapshotPathTemplate` with the
-    // viewport hardcoded as a literal, not derived from `{projectName}`.
+    // `help-visual`: owns recipes "11-help" and "20-help-search" (excluded
+    // from the un-split visual projects via SPLIT_OWNED_RECIPE_NAMES);
+    // reuses common-visual's per-project snapshotPathTemplate shape.
     ...viewports.map((viewport) => ({
       name: `help-visual-${viewport.name}`,
       testDir: "./src/features/help/tests/ui/visual",
@@ -178,10 +157,9 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `help-harness` (D24): help's own harness route + spec, reusing
-    // phase 03's settled mechanism verbatim. Fixture-build-only; functional
-    // assertions only (mount + core interactions), no goldens — one project
-    // at the primary viewport, same as `profile-harness` above.
+    // `help-harness`: fixture-build-only, functional assertions only, no
+    // goldens -- one project at the primary viewport, same shape as
+    // `profile-harness` above.
     {
       name: "help-harness",
       testDir: "./src/features/help/tests/ui/harness",
@@ -191,9 +169,8 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
-    // `boot` (D20): the 2 specs (boot.spec.ts, cold-boot.spec.ts) phase 05
-    // ported out of `legacy` — one project per viewport, same reasoning as
-    // `help-<viewport>` above.
+    // `boot`: the 2 specs (boot.spec.ts, cold-boot.spec.ts), one project
+    // per viewport.
     ...viewports.map((viewport) => ({
       name: `boot-${viewport.name}`,
       testDir: "./src/features/boot/tests/ui/e2e",
@@ -203,13 +180,10 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `boot-visual` (D21): the 2 recipes phase 05 owns per
-    // Instructions/01-pre-phase/recipe-feature-map.md ("13-boot-mid",
-    // "14-boot-ready"), moved out of the viewport-named visual projects above
-    // (and out of tests/visual/identical.spec.ts's SPLIT_OWNED_RECIPE_NAMES
-    // filter). Reuses common's/profile's/help's split-project shape verbatim
-    // (D21(a)): its own `snapshotPathTemplate` with the viewport hardcoded as
-    // a literal, not derived from `{projectName}`.
+    // `boot-visual`: owns recipes "13-boot-mid" and "14-boot-ready"
+    // (excluded from the un-split visual projects via
+    // SPLIT_OWNED_RECIPE_NAMES); reuses common-visual's per-project
+    // snapshotPathTemplate shape.
     ...viewports.map((viewport) => ({
       name: `boot-visual-${viewport.name}`,
       testDir: "./src/features/boot/tests/ui/visual",
@@ -220,11 +194,9 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `boot-harness` (D24): boot's own harness route + spec, reusing
-    // phase 03's settled mechanism verbatim. Fixture-build-only; functional
-    // assertions only (mount + core interactions), no goldens — one project
-    // at the primary viewport, same as `profile-harness`/`help-harness`
-    // above.
+    // `boot-harness`: fixture-build-only, functional assertions only, no
+    // goldens -- one project at the primary viewport, same shape as
+    // `profile-harness` above.
     {
       name: "boot-harness",
       testDir: "./src/features/boot/tests/ui/harness",
@@ -234,10 +206,9 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
-    // `notifications` (D20): the 3 specs (notifications.spec.ts,
-    // notifications-boot.spec.ts, toast-drain-arm.spec.ts) phase 06 ported
-    // out of `legacy` — one project per viewport, same reasoning as
-    // `boot-<viewport>` above.
+    // `notifications`: the 3 specs (notifications.spec.ts,
+    // notifications-boot.spec.ts, toast-drain-arm.spec.ts), one project per
+    // viewport.
     ...viewports.map((viewport) => ({
       name: `notifications-${viewport.name}`,
       testDir: "./src/features/notifications/tests/ui/e2e",
@@ -247,13 +218,10 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `notifications-visual` (D21): the 1 recipe phase 06 owns
-    // ("21-notifications-panel-open"), moved out of the viewport-named
-    // visual projects above (and out of tests/visual/identical.spec.ts's
-    // SPLIT_OWNED_RECIPE_NAMES filter). Reuses common's/profile's/help's/
-    // boot's split-project shape verbatim (D21(a)): its own
-    // `snapshotPathTemplate` with the viewport hardcoded as a literal, not
-    // derived from `{projectName}`.
+    // `notifications-visual`: owns recipe "21-notifications-panel-open"
+    // (excluded from the un-split visual projects via
+    // SPLIT_OWNED_RECIPE_NAMES); reuses common-visual's per-project
+    // snapshotPathTemplate shape.
     ...viewports.map((viewport) => ({
       name: `notifications-visual-${viewport.name}`,
       testDir: "./src/features/notifications/tests/ui/visual",
@@ -264,11 +232,9 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `notifications-harness` (D24): notifications' own harness route +
-    // spec, reusing phase 03's settled mechanism verbatim. Fixture-build-only;
-    // functional assertions only (mount + core interactions), no goldens —
-    // one project at the primary viewport, same as
-    // `profile-harness`/`help-harness`/`boot-harness` above.
+    // `notifications-harness`: fixture-build-only, functional assertions
+    // only, no goldens -- one project at the primary viewport, same shape as
+    // `profile-harness` above.
     {
       name: "notifications-harness",
       testDir: "./src/features/notifications/tests/ui/harness",
@@ -278,9 +244,8 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
-    // `dashboard` (D20): the 1 spec (dashboard.spec.ts) phase 07 ported out
-    // of `legacy` — one project per viewport, same reasoning as
-    // `notifications-<viewport>` above.
+    // `dashboard`: the 1 spec (dashboard.spec.ts), one project per
+    // viewport.
     ...viewports.map((viewport) => ({
       name: `dashboard-${viewport.name}`,
       testDir: "./src/features/dashboard/tests/ui/e2e",
@@ -290,16 +255,13 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `dashboard-visual` (D21): the 1 recipe phase 07 owns ("01-dashboard"),
-    // moved out of the viewport-named visual projects above (and out of
-    // tests/visual/identical.spec.ts's SPLIT_OWNED_RECIPE_NAMES filter).
-    // Reuses common's/profile's/help's/boot's/notifications' split-project
-    // shape verbatim (D21(a)): its own `snapshotPathTemplate` with the
-    // viewport hardcoded as a literal, not derived from `{projectName}`.
-    // "08-tracker" (also owned by this phase's original goal line) is NOT
-    // here — phase-07 R1 ruled it common's; it moved into
-    // src/common/tests/ui/visual/ instead, under the existing
-    // `common-visual-<viewport>` projects.
+    // `dashboard-visual`: owns recipe "01-dashboard" (excluded from the
+    // un-split visual projects via SPLIT_OWNED_RECIPE_NAMES); reuses
+    // common-visual's per-project snapshotPathTemplate shape.
+    //
+    // "08-tracker" is owned by `common-visual` instead, not here -- see
+    // src/common/tests/ui/visual/ under the `common-visual-<viewport>`
+    // projects.
     ...viewports.map((viewport) => ({
       name: `dashboard-visual-${viewport.name}`,
       testDir: "./src/features/dashboard/tests/ui/visual",
@@ -310,12 +272,9 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `dashboard-harness` (D24): dashboard's own harness route + spec,
-    // reusing phase 03's settled mechanism verbatim. Fixture-build-only;
-    // functional assertions only (mount + core interactions), no goldens —
-    // one project at the primary viewport, same as
-    // `profile-harness`/`help-harness`/`boot-harness`/
-    // `notifications-harness` above.
+    // `dashboard-harness`: fixture-build-only, functional assertions only,
+    // no goldens -- one project at the primary viewport, same shape as
+    // `profile-harness` above.
     {
       name: "dashboard-harness",
       testDir: "./src/features/dashboard/tests/ui/harness",
@@ -325,10 +284,8 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
-    // `employment` (D20): the 2 specs (employment.spec.ts,
-    // employment-layout.spec.ts) phase 08 ported out of `legacy` — one
-    // project per viewport, same reasoning as `notifications-<viewport>`/
-    // `dashboard-<viewport>` above.
+    // `employment`: the 2 specs (employment.spec.ts,
+    // employment-layout.spec.ts), one project per viewport.
     ...viewports.map((viewport) => ({
       name: `employment-${viewport.name}`,
       testDir: "./src/features/employment/tests/ui/e2e",
@@ -338,14 +295,10 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `employment-visual` (D21): the 2 recipes phase 08 owns
-    // ("04-employment-l0", "05-employment-l1"), moved out of the
-    // viewport-named visual projects above (and out of
-    // tests/visual/identical.spec.ts's SPLIT_OWNED_RECIPE_NAMES filter).
-    // Reuses common's/profile's/help's/boot's/notifications'/dashboard's
-    // split-project shape verbatim (D21(a)): its own `snapshotPathTemplate`
-    // with the viewport hardcoded as a literal, not derived from
-    // `{projectName}`.
+    // `employment-visual`: owns recipes "04-employment-l0" and
+    // "05-employment-l1" (excluded from the un-split visual projects via
+    // SPLIT_OWNED_RECIPE_NAMES); reuses common-visual's per-project
+    // snapshotPathTemplate shape.
     ...viewports.map((viewport) => ({
       name: `employment-visual-${viewport.name}`,
       testDir: "./src/features/employment/tests/ui/visual",
@@ -356,12 +309,9 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `employment-harness` (D24): employment's own harness route + spec,
-    // reusing phase 03's settled mechanism verbatim. Fixture-build-only;
-    // functional assertions only (mount + core interactions), no goldens —
-    // one project at the primary viewport, same as
-    // `profile-harness`/`help-harness`/`boot-harness`/
-    // `notifications-harness`/`dashboard-harness` above.
+    // `employment-harness`: fixture-build-only, functional assertions
+    // only, no goldens -- one project at the primary viewport, same shape
+    // as `profile-harness` above.
     {
       name: "employment-harness",
       testDir: "./src/features/employment/tests/ui/harness",
@@ -371,10 +321,10 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
-    // `repositories` (D20): the 4 specs (repositories.spec.ts,
-    // repositories-preview-highlight.spec.ts, repositories-preview-scroll.spec.ts,
-    // repositories-status-dots.spec.ts) phase 09 ported out of `legacy` — one
-    // project per viewport, same reasoning as `employment-<viewport>` above.
+    // `repositories`: the 4 specs (repositories.spec.ts,
+    // repositories-preview-highlight.spec.ts,
+    // repositories-preview-scroll.spec.ts, repositories-status-dots.spec.ts),
+    // one project per viewport.
     ...viewports.map((viewport) => ({
       name: `repositories-${viewport.name}`,
       testDir: "./src/features/repositories/tests/ui/e2e",
@@ -384,14 +334,10 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `repositories-visual` (D21): the 3 recipes phase 09 owns
-    // ("02-repositories", "03-repositories-arrow", "12-all-projects"), moved
-    // out of the viewport-named visual projects above (and out of
-    // tests/visual/identical.spec.ts's SPLIT_OWNED_RECIPE_NAMES filter).
-    // Reuses common's/profile's/help's/boot's/notifications'/dashboard's/
-    // employment's split-project shape verbatim (D21(a)): its own
-    // `snapshotPathTemplate` with the viewport hardcoded as a literal, not
-    // derived from `{projectName}`.
+    // `repositories-visual`: owns recipes "02-repositories",
+    // "03-repositories-arrow", and "12-all-projects" (excluded from the
+    // un-split visual projects via SPLIT_OWNED_RECIPE_NAMES); reuses
+    // common-visual's per-project snapshotPathTemplate shape.
     ...viewports.map((viewport) => ({
       name: `repositories-visual-${viewport.name}`,
       testDir: "./src/features/repositories/tests/ui/visual",
@@ -402,12 +348,9 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `repositories-harness` (D24): repositories' own harness route + spec,
-    // reusing phase 03's settled mechanism verbatim. Fixture-build-only;
-    // functional assertions only (mount + core interactions), no goldens —
-    // one project at the primary viewport, same as
-    // `profile-harness`/`help-harness`/`boot-harness`/
-    // `notifications-harness`/`dashboard-harness`/`employment-harness` above.
+    // `repositories-harness`: fixture-build-only, functional assertions
+    // only, no goldens -- one project at the primary viewport, same shape
+    // as `profile-harness` above.
     {
       name: "repositories-harness",
       testDir: "./src/features/repositories/tests/ui/harness",
@@ -417,9 +360,7 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
-    // `grep`: grep.spec.ts ported out of `legacy` — one project per
-    // viewport, same reasoning as `employment-<viewport>`/
-    // `repositories-<viewport>` above.
+    // `grep`: grep.spec.ts, one project per viewport.
     ...viewports.map((viewport) => ({
       name: `grep-${viewport.name}`,
       testDir: "./src/features/grep/tests/ui/e2e",
@@ -429,16 +370,10 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `grep-visual`: the 2 recipes grep owns ("09-grep-empty",
-    // "10-grep-query"), moved out of the viewport-named visual projects
-    // above (and out of tests/visual/identical.spec.ts's
-    // SPLIT_OWNED_RECIPE_NAMES filter). Same split-project shape as
-    // common's/profile's/help's/boot's/notifications'/dashboard's/
-    // employment's/repositories' entries above: its own
-    // `snapshotPathTemplate` hardcodes the viewport as a literal rather
-    // than deriving it from `{projectName}`, because each viewport's
-    // goldens must resolve to their own fixed directory regardless of
-    // which project name renders them.
+    // `grep-visual`: owns recipes "09-grep-empty" and "10-grep-query"
+    // (excluded from the un-split visual projects via
+    // SPLIT_OWNED_RECIPE_NAMES); reuses common-visual's per-project
+    // snapshotPathTemplate shape.
     ...viewports.map((viewport) => ({
       name: `grep-visual-${viewport.name}`,
       testDir: "./src/features/grep/tests/ui/visual",
@@ -449,13 +384,9 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `grep-harness`: grep's own harness route + spec, reusing the same
-    // harness mechanism as every other feature's. Fixture-build-only;
-    // functional assertions only (mount + core interactions), no goldens —
-    // one project at the primary viewport, same as
-    // `profile-harness`/`help-harness`/`boot-harness`/
-    // `notifications-harness`/`dashboard-harness`/`employment-harness`/
-    // `repositories-harness` above.
+    // `grep-harness`: fixture-build-only, functional assertions only, no
+    // goldens -- one project at the primary viewport, same shape as
+    // `profile-harness` above.
     {
       name: "grep-harness",
       testDir: "./src/features/grep/tests/ui/harness",
@@ -465,14 +396,9 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
-    // `shell-fs-harness` (D24): shell-fs's own harness route + spec,
-    // reusing the same harness mechanism as every other feature's.
-    // Fixture-build-only; functional assertions only (mount + core pane-
-    // mode interactions), no goldens — one project at the primary
-    // viewport, same as
-    // `profile-harness`/`help-harness`/`boot-harness`/
-    // `notifications-harness`/`dashboard-harness`/`employment-harness`/
-    // `repositories-harness`/`grep-harness` above.
+    // `shell-fs-harness`: fixture-build-only, functional assertions only
+    // (mount + core pane-mode interactions), no goldens -- one project at
+    // the primary viewport, same shape as `profile-harness` above.
     {
       name: "shell-fs-harness",
       testDir: "./src/features/shell-fs/tests/ui/harness",
@@ -482,9 +408,7 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
-    // `shell-fs`: shell.spec.ts ported out of `legacy` — one project per
-    // viewport, same reasoning as `employment-<viewport>`/
-    // `repositories-<viewport>`/`grep-<viewport>` above.
+    // `shell-fs`: shell.spec.ts, one project per viewport.
     ...viewports.map((viewport) => ({
       name: `shell-fs-${viewport.name}`,
       testDir: "./src/features/shell-fs/tests/ui/e2e",
@@ -494,16 +418,10 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     })),
-    // `shell-fs-visual`: the 2 recipes shell-fs owns ("16-shell",
-    // "17-host-shell"), moved out of the viewport-named visual projects
-    // above (and out of tests/visual/identical.spec.ts's
-    // SPLIT_OWNED_RECIPE_NAMES filter). Same split-project shape as
-    // common's/profile's/help's/boot's/notifications'/dashboard's/
-    // employment's/repositories'/grep's entries above: its own
-    // `snapshotPathTemplate` hardcodes the viewport as a literal rather
-    // than deriving it from `{projectName}`, because each viewport's
-    // goldens must resolve to their own fixed directory regardless of
-    // which project name renders them.
+    // `shell-fs-visual`: owns recipes "16-shell" and "17-host-shell"
+    // (excluded from the un-split visual projects via
+    // SPLIT_OWNED_RECIPE_NAMES); reuses common-visual's per-project
+    // snapshotPathTemplate shape.
     ...viewports.map((viewport) => ({
       name: `shell-fs-visual-${viewport.name}`,
       testDir: "./src/features/shell-fs/tests/ui/visual",
@@ -517,43 +435,33 @@ export default defineConfig({
   ],
   webServer: [
     {
-      // Serves the vendored, network-independent prototype reference. Port
-      // 4400 per PLAN.md. `url` (not `port`) so the readiness check hits the
-      // actual page path — the two options are mutually exclusive in
+      // Serves the vendored, network-independent prototype reference on
+      // port 4400, using `url` rather than `port` so the readiness check
+      // hits the actual page path -- the two are mutually exclusive in
       // Playwright's webServer schema.
       //
-      // NOT used by tests/visual/identical.spec.ts (or its common-visual
-      // split): that suite compares the real/fixture implementation build
-      // (port 4322 below) directly against the committed goldens via
-      // `expect(png).toMatchSnapshot(...)` + `snapshotPathTemplate` — it
-      // never fetches this server. This entry only serves
-      // src/common/tests/ui/support/capture-goldens.mjs's historical/guarded
-      // vendored-prototype regeneration path (see that script's own header
-      // comment), which is not run as part of normal development; it is
-      // started here regardless (unconditionally, alongside the port-4322
-      // entry) because Playwright's `webServer` array has no per-project
-      // conditional wiring — confirmed empirically in phase 02's D21(b)
-      // read of identical.spec.ts/adversarial-fixtures.spec.ts.
+      // Not fetched by tests/visual/identical.spec.ts (or its
+      // common-visual split), which compares the port-4322 build directly
+      // against committed goldens via `toMatchSnapshot` +
+      // `snapshotPathTemplate` instead; this entry only serves
+      // capture-goldens.mjs's guarded vendored-prototype regeneration path
+      // (not run in normal development), started unconditionally because
+      // Playwright's `webServer` array has no per-project conditional
+      // wiring.
       command: "node src/common/tests/ui/support/static-server.mjs reference 4400",
       url: "http://localhost:4400/Homepage.dc.html",
       reuseExistingServer: !process.env.CI,
     },
     {
-      // Real implementation build, served for the visual and e2e specs.
-      // Port 4322 per PLAN.md (4321 is `astro dev`, unused by the test
-      // suite). Each of those two scripts (package.json `test:visual` /
-      // `test:e2e`) runs its own build first (`build:fixtures` / `build`
-      // respectively) so this entry only needs to serve whichever `dist/`
-      // was most recently produced.
+      // Serves the app's `dist/` build for the visual and e2e specs on port
+      // 4322 -- each suite runs its own build first (`build:fixtures` /
+      // `build`) so this entry serves whichever `dist/` was most recently
+      // produced; 4321 is `astro dev`, unused by the test suite.
       //
-      // Uses the same dependency-free static server as the reference
-      // (src/common/tests/ui/support/static-server.mjs), not `astro preview`:
-      // Astro 7.2.2's `astro preview` daemonizes (forks a detached
-      // background process; the launching process exits within ~1s), which
-      // Playwright's `webServer` treats as a crash ("Process from
-      // config.webServer exited early") since it monitors that launching
-      // process. The build output is fully static, so a plain file server
-      // (with directory→index.html resolution) serves it identically.
+      // Uses the same static server as the reference (static-server.mjs),
+      // not `astro preview`, because Astro 7.2.2's `astro preview`
+      // daemonizes -- the launching process Playwright monitors exits
+      // within ~1s, which it treats as a crash.
       command: "node src/common/tests/ui/support/static-server.mjs dist 4322",
       url: "http://localhost:4322",
       reuseExistingServer: !process.env.CI,
