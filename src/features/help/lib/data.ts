@@ -5,7 +5,7 @@ import { parseYaml } from "../../../common/lib/yaml";
 import type { CollectionEntry } from "astro:content";
 import type { HelpChrome, HelpData, HelpSearchData } from "../../../common/lib/data";
 
-export const getHelpChrome = (): HelpChrome => parseYaml<HelpChrome>(helpRaw, "help.yaml");
+const getHelpChrome = (): HelpChrome => parseYaml<HelpChrome>(helpRaw, "help.yaml");
 
 export const getHelpSearch = (): HelpSearchData => parseYaml<HelpSearchData>(helpsearchRaw, "helpsearch.yaml");
 

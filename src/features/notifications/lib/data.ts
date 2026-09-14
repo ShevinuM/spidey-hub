@@ -5,7 +5,7 @@ import type { CollectionEntry } from "astro:content";
 import type { NotificationPoolEntry, NotificationsChrome, NotificationsData } from "../../../common/lib/data";
 
 /** Builds the pool from the `notifications` content collection, sorted by frontmatter `order`, since the seeded per-visit pick depends on stable array position across rebuilds. */
-export const buildNotificationPool = (
+const buildNotificationPool = (
   entries: CollectionEntry<"notifications">[],
 ): NotificationPoolEntry[] =>
   entries

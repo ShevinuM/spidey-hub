@@ -239,9 +239,7 @@ export class TerminalState {
   view = $derived(this.activeWindow ? windowIdToView(this.activeWindow.id) : undefined);
 
   /** Status bar's own window list, re-derived from the live model on every
-   * change — same shape (`{number, id, name}`) StatusBar.svelte has always
-   * taken, just sourced from `client` instead of a separate `windows` $state
-   * array.
+   * change, in the shape (`{number, id, name}`) StatusBar.svelte takes.
    *
    * Empty while detached (StatusBar isn't even mounted then — see
    * the template). */
