@@ -106,9 +106,6 @@ type AllowlistEntry = {
   reason: string;
 };
 
-const METER_REASON =
-  "`common/components/Meter.svelte` reads its scale helpers from the profile feature, which owns them.";
-
 const FIXTURE_GLOB_REASON =
   "`common/lib/commits.ts` composes its data source at build time: an eager `import.meta.glob` over the real `src/generated/commits/` snapshots and a second one over the repositories feature's fixture snapshots, selected by `process.env.PORTFOLIO_FIXTURES`. That is the PORTFOLIO_FIXTURES build-level composition mechanism, not feature knowledge — the module is server-only (guarded against island import) and the glob never runs in a browser. `build:fixtures`, and therefore the whole visual gate, depends on the fixture branch resolving, and moving the fixtures under `common/` or duplicating them per feature would buy no decoupling at any layer that runs. Kept deliberately and permanently.";
 
@@ -117,14 +114,6 @@ const TEST_SUPPORT_REASON =
   "Shared Playwright fixtures must seed the same storage keys the features read, and duplicating those constants would let them drift silently. The reach-in stops being drift and becomes a decision with a date on it.";
 
 const ALLOWLIST: AllowlistEntry[] = [
-  {
-    source: "src/common/components/Meter.svelte",
-    specifier: "../../features/profile/lib/net",
-    added: "2026-09-14",
-    disposition: "TEMPORARY (deleted by phase 15 step 8)",
-    reason: METER_REASON,
-  },
-
   // The build-time fixture glob in the shared commits loader.
   {
     source: "src/common/lib/commits.ts",

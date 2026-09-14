@@ -2,7 +2,7 @@
   // Profile ("Agent Profile") view — reference/Homepage.dc.html lines 184-269.
   import type { ProfileData } from "../../../common/lib/data";
   import { downloadResume } from "../../../common/lib/resume";
-  import Meter from "../../../common/components/Meter.svelte";
+  import Meter from "./Meter.svelte";
 
   interface Props {
     profile: ProfileData;
