@@ -106,8 +106,9 @@ const shellFs = feature === "shell-fs" ? getShell() : undefined;
   }
   {
     // Wrapped despite Dashboard.svelte being a real, already-shipping
-    // component PaneTree.svelte mounts directly elsewhere: the wrapper
-    // supplies the onMount-flipped hydration-ready marker this `.astro`
+    // component Terminal.svelte mounts directly elsewhere (via its
+    // `paneLeaf` snippet, rendered through PaneTree.svelte's leaf wrapper):
+    // the wrapper supplies the onMount-flipped hydration-ready marker this `.astro`
     // frontmatter cannot express itself, plus the synthetic
     // isFocused/windowNumbers/paneCount/onSelect props a kernel-free mount
     // has no live tmux state to derive (see DashboardHarness's own header).

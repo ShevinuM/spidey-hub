@@ -1,7 +1,11 @@
 <script lang="ts">
   // Recursive pane-tree renderer: a "split" node renders a flex row/column
   // of its children (each sized by its parallel `sizes` fraction),
-  // recursing into itself via `<svelte:self>` for each child.
+  // recursing into itself via `<svelte:self>` for each child. A "leaf" node
+  // renders the shared focus-ring wrapper and delegates the actual
+  // per-program content to the caller-supplied `paneLeaf` snippet — this
+  // file names no feature (architecture R007): the concrete leaf registry
+  // lives with the caller (bootstrap/Terminal.svelte), not here.
   //
   // `refs` is a PROP, not a component-local Map, because Terminal.svelte
   // creates it once and threads the same object through every recursive
@@ -13,25 +17,8 @@
   // multi-instance program ever claims either; and the active-pane border
   // accent below, shown only around the actually-focused leaf when
   // `multiPane` is true.
-  import type { ProgramName, PaneNode } from "../engines/tmux/tmux";
-  import type {
-    DashboardData,
-    RepositoriesData,
-    PersonnelData,
-    ProfileData,
-    HelpData,
-    ShellData,
-  } from "../lib/data";
-  import type { CollectionEntry } from "astro:content";
-  import type { Commit } from "../lib/commits";
-  import type { SessionRosterEntry, ShellMode } from "../lib/shell";
-  import Dashboard from "../../features/dashboard/components/Dashboard.svelte";
-  import Repositories from "../../features/repositories/components/Repositories.svelte";
-  import EmploymentRecords from "../../features/employment/components/EmploymentRecords.svelte";
-  import Profile from "../../features/profile/components/Profile.svelte";
-  import HelpView from "../../features/help/components/HelpView.svelte";
-  import Shell from "../../features/shell-fs/components/Shell.svelte";
-  import { viewIdToProgram } from "../lib/views";
+  import type { Snippet } from "svelte";
+  import type { Pane, PaneNode } from "../engines/tmux/tmux";
 
   interface Props {
     node: PaneNode;
@@ -45,72 +32,27 @@
     /** Shared, non-reactive ref registry (see the file header); only ever
      * `.set`/`.delete`'d from a leaf's own `$effect`. */
     refs: Map<string, unknown>;
-    dashboard: DashboardData;
-    /** Window id (a `ProgramName`) -> its live tmux window number — threaded
-     * straight through to Dashboard.svelte's own hotkey-column lookup. */
-    windowNumberById: Record<string, number>;
-    /** Live total pane count across the whole session — threaded straight
-     * through to Dashboard.svelte's footer sync line. */
-    paneCount: number;
-    repositories: RepositoriesData;
-    personnel: PersonnelData;
-    profile: ProfileData;
-    help: HelpData;
-    shell: ShellData;
-    projects: CollectionEntry<"repositories">[];
-    personnelEntries: CollectionEntry<"personnel">[];
-    commitsByRepo: Record<string, Commit[]>;
-    /** Dashboard menu clicks are all just "switch to a different WINDOW"
-     * (exactly like a status-bar click or a prefix digit target) — never a
-     * program LAUNCH into the current pane — so they all funnel through this
-     * one callback, keyed by the target window's canonical program id. */
-    onWindowSwitch: (program: ProgramName) => void;
-    /** Shell.svelte's own three effects — launching a program IN THIS PANE
-     * (bare view-name commands/
-     * `open <view>`, never a window switch), exiting THIS pane's program
-     * back to a shell (`exit` — cascades like kill-pane), and `reboot`. */
-    onLaunchInPane: (paneId: string, program: string) => void;
-    onExitPane: (paneId: string) => void;
-    onReboot: () => void;
-    shellMode: ShellMode;
-    viewNames: readonly string[];
-    shellSession: { name: string; windowCount: number; createdAt: number; attached: boolean };
-    /** Forwarded straight through to every in-pane Shell instance so
-     * `tmux ls` (which lists
-     * every session, not just this one) works from a pane too, not only the
-     * host shell — see Shell.svelte's own prop doc comment. */
-    sessions: SessionRosterEntry[];
-    defaultSessionName: string;
+    /** Renders one leaf's per-program content — owned by the caller
+     * (bootstrap/Terminal.svelte's program→component switch), never by this
+     * file (R007). Receives the leaf's own `pane`, its computed
+     * `isFocused`, a getter and a setter for THIS `<svelte:self>`
+     * instance's own `leafRef` (wired via a component's `bind:this={get,
+     * set}` function binding), so the ref registration `$effect` below
+     * keeps registering/unregistering exactly the instance this recursion
+     * level actually rendered — never a registry shared across leaves. */
+    paneLeaf: Snippet<[pane: Pane, isFocused: boolean, getLeafRef: () => unknown, setLeafRef: (ref: unknown) => void]>;
   }
 
-  const {
-    node,
-    activePaneId,
-    multiPane,
-    refs,
-    dashboard,
-    windowNumberById,
-    paneCount,
-    repositories,
-    personnel,
-    profile,
-    help,
-    shell,
-    projects,
-    personnelEntries,
-    commitsByRepo,
-    onWindowSwitch,
-    onLaunchInPane,
-    onExitPane,
-    onReboot,
-    shellMode,
-    viewNames,
-    shellSession,
-    sessions,
-    defaultSessionName,
-  }: Props = $props();
+  const { node, activePaneId, multiPane, refs, paneLeaf }: Props = $props();
 
   let leafRef = $state<unknown>(null);
+
+  function getLeafRef(): unknown {
+    return leafRef;
+  }
+  function setLeafRef(ref: unknown): void {
+    leafRef = ref;
+  }
 
   $effect(() => {
     if (node.type !== "leaf") return;
@@ -135,32 +77,7 @@
             : 'border-top:1px solid rgba(196,216,232,.18)'
           : ''}"
       >
-        <svelte:self
-          node={child}
-          {activePaneId}
-          {multiPane}
-          {refs}
-          {dashboard}
-          {windowNumberById}
-          {paneCount}
-          {repositories}
-          {personnel}
-          {profile}
-          {help}
-          {shell}
-          {projects}
-          {personnelEntries}
-          {commitsByRepo}
-          {onWindowSwitch}
-          {onLaunchInPane}
-          {onExitPane}
-          {onReboot}
-          {shellMode}
-          {viewNames}
-          {shellSession}
-          {sessions}
-          {defaultSessionName}
-        />
+        <svelte:self node={child} {activePaneId} {multiPane} {refs} {paneLeaf} />
       </div>
     {/each}
   </div>
@@ -172,49 +89,6 @@
       ? 'box-shadow:inset 0 0 0 1px #e0453c'
       : ''}"
   >
-    {#if node.pane.program === "dashboard"}
-      <Dashboard {dashboard} {isFocused} windowNumbers={windowNumberById} {paneCount} onSelect={(v) => onWindowSwitch(viewIdToProgram(v))} />
-    {:else if node.pane.program === "retina-v"}
-      <!-- The full-opacity map/HUD is Wallpaper's own view-gated opacity
-           (rendered once, behind every window, by Terminal.svelte) — this
-           branch is otherwise empty. The filler
-           div keeps the flex column's layout identical to every other
-           window (StatusBar still pinned to the bottom). -->
-      <div style="flex:1;min-height:0"></div>
-    {:else if node.pane.program === "repositories"}
-      <Repositories
-        bind:this={leafRef}
-        {repositories}
-        {projects}
-        {commitsByRepo}
-        {isFocused}
-      />
-    {:else if node.pane.program === "employment"}
-      <EmploymentRecords
-        bind:this={leafRef}
-        {personnel}
-        {personnelEntries}
-        {isFocused}
-      />
-    {:else if node.pane.program === "help"}
-      <HelpView bind:this={leafRef} {help} {isFocused} />
-    {:else if node.pane.program === "profile"}
-      <Profile bind:this={leafRef} {profile} {isFocused} />
-    {:else}
-      <Shell
-        bind:this={leafRef}
-        {shell}
-        pane={node.pane}
-        mode={shellMode}
-        {viewNames}
-        session={shellSession}
-        {sessions}
-        {defaultSessionName}
-        {isFocused}
-        onLaunch={(program) => onLaunchInPane(node.pane.id, program)}
-        onExit={() => onExitPane(node.pane.id)}
-        {onReboot}
-      />
-    {/if}
+    {@render paneLeaf(node.pane, isFocused, getLeafRef, setLeafRef)}
   </div>
 {/if}

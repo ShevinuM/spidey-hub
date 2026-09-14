@@ -1,6 +1,7 @@
 // Proves Dashboard.svelte renders standalone (wordmark, menu rows, footer
 // line, no kernel chrome) at `/harness/dashboard`; does not assert row
-// navigation, since PaneTree.svelte/Terminal.svelte own that in the real app.
+// navigation, since Terminal.svelte owns that in the real app (its
+// `paneLeaf` snippet's onSelect wiring).
 import { expect, test } from "@playwright/test";
 import { DashboardPage } from "../pages/DashboardPage";
 

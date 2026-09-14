@@ -1,9 +1,9 @@
 <script lang="ts">
   // Synthetic props stand in for the live tmux state (`isFocused`/
-  // `windowNumbers`/`paneCount`/`onSelect`) that Terminal.svelte/
-  // PaneTree.svelte own in the real app; `windowNumbers` mirrors the real
-  // window-id mapping so the hotkey column renders true bindings instead of
-  // blank cells.
+  // `windowNumbers`/`paneCount`/`onSelect`) that Terminal.svelte owns in the
+  // real app (its `paneLeaf` snippet, rendered through PaneTree.svelte's
+  // leaf wrapper); `windowNumbers` mirrors the real window-id mapping so the
+  // hotkey column renders true bindings instead of blank cells.
   import { onMount } from "svelte";
   import Dashboard from "../../../components/Dashboard.svelte";
   import type { DashboardData } from "../../../../../common/lib/data";

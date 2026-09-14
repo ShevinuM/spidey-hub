@@ -106,9 +106,6 @@ type AllowlistEntry = {
   reason: string;
 };
 
-const PANE_TREE_REASON =
-  "`common/components/PaneTree.svelte` statically imports each feature's top-level view to render whichever pane is active, so the shared pane container knows the concrete feature set.";
-
 const METER_REASON =
   "`common/components/Meter.svelte` reads its scale helpers from the profile feature, which owns them.";
 
@@ -120,22 +117,6 @@ const TEST_SUPPORT_REASON =
   "Shared Playwright fixtures must seed the same storage keys the features read, and duplicating those constants would let them drift silently. The reach-in stops being drift and becomes a decision with a date on it.";
 
 const ALLOWLIST: AllowlistEntry[] = [
-  // Six view reach-ins from the shared pane container.
-  ...[
-    "../../features/dashboard/components/Dashboard.svelte",
-    "../../features/repositories/components/Repositories.svelte",
-    "../../features/employment/components/EmploymentRecords.svelte",
-    "../../features/profile/components/Profile.svelte",
-    "../../features/help/components/HelpView.svelte",
-    "../../features/shell-fs/components/Shell.svelte",
-  ].map((specifier) => ({
-    source: "src/common/components/PaneTree.svelte",
-    specifier,
-    added: "2026-09-14",
-    disposition: "TEMPORARY (deleted by phase 15 step 8)",
-    reason: PANE_TREE_REASON,
-  })),
-
   {
     source: "src/common/components/Meter.svelte",
     specifier: "../../features/profile/lib/net",

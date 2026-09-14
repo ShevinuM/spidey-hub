@@ -21,12 +21,17 @@
   import type { Commit } from "../common/lib/commits";
   import type { ViewId } from "../common/lib/views";
   import { pathToView, viewIdToProgram } from "../common/lib/views";
-  import type { PaneDirection } from "../common/engines/tmux/tmux";
+  import type { Pane, PaneDirection } from "../common/engines/tmux/tmux";
   import type { ShellMode } from "../common/lib/shell";
   import { TerminalState, DEFAULT_SESSION_NAME } from "./terminalState.svelte";
   import Wallpaper from "../common/components/Wallpaper.svelte";
   import StatusBar from "../common/components/StatusBar.svelte";
   import PaneTree from "../common/components/PaneTree.svelte";
+  import Dashboard from "../features/dashboard/components/Dashboard.svelte";
+  import Repositories from "../features/repositories/components/Repositories.svelte";
+  import EmploymentRecords from "../features/employment/components/EmploymentRecords.svelte";
+  import Profile from "../features/profile/components/Profile.svelte";
+  import HelpView from "../features/help/components/HelpView.svelte";
   import Shell from "../features/shell-fs/components/Shell.svelte";
   import Notifications from "../features/notifications/components/Notifications.svelte";
   import GrepOverlay from "../features/grep/components/GrepOverlay.svelte";
@@ -785,31 +790,86 @@
         bootActive={() => bootRef?.isActive?.() ?? false}
       />
 
+      <!-- The program→component switch PaneTree.svelte itself no longer owns
+           (R007): PaneTree renders the shared leaf wrapper/focus ring and
+           calls this snippet with the leaf's own `pane`, its computed
+           `isFocused`, and a getter/setter pair for THAT `<svelte:self>`
+           instance's own `leafRef` — a Svelte 5 function binding
+           (`bind:this={get, set}`), never a variable scoped to this file,
+           so each leaf instance keeps registering/unregistering only
+           itself in `paneRefs` below (see that Map's own comment). -->
+      {#snippet paneLeaf(pane: Pane, isFocused: boolean, getLeafRef: () => unknown, setLeafRef: (ref: unknown) => void)}
+        {#if pane.program === "dashboard"}
+          <!-- Dashboard menu clicks are all just "switch to a different WINDOW"
+               (exactly like a status-bar click or a prefix digit target) — never a
+               program LAUNCH into the current pane — so they all funnel through
+               `core.switchToProgram`, keyed by the target window's canonical
+               program id. `windowNumbers`/`paneCount` feed Dashboard's own
+               hotkey-column lookup and footer sync line. -->
+          <Dashboard
+            {dashboard}
+            {isFocused}
+            windowNumbers={core.windowNumberById}
+            paneCount={core.totalPaneCount}
+            onSelect={(v) => core.switchToProgram(viewIdToProgram(v))}
+          />
+        {:else if pane.program === "retina-v"}
+          <!-- The full-opacity map/HUD is Wallpaper's own view-gated opacity
+               (rendered once, behind every window, by Terminal.svelte) — this
+               branch is otherwise empty. The filler
+               div keeps the flex column's layout identical to every other
+               window (StatusBar still pinned to the bottom). -->
+          <div style="flex:1;min-height:0"></div>
+        {:else if pane.program === "repositories"}
+          <Repositories
+            bind:this={getLeafRef, setLeafRef}
+            {repositories}
+            {projects}
+            {commitsByRepo}
+            {isFocused}
+          />
+        {:else if pane.program === "employment"}
+          <EmploymentRecords
+            bind:this={getLeafRef, setLeafRef}
+            {personnel}
+            {personnelEntries}
+            {isFocused}
+          />
+        {:else if pane.program === "help"}
+          <HelpView bind:this={getLeafRef, setLeafRef} {help} {isFocused} />
+        {:else if pane.program === "profile"}
+          <Profile bind:this={getLeafRef, setLeafRef} {profile} {isFocused} />
+        {:else}
+          <!-- Shell.svelte's own three effects: launching a program IN THIS PANE
+               (bare view-name commands/`open <view>`, never a window switch),
+               exiting THIS pane's program back to a shell (`exit` — cascades
+               like kill-pane), and `reboot`. `sessions` is forwarded straight
+               through so `tmux ls` (which lists every session, not just this
+               one) works from a pane too, not only the host shell — see
+               Shell.svelte's own prop doc comment. -->
+          <Shell
+            bind:this={getLeafRef, setLeafRef}
+            {shell}
+            {pane}
+            mode={SHELL_MODE}
+            viewNames={VIEW_NAMES}
+            session={core.shellSession}
+            sessions={core.sessionsRoster}
+            defaultSessionName={DEFAULT_SESSION_NAME}
+            {isFocused}
+            onLaunch={(program) => core.onLaunchInPane(pane.id, program)}
+            onExit={() => core.onExitPane(pane.id)}
+            onReboot={core.reboot}
+          />
+        {/if}
+      {/snippet}
+
       <PaneTree
         node={core.activeWindow!.root}
         activePaneId={core.activeWindow!.activePaneId}
         multiPane={core.multiPane}
         refs={paneRefs}
-        {dashboard}
-        windowNumberById={core.windowNumberById}
-        paneCount={core.totalPaneCount}
-        {repositories}
-        {personnel}
-        {profile}
-        {help}
-        {shell}
-        {projects}
-        {personnelEntries}
-        {commitsByRepo}
-        onWindowSwitch={core.switchToProgram}
-        onLaunchInPane={core.onLaunchInPane}
-        onExitPane={core.onExitPane}
-        onReboot={core.reboot}
-        shellMode={SHELL_MODE}
-        viewNames={VIEW_NAMES}
-        shellSession={core.shellSession}
-        sessions={core.sessionsRoster}
-        defaultSessionName={DEFAULT_SESSION_NAME}
+        {paneLeaf}
       />
 
       <StatusBar
