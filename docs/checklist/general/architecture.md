@@ -1,6 +1,6 @@
 # Architecture & layering
 
-The structural rules for the bounded-context rewrite: the skeleton, the dependency rule, shared code, and how feature boundaries are drawn.
+The structural rules for the feature-context rewrite: the skeleton, the dependency rule, shared code, and how feature boundaries are drawn.
 
 ## The skeleton
 
@@ -9,7 +9,7 @@ The structural rules for the bounded-context rewrite: the skeleton, the dependen
   ```
   <repo root>/
   ├── src/
-  │   ├── features/           one bounded context per folder
+  │   ├── features/           one feature context per folder
   │   │   └── <feature>/
   │   │       ├── components/
   │   │       ├── lib/
@@ -39,11 +39,11 @@ The structural rules for the bounded-context rewrite: the skeleton, the dependen
 - [ ] **R008** `bootstrap/` is the composition root: it is the only code that imports every feature, wires `common`'s engines into them, and knows the full feature list. A page or entrypoint constructs nothing directly — it calls into `bootstrap`.
 - [ ] **R009** Boundary rules (no-feature-imports-feature, no-common-imports-feature, no-feature-imports-bootstrap) are enforced by a fitness test (e.g. dependency-cruiser), not left to convention. A new architecture rule is fired against a synthetic violation once, to prove it isn't passing vacuously, before it's trusted.
 
-## Bounded contexts — drawing and instantiating
+## Feature contexts — drawing and instantiating
 
-- [ ] **R010** Bounded contexts are discovered, not declared: scaffold a feature's folder only when its first real page/use case is being built, and treat early boundaries as provisional until a seam is proven in code.
+- [ ] **R010** Feature contexts are discovered, not declared: scaffold a feature's folder only when its first real page/use case is being built, and treat early boundaries as provisional until a seam is proven in code.
 - [ ] **R011** Boundaries are drawn around language and behavior autonomy, not data relationships. Two features rendering the same underlying content collection doesn't make them one context; two views sharing zero behavior can stay two features even if their data looks similar.
-- [ ] **R012** Placement is a spectrum, not a binary: a prop on an existing component → a shared component in `common/` → a full feature folder. A bounded context is expensive (its own tests, its own state class, its own content) — pay for it only when a feature's language and behavior are genuinely its own.
+- [ ] **R012** Placement is a spectrum, not a binary: a prop on an existing component → a shared component in `common/` → a full feature folder. A feature context is expensive (its own tests, its own state class, its own content) — pay for it only when a feature's language and behavior are genuinely its own.
 - [ ] **R013** Rule of three: defer promoting a feature's helper into `common/` until a second feature genuinely needs it. A single feature's logic stays inside that feature's own folder.
 - [ ] **R014** Cross-feature communication happens through a published surface — a typed signal/event the owning feature exposes via `common/`, or an explicit prop `bootstrap` threads between them — never a direct import of one feature's internals from another. If two features need the same fact, promote it to a shared surface rather than duplicating the reach-in.
 

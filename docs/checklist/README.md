@@ -1,6 +1,6 @@
 # Checklist
 
-Rules for the bounded-context rewrite of this repo: a static portfolio site (Astro + Svelte 5, no backend, no database, no auth, no API) organized as `features/common/bootstrap/scripts`. Each rule is numbered `R001`, `R002`, ... independently per file. No rule carries a review tag (`enforced`, `decision`, ...) — nothing here is mechanically enforced yet, so a tag claiming otherwise would misrepresent the repo's current state.
+Rules for the feature-context rewrite of this repo: a static portfolio site (Astro + Svelte 5, no backend, no database, no auth, no API) organized as `features/common/bootstrap/scripts`. Each rule is numbered `R001`, `R002`, ... independently per file. No rule carries a review tag (`enforced`, `decision`, ...) — nothing here is mechanically enforced yet, so a tag claiming otherwise would misrepresent the repo's current state.
 
 ## `testing/` — what earns a test, per suite
 
@@ -27,7 +27,7 @@ Cross-suite rules (where test code lives, root-level audits) live in `testing/RE
 
 | file | covers |
 |---|---|
-| `general/architecture.md` | The `features/common/bootstrap/scripts` skeleton, the dependency rule, how a bounded context is discovered and drawn, rule-of-three, cross-feature communication via a published surface. |
+| `general/architecture.md` | The `features/common/bootstrap/scripts` skeleton, the dependency rule, how a feature context is discovered and drawn, rule-of-three, cross-feature communication via a published surface. |
 | `general/files-and-naming.md` | File/type-locality rules, when a type earns its own file, the Svelte orchestrator-component + state-class folder pattern, and the per-feature `data-testid` prefix convention. |
 | `general/classes.md` | When to reach for a class vs. a plain type, encapsulation, construction invariants, member order, error messages. |
 | `general/comments.md` | What earns a comment, the two kinds of comment, TODO discipline, commented-out code, one-sentence length/format discipline, the phone test, and the ban on legacy/prior-implementation references. |

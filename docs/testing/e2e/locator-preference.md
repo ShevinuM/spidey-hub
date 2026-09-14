@@ -1,6 +1,6 @@
 # Locator preference order
 
-Locators that resolve through the accessibility tree or visible user-facing text survive markup churn. Locators that resolve through implementation details (CSS classes, DOM structure, XPath) break the moment a developer refactors a `<div>` — which happens constantly in a bounded-context rewrite where components get relocated between features and `common/`.
+Locators that resolve through the accessibility tree or visible user-facing text survive markup churn. Locators that resolve through implementation details (CSS classes, DOM structure, XPath) break the moment a developer refactors a `<div>` — which happens constantly in a feature-context rewrite where components get relocated between features and `common/`.
 
 The ranking below runs from most to least preferred. Pick the highest-ranked strategy that can uniquely and reliably identify the element — don't reach for #4 when #1 works. The checkable form of this ranking lives in `../checklist/tech-stack/playwright.md`.
 

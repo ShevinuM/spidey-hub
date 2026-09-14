@@ -1,6 +1,6 @@
 # Visual test suite structure
 
-How golden-image test code is organized across the bounded-context rewrite, and how that maps onto Playwright's `projects` mechanism. The checkable rules this doc explains live in `../../checklist/testing/visual-testing.md` and `../../checklist/tech-stack/playwright.md`; on any disagreement between this doc and the checklist, fix both in the same change rather than trusting one over the other.
+How golden-image test code is organized across the feature-context rewrite, and how that maps onto Playwright's `projects` mechanism. The checkable rules this doc explains live in `../../checklist/testing/visual-testing.md` and `../../checklist/tech-stack/playwright.md`; on any disagreement between this doc and the checklist, fix both in the same change rather than trusting one over the other.
 
 ## Folder structure
 
