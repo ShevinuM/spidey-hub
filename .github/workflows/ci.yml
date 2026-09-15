@@ -48,10 +48,9 @@ jobs:
 
       # jscpd and knip land here (PR 4.3).
 
-      - run: pnpm test:unit
+      - run: pnpm test:unit --coverage
 
       # Codacy coverage upload (PR 4.4) and CodeQL (PR 4.5) land here.
-      # PR 4.2 adds --coverage to the pnpm test:unit step above.
 
       - name: Restore Playwright browser cache
         uses: actions/cache@v6
