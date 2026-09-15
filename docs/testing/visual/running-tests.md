@@ -45,3 +45,7 @@ Never rebaseline to make a refactor's diff pass — a diff on a change advertise
 2. Run that feature's visual project **three consecutive times** and confirm all three pass clean — a golden that only passes intermittently after `--update-snapshots` baked in something non-deterministic (a live measurement, an un-flushed timer, GPU rasterization jitter), and the fix is to root-cause that non-determinism, not to re-run `--update-snapshots` until it happens to stick.
 3. Visually inspect every changed `.png` yourself — not just the byte diff — for rendering defects a passing pixel-count threshold wouldn't catch (see `../../rules/tech-stack/playwright.md` R011 on reading a diff image).
 4. Never hand-edit a golden PNG (`../../rules/testing/visual-testing.md` R006).
+
+## CI does not run this suite
+
+`.github/workflows/deploy.yml` skips `pnpm test:visual`, for the reason `../README.md` records. A green CI run is therefore no evidence that the goldens still match — only a local run is.

@@ -3,7 +3,7 @@ import svelte from "@astrojs/svelte";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  site: "https://shevinum.dev",
+  site: "https://v2.shevinum.dev",
   output: "static",
   compressHTML: false,
   integrations: [svelte()],

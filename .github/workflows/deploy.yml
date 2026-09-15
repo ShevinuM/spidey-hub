@@ -1,0 +1,91 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # A push that lands while an earlier run is still going supersedes it; the
+    # gate takes 15-30 minutes, so queued runs would otherwise stack up.
+    concurrency:
+      group: build-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # scripts/generate.mjs fetches one SHA-pinned tarball per repo in
+      # repos.json, so the cache key is that file's contents.
+      - name: Restore repository tarball cache
+        uses: actions/cache@v6
+        with:
+          path: .cache/repos
+          key: repos-${{ hashFiles('repos.json') }}
+
+      # The five checks, in the order docs/testing/README.md lists them.
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm architecture
+      - run: pnpm format
+      - run: pnpm build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: pnpm test:unit
+
+      - name: Restore Playwright browser cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - run: pnpm exec playwright install --with-deps chromium
+
+      # This rebuilds dist/ from real data, and that build is what deploys.
+      # pnpm test:visual would replace dist/ with fixture bytes instead, so
+      # anything added after this step must re-run `pnpm build` before the
+      # upload below.
+      - run: pnpm test:e2e
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # Publishing is never cancelled mid-flight, unlike the gate above.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

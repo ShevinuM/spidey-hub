@@ -31,3 +31,9 @@ These five are the static checks. Running the tests is a different altitude, wit
 - `pnpm test:unit` (`vitest run`) runs the unit tests and the audits — `check:arch` and the cruise guards among them.
 - `e2e/running-tests.md` — `pnpm test:e2e`, and every narrower Playwright invocation.
 - `visual/running-tests.md` — `pnpm test:visual`, the fixture build it needs, and the rebaselining procedure.
+
+## What CI runs
+
+`.github/workflows/deploy.yml` runs on every push to `main`, and a green run publishes `dist/` to GitHub Pages. It runs all five checks above in the order this file lists them, then `pnpm test:unit`, then `pnpm test:e2e` — that last step's `pnpm build` produces the `dist/` that deploys.
+
+It does not run `pnpm test:visual`. The goldens are captured on macOS and compared at `maxDiffPixels: 0`, and a Linux runner rasterizes text differently, so every golden would fail there on a clean tree. The visual suite is a local pre-push gate until [issue #2](https://github.com/ShevinuM/spidey-hub/issues/2) moves golden authority to an environment both CI and a developer can reproduce.
