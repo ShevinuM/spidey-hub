@@ -7,9 +7,10 @@
 // so it sees the two whole classes of crossing a resolver cannot:
 //   - `?raw` query-suffixed specifiers (Vite asset imports), which no module
 //     resolver can see, and
-//   - `.astro` files, which hold 37 of the 209 boundary-crossing imports in
-//     `src/`. `.astro` is not in this tool's extension map: an `.astro`
-//     importing a `.svelte` and a `.ts` does not appear in the output at all.
+//   - `.astro` files, which hold a large share of the boundary-crossing
+//     imports in `src/` (counted at run time by the scanner, not pinned here).
+//     `.astro` is not in this tool's extension map: an `.astro` importing a
+//     `.svelte` and a `.ts` does not appear in the output at all.
 //     `extraExtensionsToScan: [".astro"]` is NOT the fix and is deliberately not
 //     set — it makes `.astro` files appear as graph nodes with ZERO
 //     dependencies, so a genuinely violating `.astro` would read as clean.

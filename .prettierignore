@@ -4,9 +4,9 @@ src/generated/**
 
 # Frozen fixture bytes — a reformat here changes what a test compares against.
 **/goldens/**
-src/features/grep/tests/ui/support/grep-index.json
 
 # Copied verbatim into dist/generated/ by build:fixtures — these bytes reach the rendered artifact.
+src/features/grep/tests/ui/support/grep-index.json
 src/features/repositories/tests/ui/support/repos/*.json
 src/features/shell-fs/tests/ui/support/fs-index.json
 src/features/repositories/tests/ui/support/contributions.json
