@@ -2,6 +2,8 @@
 
 There's no backend, database, or login flow in this app — every command below runs against a real (or fixture) static build, not a seeded environment.
 
+The five static checks — `typecheck`, `lint`, `architecture`, `format`, `build` — are listed in `../README.md`.
+
 ## Prerequisites
 
 - `pnpm install` at the repo root.

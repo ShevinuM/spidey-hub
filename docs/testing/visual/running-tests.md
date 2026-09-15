@@ -1,5 +1,7 @@
 # Running the visual tests
 
+The five static checks — `typecheck`, `lint`, `architecture`, `format`, `build` — are listed in `../README.md`.
+
 ## Prerequisites
 
 - `pnpm install` at the repo root.
