@@ -1,0 +1,21 @@
+# Generated artifacts — scripts/generate.mjs owns these bytes.
+public/generated/**
+src/generated/**
+
+# Frozen fixture bytes — a reformat here changes what a test compares against.
+**/goldens/**
+src/features/grep/tests/ui/support/grep-index.json
+
+# Vendored third-party design handoff — not this repo's source.
+reference/
+
+# Build outputs and caches.
+.cache/
+dist/
+
+# Machine-managed lockfile.
+pnpm-lock.yaml
+
+# Agent tooling state, not project source — untracked and outside the build.
+.claude/
+.remember/

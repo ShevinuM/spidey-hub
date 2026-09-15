@@ -14,7 +14,7 @@ The compiler, gates, formatters, and scripts. Items marked `open` are not yet de
 ## Scripts & formatting
 
 - [ ] **R007** `package.json` scripts are the command itself — no `echo`/brace-group/shell-plumbing wrappers. When a tool can write its own output to a file, use its native flag, never a shell redirect.
-- [ ] **R008** Formatting is delegated to one formatter and never hand-managed — run it, treat its output as authoritative.
+- [ ] **R008** Formatting is delegated to Prettier and never hand-managed — run `pnpm format:write` and treat its output as authoritative. Its settings live in `.prettierrc` and its exclusions in `.prettierignore`; a file that must not be reformatted is excluded there with a stated reason, never formatted by hand.
 - [ ] **R009** Invoke tools through `pnpm`, not `npx` or a globally installed binary.
 - [ ] **R010** A fixture/env-flag build (an env var like `FIXTURES=1` that switches content sources for deterministic capture) is documented at the one place that reads it and never leaks into a normal dev/build run.
 
