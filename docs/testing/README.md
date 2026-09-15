@@ -34,7 +34,7 @@ These five are the static checks. Running the tests is a different altitude, wit
 
 ## What CI runs
 
-`.github/workflows/ci.yml` runs on every pull request and is the gate. It runs all five checks above in the order this file lists them, then `pnpm test:unit`, then `pnpm test:e2e`.
+`.github/workflows/ci.yml` runs on every pull request and is the gate. It runs all five checks above in the order this file lists them, then `pnpm test:unit --coverage`, then `pnpm test:e2e`. The `--coverage` flag measures statement coverage over `src/common/lib/**`, `src/common/engines/**`, `src/features/*/lib/**` and `scripts/lib/**` — the plain-TypeScript surface unit tests actually exercise, scoped there because Svelte components emit no V8 instrumentation and are covered by Playwright instead. Reporters are `text` and `lcov`, so the run also writes `coverage/lcov.info`.
 
 `.github/workflows/deploy.yml` runs on every push to `main` and only builds and deploys — its `pnpm build` produces the `dist/` that publishes to GitHub Pages. The gate already ran on the pull request, which is why it is not repeated there.
 
