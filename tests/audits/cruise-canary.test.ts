@@ -10,8 +10,10 @@
 // 68 / 98, all 36 `.svelte` files gone, still green. Nothing else in the repo
 // would notice, which is why this test exists.
 //
-// This is deliberately NOT a boundary rule: it claims nothing about what may
-// import what. It only claims the parser still sees.
+// This is deliberately NOT a boundary rule.
+//
+// It claims nothing about what may import what; it only claims the parser still
+// sees.
 //
 // Two details are load-bearing and must not be "simplified":
 //   - It cruises a DIRECTORY, the way the `architecture` script does. Naming an
@@ -34,7 +36,6 @@ const CONFIG = join(ROOT, ".dependency-cruiser.mjs");
 /** Cruised as a directory, not as a file — see the note above. */
 const SUBJECT_DIRECTORY = "src/bootstrap";
 
-/** Imports ~18 modules, all of them referenced from template markup only. */
 const SUBJECT = "src/bootstrap/Terminal.svelte";
 
 test("the cruise still parses .svelte files instead of silently seeing a graph without them", async () => {

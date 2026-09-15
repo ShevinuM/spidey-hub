@@ -1,11 +1,12 @@
-// The graph half of `pnpm architecture`. It runs SECOND, after the text
-// scanner in `tests/audits/boundaries.test.ts` (`pnpm check:arch`), and the two
-// layers are not interchangeable.
+// The graph half of `pnpm architecture`.
+//
+// It runs SECOND, after the text scanner in `tests/audits/boundaries.test.ts`
+// (`pnpm check:arch`), and the two layers are not interchangeable.
 //
 // THE SCANNER OWNS DIRECT EDGES, ACROSS EVERY FILE TYPE. It reads source text,
 // so it sees the two whole classes of crossing a resolver cannot:
-//   - `?raw` query-suffixed specifiers (Vite asset imports — `common/lib/data.ts`
-//     carried nine of them into feature content until phase 15 step 7), and
+//   - `?raw` query-suffixed specifiers (Vite asset imports), which no module
+//     resolver can see, and
 //   - `.astro` files, which hold 37 of the 209 boundary-crossing imports in
 //     `src/`. `.astro` is not in this tool's extension map: an `.astro`
 //     importing a `.svelte` and a `.ts` does not appear in the output at all.
@@ -30,14 +31,9 @@
 // type-only import out of a `.svelte` file is invisible to the cruise. The
 // scanner still catches that hop as a direct edge. That is why both layers stay.
 //
-// CANARY: `tests/audits/cruise-canary.test.ts` asserts a known `.svelte` file
-// still appears in the cruise output with a non-empty dependency list. With
-// `svelte/compiler` unresolvable, `.svelte` silently stops being an enabled
-// extension: measured by renaming `node_modules/svelte`, the graph fell from
-// 104 modules / 185 dependencies to 68 / 98 — all 36 SFCs gone — and the cruise
-// still reported "no dependency violations found" and exited 0. A green cruise
-// over a blind graph is the failure mode that matters here, and nothing else in
-// the repo would notice it.
+// CANARY: `tests/audits/cruise-canary.test.ts` guards the one failure mode that
+// leaves this config green over a graph with no `.svelte` files in it, and
+// explains it.
 
 /** @type {import("dependency-cruiser").IConfiguration} */
 export default {
@@ -53,10 +49,8 @@ export default {
     {
       // `reachable: true` is the "A reaches B directly OR through anything"
       // rule, and `$1` back-references the capture in `from.path`, so the pair
-      // reads as "feature X must not reach feature not-X". This is NOT
-      // `via`/`viaOnly` — those restrict which CYCLES match and are meaningful
-      // only alongside `circular: true`. A `reachable` rule may carry only
-      // `path`/`pathNot` in both halves: no `dependencyTypes`, no `circular`.
+      // reads as "feature X must not reach feature not-X".
+      //
       // The `err-long` reporter prints the intermediate hops, which is the
       // entire point of the rule, so `pnpm architecture` pins that reporter.
       name: "no-transitive-peer-feature",
