@@ -51,7 +51,7 @@ import { downloadResume } from "../common/lib/resume";
 /** Mirrors Cmdline.svelte's own `CmdlineMode` export structurally — a plain
  * .ts module can't import a named type from a .svelte file under `tsc`
  * (only svelte-check's virtual modules allow that, and this file is also
- * type-checked by plain tsc via `pnpm check`), so this is kept in sync by
+ * type-checked by plain tsc via `pnpm typecheck`), so this is kept in sync by
  * shape rather than by import.
  *
  * Cmdline.svelte remains the source of truth. */

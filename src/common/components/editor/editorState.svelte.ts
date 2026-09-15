@@ -15,7 +15,7 @@ import { lineText } from "./editor-render";
 import type { EditorLabels } from "../../lib/data";
 import type { TokenSpan } from "../../lib/repo-tree";
 
-// Mirrors Editor.svelte's `EditorLine` structurally and is kept in sync by shape rather than import, since a plain .ts module can't import a type from a .svelte file under `tsc` (this file is type-checked by plain tsc via `pnpm check`).
+// Mirrors Editor.svelte's `EditorLine` structurally and is kept in sync by shape rather than import, since a plain .ts module can't import a type from a .svelte file under `tsc` (this file is type-checked by plain tsc via `pnpm typecheck`).
 interface EditorLine {
   n: number;
   t: string | TokenSpan[];
