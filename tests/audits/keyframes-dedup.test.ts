@@ -40,19 +40,58 @@ function findKeyframeDeclarations(text: string, file: string): Array<{ name: str
   return found;
 }
 
-test("no @keyframes name is declared in more than one place across src/", () => {
-  const files = listStyleBearingFiles(SRC_DIR);
+/** Every `@keyframes` name declared at more than one site, paired with the
+ * repo-relative paths that declare it.
+ *
+ * Pure over its inputs, so the proof below can fire it at synthetic files
+ * rather than by dirtying the tree. */
+function findDuplicateKeyframeNames(files: Array<{ path: string; text: string }>): Array<[string, string[]]> {
   const byName = new Map<string, string[]>();
-  for (const file of files) {
-    const text = readFileSync(file, "utf8");
-    for (const { name } of findKeyframeDeclarations(text, file)) {
-      const rel = file.slice(ROOT.length + 1);
+  for (const { path, text } of files) {
+    for (const { name } of findKeyframeDeclarations(text, path)) {
       const sites = byName.get(name) ?? [];
-      sites.push(rel);
+      sites.push(path);
       byName.set(name, sites);
     }
   }
+  return Array.from(byName.entries()).filter(([, sites]) => sites.length > 1);
+}
 
-  const duplicates = Array.from(byName.entries()).filter(([, sites]) => sites.length > 1);
+test("no @keyframes name is declared in more than one place across src/", () => {
+  const duplicates = findDuplicateKeyframeNames(
+    listStyleBearingFiles(SRC_DIR).map((file) => ({
+      path: file.slice(ROOT.length + 1),
+      text: readFileSync(file, "utf8"),
+    })),
+  );
+
   expect(duplicates, `duplicate @keyframes declaration(s): ${duplicates.map(([name, sites]) => `${name} in [${sites.join(", ")}]`).join("; ")}`).toEqual([]);
+});
+
+// The proof clause: a scan that matches nothing reports the same empty result
+// as a tree that holds no duplicates.
+//
+// The planted pair is the cross-form collision described at the top of this
+// file, so a scan that stops seeing either form — or a grouping that stops
+// treating two sites as a duplicate — fails here instead of going quietly green
+// over `src/`. The third file's name is declared once and must not be reported.
+test("a name declared in both the plain and -global- forms is reported with its two sites", () => {
+  const duplicates = findDuplicateKeyframeNames([
+    {
+      path: "src/features/boot/components/Synthetic.svelte",
+      text: "<style>@keyframes flicker { from { opacity: 0; } }</style>",
+    },
+    {
+      path: "src/common/styles/synthetic.css",
+      text: "@keyframes -global-flicker { from { opacity: 0; } }",
+    },
+    {
+      path: "src/features/grep/components/Unique.svelte",
+      text: "<style>@keyframes scanline { from { opacity: 0; } }</style>",
+    },
+  ]);
+
+  expect(duplicates).toEqual([
+    ["flicker", ["src/features/boot/components/Synthetic.svelte", "src/common/styles/synthetic.css"]],
+  ]);
 });
