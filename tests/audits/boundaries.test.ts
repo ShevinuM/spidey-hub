@@ -5,22 +5,19 @@
 //
 // It scans source text instead of walking a resolved module graph because two
 // whole classes of edge are invisible to a resolver-based tool here: a
-// `?raw` query-suffixed specifier crossing a layer boundary (as
-// `common/lib/data.ts` did into nine feature content files, until phase 15
-// step 7 moved each loader feature-local), and a large share of the
-// crossings living in `.astro` files. A graph tool that drops the query
-// suffix or skips `.astro` reports a clean tree while those edges keep
-// crossing. A text scan reads every scanned file type alike and keeps each
-// specifier verbatim.
+// `?raw` query-suffixed specifier crossing a layer boundary, and a large
+// share of the crossings living in `.astro` files. A graph tool that drops
+// the query suffix or skips `.astro` reports a clean tree while those edges
+// keep crossing. A text scan reads every scanned file type alike and keeps
+// each specifier verbatim.
 //
 // What the scan matches, and nothing else: `from "…"`, bare `import "…"`,
 // dynamic `import("…")` and `` import(`…`) ``, and `import.meta.glob("…")` —
 // each in single or double quotes (backticks for the template-literal dynamic
 // form). `import.meta.glob` needs its own pattern: the interposed `.meta.glob`
-// stops the plain-import pattern from reaching the quote, which is exactly how
-// `common/lib/commits.ts`'s eager glob into a feature's fixture folder — four
-// static JSON imports once Vite compiles it — went undetected in this test's
-// first commit.
+// stops the plain-import pattern from reaching the quote, so the plain pattern
+// cannot see `common/lib/commits.ts`'s eager glob into a feature's fixture
+// folder — four static JSON imports once Vite compiles it.
 //
 // Two blind spots are known and deliberate. `require(…)` is not matched at all:
 // the repo is ESM and has zero subjects in `src/`. CSS `@import "…"` is
@@ -118,7 +115,6 @@ type AllowlistEntry = {
 const FIXTURE_GLOB_REASON =
   "`common/lib/commits.ts` composes its data source at build time: an eager `import.meta.glob` over the real `src/generated/commits/` snapshots and a second one over the repositories feature's fixture snapshots, selected by `process.env.PORTFOLIO_FIXTURES`. That is the PORTFOLIO_FIXTURES build-level composition mechanism, not feature knowledge — the module is server-only (guarded against island import) and the glob never runs in a browser. `build:fixtures`, and therefore the whole visual gate, depends on the fixture branch resolving, and moving the fixtures under `common/` or duplicating them per feature would buy no decoupling at any layer that runs. Kept deliberately and permanently.";
 
-// Ruling R3.
 const TEST_SUPPORT_REASON =
   "Shared Playwright fixtures must seed the same storage keys the features read, and duplicating those constants would let them drift silently. The reach-in stops being drift and becomes a decision with a date on it.";
 
@@ -291,8 +287,7 @@ test("every boundary crossing in src/ is an allowlisted edge, and every allowlis
 // file being on disk. The synthetic set covers one case per specifier form the
 // scan claims to match — plain, `?raw`-suffixed, quoted dynamic,
 // `import.meta.glob` and backtick dynamic — so a form the patterns stop seeing
-// goes red here instead of quietly shrinking the gate, which is how the glob
-// form escaped detection in the first place.
+// goes red here instead of quietly shrinking the gate.
 test("each boundary rule fires against a synthetic violation, and a stale entry is reported", () => {
   const synthetic = [
     {
