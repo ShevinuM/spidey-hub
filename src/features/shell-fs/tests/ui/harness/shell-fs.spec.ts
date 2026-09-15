@@ -17,12 +17,16 @@ import { ShellFsPage } from "../pages/ShellFsPage";
 import { listDir, type FsEntry } from "../../../../../common/lib/shell";
 
 const FIXTURE_PATH = join(import.meta.dirname, "../support/fs-index.json");
-const FIXTURE: FsEntry[] = (JSON.parse(readFileSync(FIXTURE_PATH, "utf8")) as { entries: FsEntry[] }).entries;
+const FIXTURE: FsEntry[] = (
+  JSON.parse(readFileSync(FIXTURE_PATH, "utf8")) as { entries: FsEntry[] }
+).entries;
 
 interface ShellErrors {
   cdNoSuchDirTemplate: string;
 }
-const shellYaml = YAML.parse(readFileSync(join(import.meta.dirname, "../../../content/shell.yaml"), "utf8")) as {
+const shellYaml = YAML.parse(
+  readFileSync(join(import.meta.dirname, "../../../content/shell.yaml"), "utf8"),
+) as {
   homeLabel: string;
   errors: ShellErrors;
 };
@@ -65,7 +69,9 @@ test.describe("Shell-fs harness: mounts standalone (pane mode) with seeded fixtu
     }
   });
 
-  test("cd into a real subdirectory changes the prompt path, and ls there lists its children", async ({ page }) => {
+  test("cd into a real subdirectory changes the prompt path, and ls there lists its children", async ({
+    page,
+  }) => {
     const shell = new ShellFsPage(page);
     await shell.openHarness();
 
@@ -89,7 +95,10 @@ test.describe("Shell-fs harness: mounts standalone (pane mode) with seeded fixtu
     await page.keyboard.type("cd nope-this-does-not-exist");
     await page.keyboard.press("Enter");
 
-    const expected = shellYaml.errors.cdNoSuchDirTemplate.replace("{path}", "nope-this-does-not-exist");
+    const expected = shellYaml.errors.cdNoSuchDirTemplate.replace(
+      "{path}",
+      "nope-this-does-not-exist",
+    );
     await expect(shell.lines.filter({ hasText: expected })).toHaveCount(1);
   });
 

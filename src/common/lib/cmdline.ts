@@ -31,7 +31,8 @@ export function resolveCommand(commands: CommandDef[], name: string): CommandDef
   if (!name) return undefined;
   const lower = name.toLowerCase();
   return commands.find(
-    (c) => c.name.toLowerCase() === lower || (c.aliases ?? []).some((a) => a.toLowerCase() === lower),
+    (c) =>
+      c.name.toLowerCase() === lower || (c.aliases ?? []).some((a) => a.toLowerCase() === lower),
   );
 }
 
@@ -40,7 +41,9 @@ export function filterSuggestions(commands: CommandDef[], prefix: string): Comma
   const p = prefix.toLowerCase();
   if (!p) return commands;
   return commands.filter(
-    (c) => c.name.toLowerCase().startsWith(p) || (c.aliases ?? []).some((a) => a.toLowerCase().startsWith(p)),
+    (c) =>
+      c.name.toLowerCase().startsWith(p) ||
+      (c.aliases ?? []).some((a) => a.toLowerCase().startsWith(p)),
   );
 }
 
@@ -103,10 +106,7 @@ export function mergeCommandLists(primary: CommandDef[], secondary: CommandDef[]
 // Ex-command parsing, a pure function shared between Editor.svelte's execution and this file's own unit tests.
 
 export type ExCommand =
-  | { kind: "close" }
-  | { kind: "writeError" }
-  | { kind: "jump"; line: number }
-  | { kind: "unknown" };
+  { kind: "close" } | { kind: "writeError" } | { kind: "jump"; line: number } | { kind: "unknown" };
 
 export function parseExCommand(cmd: string): ExCommand {
   if (cmd === "q" || cmd === "q!") return { kind: "close" };
@@ -146,7 +146,9 @@ export function parseTmuxCommand(input: string): TmuxCommand {
   const { name, args } = parseInput(input);
   const lower = name.toLowerCase();
   if (lower === "rename-window") {
-    return args ? { kind: "rename-window", name: args } : { kind: "usage", command: "rename-window" };
+    return args
+      ? { kind: "rename-window", name: args }
+      : { kind: "usage", command: "rename-window" };
   }
   if (lower === "kill-window") return { kind: "kill-window" };
   if (lower === "kill-pane") return { kind: "kill-pane" };

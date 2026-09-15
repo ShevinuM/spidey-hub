@@ -46,8 +46,12 @@ const fixtureMode = process.env.PORTFOLIO_FIXTURES === "1";
 
     <div class="mobile-block" data-testid="mobile-block">
       <div class="mobile-block-card">
-        <div class="mobile-block-heading" data-testid="mobile-block-heading">{mobileBlock.heading}</div>
-        <div class="mobile-block-body" data-testid="mobile-block-body">{mobileBlock.body}</div>
+        <div class="mobile-block-heading" data-testid="mobile-block-heading">
+          {mobileBlock.heading}
+        </div>
+        <div class="mobile-block-body" data-testid="mobile-block-body">
+          {mobileBlock.body}
+        </div>
         <a
           class="mobile-block-link"
           data-testid="mobile-block-link"

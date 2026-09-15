@@ -9,7 +9,10 @@ export class ShellFsPage {
    * against. */
   async openHarness() {
     await this.page.goto("/harness/shell-fs");
-    await expect(this.page.getByTestId("shell-fs-harness-ready")).toHaveAttribute("data-ready", "true");
+    await expect(this.page.getByTestId("shell-fs-harness-ready")).toHaveAttribute(
+      "data-ready",
+      "true",
+    );
   }
 
   get scroller() {

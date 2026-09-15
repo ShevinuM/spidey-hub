@@ -38,7 +38,10 @@ const FS: FsEntry[] = [
 ];
 
 const SHELL: ShellData = {
-  prompt: { paneTemplate: "shev@edith:~/shevinum.dev{path} $ ", hostTemplate: "shev@edith:~/shevinum.dev git:(main) $ " },
+  prompt: {
+    paneTemplate: "shev@edith:~/shevinum.dev{path} $ ",
+    hostTemplate: "shev@edith:~/shevinum.dev git:(main) $ ",
+  },
   homeLabel: "~/shevinum.dev",
   errors: {
     commandNotFoundTemplate: "{cmd}: command not found",
@@ -103,7 +106,14 @@ const SHELL: ShellData = {
   },
 };
 
-const VIEW_NAMES = ["dashboard", "repositories", "employment", "retina-v", "profile", "help"] as const;
+const VIEW_NAMES = [
+  "dashboard",
+  "repositories",
+  "employment",
+  "retina-v",
+  "profile",
+  "help",
+] as const;
 
 const DEFAULT_SESSION: SessionRosterEntry = {
   id: "session-0",
@@ -341,7 +351,8 @@ test("runCommand: pwd prints the home label plus the cwd suffix", () => {
 test("runCommand: cat a site file resolves content via ctx.resolveContent", () => {
   const s = createShellState();
   const { state } = run(s, "cat package.json", {
-    resolveContent: (t) => (t.kind === "site" && t.path === "package.json" ? "line one\nline two" : undefined),
+    resolveContent: (t) =>
+      t.kind === "site" && t.path === "package.json" ? "line one\nline two" : undefined,
   });
   const printed = state.lines.slice(1).map((l) => l.text);
   expect(printed).toEqual(["line one", "line two"]);
@@ -370,9 +381,14 @@ test("runCommand: cat reports missing/dir/unindexed distinctly", () => {
 test("runCommand: vim <existing file> emits an open-editor effect with the resolved path and fetched content", () => {
   const s = createShellState();
   const { state, effect } = run(s, "vim package.json", {
-    resolveContent: (t) => (t.kind === "site" && t.path === "package.json" ? "line one\nline two" : undefined),
+    resolveContent: (t) =>
+      t.kind === "site" && t.path === "package.json" ? "line one\nline two" : undefined,
   });
-  expect(effect).toEqual({ kind: "open-editor", path: "package.json", content: "line one\nline two" });
+  expect(effect).toEqual({
+    kind: "open-editor",
+    path: "package.json",
+    content: "line one\nline two",
+  });
   // Still echoes the typed command like every other builtin, just no extra
   // printed lines (the content goes to the effect, not the scrollback).
   expect(state.lines.length).toBe(1);
@@ -425,7 +441,9 @@ test("runCommand: help prints the intro then one row per builtin", () => {
 
 test("runCommand: view-names lists the six canonical programs", () => {
   const { state } = run(createShellState(), "view-names");
-  expect(state.lines.at(-1)?.text).toBe("available views: dashboard repositories employment retina-v profile help");
+  expect(state.lines.at(-1)?.text).toBe(
+    "available views: dashboard repositories employment retina-v profile help",
+  );
 });
 
 test("runCommand: neofetch's uptime derives from ctx.nowMs - session.createdAt, never a hidden clock read", () => {
@@ -438,7 +456,9 @@ test("runCommand: neofetch's uptime derives from ctx.nowMs - session.createdAt, 
 
 test("runCommand: sudo prints the exact joke as an error line", () => {
   const { state } = run(createShellState(), "sudo rm -rf /");
-  expect(state.lines.at(-1)?.text).toBe("shev is not in the sudoers file. This incident will be reported to D.O.O.M.");
+  expect(state.lines.at(-1)?.text).toBe(
+    "shev is not in the sudoers file. This incident will be reported to D.O.O.M.",
+  );
 });
 
 test("runCommand: open <view> launches that program; an invalid target errors", () => {
@@ -475,7 +495,15 @@ test("runCommand: tmux ls lists EVERY session in the roster, each with its own a
   const { state } = run(createShellState(), "tmux ls", {
     sessions: [
       { ...DEFAULT_SESSION, createdAt: Date.UTC(2026, 7, 17, 23, 34, 0), attached: true },
-      { ...DEFAULT_SESSION, id: "session:test", name: "test", windowCount: 1, createdAt: testCreatedAt, attached: false, windowIds: ["w0"] },
+      {
+        ...DEFAULT_SESSION,
+        id: "session:test",
+        name: "test",
+        windowCount: 1,
+        createdAt: testCreatedAt,
+        attached: false,
+        windowIds: ["w0"],
+      },
     ],
   });
   const lines = state.lines.slice(1).map((l) => l.text);
@@ -496,7 +524,9 @@ test("runCommand: tmux ls with an empty roster prints 'no sessions'", () => {
 test("runCommand: tmux new/a/attach inside a pane refuse with the exact nesting message", () => {
   for (const sub of ["new", "a", "attach"]) {
     const { state } = run(createShellState(), `tmux ${sub}`);
-    expect(state.lines.at(-1)?.text).toBe("sessions should be nested with care, unset $TMUX to force");
+    expect(state.lines.at(-1)?.text).toBe(
+      "sessions should be nested with care, unset $TMUX to force",
+    );
   }
 });
 
@@ -526,7 +556,10 @@ test("seedHostNarrative: substitutes {session} in every row, keeping kind", () =
 });
 
 test("runCommand: tmux new (bare, host mode) creates the next numeric session name", () => {
-  const { effect } = run(createShellState(), "tmux new", { mode: "host", sessions: [DEFAULT_SESSION] });
+  const { effect } = run(createShellState(), "tmux new", {
+    mode: "host",
+    sessions: [DEFAULT_SESSION],
+  });
   expect(effect).toEqual({ kind: "create-and-attach", name: "1" });
 });
 
@@ -548,8 +581,18 @@ test("runCommand: tmux new -s with no name argument is a usage error, not a sile
 });
 
 test("runCommand: tmux a (bare, host mode) attaches the most-recently-used session, not merely the first", () => {
-  const older: SessionRosterEntry = { ...DEFAULT_SESSION, id: "s-older", name: "older", lastAttachedSeq: 1 };
-  const newer: SessionRosterEntry = { ...DEFAULT_SESSION, id: "s-newer", name: "newer", lastAttachedSeq: 5 };
+  const older: SessionRosterEntry = {
+    ...DEFAULT_SESSION,
+    id: "s-older",
+    name: "older",
+    lastAttachedSeq: 1,
+  };
+  const newer: SessionRosterEntry = {
+    ...DEFAULT_SESSION,
+    id: "s-newer",
+    name: "newer",
+    lastAttachedSeq: 5,
+  };
   const { effect } = run(createShellState(), "tmux a", { mode: "host", sessions: [older, newer] });
   expect(effect).toEqual({ kind: "attach", sessionId: "s-newer" });
 });
@@ -573,17 +616,33 @@ test("runCommand: tmux a -t <missing name> (host mode) errors — exact fidelity
 
 test("runCommand: open <view> in host mode attaches the default session and selects that window when it exists", () => {
   const { effect } = run(createShellState(), "open repositories", { mode: "host" });
-  expect(effect).toEqual({ kind: "attach-view", sessionId: DEFAULT_SESSION.id, view: "repositories", windowExists: true });
+  expect(effect).toEqual({
+    kind: "attach-view",
+    sessionId: DEFAULT_SESSION.id,
+    view: "repositories",
+    windowExists: true,
+  });
 });
 
 test("runCommand: open <view> in host mode still attaches when the window was killed, flagging windowExists false", () => {
   const gone: SessionRosterEntry = { ...DEFAULT_SESSION, windowIds: ["dashboard"] };
-  const { effect } = run(createShellState(), "open repositories", { mode: "host", sessions: [gone] });
-  expect(effect).toEqual({ kind: "attach-view", sessionId: gone.id, view: "repositories", windowExists: false });
+  const { effect } = run(createShellState(), "open repositories", {
+    mode: "host",
+    sessions: [gone],
+  });
+  expect(effect).toEqual({
+    kind: "attach-view",
+    sessionId: gone.id,
+    view: "repositories",
+    windowExists: false,
+  });
 });
 
 test("runCommand: open <view> in host mode errors when the default session no longer exists at all", () => {
-  const { state, effect } = run(createShellState(), "open repositories", { mode: "host", sessions: [] });
+  const { state, effect } = run(createShellState(), "open repositories", {
+    mode: "host",
+    sessions: [],
+  });
   expect(effect).toEqual({ kind: "none" });
   expect(state.lines.at(-1)?.text).toBe("can't find session: 10.42.7.13");
 });
@@ -595,7 +654,12 @@ test("runCommand: open <view> in pane mode is UNCHANGED — a plain in-pane laun
 
 test("runCommand: edith (host mode) attaches the default session at window 0 (dashboard)", () => {
   const { effect } = run(createShellState(), "edith", { mode: "host" });
-  expect(effect).toEqual({ kind: "attach-view", sessionId: DEFAULT_SESSION.id, view: "dashboard", windowExists: true });
+  expect(effect).toEqual({
+    kind: "attach-view",
+    sessionId: DEFAULT_SESSION.id,
+    view: "dashboard",
+    windowExists: true,
+  });
 });
 
 test("runCommand: edith in pane mode is command-not-found (a pane is already attached)", () => {

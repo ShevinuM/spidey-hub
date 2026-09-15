@@ -50,15 +50,14 @@ export type HelpSearchEntry = HelpSearchCommandEntry | HelpSearchKeymapEntry;
 /** Serves as both the empty-query listing and the command half of the
  * typed-search corpus, in cmdline.yaml's declared order. */
 export function commandEntries(commands: CommandSource[]): HelpSearchCommandEntry[] {
-  return commands
-    .map((c) => ({
-      kind: "command" as const,
-      id: `cmd:${c.name}`,
-      label: c.name,
-      description: c.description,
-      action: c.action,
-      takesArgs: c.takesArgs ?? false,
-    }));
+  return commands.map((c) => ({
+    kind: "command" as const,
+    id: `cmd:${c.name}`,
+    label: c.name,
+    description: c.description,
+    action: c.action,
+    takesArgs: c.takesArgs ?? false,
+  }));
 }
 
 /** Flattens every row of every help scope, in scope order, anchoring each id
@@ -68,7 +67,12 @@ export function keymapEntries(sections: HelpSectionSource[]): HelpSearchKeymapEn
   const out: HelpSearchKeymapEntry[] = [];
   sections.forEach((section, si) => {
     section.rows.forEach((row, ri) => {
-      out.push({ kind: "keymap", id: `key:${si}:${ri}`, label: row.key, description: row.description });
+      out.push({
+        kind: "keymap",
+        id: `key:${si}:${ri}`,
+        label: row.key,
+        description: row.description,
+      });
     });
   });
   return out;
@@ -77,7 +81,12 @@ export function keymapEntries(sections: HelpSectionSource[]): HelpSearchKeymapEn
 /** shell.yaml's `help.rows[]` as "keymap"-shaped entries, `id`-namespaced
  * `shell:` so they can never collide with `keymapEntries`'s `key:${si}:${ri}`. */
 export function shellEntries(rows: ShellHelpRowSource[]): HelpSearchKeymapEntry[] {
-  return rows.map((row, i) => ({ kind: "keymap", id: `shell:${i}`, label: row.cmd, description: row.description }));
+  return rows.map((row, i) => ({
+    kind: "keymap",
+    id: `shell:${i}`,
+    label: row.cmd,
+    description: row.description,
+  }));
 }
 
 export function buildEntries(
@@ -103,7 +112,10 @@ const TIER_RANK: Record<MatchTier, number> = {
 };
 
 function tokenize(s: string): string[] {
-  return s.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  return s
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
 }
 
 function isSubsequence(needle: string, haystack: string): boolean {
@@ -149,7 +161,8 @@ function matchField(query: string, field: string): FieldMatch | null {
   const tokens = tokenize(f);
   if (tokens.some((t) => t === q || t.startsWith(q))) return { tier: "word-boundary", distance: 0 };
   if (f.includes(q)) return { tier: "substring", distance: 0 };
-  if (isSubsequence(q, f)) return { tier: "subsequence", distance: levenshtein(q, f) / Math.max(f.length, 1) };
+  if (isSubsequence(q, f))
+    return { tier: "subsequence", distance: levenshtein(q, f) / Math.max(f.length, 1) };
   return null;
 }
 
@@ -167,7 +180,11 @@ function aliasFieldsOf(commands: CommandSource[], entry: HelpSearchEntry): strin
   return src?.aliases ?? [];
 }
 
-function bestMatch(query: string, entry: HelpSearchEntry, commands: CommandSource[]): FieldMatch | null {
+function bestMatch(
+  query: string,
+  entry: HelpSearchEntry,
+  commands: CommandSource[],
+): FieldMatch | null {
   let best: FieldMatch | null = null;
   for (const f of [...fieldsOf(entry), ...aliasFieldsOf(commands, entry)]) {
     const m = matchField(query, f);
@@ -196,7 +213,9 @@ export function searchHelp(
   if (!q) return [];
   const scored = entries
     .map((entry, index) => ({ entry, index, match: bestMatch(q, entry, commands) }))
-    .filter((s): s is { entry: HelpSearchEntry; index: number; match: FieldMatch } => s.match !== null);
+    .filter(
+      (s): s is { entry: HelpSearchEntry; index: number; match: FieldMatch } => s.match !== null,
+    );
   scored.sort((a, b) => {
     const tierDiff = TIER_RANK[a.match.tier] - TIER_RANK[b.match.tier];
     if (tierDiff !== 0) return tierDiff;

@@ -112,10 +112,13 @@
    * index, repos/<name>/ files from repo index JSONs") and returns a
    * synchronous lookup `runCommand` can call — the
    * ONE place this component reaches into the network for `cat`. */
-  async function buildResolveContent(target: CatTarget): Promise<(t: CatTarget) => string | undefined> {
+  async function buildResolveContent(
+    target: CatTarget,
+  ): Promise<(t: CatTarget) => string | undefined> {
     if (target.kind === "site") {
       const files = await loadGrepFiles().catch(() => []);
-      return (t) => (t.kind === "site" ? files.find((f) => f.path === t.path)?.lines.join("\n") : undefined);
+      return (t) =>
+        t.kind === "site" ? files.find((f) => f.path === t.path)?.lines.join("\n") : undefined;
     }
     if (target.kind === "repo") {
       const files = await loadRepoIndex(target.repo)
@@ -155,7 +158,8 @@
     else if (effect.kind === "reboot") onReboot();
     else if (effect.kind === "attach") onAttach?.(effect.sessionId);
     else if (effect.kind === "create-and-attach") onCreateAndAttach?.(effect.name);
-    else if (effect.kind === "attach-view") onAttachView?.(effect.sessionId, effect.view, effect.windowExists);
+    else if (effect.kind === "attach-view")
+      onAttachView?.(effect.sessionId, effect.view, effect.windowExists);
     else if (effect.kind === "open-editor") {
       const { tokens, palette } = await tokensFor(target);
       editorFile = { path: effect.path, content: effect.content, tokens, palette };
@@ -183,11 +187,19 @@
     const isMd = editorFile.path.toLowerCase().endsWith(".md");
     if (isMd) {
       const kinds = classifyDoc(lines, "project");
-      return lines.map((raw, i) => ({ n: i + 1, t: raw === "" ? " " : raw, style: colorFor(kinds[i], "project") }));
+      return lines.map((raw, i) => ({
+        n: i + 1,
+        t: raw === "" ? " " : raw,
+        style: colorFor(kinds[i], "project"),
+      }));
     }
     if (editorFile.tokens) {
       const tokens = editorFile.tokens;
-      return lines.map((raw, i) => ({ n: i + 1, t: raw === "" ? " " : tokens[i], style: docColors.p }));
+      return lines.map((raw, i) => ({
+        n: i + 1,
+        t: raw === "" ? " " : tokens[i],
+        style: docColors.p,
+      }));
     }
     return lines.map((raw, i) => ({ n: i + 1, t: raw === "" ? " " : raw, style: docColors.p }));
   });
@@ -362,11 +374,13 @@
             : line.kind === "input"
               ? "color:#5fc6b4"
               : "color:#c9d1d9"}
-        >{line.text}</div>
+        >
+          {line.text}
+        </div>
       {/each}
       <div style="display:flex;align-items:baseline;white-space:pre">
-        <span data-testid="shell-prompt" style="color:#5fc6b4">{promptText}</span
-        ><span data-testid="shell-input">{pane.shell.input}</span
+        <span data-testid="shell-prompt" style="color:#5fc6b4">{promptText}</span><span
+          data-testid="shell-input">{pane.shell.input}</span
         ><span
           style="display:inline-block;width:7px;height:13px;margin-left:1px;vertical-align:-2px;background:#5fc6b4;animation:blk 1.1s steps(1) infinite"
         ></span>

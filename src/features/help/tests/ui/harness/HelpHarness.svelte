@@ -6,7 +6,12 @@
   import { onMount } from "svelte";
   import HelpView from "../../../components/HelpView.svelte";
   import HelpSearch from "../../../components/HelpSearch.svelte";
-  import type { CmdlineData, HelpData, HelpSearchData, ShellData } from "../../../../../common/lib/data";
+  import type {
+    CmdlineData,
+    HelpData,
+    HelpSearchData,
+    ShellData,
+  } from "../../../../../common/lib/data";
 
   interface Props {
     help: HelpData;

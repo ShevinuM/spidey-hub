@@ -27,12 +27,17 @@
   >
     {state.grepFilePos}
   </div>
-  <div bind:this={state.previewEl} data-testid="grep-preview" style="flex:1;min-height:0;overflow:hidden">
+  <div
+    bind:this={state.previewEl}
+    data-testid="grep-preview"
+    style="flex:1;min-height:0;overflow:hidden"
+  >
     {#each state.previewLines as l (l.n)}
       <div style={l.style}>
         <span style={l.nStyle}>{l.n}</span>
         <span style="min-width:0;overflow:hidden"
-          >{l.pre}<span style="background:rgba(95,198,180,.38);color:#eafaf6">{l.mat}</span>{l.post}</span
+          >{l.pre}<span style="background:rgba(95,198,180,.38);color:#eafaf6">{l.mat}</span
+          >{l.post}</span
         >
       </div>
     {/each}

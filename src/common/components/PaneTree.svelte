@@ -43,7 +43,14 @@
      * so the ref registration `$effect` below keeps
      * registering/unregistering exactly the instance this recursion level
      * actually rendered — never a registry shared across leaves. */
-    paneLeaf: Snippet<[pane: Pane, isFocused: boolean, getLeafRef: () => unknown, setLeafRef: (ref: unknown) => void]>;
+    paneLeaf: Snippet<
+      [
+        pane: Pane,
+        isFocused: boolean,
+        getLeafRef: () => unknown,
+        setLeafRef: (ref: unknown) => void,
+      ]
+    >;
   }
 
   const { node, activePaneId, multiPane, refs, paneLeaf }: Props = $props();
@@ -71,10 +78,15 @@
 </script>
 
 {#if node.type === "split"}
-  <div style="flex:1;min-height:0;min-width:0;display:flex;flex-direction:{node.direction === 'row' ? 'row' : 'column'}">
+  <div
+    style="flex:1;min-height:0;min-width:0;display:flex;flex-direction:{node.direction === 'row'
+      ? 'row'
+      : 'column'}"
+  >
     {#each node.children as child, i (i)}
       <div
-        style="flex:{node.sizes[i] ?? 1} 1 0%;min-width:0;min-height:0;display:flex;flex-direction:column;{i > 0
+        style="flex:{node.sizes[i] ??
+          1} 1 0%;min-width:0;min-height:0;display:flex;flex-direction:column;{i > 0
           ? node.direction === 'row'
             ? 'border-left:1px solid rgba(196,216,232,.18)'
             : 'border-top:1px solid rgba(196,216,232,.18)'
@@ -88,7 +100,8 @@
   <div
     data-testid="pane-leaf"
     data-pane-focused={isFocused}
-    style="flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;{multiPane && isFocused
+    style="flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;{multiPane &&
+    isFocused
       ? 'box-shadow:inset 0 0 0 1px #e0453c'
       : ''}"
   >

@@ -273,7 +273,12 @@ export interface RepositoriesData {
     // "<repo> @<sha8>" once a repo/commit is open.
     files: { label: string; subtitleTemplate: string };
     repos: { label: string };
-    commits: { label: string; subtitleTemplate: string; authorInitials: string; localOnlyText: string };
+    commits: {
+      label: string;
+      subtitleTemplate: string;
+      authorInitials: string;
+      localOnlyText: string;
+    };
     changes: { label: string; subtitleTemplate: string };
   };
   statusLine: {
@@ -573,4 +578,5 @@ export interface ChooseTreeData {
   killSessionPromptTemplate: string;
 }
 
-export const getChooseTree = (): ChooseTreeData => parseYaml<ChooseTreeData>(choosetreeRaw, "choosetree.yaml");
+export const getChooseTree = (): ChooseTreeData =>
+  parseYaml<ChooseTreeData>(choosetreeRaw, "choosetree.yaml");

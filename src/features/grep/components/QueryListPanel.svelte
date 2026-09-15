@@ -24,13 +24,22 @@
     style="flex:none;display:flex;align-items:baseline;gap:8px;padding:2px 10px 6px;border-bottom:1px solid rgba(224,69,60,.28)"
   >
     <span style="color:#5fc6b4">{grep.leftPane.promptIcon}</span>
-    <span data-testid="grep-query" style="flex:1;min-width:0;color:#f4ece9;white-space:pre;overflow:hidden"
-      >{state.query}<span style="animation:blk 1.05s steps(1) infinite;color:#e0453c">{grep.leftPane.cursorGlyph}</span
+    <span
+      data-testid="grep-query"
+      style="flex:1;min-width:0;color:#f4ece9;white-space:pre;overflow:hidden"
+      >{state.query}<span style="animation:blk 1.05s steps(1) infinite;color:#e0453c"
+        >{grep.leftPane.cursorGlyph}</span
       ></span
     >
-    <span data-testid="grep-counter" style="flex:none;color:rgba(217,176,74,.9)">{state.countText}</span>
+    <span data-testid="grep-counter" style="flex:none;color:rgba(217,176,74,.9)"
+      >{state.countText}</span
+    >
   </div>
-  <div bind:this={state.listEl} data-testid="grep-list" style="flex:1;min-height:0;overflow:hidden;padding:0 2px">
+  <div
+    bind:this={state.listEl}
+    data-testid="grep-list"
+    style="flex:1;min-height:0;overflow:hidden;padding:0 2px"
+  >
     {#if state.grepRows.length > 0}
       {#each state.grepRows as r (r.idx)}
         <div
@@ -45,20 +54,29 @@
           }}
           style={r.style}
         >
-          <span style="width:14px;height:14px;flex:none;display:inline-flex" aria-hidden="true">{@html r.icon}</span>
+          <span style="width:14px;height:14px;flex:none;display:inline-flex" aria-hidden="true"
+            >{@html r.icon}</span
+          >
           <span style={`flex:none;color:${r.pathColor}`}>{r.path}</span>
           <span style="flex:none;color:#5fc6b4">{r.pos}</span>
           <span style="min-width:0;overflow:hidden;text-overflow:ellipsis"
-            >{r.pre}<span style="background:rgba(95,198,180,.35);color:#eafaf6">{r.mat}</span>{r.post}</span
+            >{r.pre}<span style="background:rgba(95,198,180,.35);color:#eafaf6">{r.mat}</span
+            >{r.post}</span
           >
         </div>
       {/each}
     {:else if state.showLoading}
-      <div data-testid="grep-loading" style="padding:10px;color:rgba(196,216,232,.45)">{grep.loadingText}</div>
+      <div data-testid="grep-loading" style="padding:10px;color:rgba(196,216,232,.45)">
+        {grep.loadingText}
+      </div>
     {:else if state.showError}
-      <div data-testid="grep-error" style="padding:10px;color:rgba(196,216,232,.45)">{grep.errorText}</div>
+      <div data-testid="grep-error" style="padding:10px;color:rgba(196,216,232,.45)">
+        {grep.errorText}
+      </div>
     {:else}
-      <div data-testid="grep-empty" style="padding:10px;color:rgba(196,216,232,.45)">{state.emptyStateText}</div>
+      <div data-testid="grep-empty" style="padding:10px;color:rgba(196,216,232,.45)">
+        {state.emptyStateText}
+      </div>
     {/if}
   </div>
   <div

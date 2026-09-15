@@ -2,11 +2,11 @@
 
 Rules shared by all three suites (`unit-testing.md`, `e2e-testing.md`, `visual-testing.md`) live here so no rule has two homes. Each suite file opens with its own admission rule for what belongs there; this file is what's left once admission is decided.
 
-| file | covers |
-|---|---|
-| `unit-testing.md` | Pure, DOM-free logic: `common/engines/`, `common/lib/`, a feature's own `lib/*.ts` and state-class methods. |
-| `e2e-testing.md` | User-observable flow in a real browser: page objects, locators-in-practice, animation/overflow/cold-boot behavioral assertions. |
-| `visual-testing.md` | Rendered appearance via golden pixel comparison: fixture-driven recipes, adversarial layouts, the rebaseline policy. |
+| file                | covers                                                                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `unit-testing.md`   | Pure, DOM-free logic: `common/engines/`, `common/lib/`, a feature's own `lib/*.ts` and state-class methods.                     |
+| `e2e-testing.md`    | User-observable flow in a real browser: page objects, locators-in-practice, animation/overflow/cold-boot behavioral assertions. |
+| `visual-testing.md` | Rendered appearance via golden pixel comparison: fixture-driven recipes, adversarial layouts, the rebaseline policy.            |
 
 ## Where test code lives
 

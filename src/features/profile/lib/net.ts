@@ -89,7 +89,15 @@ export interface BarFrameParams {
 }
 
 /** One bar's height for this frame, [0,1] — mirrors the reference `startMeter()`'s per-bar `tick()` body. */
-export function barHeight({ index: i, barCount, tSeconds: t, env, cap, burst, rand = Math.random }: BarFrameParams): number {
+export function barHeight({
+  index: i,
+  barCount,
+  tSeconds: t,
+  env,
+  cap,
+  burst,
+  rand = Math.random,
+}: BarFrameParams): number {
   const wob =
     Math.sin(t * (1.15 + i * 0.07) + i * 1.7) * 0.5 +
     Math.sin(t * (0.55 + i * 0.031) + i * 0.9) * 0.32 +

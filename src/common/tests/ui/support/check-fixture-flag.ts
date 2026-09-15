@@ -39,7 +39,10 @@ export default async function globalSetup(): Promise<void> {
   }
 
   if (actual !== expected) {
-    const expectedLabel = expected === "1" ? "a FIXTURE build (PORTFOLIO_FIXTURES=1)" : "a REAL build (no PORTFOLIO_FIXTURES)";
+    const expectedLabel =
+      expected === "1"
+        ? "a FIXTURE build (PORTFOLIO_FIXTURES=1)"
+        : "a REAL build (no PORTFOLIO_FIXTURES)";
     const actualLabel = actual === "1" ? "a FIXTURE build" : "a REAL build";
     throw new Error(
       `[checkFixtureFlag] port 4322 is serving ${actualLabel}, but this suite expects ` +

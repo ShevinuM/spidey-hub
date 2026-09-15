@@ -154,7 +154,11 @@ test("padStatusValue: right-pads/truncates to exactly 16 characters", () => {
 });
 
 test("statusRowValue: dots below threshold, onlineText (padded) above it", () => {
-  const row: BootStatusRow = { prefix: "│ core ............ ", threshold: 14, onlineText: "ONLINE" };
+  const row: BootStatusRow = {
+    prefix: "│ core ............ ",
+    threshold: 14,
+    onlineText: "ONLINE",
+  };
   expect(statusRowValue(14, row)).toBe(padStatusValue("········"));
   expect(statusRowValue(15, row)).toBe(padStatusValue("ONLINE"));
 });

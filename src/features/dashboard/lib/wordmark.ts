@@ -15,6 +15,9 @@ export function wordmarkChars(title: string): WordmarkChar[] {
     const t = n > 1 ? (i - (n - 1) / 2) / ((n - 1) / 2) : 0; // -1..1 across the word
     const angle = t * WORDMARK_MAX_ANGLE;
     const rise = (1 - t * t) * WORDMARK_ARCH_PX;
-    return { ch, style: `transform:translateY(${(-rise).toFixed(2)}px) rotate(${angle.toFixed(2)}deg)` };
+    return {
+      ch,
+      style: `transform:translateY(${(-rise).toFixed(2)}px) rotate(${angle.toFixed(2)}deg)`,
+    };
   });
 }

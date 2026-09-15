@@ -1,6 +1,11 @@
 <script lang="ts">
   import type { CmdlineData, HelpData, HelpSearchData, ShellData } from "../../../common/lib/data";
-  import { buildEntries, commandEntries, searchHelp, type HelpSearchEntry } from "../lib/help-search";
+  import {
+    buildEntries,
+    commandEntries,
+    searchHelp,
+    type HelpSearchEntry,
+  } from "../lib/help-search";
   import { pushPasteTarget, removePasteTarget } from "../../../common/lib/paste-targets";
   import { STATUS_BAR_HEIGHT_PX } from "../../../common/lib/layout";
 
@@ -176,8 +181,11 @@
           style="display:flex;align-items:baseline;gap:8px;padding:2px 4px 8px;border-bottom:1px solid rgba(224,69,60,.28)"
         >
           <span style="color:#5fc6b4">{helpSearch.prompt.glyph}</span>
-          <span data-testid="help-search-input" style="flex:1;min-width:0;color:#f4ece9;white-space:pre;overflow:hidden"
-            >{text}<span style="animation:blk 1.05s steps(1) infinite;color:#e0453c">{helpSearch.prompt.cursorGlyph}</span
+          <span
+            data-testid="help-search-input"
+            style="flex:1;min-width:0;color:#f4ece9;white-space:pre;overflow:hidden"
+            >{text}<span style="animation:blk 1.05s steps(1) infinite;color:#e0453c"
+              >{helpSearch.prompt.cursorGlyph}</span
             ></span
           >
         </div>
@@ -204,17 +212,24 @@
                 if (ev.key === "Enter" || ev.key === " ") activate(r);
               }}
               style={`cursor:pointer;display:flex;gap:10px;padding:3px 6px;border-radius:2px;` +
-                (i === clampedSelected ? "background:rgba(224,69,60,.22);color:#f4ece9" : "color:rgba(196,216,232,.7)")}
+                (i === clampedSelected
+                  ? "background:rgba(224,69,60,.22);color:#f4ece9"
+                  : "color:rgba(196,216,232,.7)")}
             >
-              <span style="flex:none;width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#5fc6b4"
-                >{r.kind === "command" && r.takesArgs ? `${r.label}${cmdline.argsPlaceholder}` : r.label}</span
+              <span
+                style="flex:none;width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#5fc6b4"
+                >{r.kind === "command" && r.takesArgs
+                  ? `${r.label}${cmdline.argsPlaceholder}`
+                  : r.label}</span
               >
               <span
                 style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(196,216,232,.5)"
                 >{r.description}</span
               >
               {#if r.kind === "keymap"}
-                <span style="flex:none;color:rgba(196,216,232,.32);font-style:italic">{helpSearch.keymapHint}</span>
+                <span style="flex:none;color:rgba(196,216,232,.32);font-style:italic"
+                  >{helpSearch.keymapHint}</span
+                >
               {/if}
             </div>
           {:else}

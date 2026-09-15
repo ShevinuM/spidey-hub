@@ -60,7 +60,16 @@ const SCANNED_EXTENSIONS = [".ts", ".mjs", ".js", ".svelte", ".astro"];
 /** Extensions tried when resolving an extensionless specifier. `.svelte.ts`
  * is in the list because `./terminalState.svelte` names a runes module, not a
  * component — appending `.ts` to a `.svelte` specifier is a real case here. */
-const RESOLUTION_SUFFIXES = ["", ".ts", ".js", ".mjs", ".svelte", ".astro", "/index.ts", "/index.js"];
+const RESOLUTION_SUFFIXES = [
+  "",
+  ".ts",
+  ".js",
+  ".mjs",
+  ".svelte",
+  ".astro",
+  "/index.ts",
+  "/index.js",
+];
 
 /** Matches `from "…"`, bare `import "…"` and dynamic `import("…")`, in single
  * or double quotes. The specifier is captured verbatim — query suffix included,
@@ -127,11 +136,20 @@ const ALLOWLIST: AllowlistEntry[] = [
   ...(
     [
       ["src/common/tests/ui/support/fixtures.ts", "../../../../features/boot/lib/boot-state"],
-      ["src/common/tests/ui/support/fixtures.ts", "../../../../features/notifications/lib/notification-store"],
+      [
+        "src/common/tests/ui/support/fixtures.ts",
+        "../../../../features/notifications/lib/notification-store",
+      ],
       ["src/common/tests/ui/support/pipeline.mjs", "../../../../features/boot/lib/boot-state.ts"],
-      ["src/common/tests/ui/support/pipeline.mjs", "../../../../features/notifications/lib/toast-seed.ts"],
+      [
+        "src/common/tests/ui/support/pipeline.mjs",
+        "../../../../features/notifications/lib/toast-seed.ts",
+      ],
       ["src/common/tests/ui/e2e/animations.spec.ts", "../../../../features/boot/lib/boot-state"],
-      ["src/common/tests/ui/e2e/animations.spec.ts", "../../../../features/notifications/lib/notification-store"],
+      [
+        "src/common/tests/ui/e2e/animations.spec.ts",
+        "../../../../features/notifications/lib/notification-store",
+      ],
       ["src/common/tests/ui/e2e/cmdline.spec.ts", "../../../../features/grep/lib/grep"],
     ] as const
   ).map(([source, specifier]) => ({
@@ -173,7 +191,11 @@ function classify(path: string): Layer {
  * can name it; it can never change the answer's layer, because every candidate
  * shares the same directory prefix. That is what lets the non-vacuity proof
  * pass in-memory files that are nowhere on disk. */
-function resolveTarget(source: string, specifier: string, fileExists: (absPath: string) => boolean): string {
+function resolveTarget(
+  source: string,
+  specifier: string,
+  fileExists: (absPath: string) => boolean,
+): string {
   const withoutQuery = specifier.split("?")[0];
   const lexical = posixJoin(posixDirname(source), withoutQuery);
   for (const suffix of RESOLUTION_SUFFIXES) {
@@ -304,7 +326,9 @@ test("each boundary rule fires against a synthetic violation, and a stale entry 
   ];
 
   const detected = findBoundaryCrossings(synthetic, () => false);
-  expect(detected.map((edge) => `${edge.rule} | ${edge.source} -> ${edge.specifier}`).sort()).toEqual([
+  expect(
+    detected.map((edge) => `${edge.rule} | ${edge.source} -> ${edge.specifier}`).sort(),
+  ).toEqual([
     "common never imports a feature | src/common/lib/synthetic-glob.ts -> ../../features/grep/content/*.json",
     "common never imports a feature | src/common/lib/synthetic-raw.ts -> ../../features/help/content/help.yaml?raw",
     "common never imports a feature | src/common/lib/synthetic.ts -> ../../features/grep/lib/grep",
@@ -319,15 +343,18 @@ test("each boundary rule fires against a synthetic violation, and a stale entry 
 
   // The other direction: an entry naming an edge no code contains is a failure,
   // which is what makes a deleted reach-in impossible to restore unnoticed.
-  const stalePair = diffAgainstAllowlist([], [
-    {
-      source: "src/common/lib/data.ts",
-      specifier: "../../features/removed/content/removed.yaml?raw",
-      added: "2026-09-14",
-      disposition: "TEMPORARY (synthetic)",
-      reason: "Synthetic entry used to prove the stale-entry direction is not vacuous.",
-    },
-  ]);
+  const stalePair = diffAgainstAllowlist(
+    [],
+    [
+      {
+        source: "src/common/lib/data.ts",
+        specifier: "../../features/removed/content/removed.yaml?raw",
+        added: "2026-09-14",
+        disposition: "TEMPORARY (synthetic)",
+        reason: "Synthetic entry used to prove the stale-entry direction is not vacuous.",
+      },
+    ],
+  );
   expect(stalePair.stale).toEqual([
     "src/common/lib/data.ts -> ../../features/removed/content/removed.yaml?raw",
   ]);

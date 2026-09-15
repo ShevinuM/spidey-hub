@@ -33,7 +33,8 @@ export interface RepoRow {
   isAllProjects: boolean;
 }
 
-type RepoIndexState = { status: "loading" } | { status: "error" } | { status: "ready"; index: RepoIndex };
+type RepoIndexState =
+  { status: "loading" } | { status: "error" } | { status: "ready"; index: RepoIndex };
 
 type TreeSource =
   | { kind: "working"; repoName: string }
@@ -81,7 +82,10 @@ export class RepositoriesState {
           .filter((n) => !Number.isNaN(n));
         if (dates.length === 0) return;
         const ago = agoLabel(Math.max(...dates), Date.now());
-        this.lastPushLabel = this.repositoriesFn().statusLine.lastPushTemplate.replace("{value}", `${ago} ago`);
+        this.lastPushLabel = this.repositoriesFn().statusLine.lastPushTemplate.replace(
+          "{value}",
+          `${ago} ago`,
+        );
       });
     });
 
@@ -95,7 +99,9 @@ export class RepositoriesState {
         })
         .then((data) => {
           if (cancelled) return;
-          const sorted = [...data.days].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+          const sorted = [...data.days].sort((a, b) =>
+            a.date < b.date ? -1 : a.date > b.date ? 1 : 0,
+          );
           // Trim to the trailing 364 days (52 full weeks) — GraphQL can
           // return a handful of extra leading days depending on the exact
           // fetch instant; sequential 7-day chunking (no weekday alignment,
@@ -232,7 +238,10 @@ export class RepositoriesState {
 
   renderedDoc = $derived(
     this.defaultProject?.body
-      ? classifyBody(this.defaultProject.body, "project").map((l) => ({ t: l.t, style: colorFor(l.kind, "project") }))
+      ? classifyBody(this.defaultProject.body, "project").map((l) => ({
+          t: l.t,
+          style: colorFor(l.kind, "project"),
+        }))
       : [],
   );
 
@@ -247,11 +256,21 @@ export class RepositoriesState {
   // down).
   flatRepos = $derived.by((): RepoRow[] => {
     const rows: RepoRow[] = [
-      { key: this.repositories.allProjects.name, branch: this.repositories.allProjects.branch, mark: "•", isAllProjects: true },
+      {
+        key: this.repositories.allProjects.name,
+        branch: this.repositories.allProjects.branch,
+        mark: "•",
+        isAllProjects: true,
+      },
     ];
     for (const p of this.sortedProjects) {
       p.data.repos.forEach((r, i) => {
-        rows.push({ key: r.name, branch: r.branch, mark: i === 0 ? "*" : "•", isAllProjects: false });
+        rows.push({
+          key: r.name,
+          branch: r.branch,
+          mark: i === 0 ? "*" : "•",
+          isAllProjects: false,
+        });
       });
     }
     return rows;
@@ -274,7 +293,10 @@ export class RepositoriesState {
   // `untrack()` is load-bearing, not decorative — without it, reading and rewriting `fetchingRepos` here would register it as a dependency of whichever effect called this, retriggering that effect forever.
   beginFetch(repoName: string) {
     untrack(() => {
-      this.fetchingRepos = { ...this.fetchingRepos, [repoName]: (this.fetchingRepos[repoName] ?? 0) + 1 };
+      this.fetchingRepos = {
+        ...this.fetchingRepos,
+        [repoName]: (this.fetchingRepos[repoName] ?? 0) + 1,
+      };
     });
   }
   endFetch(repoName: string) {
@@ -339,7 +361,9 @@ export class RepositoriesState {
         : this.repoTree.source.repoName
       : "",
   );
-  filesSubtitle = $derived(this.repositories.panels.files.subtitleTemplate.replace("{value}", this.filesSubtitleValue));
+  filesSubtitle = $derived(
+    this.repositories.panels.files.subtitleTemplate.replace("{value}", this.filesSubtitleValue),
+  );
 
   async ensureRepoIndex(repoName: string) {
     const existing = this.repoIndexCache[repoName];
@@ -361,7 +385,11 @@ export class RepositoriesState {
   /** Single click OR Enter on a panel [1] row loads that repo's working
    * tree into panel [2] — there is no separate select-then-open step. */
   openRepo(r: RepoRow) {
-    this.repoTree = { source: { kind: "working", repoName: r.key }, collapsedDirs: new Set(), selectedIdx: 0 };
+    this.repoTree = {
+      source: { kind: "working", repoName: r.key },
+      collapsedDirs: new Set(),
+      selectedIdx: 0,
+    };
     this.commitFetchError = null;
     void this.ensureRepoIndex(r.key);
   }
@@ -377,7 +405,13 @@ export class RepositoriesState {
       return;
     }
     this.repoTree = {
-      source: { kind: "commit", repoName, sha: commit.sha ?? commit.sha8, sha8: commit.sha8, paths },
+      source: {
+        kind: "commit",
+        repoName,
+        sha: commit.sha ?? commit.sha8,
+        sha8: commit.sha8,
+        paths,
+      },
       collapsedDirs: new Set(),
       selectedIdx: 0,
     };
@@ -395,22 +429,40 @@ export class RepositoriesState {
     const isMd = this.preview.path.toLowerCase().endsWith(".md");
     if (isMd) {
       const kinds = classifyDoc(this.preview.lines, "project");
-      return this.preview.lines.map((raw, i) => ({ n: null, t: raw === "" ? " " : raw, style: colorFor(kinds[i], "project") }));
+      return this.preview.lines.map((raw, i) => ({
+        n: null,
+        t: raw === "" ? " " : raw,
+        style: colorFor(kinds[i], "project"),
+      }));
     }
     if (this.preview.tokens) {
       const tokens = this.preview.tokens;
-      return this.preview.lines.map((raw, i) => ({ n: i + 1, t: raw === "" ? " " : tokens[i], style: docColors.p }));
+      return this.preview.lines.map((raw, i) => ({
+        n: i + 1,
+        t: raw === "" ? " " : tokens[i],
+        style: docColors.p,
+      }));
     }
-    return this.preview.lines.map((raw, i) => ({ n: i + 1, t: raw === "" ? " " : raw, style: docColors.p }));
+    return this.preview.lines.map((raw, i) => ({
+      n: i + 1,
+      t: raw === "" ? " " : raw,
+      style: docColors.p,
+    }));
   });
 
   /** Hex colors indexed by a tokenized `previewLines[].t`'s paletteIndex — same shape as `editorPalette` further down, so the same per-repo palette resolves both. */
   previewPalette = $derived(this.preview?.palette ?? []);
 
   changesSubtitleValue = $derived(
-    this.preview ? `${this.preview.repoName}/${this.preview.path}` : this.defaultProject ? `${this.defaultProject.id}.md` : "",
+    this.preview
+      ? `${this.preview.repoName}/${this.preview.path}`
+      : this.defaultProject
+        ? `${this.defaultProject.id}.md`
+        : "",
   );
-  changesSubtitle = $derived(this.repositories.panels.changes.subtitleTemplate.replace("{value}", this.changesSubtitleValue));
+  changesSubtitle = $derived(
+    this.repositories.panels.changes.subtitleTemplate.replace("{value}", this.changesSubtitleValue),
+  );
 
   // ---------------------------------------------------------------------
   // Editor (full-screen, opened only by Enter on a file — clicking a file
@@ -505,7 +557,11 @@ export class RepositoriesState {
         style: docColors.p,
       }));
     }
-    return this.editorFile.lines.map((raw, i) => ({ n: i + 1, t: raw === "" ? " " : raw, style: docColors.p }));
+    return this.editorFile.lines.map((raw, i) => ({
+      n: i + 1,
+      t: raw === "" ? " " : raw,
+      style: docColors.p,
+    }));
   });
 
   editorPalette = $derived(this.editorFile?.palette ?? []);
@@ -542,7 +598,9 @@ export class RepositoriesState {
     if (!repo || repo.isAllProjects) return [];
     return this.liveCommits[repo.key] ?? this.commitsByRepo[repo.key] ?? [];
   });
-  clampedCommitIdx = $derived(this.commits.length ? Math.min(this.selectedCommitIdx, this.commits.length - 1) : 0);
+  clampedCommitIdx = $derived(
+    this.commits.length ? Math.min(this.selectedCommitIdx, this.commits.length - 1) : 0,
+  );
 
   /** "{branch} · {count} commits" — both real: branch from the panel [1] selection, count from the actually-rendered commit list. */
   commitsSubtitle = $derived(
@@ -578,7 +636,10 @@ export class RepositoriesState {
     if (!this.repoTree) return;
     const n = this.currentRows.length;
     if (n === 0) return;
-    this.repoTree = { ...this.repoTree, selectedIdx: (((this.repoTree.selectedIdx + delta) % n) + n) % n };
+    this.repoTree = {
+      ...this.repoTree,
+      selectedIdx: (((this.repoTree.selectedIdx + delta) % n) + n) % n,
+    };
   }
 
   // Rekeyed to the panel [1] selection; skipped for the virtual all-projects entry since it isn't a real GitHub repo and would just fail, wasting one of the 60 unauthenticated requests/hour.

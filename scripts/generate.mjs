@@ -69,15 +69,59 @@ const SIZE_CAP = 200 * 1024;
 
 const TEXT_EXTENSIONS = new Set([
   // web / JS ecosystem
-  "md", "mdx", "txt", "json", "yaml", "yml", "toml", "ini", "cfg", "conf",
-  "properties", "xml", "html", "htm", "css", "scss", "less",
-  "js", "mjs", "cjs", "jsx", "ts", "tsx", "svelte", "astro", "vue",
+  "md",
+  "mdx",
+  "txt",
+  "json",
+  "yaml",
+  "yml",
+  "toml",
+  "ini",
+  "cfg",
+  "conf",
+  "properties",
+  "xml",
+  "html",
+  "htm",
+  "css",
+  "scss",
+  "less",
+  "js",
+  "mjs",
+  "cjs",
+  "jsx",
+  "ts",
+  "tsx",
+  "svelte",
+  "astro",
+  "vue",
   // languages found in the eight repos (and generally common)
-  "py", "java", "kt", "kts", "gradle", "rb", "go", "rs",
-  "c", "cc", "cpp", "h", "hpp", "cs", "php",
-  "sh", "bash", "zsh", "fish", "ps1", "cmd",
-  "sql", "graphql", "gql",
-  "svg", "fxml",
+  "py",
+  "java",
+  "kt",
+  "kts",
+  "gradle",
+  "rb",
+  "go",
+  "rs",
+  "c",
+  "cc",
+  "cpp",
+  "h",
+  "hpp",
+  "cs",
+  "php",
+  "sh",
+  "bash",
+  "zsh",
+  "fish",
+  "ps1",
+  "cmd",
+  "sql",
+  "graphql",
+  "gql",
+  "svg",
+  "fxml",
   "env",
 ]);
 
@@ -233,7 +277,11 @@ function loadPins() {
 }
 
 function savePins(pins) {
-  const sorted = Object.fromEntries(Object.keys(pins).sort().map((k) => [k, pins[k]]));
+  const sorted = Object.fromEntries(
+    Object.keys(pins)
+      .sort()
+      .map((k) => [k, pins[k]]),
+  );
   writeFileSync(REPOS_JSON_PATH, JSON.stringify(sorted, null, 2) + "\n");
 }
 
@@ -246,7 +294,10 @@ function savePins(pins) {
 async function resolveSha(pins, name, github, branch) {
   if (pins[name]) return pins[name];
   const url = `https://api.github.com/repos/${github}/commits/${branch}`;
-  const headers = { Accept: "application/vnd.github+json", "User-Agent": "shevinum-dev-v3-generate-script" };
+  const headers = {
+    Accept: "application/vnd.github+json",
+    "User-Agent": "shevinum-dev-v3-generate-script",
+  };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   const res = await fetch(url, { headers });
   if (!res.ok) {
@@ -288,7 +339,9 @@ async function ensureRepoCache(name, github, sha) {
     // <repo>-<sha>/ (codeload's own naming — not necessarily this
     // project's `name`, which is why --strip-components=1 is required;
     // getting it wrong would silently re-prefix every path in the output).
-    const result = spawnSync("tar", ["-xz", "--strip-components=1", "-C", tmpDir], { input: buffer });
+    const result = spawnSync("tar", ["-xz", "--strip-components=1", "-C", tmpDir], {
+      input: buffer,
+    });
     if (result.status !== 0) {
       const stderr = result.stderr?.toString().trim();
       throw new Error(`tar extraction failed for ${github}@${sha}${stderr ? `: ${stderr}` : ""}`);
@@ -327,7 +380,9 @@ async function generateRepoIndexes() {
       const sha = await resolveSha(pins, name, github, branch);
       repoDir = await ensureRepoCache(name, github, sha);
     } catch (err) {
-      console.warn(`[generate] WARNING: fetch failed for ${name} (${err.message}); keeping existing snapshot.`);
+      console.warn(
+        `[generate] WARNING: fetch failed for ${name} (${err.message}); keeping existing snapshot.`,
+      );
       continue;
     }
     const files = [];
@@ -376,7 +431,9 @@ function generateAllProjectsIndex() {
       files.push({ path: entry, lines: content.split("\n") });
     }
   } else {
-    console.warn("[generate] src/features/repositories/content/repositories not found — skipping all-projects.json.");
+    console.warn(
+      "[generate] src/features/repositories/content/repositories not found — skipping all-projects.json.",
+    );
   }
   files.sort((a, b) => a.path.localeCompare(b.path));
   const index = { name: "all-projects", files };
@@ -398,13 +455,7 @@ function generateAllProjectsIndex() {
 // HTML/JS/images, never shipped, and excluding it keeps the live grep
 // overlay to the site's own source.
 
-const GREP_SKIP_DIRS = new Set([
-  "node_modules",
-  ".git",
-  "dist",
-  ".astro",
-  "goldens",
-]);
+const GREP_SKIP_DIRS = new Set(["node_modules", ".git", "dist", ".astro", "goldens"]);
 
 const GREP_ROOT_SUBDIRS = ["src", "scripts", "tests"];
 
@@ -481,13 +532,7 @@ function generateGrepIndex() {
 // GitHub repo, so there is no `repos/all-projects` shell path to populate.
 // ---------------------------------------------------------------------------
 
-const FS_INDEX_SKIP_DIRS = new Set([
-  "node_modules",
-  ".git",
-  "dist",
-  ".astro",
-  "goldens",
-]);
+const FS_INDEX_SKIP_DIRS = new Set(["node_modules", ".git", "dist", ".astro", "goldens"]);
 
 const FS_INDEX_SKIP_FILES = new Set([".DS_Store"]);
 
@@ -640,12 +685,18 @@ async function generateCommitSnapshots() {
       const commits = await fetchCommits(github);
       if (commits.length === 0) throw new Error("zero commits returned");
       writeFileSync(outFile, JSON.stringify(commits, null, 2) + "\n");
-      console.log(`[generate] src/generated/commits/${name}.json — ${commits.length} commits (live)`);
+      console.log(
+        `[generate] src/generated/commits/${name}.json — ${commits.length} commits (live)`,
+      );
     } catch (err) {
       if (existsSync(outFile)) {
-        console.warn(`[generate] WARNING: commit fetch failed for ${name} (${err.message}); keeping existing snapshot.`);
+        console.warn(
+          `[generate] WARNING: commit fetch failed for ${name} (${err.message}); keeping existing snapshot.`,
+        );
       } else {
-        console.warn(`[generate] WARNING: commit fetch failed for ${name} (${err.message}); no existing snapshot — Repositories will have no commits for this repo until this succeeds.`);
+        console.warn(
+          `[generate] WARNING: commit fetch failed for ${name} (${err.message}); no existing snapshot — Repositories will have no commits for this repo until this succeeds.`,
+        );
       }
     }
   }
@@ -735,7 +786,9 @@ async function fetchContributionsScrape() {
     days.push({ date, level });
   }
   if (days.length === 0) {
-    throw new Error(`GET ${url} -> no ContributionCalendar-day cells found (markup may have changed)`);
+    throw new Error(
+      `GET ${url} -> no ContributionCalendar-day cells found (markup may have changed)`,
+    );
   }
   return days;
 }
@@ -754,7 +807,9 @@ async function generateContributions() {
     }
   } catch (err) {
     if (existsSync(outFile)) {
-      console.warn(`[generate] WARNING: contributions fetch failed (${err.message}); keeping existing snapshot.`);
+      console.warn(
+        `[generate] WARNING: contributions fetch failed (${err.message}); keeping existing snapshot.`,
+      );
     } else {
       console.warn(
         `[generate] WARNING: contributions fetch failed (${err.message}); no existing snapshot — Repositories' Status pane grid will be empty until this succeeds.`,
@@ -771,7 +826,9 @@ async function generateContributions() {
   if (existsSync(outFile)) {
     const prev = JSON.parse(readFileSync(outFile, "utf8"));
     if (prev.source === source && JSON.stringify(prev.days) === JSON.stringify(days)) {
-      console.log(`[generate] public/generated/contributions.json — unchanged (${days.length} days, ${source})`);
+      console.log(
+        `[generate] public/generated/contributions.json — unchanged (${days.length} days, ${source})`,
+      );
       return;
     }
   }

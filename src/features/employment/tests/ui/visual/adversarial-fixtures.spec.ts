@@ -21,16 +21,13 @@ import { BOOT_SEEN_STORAGE_KEY } from "../../../../../common/tests/ui/support/fi
  * uses (pre-seed via `addInitScript`, before any navigation) — this file
  * has no golden/clock determinism needs, only the boot-skip. */
 async function gotoReady(page: Page, path: string): Promise<string[]> {
-  await page.addInitScript(
-    (key) => {
-      try {
-        sessionStorage.setItem(key, "1");
-      } catch {
-        // best-effort, same contract as src/features/boot/lib/boot-state.ts
-      }
-    },
-    BOOT_SEEN_STORAGE_KEY,
-  );
+  await page.addInitScript((key) => {
+    try {
+      sessionStorage.setItem(key, "1");
+    } catch {
+      // best-effort, same contract as src/features/boot/lib/boot-state.ts
+    }
+  }, BOOT_SEEN_STORAGE_KEY);
   const pageErrors: string[] = [];
   page.on("pageerror", (e) => pageErrors.push(String(e)));
   await page.goto(path);
@@ -67,7 +64,11 @@ test.describe("adversarial fixtures — employment", () => {
     expect(viewportSize).not.toBeNull();
     expect(previewBox.x + previewBox.width).toBeLessThanOrEqual(viewportSize!.width + 2);
 
-    const { scrollHeight, clientHeight, scrollTop: initialScrollTop } = await preview.evaluate((el) => ({
+    const {
+      scrollHeight,
+      clientHeight,
+      scrollTop: initialScrollTop,
+    } = await preview.evaluate((el) => ({
       scrollHeight: el.scrollHeight,
       clientHeight: el.clientHeight,
       scrollTop: el.scrollTop,

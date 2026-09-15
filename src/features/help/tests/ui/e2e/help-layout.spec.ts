@@ -50,7 +50,9 @@ for (const viewport of VIEWPORTS) {
       expect(await overflows(page.locator('[data-testid="help-title"]'))).toBe(false);
     });
 
-    test("every row's name, description, and key chips render on one line, with no overflow", async ({ page }) => {
+    test("every row's name, description, and key chips render on one line, with no overflow", async ({
+      page,
+    }) => {
       await gotoReady(page, "/help");
 
       const rowCount = await page.locator('[data-testid="help-row"]').count();
@@ -64,9 +66,9 @@ for (const viewport of VIEWPORTS) {
     test("every row renders at the same (single-line-pair) height", async ({ page }) => {
       await gotoReady(page, "/help");
 
-      const heights = await page.locator('[data-testid="help-row"]').evaluateAll((els) =>
-        els.map((el) => el.getBoundingClientRect().height),
-      );
+      const heights = await page
+        .locator('[data-testid="help-row"]')
+        .evaluateAll((els) => els.map((el) => el.getBoundingClientRect().height));
       expect(heights.length).toBeGreaterThan(0);
       const uniform = heights[0];
       for (const h of heights) {

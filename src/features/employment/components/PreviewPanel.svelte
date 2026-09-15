@@ -13,7 +13,9 @@
 
   const filePath = $derived(state.selected ? `${state.selected.org}/${state.selected.name}` : "");
   const fileSizeLabel = $derived(state.selected ? `${state.selected.sizeBytes} B` : "");
-  const lineCountLabel = $derived(state.personnel.previewLineCountTemplate.replace("{n}", String(state.docLines.length)));
+  const lineCountLabel = $derived(
+    state.personnel.previewLineCountTemplate.replace("{n}", String(state.docLines.length)),
+  );
 </script>
 
 <div style="position:relative;flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">
@@ -27,8 +29,12 @@
     >
       <span style="color:rgba(196,216,232,.5);flex:none">{state.personnel.filePerms}</span>
       <span style="color:rgba(196,216,232,.35);flex:none">{state.personnel.fileOwner}</span>
-      <span data-testid="employment-preview-size" style="color:rgba(217,176,74,.85);flex:none">{fileSizeLabel}</span>
-      <span data-testid="employment-preview-path" style="color:rgba(196,216,232,.4);min-width:0;overflow:hidden;text-overflow:ellipsis;flex:1"
+      <span data-testid="employment-preview-size" style="color:rgba(217,176,74,.85);flex:none"
+        >{fileSizeLabel}</span
+      >
+      <span
+        data-testid="employment-preview-path"
+        style="color:rgba(196,216,232,.4);min-width:0;overflow:hidden;text-overflow:ellipsis;flex:1"
         >{filePath}</span
       >
       <span style="color:rgba(95,198,180,.8);flex:none">{lineCountLabel}</span>
@@ -39,7 +45,9 @@
     >
       {#each state.docLines as l, i (i)}
         <div data-testid="employment-doc-line" style="display:flex;gap:11px">
-          <span style="width:20px;text-align:right;flex:none;color:rgba(196,216,232,.24)">{i + 1}</span>
+          <span style="width:20px;text-align:right;flex:none;color:rgba(196,216,232,.24)"
+            >{i + 1}</span
+          >
           <span style="min-width:0;{l.style}">{l.t}</span>
         </div>
       {/each}

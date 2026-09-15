@@ -55,17 +55,45 @@
   <div style="flex:1;min-height:0;display:flex">
     <div style="flex:1;min-height:0;padding:26px">
       <div style="position:relative;width:100%;height:100%;display:flex;font-size:12.5px">
-        <div style="position:absolute;left:-10px;top:-10px;z-index:8;width:22px;height:22px;border:1px solid rgba(224,69,60,.6);border-radius:3px;background:rgba(10,14,19,.97);box-shadow:0 0 14px rgba(224,69,60,.25);display:flex;align-items:center;justify-content:center">
-          <img src="/assets/spider-glyph-red.svg" alt="" aria-hidden="true" style="width:13px;height:13px;display:block" />
+        <div
+          style="position:absolute;left:-10px;top:-10px;z-index:8;width:22px;height:22px;border:1px solid rgba(224,69,60,.6);border-radius:3px;background:rgba(10,14,19,.97);box-shadow:0 0 14px rgba(224,69,60,.25);display:flex;align-items:center;justify-content:center"
+        >
+          <img
+            src="/assets/spider-glyph-red.svg"
+            alt=""
+            aria-hidden="true"
+            style="width:13px;height:13px;display:block"
+          />
         </div>
-        <div style="position:absolute;right:-10px;top:-10px;z-index:8;width:22px;height:22px;border:1px solid rgba(74,159,224,.55);border-radius:3px;background:rgba(10,14,19,.97);box-shadow:0 0 14px rgba(74,159,224,.2);display:flex;align-items:center;justify-content:center">
-          <img src="/assets/spider-glyph-blue.svg" alt="" aria-hidden="true" style="width:13px;height:13px;display:block" />
+        <div
+          style="position:absolute;right:-10px;top:-10px;z-index:8;width:22px;height:22px;border:1px solid rgba(74,159,224,.55);border-radius:3px;background:rgba(10,14,19,.97);box-shadow:0 0 14px rgba(74,159,224,.2);display:flex;align-items:center;justify-content:center"
+        >
+          <img
+            src="/assets/spider-glyph-blue.svg"
+            alt=""
+            aria-hidden="true"
+            style="width:13px;height:13px;display:block"
+          />
         </div>
-        <div style="position:absolute;left:-10px;bottom:-10px;z-index:8;width:22px;height:22px;border:1px solid rgba(95,198,180,.5);border-radius:3px;background:rgba(10,14,19,.97);display:flex;align-items:center;justify-content:center">
-          <img src="/assets/spider-glyph-teal.svg" alt="" aria-hidden="true" style="width:13px;height:13px;display:block;opacity:.9" />
+        <div
+          style="position:absolute;left:-10px;bottom:-10px;z-index:8;width:22px;height:22px;border:1px solid rgba(95,198,180,.5);border-radius:3px;background:rgba(10,14,19,.97);display:flex;align-items:center;justify-content:center"
+        >
+          <img
+            src="/assets/spider-glyph-teal.svg"
+            alt=""
+            aria-hidden="true"
+            style="width:13px;height:13px;display:block;opacity:.9"
+          />
         </div>
-        <div style="position:absolute;right:-10px;bottom:-10px;z-index:8;width:22px;height:22px;border:1px solid rgba(217,176,74,.5);border-radius:3px;background:rgba(10,14,19,.97);display:flex;align-items:center;justify-content:center">
-          <img src="/assets/spider-glyph-gold.svg" alt="" aria-hidden="true" style="width:13px;height:13px;display:block;opacity:.95" />
+        <div
+          style="position:absolute;right:-10px;bottom:-10px;z-index:8;width:22px;height:22px;border:1px solid rgba(217,176,74,.5);border-radius:3px;background:rgba(10,14,19,.97);display:flex;align-items:center;justify-content:center"
+        >
+          <img
+            src="/assets/spider-glyph-gold.svg"
+            alt=""
+            aria-hidden="true"
+            style="width:13px;height:13px;display:block;opacity:.95"
+          />
         </div>
 
         <RecordsPanel {state} {isFocused} />

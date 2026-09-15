@@ -26,23 +26,20 @@ import { TOAST_SEED_STORAGE_KEY } from "../../../../features/notifications/lib/t
  * Structural canary only, not a mask target (see SIGNAL_ROW_SELECTOR) — a
  * regression here fails the capture loudly rather than masking nothing.
  */
-export const NET_READOUT_SELECTOR =
-  'span[style*="font-variant-numeric: tabular-nums"]';
+export const NET_READOUT_SELECTOR = 'span[style*="font-variant-numeric: tabular-nums"]';
 /**
  * CSS selector for the 60-bar SIGNAL meter container (Profile view).
  *
  * Structural canary only, not a mask target — same reasoning as
  * NET_READOUT_SELECTOR.
  */
-export const METER_BARS_SELECTOR =
-  'div[style*="align-items: flex-end"][style*="overflow: hidden"]';
+export const METER_BARS_SELECTOR = 'div[style*="align-items: flex-end"][style*="overflow: hidden"]';
 /**
  * CSS selector for the SIGNAL footer row (Profile view) — the mask target,
  * since its box is fixed by static CSS while the net-readout/meter-bars
  * content inside it varies with real load timing (see README-PIPELINE.md).
  */
-export const SIGNAL_ROW_SELECTOR =
-  'div[style*="border-top: 1px solid rgba(224, 69, 60, 0.25)"]';
+export const SIGNAL_ROW_SELECTOR = 'div[style*="border-top: 1px solid rgba(224, 69, 60, 0.25)"]';
 
 /**
  * @param {import('@playwright/test').Page} page

@@ -44,7 +44,10 @@ test("tokenizeFile dedupes same-color runs into a shared palette (paletteIndex, 
 
   const usedIndices = new Set(result!.flat().map(([idx]) => idx));
   for (const idx of usedIndices) {
-    expect(idx >= 0 && idx < palette.palette.length, `paletteIndex ${idx} must resolve into the palette array`).toBeTruthy();
+    expect(
+      idx >= 0 && idx < palette.palette.length,
+      `paletteIndex ${idx} must resolve into the palette array`,
+    ).toBeTruthy();
   }
   // The snippet reuses the default/plain color across many tokens (spaces,
   // punctuation) — the palette must not have one entry per token.
@@ -65,12 +68,14 @@ test("tokenizeFile returns null for an extension with no grammar (e.g. markdown)
 });
 
 test("tokenLineText reconstructs plain text from an arbitrary token line", () => {
-  expect(tokenLineText([
+  expect(
+    tokenLineText([
       [0, "const "],
       [1, "x"],
       [0, " = "],
       [2, "1"],
       [0, ";"],
-    ])).toBe("const x = 1;");
+    ]),
+  ).toBe("const x = 1;");
   expect(tokenLineText([])).toBe("");
 });

@@ -30,9 +30,14 @@
     >
       {state.changesSubtitle}
     </div>
-    <div data-testid="repositories-changes-body" style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:2px">
+    <div
+      data-testid="repositories-changes-body"
+      style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:2px"
+    >
       {#if state.commitFetchError}
-        <div data-testid="repositories-commit-error" style="color:#e0453c">{state.commitFetchError}</div>
+        <div data-testid="repositories-commit-error" style="color:#e0453c">
+          {state.commitFetchError}
+        </div>
       {/if}
       {#if state.repoTree}
         {#if !state.preview}
@@ -45,8 +50,23 @@
           <div style="color:#e0453c">{repositories.filePreview.binaryText}</div>
         {:else}
           {#each state.previewLines as l, i (i)}
-            <div data-testid="repositories-preview-line" style="display:flex;gap:12px;align-items:flex-start">
-              {#if l.n !== null}<span style="flex:none;width:26px;text-align:right;color:rgba(224,69,60,.4)">{l.n}</span>{/if}{#if typeof l.t === "string"}<span data-testid="repositories-preview-text" style="{l.style};flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere">{l.t}</span>{:else}<span data-testid="repositories-preview-text" style="flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere">{#each l.t as [idx, text]}<span style={`color:${state.previewPalette[idx] ?? ""}`}>{text}</span>{/each}</span>{/if}
+            <div
+              data-testid="repositories-preview-line"
+              style="display:flex;gap:12px;align-items:flex-start"
+            >
+              {#if l.n !== null}<span
+                  style="flex:none;width:26px;text-align:right;color:rgba(224,69,60,.4)">{l.n}</span
+                >{/if}{#if typeof l.t === "string"}<span
+                  data-testid="repositories-preview-text"
+                  style="{l.style};flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere"
+                  >{l.t}</span
+                >{:else}<span
+                  data-testid="repositories-preview-text"
+                  style="flex:1;min-width:0;white-space:pre-wrap;overflow-wrap:anywhere"
+                  >{#each l.t as [idx, text]}<span
+                      style={`color:${state.previewPalette[idx] ?? ""}`}>{text}</span
+                    >{/each}</span
+                >{/if}
             </div>
           {/each}
         {/if}

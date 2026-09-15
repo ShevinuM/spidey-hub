@@ -42,8 +42,13 @@ test("the cruise still parses .svelte files instead of silently seeing a graph w
   const config = await extractDepcruiseConfig(CONFIG);
   // `maxDepth: 1` keeps this to the subject's direct dependencies: the whole
   // question is whether the SFC parses, not what the graph beyond it looks like.
-  const result = await cruise([SUBJECT_DIRECTORY], { ...config.options, maxDepth: 1, ruleSet: config });
-  if (typeof result.output === "string") throw new Error("expected a cruise result object, got a report string");
+  const result = await cruise([SUBJECT_DIRECTORY], {
+    ...config.options,
+    maxDepth: 1,
+    ruleSet: config,
+  });
+  if (typeof result.output === "string")
+    throw new Error("expected a cruise result object, got a report string");
 
   const subject = result.output.modules.find((module) => module.source === SUBJECT);
   expect(

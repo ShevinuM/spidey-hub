@@ -99,7 +99,7 @@ pipeline.mjs:
 3. `page.clock.runFor(RUN_FOR_MS)` (5000ms by default, from `recipes.ts`).
 4. Wait for the dashboard-mount marker to prove the app mounted and its
    keydown listener is attached — `page.getByText("SHEVINUM.DEV").or(page
-   .locator('[data-testid="dashboard-wordmark"]'))`, an `.or()` of BOTH the
+.locator('[data-testid="dashboard-wordmark"]'))`, an `.or()` of BOTH the
    vendored prototype's literal plate text (still current for
    `capture-goldens.mjs`'s historical/guarded path, which has no
    `data-testid` attributes at all) and the real implementation's SPIDEY-HUB
@@ -117,7 +117,7 @@ under 60s, so the displayed minute stays `23:34` throughout.
 ### Why runFor happens twice, not once
 
 With a fully faked clock, nothing beyond the synchronous first render
-happens until time is advanced — so step 3 must run *before* step 4's
+happens until time is advanced — so step 3 must run _before_ step 4's
 selector wait or step 5's key dispatch, otherwise either can hang (nothing
 ever mounts) or a key can land before the listener that would handle it
 exists. Step 6's second `runFor` then flushes whatever rAF loop belongs to
@@ -140,7 +140,7 @@ few px run-to-run and exposed/hid real pixels at the mask edge (observed:
 goldens` runs — see git history on this file and `pipeline.mjs` for the
 fix).
 
-The mask now targets `SIGNAL_ROW_SELECTOR` — the flex row *ancestor* that
+The mask now targets `SIGNAL_ROW_SELECTOR` — the flex row _ancestor_ that
 contains the SIGNAL label, the meter-bars container, the readout span, and
 the coordinates label. That row's own bounding box is fixed by static CSS
 alone (width from the parent panel's flex layout, height from the meter's
@@ -188,7 +188,7 @@ time) and all 60 output files (20 goldens × 3 runs) were SHA-256 compared:
   This is consistent with ordinary Chromium GPU/compositor
   floating-point jitter in blur rasterization: it does not reproduce in
   the same pixel every run, and does not correlate with any masked or
-  timing-sensitive element. *Which* golden exhibits this 1px jitter (if
+  timing-sensitive element. _Which_ golden exhibits this 1px jitter (if
   any) is not fixed from run to run — a prior determinism check on this
   same harness saw it in `1920x1080/01-dashboard.png` and
   `1920x1080/06-editor.png` instead; treat "0 or 1 files, 1px, blurred
@@ -282,7 +282,7 @@ between:
   `neofetch` output
   (`Uptime: 0 min`) and renamed `0:zsh*` window on `16-shell`; the dim
   (non-blurred) radar + pre-seeded narrative + `[detached (from session
-  10.42.7.13)]` on `17-host-shell`; the 3-pane main-vertical layout on
+10.42.7.13)]` on `17-host-shell`; the 3-pane main-vertical layout on
   `18-split`; the session/window tree + pane-program preview strip on
   `19-choose-tree`; the fuzzy "kil" result list (kill-window + kill-pane
   rows, no suggestion-list regression) on `20-help-search`; and the real

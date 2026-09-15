@@ -38,12 +38,24 @@
     onKillSession: (sessionId: string) => void;
   }
 
-  const { client, chooseTree, onSelectWindow, onSelectSession, onKillWindow, onKillSession }: Props = $props();
+  const {
+    client,
+    chooseTree,
+    onSelectWindow,
+    onSelectSession,
+    onKillWindow,
+    onKillSession,
+  }: Props = $props();
 
   let open = $state(false);
   let expandedSessionIds = $state<Set<string>>(new Set());
   let selectedIdx = $state(0);
-  let killPrompt = $state<{ kind: "window" | "session"; sessionId: string; windowId?: string | undefined; text: string } | null>(null);
+  let killPrompt = $state<{
+    kind: "window" | "session";
+    sessionId: string;
+    windowId?: string | undefined;
+    text: string;
+  } | null>(null);
 
   interface Row {
     kind: "session" | "window";
@@ -64,13 +76,22 @@
     for (const s of client.sessions) {
       const attached = client.attachedSessionId === s.id;
       const sessionText =
-        chooseTree.sessionTemplate.replace("{name}", s.name).replace("{n}", String(s.windows.length)) +
+        chooseTree.sessionTemplate
+          .replace("{name}", s.name)
+          .replace("{n}", String(s.windows.length)) +
         (attached ? chooseTree.sessionAttachedSuffix : "");
       out.push({ kind: "session", sessionId: s.id, text: sessionText, isLast: true, depth: 0 });
       if (!expandedSessionIds.has(s.id)) continue;
       s.windows.forEach((w, wi) => {
-        const flag = wi === s.activeWindowIdx ? "*" : wi === s.lastWindowIdx && s.lastWindowIdx !== s.activeWindowIdx ? "-" : "";
-        const windowText = chooseTree.windowTemplate.replace("{index}", String(w.number)).replace("{name}", w.name) + flag;
+        const flag =
+          wi === s.activeWindowIdx
+            ? "*"
+            : wi === s.lastWindowIdx && s.lastWindowIdx !== s.activeWindowIdx
+              ? "-"
+              : "";
+        const windowText =
+          chooseTree.windowTemplate.replace("{index}", String(w.number)).replace("{name}", w.name) +
+          flag;
         out.push({
           kind: "window",
           sessionId: s.id,
@@ -100,7 +121,10 @@
     const session = client.sessions.find((s) => s.id === row.sessionId);
     if (!session) return "";
     if (row.kind === "session") {
-      return chooseTree.preview.sessionWindowsTemplate.replace("{n}", String(session.windows.length));
+      return chooseTree.preview.sessionWindowsTemplate.replace(
+        "{n}",
+        String(session.windows.length),
+      );
     }
     const win = session.windows.find((w) => w.id === row.windowId);
     if (!win) return "";
@@ -126,7 +150,9 @@
       return;
     }
     const activeWindowId = session.windows[session.activeWindowIdx]?.id;
-    const idx = rows.findIndex((r) => r.kind === "window" && r.sessionId === attachedId && r.windowId === activeWindowId);
+    const idx = rows.findIndex(
+      (r) => r.kind === "window" && r.sessionId === attachedId && r.windowId === activeWindowId,
+    );
     selectedIdx = idx === -1 ? 0 : idx;
   }
 
@@ -184,7 +210,10 @@
     if (!session) return;
     if (row.kind === "window") {
       const win = session.windows.find((w) => w.id === row.windowId);
-      const text = chooseTree.killWindowPromptTemplate.replace("{index}", String(win?.number ?? ""));
+      const text = chooseTree.killWindowPromptTemplate.replace(
+        "{index}",
+        String(win?.number ?? ""),
+      );
       killPrompt = { kind: "window", sessionId: row.sessionId, windowId: row.windowId, text };
     } else {
       const text = chooseTree.killSessionPromptTemplate.replace("{name}", session.name);
@@ -202,7 +231,8 @@
     // cancels just this sub-prompt, leaving the overlay itself open.
     if (killPrompt) {
       if (e.key.toLowerCase() === "y") {
-        if (killPrompt.kind === "window" && killPrompt.windowId) onKillWindow(killPrompt.sessionId, killPrompt.windowId);
+        if (killPrompt.kind === "window" && killPrompt.windowId)
+          onKillWindow(killPrompt.sessionId, killPrompt.windowId);
         else onKillSession(killPrompt.sessionId);
         killPrompt = null;
         return true;
@@ -267,12 +297,17 @@
         {chooseTree.titlePrefix}<span style="color:#5fc6b4">{chooseTree.titleTilde}</span>
       </div>
 
-      <div data-testid="choose-tree-rows" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;padding-top:6px">
+      <div
+        data-testid="choose-tree-rows"
+        style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;padding-top:6px"
+      >
         {#each rows as row, i (row.kind + ":" + row.sessionId + ":" + (row.windowId ?? ""))}
           <div
             role="button"
             tabindex="0"
-            data-testid={row.kind === "session" ? "choose-tree-session-row" : "choose-tree-window-row"}
+            data-testid={row.kind === "session"
+              ? "choose-tree-session-row"
+              : "choose-tree-window-row"}
             data-session-id={row.sessionId}
             data-window-id={row.windowId ?? ""}
             data-selected={i === selectedIdx}
@@ -280,13 +315,22 @@
             onkeydown={(e) => {
               if (e.key === "Enter" || e.key === " ") selectedIdx = i;
             }}
-            style="cursor:pointer;white-space:pre;padding:2px 6px;{i === selectedIdx ? 'background:rgba(224,69,60,.22);color:#f0e7e4' : 'color:rgba(196,216,232,.8)'}"
-          >{row.depth === 1 ? `${row.isLast ? "└─ " : "├─ "}${row.text}` : row.text}</div>
+            style="cursor:pointer;white-space:pre;padding:2px 6px;{i === selectedIdx
+              ? 'background:rgba(224,69,60,.22);color:#f0e7e4'
+              : 'color:rgba(196,216,232,.8)'}"
+          >
+            {row.depth === 1 ? `${row.isLast ? "└─ " : "├─ "}${row.text}` : row.text}
+          </div>
         {/each}
       </div>
 
       {#if killPrompt}
-        <div data-testid="choose-tree-kill-confirm" style="flex:none;padding:6px 10px 0;color:#e0453c">{killPrompt.text}</div>
+        <div
+          data-testid="choose-tree-kill-confirm"
+          style="flex:none;padding:6px 10px 0;color:#e0453c"
+        >
+          {killPrompt.text}
+        </div>
       {:else}
         <div
           data-testid="choose-tree-preview"
@@ -296,7 +340,9 @@
         </div>
       {/if}
 
-      <div style="flex:none;padding:4px 10px 0;color:rgba(196,216,232,.42);font-size:12px">{chooseTree.hint}</div>
+      <div style="flex:none;padding:4px 10px 0;color:rgba(196,216,232,.42);font-size:12px">
+        {chooseTree.hint}
+      </div>
     </div>
   </div>
 {/if}

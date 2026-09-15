@@ -51,7 +51,9 @@ test.describe("Repositories preview: syntax highlighting", () => {
     expect(new Set(colors).size).toBeGreaterThan(1);
   });
 
-  test("preview and full-screen editor render the SAME token colours for the same file+line", async ({ page }) => {
+  test("preview and full-screen editor render the SAME token colours for the same file+line", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     await openRepoTree(page, REPO);
     await treeRow(page, FILE).click();
@@ -62,7 +64,9 @@ test.describe("Repositories preview: syntax highlighting", () => {
     // pass but only exercise a single token colour).
     const previewLine31 = page.locator('[data-testid="repositories-preview-line"]').nth(30);
     await expect(previewLine31).toContainText("class Solution");
-    const previewColors = await tokenColors(previewLine31.locator('[data-testid="repositories-preview-text"]'));
+    const previewColors = await tokenColors(
+      previewLine31.locator('[data-testid="repositories-preview-text"]'),
+    );
     expect(previewColors.length).toBeGreaterThan(1);
 
     await page.keyboard.press("2"); // focus panel [2] (Files)
@@ -72,7 +76,9 @@ test.describe("Repositories preview: syntax highlighting", () => {
 
     const editorLine31 = page.locator('[data-line="31"]');
     await expect(editorLine31).toContainText("class Solution");
-    const editorColors = await tokenColors(editorLine31.locator('[data-testid="editor-line-text"]'));
+    const editorColors = await tokenColors(
+      editorLine31.locator('[data-testid="editor-line-text"]'),
+    );
 
     expect(editorColors).toEqual(previewColors);
   });

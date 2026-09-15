@@ -34,14 +34,28 @@ export function search(files: RepoFile[], query: string): Hit[] {
   const q = query.trim().toLowerCase();
 
   if (!q) {
-    return files.map((f) => ({ path: f.path, line: 0, col: 0, pre: `${f.lines.length} lines`, mat: "", post: "" }));
+    return files.map((f) => ({
+      path: f.path,
+      line: 0,
+      col: 0,
+      pre: `${f.lines.length} lines`,
+      mat: "",
+      post: "",
+    }));
   }
 
   const out: Hit[] = [];
   for (const f of files) {
     const inPath = f.path.toLowerCase().indexOf(q);
     if (inPath !== -1) {
-      out.push({ path: f.path, line: 0, col: 0, pre: `${f.lines.length} lines`, mat: "", post: "" });
+      out.push({
+        path: f.path,
+        line: 0,
+        col: 0,
+        pre: `${f.lines.length} lines`,
+        mat: "",
+        post: "",
+      });
     }
     for (let i = 0; i < f.lines.length; i++) {
       if (out.length >= LIMIT) return out;

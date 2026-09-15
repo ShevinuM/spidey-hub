@@ -74,7 +74,12 @@ const THEME: ThemeRegistrationRaw = {
     },
     { scope: ["string", "string.quoted"], settings: { foreground: "#d9b04a" } },
     {
-      scope: ["constant.numeric", "constant.language", "constant.character.escape", "support.constant"],
+      scope: [
+        "constant.numeric",
+        "constant.language",
+        "constant.character.escape",
+        "support.constant",
+      ],
       settings: { foreground: "#9a7fd4" },
     },
     {
@@ -148,7 +153,10 @@ export class PaletteBuilder {
   }
 }
 
-function mergeLine(line: { content: string; color?: string }[], palette: PaletteBuilder): TokenSpan[] {
+function mergeLine(
+  line: { content: string; color?: string }[],
+  palette: PaletteBuilder,
+): TokenSpan[] {
   const out: TokenSpan[] = [];
   for (const tok of line) {
     const color = (tok.color ?? DEFAULT_COLOR).toLowerCase();

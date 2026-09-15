@@ -40,7 +40,9 @@ test.describe("Repositories harness: mounts standalone with seeded fixture props
     await expect(repositories.repoRows.first()).toHaveAttribute("data-all-projects", "true");
   });
 
-  test("panel [2] shows the all-projects tree on mount — no click or keypress needed", async ({ page }) => {
+  test("panel [2] shows the all-projects tree on mount — no click or keypress needed", async ({
+    page,
+  }) => {
     const repositories = new RepositoriesPage(page);
     await repositories.openHarness();
 
@@ -50,7 +52,9 @@ test.describe("Repositories harness: mounts standalone with seeded fixture props
     }
   });
 
-  test("selecting a file in the all-projects tree renders its content in panel [3]", async ({ page }) => {
+  test("selecting a file in the all-projects tree renders its content in panel [3]", async ({
+    page,
+  }) => {
     const repositories = new RepositoriesPage(page);
     await repositories.openHarness();
 
@@ -63,13 +67,17 @@ test.describe("Repositories harness: mounts standalone with seeded fixture props
     await expect(repositories.previewText.filter({ hasText: heading! })).toBeVisible();
   });
 
-  test("selecting a repo swaps panel [4] to that repo's fixture commit snapshot", async ({ page }) => {
+  test("selecting a repo swaps panel [4] to that repo's fixture commit snapshot", async ({
+    page,
+  }) => {
     const repositories = new RepositoriesPage(page);
     await repositories.openHarness();
 
     await repositories.repoRow("flerken-watch").first().click();
 
-    const snapshot = JSON.parse(readFileSync(join(FIXTURE_COMMITS_DIR, "flerken-watch.json"), "utf8")) as {
+    const snapshot = JSON.parse(
+      readFileSync(join(FIXTURE_COMMITS_DIR, "flerken-watch.json"), "utf8"),
+    ) as {
       sha8: string;
     }[];
     expect(snapshot.length).toBeGreaterThan(0);
@@ -81,11 +89,15 @@ test.describe("Repositories harness: mounts standalone with seeded fixture props
     const repositories = new RepositoriesPage(page);
     await repositories.openHarness();
 
-    const { days } = JSON.parse(readFileSync(FIXTURE_CONTRIBUTIONS_JSON, "utf8")) as { days: unknown[] };
+    const { days } = JSON.parse(readFileSync(FIXTURE_CONTRIBUTIONS_JSON, "utf8")) as {
+      days: unknown[];
+    };
     await expect(repositories.contribCells).toHaveCount(days.length);
   });
 
-  test("no Terminal kernel chrome mounts alongside it (no status bar, no window switching)", async ({ page }) => {
+  test("no Terminal kernel chrome mounts alongside it (no status bar, no window switching)", async ({
+    page,
+  }) => {
     const repositories = new RepositoriesPage(page);
     await repositories.openHarness();
 

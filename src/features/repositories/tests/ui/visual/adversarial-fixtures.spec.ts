@@ -16,16 +16,13 @@ import { BOOT_SEEN_STORAGE_KEY } from "../../../../../common/tests/ui/support/fi
  * uses (pre-seed via `addInitScript`, before any navigation) — this file
  * has no golden/clock determinism needs, only the boot-skip. */
 async function gotoReady(page: Page, path: string): Promise<string[]> {
-  await page.addInitScript(
-    (key) => {
-      try {
-        sessionStorage.setItem(key, "1");
-      } catch {
-        // best-effort, same contract as src/features/boot/lib/boot-state.ts
-      }
-    },
-    BOOT_SEEN_STORAGE_KEY,
-  );
+  await page.addInitScript((key) => {
+    try {
+      sessionStorage.setItem(key, "1");
+    } catch {
+      // best-effort, same contract as src/features/boot/lib/boot-state.ts
+    }
+  }, BOOT_SEEN_STORAGE_KEY);
   const pageErrors: string[] = [];
   page.on("pageerror", (e) => pageErrors.push(String(e)));
   await page.goto(path);
@@ -57,16 +54,22 @@ test.describe("adversarial fixtures — repositories", () => {
     // All-projects tree is the default selection/mount state — no click
     // needed to reach it (see
     // src/features/repositories/tests/ui/e2e/repositories.spec.ts).
-    await page.locator('[data-testid="repositories-tree-row"][data-entry-name="flerken-watch.md"]').click();
+    await page
+      .locator('[data-testid="repositories-tree-row"][data-entry-name="flerken-watch.md"]')
+      .click();
 
     const previewLines = page.locator('[data-testid="repositories-preview-line"]');
     await expect(previewLines.first()).toBeVisible();
-    const baselineHeight = await previewLines.nth(0).evaluate((el) => el.getBoundingClientRect().height);
+    const baselineHeight = await previewLines
+      .nth(0)
+      .evaluate((el) => el.getBoundingClientRect().height);
 
     const longLine = previewLines.filter({ hasText: /^0123456789abcdef/ }).first();
     await expect(longLine).toBeVisible();
     const longLineBox = (await longLine.boundingBox())!;
-    const containerBox = (await page.locator('[data-testid="repositories-changes-body"]').boundingBox())!;
+    const containerBox = (await page
+      .locator('[data-testid="repositories-changes-body"]')
+      .boundingBox())!;
 
     expect(fitsWithin(longLineBox, containerBox)).toBe(true);
     expect(longLineBox.height).toBeGreaterThan(baselineHeight * 1.5);
@@ -78,7 +81,9 @@ test.describe("adversarial fixtures — repositories", () => {
     const errors = await gotoReady(page, "/");
     await prefixDigit(page, "1");
 
-    await page.locator('[data-testid="repositories-repo-row"][data-repo-name="webbing-lab"]').click();
+    await page
+      .locator('[data-testid="repositories-repo-row"][data-repo-name="webbing-lab"]')
+      .click();
 
     const filesCaption = page.locator('[data-testid="repositories-files-caption"]');
     await expect(filesCaption).toContainText("webbing-lab");

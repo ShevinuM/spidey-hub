@@ -77,9 +77,9 @@
                 ? 'background:linear-gradient(90deg,rgba(224,69,60,.26),rgba(224,69,60,.03))'
                 : ''}"
             >
-              <span style="color:rgba(217,176,74,.85)">{c.sha8}</span> <span style="color:#9a7fd4"
-                >{repositories.panels.commits.authorInitials}</span
-              > <span style="color:rgba(196,216,232,.7)">{c.msg}</span>
+              <span style="color:rgba(217,176,74,.85)">{c.sha8}</span>
+              <span style="color:#9a7fd4">{repositories.panels.commits.authorInitials}</span>
+              <span style="color:rgba(196,216,232,.7)">{c.msg}</span>
             </div>
           {/each}
         </div>

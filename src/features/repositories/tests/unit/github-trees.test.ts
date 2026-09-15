@@ -74,7 +74,11 @@ test("fetchCommitTree returns null when every candidate ref is rejected (never t
   const originalFetch = globalThis.fetch;
   globalThis.fetch = (async () => ({ ok: false, status: 404 })) as unknown as typeof fetch;
   try {
-    const result = await fetchCommitTree("nonexistent-repo", "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef", "deadbeef");
+    const result = await fetchCommitTree(
+      "nonexistent-repo",
+      "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "deadbeef",
+    );
     expect(result).toBe(null);
   } finally {
     globalThis.fetch = originalFetch;
@@ -106,11 +110,19 @@ test("fetchCommitTree falls back from a full sha to sha8 when the full sha is re
     }
     return {
       ok: true,
-      json: async () => ({ sha: "deadbeef", tree: [{ path: "README.md", type: "blob" }], truncated: false }),
+      json: async () => ({
+        sha: "deadbeef",
+        tree: [{ path: "README.md", type: "blob" }],
+        truncated: false,
+      }),
     };
   }) as unknown as typeof fetch;
   try {
-    const result = await fetchCommitTree("transcript-tts", "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef", "deadbeef");
+    const result = await fetchCommitTree(
+      "transcript-tts",
+      "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "deadbeef",
+    );
     expect(result).toEqual(["README.md"]);
     expect(requested.length).toBe(2);
   } finally {
@@ -138,7 +150,12 @@ test("fetchCommitFileContent returns null on a 403 (rate limit), never throws", 
   const originalFetch = globalThis.fetch;
   globalThis.fetch = (async () => ({ ok: false, status: 403 })) as unknown as typeof fetch;
   try {
-    const result = await fetchCommitFileContent("transcript-tts", "README.md", "deadbeef", "deadbeef");
+    const result = await fetchCommitFileContent(
+      "transcript-tts",
+      "README.md",
+      "deadbeef",
+      "deadbeef",
+    );
     expect(result).toBe(null);
   } finally {
     globalThis.fetch = originalFetch;
@@ -155,7 +172,12 @@ test("fetchCommitFileContent decodes a real base64 text payload into lines", asy
     json: async () => ({ size: text.length, encoding: "base64", content: b64 }),
   })) as unknown as typeof fetch;
   try {
-    const result = await fetchCommitFileContent("transcript-tts", "README.md", "deadbeef", "deadbeef");
+    const result = await fetchCommitFileContent(
+      "transcript-tts",
+      "README.md",
+      "deadbeef",
+      "deadbeef",
+    );
     expect(result).toEqual({ kind: "text", lines: ["# héllo", "second line"] });
   } finally {
     globalThis.fetch = originalFetch;

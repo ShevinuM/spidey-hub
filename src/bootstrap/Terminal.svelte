@@ -114,7 +114,14 @@
    * except "shell") — Shell.svelte's own
    * bare-command/`open <view>` validation, and the palette this file's
    * `viewIdToProgram`/`programToViewId` bridge already agrees with. */
-  const VIEW_NAMES = ["dashboard", "repositories", "employment", "retina-v", "profile", "help"] as const;
+  const VIEW_NAMES = [
+    "dashboard",
+    "repositories",
+    "employment",
+    "retina-v",
+    "profile",
+    "help",
+  ] as const;
 
   /** Every in-pane Shell instance is "pane" mode; the one host-shell
    * instance rendered directly below (not through PaneTree) is "host" mode —
@@ -264,7 +271,10 @@
     handleKey: (e: KeyboardEvent) => boolean;
   } | null>(null);
 
-  let notificationsRef = $state<{ handleKey: (e: KeyboardEvent) => boolean; close?: () => void } | null>(null);
+  let notificationsRef = $state<{
+    handleKey: (e: KeyboardEvent) => boolean;
+    close?: () => void;
+  } | null>(null);
 
   /** Constructed here as `core`, never `state`: naming it `state` breaks svelte2tsx's
    * rune recognition for the explicit-generic `$state<{...}>()` refs declared above it. */
@@ -506,10 +516,21 @@
       core.jumpToLastPane();
       return true;
     }
-    if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "ArrowRight") {
+    if (
+      e.key === "ArrowUp" ||
+      e.key === "ArrowDown" ||
+      e.key === "ArrowLeft" ||
+      e.key === "ArrowRight"
+    ) {
       e.preventDefault();
       const dir: PaneDirection =
-        e.key === "ArrowUp" ? "up" : e.key === "ArrowDown" ? "down" : e.key === "ArrowLeft" ? "left" : "right";
+        e.key === "ArrowUp"
+          ? "up"
+          : e.key === "ArrowDown"
+            ? "down"
+            : e.key === "ArrowLeft"
+              ? "left"
+              : "right";
       core.navigateDirectional(dir);
       return true;
     }
@@ -586,7 +607,14 @@
     // works even while the grep overlay is open (needed for `Ctrl-b ]` paste),
     // but is inert while detached since `activeSession` gates the arm itself
     // rather than dispatch.
-    if (!sendPrefixLiteral && core.activeSession && e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "b") {
+    if (
+      !sendPrefixLiteral &&
+      core.activeSession &&
+      e.ctrlKey &&
+      !e.metaKey &&
+      !e.altKey &&
+      e.key.toLowerCase() === "b"
+    ) {
       e.preventDefault();
       core.armPrefix();
       return;
@@ -627,7 +655,14 @@
       e.ctrlKey &&
       !e.metaKey &&
       !e.altKey &&
-      (e.key === "d" || e.key === "D" || e.key === "u" || e.key === "U" || e.key === "f" || e.key === "F" || e.key === "b" || e.key === "B");
+      (e.key === "d" ||
+        e.key === "D" ||
+        e.key === "u" ||
+        e.key === "U" ||
+        e.key === "f" ||
+        e.key === "F" ||
+        e.key === "b" ||
+        e.key === "B");
 
     /** Tries the FOCUSED pane's own ref — the editor gate consults the
      * FOCUSED pane only, via one generic lookup through PaneTree's ref
@@ -644,7 +679,8 @@
       const ref = activeRef();
       if (!ref?.handleKey) return false;
       const supportsScrollChord = typeof ref.isEditorOpen === "function";
-      const modifierOk = (supportsScrollChord && isEditorScrollChord) || !(e.metaKey || e.ctrlKey || e.altKey);
+      const modifierOk =
+        (supportsScrollChord && isEditorScrollChord) || !(e.metaKey || e.ctrlKey || e.altKey);
       if (!modifierOk) return false;
       if (ref.handleKey(e)) {
         e.preventDefault();
@@ -767,7 +803,12 @@
     ? 'bDashIn 1.05s cubic-bezier(.2,.7,.3,1) both'
     : 'none'}"
 >
-  <Wallpaper {tracker} view={core.view ?? "home"} dim={!core.activeSession} isRetinaFocused={core.activeProgram === "retina-v"} />
+  <Wallpaper
+    {tracker}
+    view={core.view ?? "home"}
+    dim={!core.activeSession}
+    isRetinaFocused={core.activeProgram === "retina-v"}
+  />
 
   {#if core.view === "home"}
     <!-- Dashboard-only central red glow — a fixed layer between the
@@ -778,7 +819,9 @@
     ></div>
   {/if}
 
-  <div style="position:relative;z-index:2;height:100vh;overflow:hidden;display:flex;flex-direction:column">
+  <div
+    style="position:relative;z-index:2;height:100vh;overflow:hidden;display:flex;flex-direction:column"
+  >
     {#if core.activeSession}
       <!-- Attached — the non-null
            assertions below are safe: this whole branch only renders while
@@ -800,7 +843,12 @@
            (`bind:this={get, set}`), never a variable scoped to this file,
            so each leaf instance keeps registering/unregistering only
            itself in `paneRefs` below (see that Map's own comment). -->
-      {#snippet paneLeaf(pane: Pane, isFocused: boolean, getLeafRef: () => unknown, setLeafRef: (ref: unknown) => void)}
+      {#snippet paneLeaf(
+        pane: Pane,
+        isFocused: boolean,
+        getLeafRef: () => unknown,
+        setLeafRef: (ref: unknown) => void,
+      )}
         {#if pane.program === "dashboard"}
           <!-- Dashboard menu clicks are all just "switch to a different WINDOW"
                (exactly like a status-bar click or a prefix digit target) — never a
@@ -911,7 +959,14 @@
   <CopyMode bind:this={copyModeRef} copyMode={site.copyMode} />
   <BootSequence bind:this={bootRef} {boot} {desktopMode} onReady={onBootReady} />
   <Cmdline bind:this={cmdlineRef} {cmdline} onSubmit={core.onCmdlineSubmit} />
-  <HelpSearch bind:this={helpSearchRef} {helpSearch} {cmdline} {help} {shell} onExecute={core.onHelpSearchExecute} />
+  <HelpSearch
+    bind:this={helpSearchRef}
+    {helpSearch}
+    {cmdline}
+    {help}
+    {shell}
+    onExecute={core.onHelpSearchExecute}
+  />
   <ChooseTree
     bind:this={chooseTreeRef}
     client={core.client}

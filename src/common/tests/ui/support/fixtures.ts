@@ -18,7 +18,10 @@
 // waiting out the real duration.
 import { test as base, expect, type Page, type BrowserContext } from "@playwright/test";
 import { BOOT_SEEN_STORAGE_KEY } from "../../../../features/boot/lib/boot-state";
-import { NOTIFICATIONS_INJECT_SEED_STORAGE_KEY, TOAST_DURATION_SCALE_STORAGE_KEY } from "../../../../features/notifications/lib/notification-store";
+import {
+  NOTIFICATIONS_INJECT_SEED_STORAGE_KEY,
+  TOAST_DURATION_SCALE_STORAGE_KEY,
+} from "../../../../features/notifications/lib/notification-store";
 
 export const E2E_NOTIFICATIONS_INJECT_SEED = 424242;
 // Must keep even the shortest severity's scaled duration comfortably longer than the toast's own fixed entrance animation, or a dismiss fires mid-transition and flakes Playwright's hover() actionability check.

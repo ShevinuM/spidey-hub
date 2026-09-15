@@ -278,11 +278,17 @@
       return true;
     }
     if (key === "^") {
-      state.setCursor({ line: state.cursor.line, col: firstNonBlankCol(state.rawLines, state.cursor.line) });
+      state.setCursor({
+        line: state.cursor.line,
+        col: firstNonBlankCol(state.rawLines, state.cursor.line),
+      });
       return true;
     }
     if (key === "$") {
-      state.setCursor({ line: state.cursor.line, col: lineEndCol(state.rawLines, state.cursor.line) });
+      state.setCursor({
+        line: state.cursor.line,
+        col: lineEndCol(state.rawLines, state.cursor.line),
+      });
       return true;
     }
     if (key === "w") {
@@ -320,7 +326,10 @@
       if (yPending) {
         clearTimeout(yTimer);
         yPending = false;
-        const range = normalizeLineRange(state.cursor, moveVertical(state.rawLines, state.cursor, pendingYCount - 1));
+        const range = normalizeLineRange(
+          state.cursor,
+          moveVertical(state.rawLines, state.cursor, pendingYCount - 1),
+        );
         state.yankLineRange(range);
       } else {
         pendingYCount = hadCount ? count : 1;
@@ -330,7 +339,11 @@
       return true;
     }
 
-    if ((state.mode === "visual" || state.mode === "visualLine") && key === "y" && state.visualAnchor) {
+    if (
+      (state.mode === "visual" || state.mode === "visualLine") &&
+      key === "y" &&
+      state.visualAnchor
+    ) {
       if (state.mode === "visual") {
         const range = normalizeCharRange(state.visualAnchor, state.cursor);
         state.yank(extractCharRange(state.rawLines, range), "char");
@@ -338,7 +351,10 @@
       } else {
         const range = normalizeLineRange(state.visualAnchor, state.cursor);
         state.yankLineRange(range);
-        state.setCursor({ line: range.startLine, col: firstNonBlankCol(state.rawLines, range.startLine) });
+        state.setCursor({
+          line: range.startLine,
+          col: firstNonBlankCol(state.rawLines, range.startLine),
+        });
       }
       state.mode = "normal";
       state.visualAnchor = null;
@@ -411,12 +427,15 @@
   }
 </script>
 
-<div style="flex:1;min-height:0;display:flex;flex-direction:column;background:rgba(8,11,15,.97);font-size:13px">
+<div
+  style="flex:1;min-height:0;display:flex;flex-direction:column;background:rgba(8,11,15,.97);font-size:13px"
+>
   <div style="flex:none;display:flex;justify-content:flex-end;padding:8px 12px 4px">
     <div
       style="display:flex;align-items:center;gap:7px;background:#e0453c;color:#0b0f14;padding:3px 12px;border-radius:3px;font-weight:700"
     >
-      {labels.tabIcon} {fileName}
+      {labels.tabIcon}
+      {fileName}
     </div>
   </div>
   <EditorBuffer {state} />

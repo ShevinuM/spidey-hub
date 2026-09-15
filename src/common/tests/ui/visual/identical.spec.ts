@@ -3,7 +3,13 @@ import { expect, test } from "@playwright/test";
 import { cmdlineRecipes, iteration3Recipes, recipes } from "../support/recipes";
 import { captureState } from "../support/pipeline.mjs";
 
-const COMMON_OWNED_RECIPE_NAMES = new Set(["06-editor", "15-cmdline", "18-split", "19-choose-tree", "08-tracker"]);
+const COMMON_OWNED_RECIPE_NAMES = new Set([
+  "06-editor",
+  "15-cmdline",
+  "18-split",
+  "19-choose-tree",
+  "08-tracker",
+]);
 const keyRecipes = [...recipes, ...cmdlineRecipes, ...iteration3Recipes].filter((recipe) =>
   COMMON_OWNED_RECIPE_NAMES.has(recipe.name),
 );

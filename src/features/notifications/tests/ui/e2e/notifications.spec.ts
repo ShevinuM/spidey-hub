@@ -1,7 +1,19 @@
 // Behavioral e2e suite for the signal-inbox bell/panel/toast system (Mockup B, dashboard-view only): injection, open/close, tabs, read/unread, dismiss/spam/archive persistence across reload, and toast auto-dismiss/hover-pause under a shortened test-duration scale.
 import { join } from "node:path";
-import { expect, test, E2E_NOTIFICATIONS_INJECT_SEED, E2E_TOAST_DURATION_SCALE, type Page } from "../../../../../common/tests/ui/support/fixtures";
-import { mulberry32, pickRandomUnseen, TOAST_DURATION_MS, type NotificationSeverity, type PoolEntry } from "../../../lib/notification-store";
+import {
+  expect,
+  test,
+  E2E_NOTIFICATIONS_INJECT_SEED,
+  E2E_TOAST_DURATION_SCALE,
+  type Page,
+} from "../../../../../common/tests/ui/support/fixtures";
+import {
+  mulberry32,
+  pickRandomUnseen,
+  TOAST_DURATION_MS,
+  type NotificationSeverity,
+  type PoolEntry,
+} from "../../../lib/notification-store";
 import { readContentDir } from "../../../../../common/tests/ui/support/content-fixtures";
 
 const ROOT = join(import.meta.dirname, "../../../../../..");
@@ -19,21 +31,39 @@ interface NotificationFrontmatter {
  * reconstructs at build time, so this suite's seeded pick expectations match
  * the real site. */
 function loadPool(): PoolEntry[] {
-  const entries = readContentDir<NotificationFrontmatter>(join(ROOT, "src/features/notifications/content"));
+  const entries = readContentDir<NotificationFrontmatter>(
+    join(ROOT, "src/features/notifications/content"),
+  );
   return entries
     .slice()
     .sort((a, b) => a.data.order - b.data.order)
-    .map((e) => ({ id: e.id, sev: e.data.sev, title: e.data.title, body: e.body, src: e.data.src }));
+    .map((e) => ({
+      id: e.id,
+      sev: e.data.sev,
+      title: e.data.title,
+      body: e.body,
+      src: e.data.src,
+    }));
 }
 
 const POOL = loadPool();
 
 /** What the FIRST visit injects, computed the same way `pickRandomUnseen()` does against the fixed seed every test in this file pre-seeds, so no notification copy is hardcoded here. */
-const [firstA, firstB] = pickRandomUnseen(POOL, new Set(), 2, mulberry32(E2E_NOTIFICATIONS_INJECT_SEED));
+const [firstA, firstB] = pickRandomUnseen(
+  POOL,
+  new Set(),
+  2,
+  mulberry32(E2E_NOTIFICATIONS_INJECT_SEED),
+);
 
 /** What a SECOND visit (after the first two ids are already "seen" in
  * localStorage) injects next — same seed, smaller remaining pool. */
-const [secondA, secondB] = pickRandomUnseen(POOL, new Set([firstA.id, firstB.id]), 2, mulberry32(E2E_NOTIFICATIONS_INJECT_SEED));
+const [secondA, secondB] = pickRandomUnseen(
+  POOL,
+  new Set([firstA.id, firstB.id]),
+  2,
+  mulberry32(E2E_NOTIFICATIONS_INJECT_SEED),
+);
 
 async function gotoReady(page: Page, path = "/") {
   await page.goto(path);
@@ -43,8 +73,10 @@ async function gotoReady(page: Page, path = "/") {
 const bell = (page: Page) => page.locator('[data-testid="notifications-bell"]');
 const panel = (page: Page) => page.locator('[data-testid="notifications-panel"]');
 const rows = (page: Page) => page.locator('[data-testid="notification-row"]');
-const row = (page: Page, id: string) => page.locator(`[data-testid="notification-row"][data-notification-id="${id}"]`);
-const tab = (page: Page, id: string) => page.locator(`[data-testid="notifications-tab"][data-tab="${id}"]`);
+const row = (page: Page, id: string) =>
+  page.locator(`[data-testid="notification-row"][data-notification-id="${id}"]`);
+const tab = (page: Page, id: string) =>
+  page.locator(`[data-testid="notifications-tab"][data-tab="${id}"]`);
 const toasts = (page: Page) => page.locator('[data-testid="toast"]');
 
 test.describe("signal inbox: badge + toast injection on a fresh visit", () => {
@@ -52,7 +84,9 @@ test.describe("signal inbox: badge + toast injection on a fresh visit", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("a fresh visit injects exactly 2 unseen pool entries, badge shows 2, both toast", async ({ page }) => {
+  test("a fresh visit injects exactly 2 unseen pool entries, badge shows 2, both toast", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await expect(bell(page)).toHaveAttribute("data-unread-count", "2");
     await expect(toasts(page)).toHaveCount(2);
@@ -86,7 +120,9 @@ test.describe("signal inbox: dashboard-only visibility", () => {
     await expect(bell(page)).toHaveCount(0);
   });
 
-  test("an open panel is hidden while away, and reappears on returning to the dashboard", async ({ page }) => {
+  test("an open panel is hidden while away, and reappears on returning to the dashboard", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await bell(page).click();
     await expect(panel(page)).toBeVisible();
@@ -167,7 +203,9 @@ test.describe("signal inbox: read/unread", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("toggling a row read decrements the unread badge; toggling back restores it", async ({ page }) => {
+  test("toggling a row read decrements the unread badge; toggling back restores it", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await bell(page).click();
     await expect(bell(page)).toHaveAttribute("data-unread-count", "2");
@@ -196,7 +234,9 @@ test.describe("signal inbox: dismiss semantics per folder", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("dismissing an inbox item archives it (and marks it read), never deletes it", async ({ page }) => {
+  test("dismissing an inbox item archives it (and marks it read), never deletes it", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await bell(page).click();
     await row(page, firstA.id).locator('[data-testid="notification-dismiss"]').click();
@@ -207,7 +247,10 @@ test.describe("signal inbox: dismiss semantics per folder", () => {
     await tab(page, "archive").click();
     const archived = row(page, firstA.id);
     await expect(archived).toBeVisible();
-    await expect(archived.locator('[data-testid="notification-toggle-read"]')).toHaveAttribute("title", "mark as unread");
+    await expect(archived.locator('[data-testid="notification-toggle-read"]')).toHaveAttribute(
+      "title",
+      "mark as unread",
+    );
   });
 
   test("dismissing an archived item deletes it outright", async ({ page }) => {
@@ -220,7 +263,9 @@ test.describe("signal inbox: dismiss semantics per folder", () => {
     await expect(tab(page, "archive")).toContainText("0");
   });
 
-  test("mark-as-spam moves an item to web·trap; dismissing FROM spam deletes it outright", async ({ page }) => {
+  test("mark-as-spam moves an item to web·trap; dismissing FROM spam deletes it outright", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await bell(page).click();
     await row(page, firstA.id).locator('[data-testid="notification-mark-spam"]').click();
@@ -241,7 +286,9 @@ test.describe("signal inbox: dismiss semantics per folder", () => {
   // The zero-notification state can't live in the fixture dataset (it would
   // collide with the toast-bearing visual recipes), so it's reached here by
   // dismissing (archiving) both of a fresh visit's injected items instead.
-  test("dismissing every inbox item surfaces the zero-notification empty state", async ({ page }) => {
+  test("dismissing every inbox item surfaces the zero-notification empty state", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await bell(page).click();
     await expect(rows(page)).toHaveCount(2);
@@ -269,10 +316,9 @@ test.describe("signal inbox: persistence across reload (localStorage)", () => {
 
     await gotoReady(page, "/");
     await bell(page).click();
-    await expect(row(page, firstA.id).locator('[data-testid="notification-toggle-read"]')).toHaveAttribute(
-      "title",
-      "mark as unread",
-    );
+    await expect(
+      row(page, firstA.id).locator('[data-testid="notification-toggle-read"]'),
+    ).toHaveAttribute("title", "mark as unread");
     await tab(page, "archive").click();
     await expect(row(page, firstB.id)).toBeVisible();
   });
@@ -292,7 +338,9 @@ test.describe("signal inbox: persistence across reload (localStorage)", () => {
     await expect(rows(page)).toHaveCount(4);
   });
 
-  test("corrupted localStorage resets gracefully instead of breaking the panel", async ({ page }) => {
+  test("corrupted localStorage resets gracefully instead of breaking the panel", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.evaluate(() => localStorage.setItem("spideyhub.notifications.v1", "{{{not json"));
     await gotoReady(page, "/");
@@ -383,7 +431,9 @@ test.describe("signal inbox: notifications panel body scrolls", () => {
     expect(scrollHeight).toBeGreaterThan(clientHeight);
   });
 
-  test("the mouse wheel actually scrolls the body (overflow-y:auto is not merely declared)", async ({ page }) => {
+  test("the mouse wheel actually scrolls the body (overflow-y:auto is not merely declared)", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1470, height: 340 });
     await gotoReady(page, "/");
     await bell(page).click();

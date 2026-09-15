@@ -47,7 +47,9 @@ test.describe("choose-tree opening / initial state (real tmux fidelity)", () => 
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("Ctrl-b w opens a full window-content overlay; the status bar stays visible", async ({ page }) => {
+  test("Ctrl-b w opens a full window-content overlay; the status bar stays visible", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     await openChooseTree(page);
     await expect(overlay(page)).toBeVisible();
@@ -70,14 +72,18 @@ test.describe("choose-tree opening / initial state (real tmux fidelity)", () => 
     await expect(sessionRows(page).first()).toContainText("10.42.7.13: 6 windows, (attached)");
   });
 
-  test("window row text and flags: {index}: {name} with * on the active window", async ({ page }) => {
+  test("window row text and flags: {index}: {name} with * on the active window", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     await openChooseTree(page);
     await expect(windowRows(page).filter({ hasText: "1: repos*" })).toHaveCount(1);
     await expect(windowRows(page).filter({ hasText: "0: dashboard" })).toHaveCount(1);
   });
 
-  test("the bottom preview strip describes the selected window's pane programs + layout", async ({ page }) => {
+  test("the bottom preview strip describes the selected window's pane programs + layout", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     await openChooseTree(page);
     await expect(page.locator('[data-testid="choose-tree-preview"]')).toContainText("repositories");
@@ -101,7 +107,9 @@ test.describe("choose-tree navigation (arrows/h/l)", () => {
     await expect(selectedRow(page)).toHaveAttribute("data-window-id", "repositories");
   });
 
-  test("h on a window row jumps to its parent session row; h again collapses it", async ({ page }) => {
+  test("h on a window row jumps to its parent session row; h again collapses it", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     await openChooseTree(page);
     await expect(windowRows(page)).toHaveCount(6);
@@ -166,7 +174,9 @@ test.describe("choose-tree Enter switches window/session; x kills; q/Esc close",
     await expect(windowRows(page).filter({ hasText: "employment" })).toHaveCount(0);
   });
 
-  test("any OTHER key cancels just the kill sub-prompt, leaving the overlay open", async ({ page }) => {
+  test("any OTHER key cancels just the kill sub-prompt, leaving the overlay open", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     await openChooseTree(page);
     await page.keyboard.press("x");
@@ -177,7 +187,9 @@ test.describe("choose-tree Enter switches window/session; x kills; q/Esc close",
     await expect(windowRows(page)).toHaveCount(6);
   });
 
-  test("killing every window down to the last one still cascades to [exited], same as Ctrl-b &", async ({ page }) => {
+  test("killing every window down to the last one still cascades to [exited], same as Ctrl-b &", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await openChooseTree(page);
     for (let i = 0; i < 5; i++) {
@@ -216,7 +228,9 @@ test.describe("choose-tree does NOT open competing modals while open (window-chr
     await expect(overlay(page)).toBeVisible();
   });
 
-  test("/ does not open grep while choose-tree is open (bare / is swallowed as an unrecognized key)", async ({ page }) => {
+  test("/ does not open grep while choose-tree is open (bare / is swallowed as an unrecognized key)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await openChooseTree(page);
     await page.keyboard.press("/");
@@ -300,7 +314,9 @@ test.describe("choose-tree across sessions (create a second session via the host
     await expect(page).toHaveURL(/\/repositories$/);
   });
 
-  test("Enter on a SESSION row (not a window row) attaches it without changing its active window", async ({ page }) => {
+  test("Enter on a SESSION row (not a window row) attaches it without changing its active window", async ({
+    page,
+  }) => {
     await gotoReady(page, "/employment");
     await createAndAttachSecondSession(page);
     await openChooseTree(page);
@@ -315,7 +331,9 @@ test.describe("choose-tree across sessions (create a second session via the host
     await expect(page).toHaveURL(/\/employment$/);
   });
 
-  test("x on a session row prompts Kill session {name}? (y/n); y kills every window in it", async ({ page }) => {
+  test("x on a session row prompts Kill session {name}? (y/n); y kills every window in it", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await createAndAttachSecondSession(page);
     await openChooseTree(page);

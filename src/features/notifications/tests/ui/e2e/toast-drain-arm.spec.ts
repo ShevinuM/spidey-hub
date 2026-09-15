@@ -47,7 +47,9 @@ async function captureRevealMoment(page: Page): Promise<RevealSample[]> {
         const anims = (toastEl as HTMLElement).getAnimations();
         // `animationName` lives on the `CSSAnimation` subtype, not the
         // base `Animation` the DOM lib types `getAnimations()` as.
-        const toastInAnim = anims.find((a) => (a as unknown as { animationName?: string }).animationName === "toastIn");
+        const toastInAnim = anims.find(
+          (a) => (a as unknown as { animationName?: string }).animationName === "toastIn",
+        );
         const toastInProgress = toastInAnim?.effect?.getComputedTiming().progress ?? null;
 
         return { id, sev, drainFrac, toastInProgress };
@@ -76,7 +78,9 @@ test.describe("cold boot: the whole toast reveal (entrance + drain) starts when 
 
     for (const sample of revealed) {
       expect.soft(sample.toastInProgress, `toastIn progress for toast ${sample.id}`).not.toBeNull();
-      expect.soft(sample.toastInProgress ?? 1, `toastIn progress for toast ${sample.id}`).toBeLessThan(1);
+      expect
+        .soft(sample.toastInProgress ?? 1, `toastIn progress for toast ${sample.id}`)
+        .toBeLessThan(1);
       expect.soft(sample.drainFrac, `drain fraction for toast ${sample.id}`).toBeGreaterThan(0.75);
     }
 
@@ -93,13 +97,17 @@ test.describe("cold boot: the whole toast reveal (entrance + drain) starts when 
       const decrease = before.drainFrac - (post as RevealSample).drainFrac;
       const expectedDecrease = waitMs / TOAST_DURATION_MS[before.sev];
       // Tolerant of arm/measurement jitter: well short of the full expected decrease, but well above no movement at all.
-      expect(decrease, `drain decrease for toast ${before.id} (sev ${before.sev})`).toBeGreaterThan(expectedDecrease * 0.6);
+      expect(decrease, `drain decrease for toast ${before.id} (sev ${before.sev})`).toBeGreaterThan(
+        expectedDecrease * 0.6,
+      );
     }
   });
 });
 
 test.describe("returning visitor: boot-seen already set", () => {
-  test("toastIn plays immediately — the boot gate must not delay the common case", async ({ page }) => {
+  test("toastIn plays immediately — the boot gate must not delay the common case", async ({
+    page,
+  }) => {
     await page.route("**/api.github.com/**", (route) => route.abort());
     await page.addInitScript((key) => {
       try {
@@ -119,7 +127,9 @@ test.describe("returning visitor: boot-seen already set", () => {
     const sample = await page.evaluate(() => {
       const toastEl = document.querySelector('[data-testid="toast"]') as HTMLElement | null;
       const anims = toastEl?.getAnimations() ?? [];
-      const toastInAnim = anims.find((a) => (a as unknown as { animationName?: string }).animationName === "toastIn");
+      const toastInAnim = anims.find(
+        (a) => (a as unknown as { animationName?: string }).animationName === "toastIn",
+      );
       return toastInAnim?.effect?.getComputedTiming().progress ?? null;
     });
 

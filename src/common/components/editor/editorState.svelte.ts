@@ -9,7 +9,11 @@ import {
   type LineRange,
   type VisualRange,
 } from "../../engines/vim/vim";
-import { setPasteBuffer, writeToSystemClipboard, type PasteBufferKind } from "../../lib/paste-buffer";
+import {
+  setPasteBuffer,
+  writeToSystemClipboard,
+  type PasteBufferKind,
+} from "../../lib/paste-buffer";
 import { pushPasteTarget, removePasteTarget } from "../../lib/paste-targets";
 import { lineText } from "./editor-render";
 import type { EditorLabels } from "../../lib/data";
@@ -147,10 +151,17 @@ export class EditorState {
     if (!this.scrollerEl) return;
     const clientH = this.scrollerEl.clientHeight;
     const maxScroll = Math.max(0, this.scrollerEl.scrollHeight - clientH);
-    this.scrollerEl.scrollTop = clamp(this.scrollerEl.scrollTop + dir * (clientH / 2), 0, maxScroll);
+    this.scrollerEl.scrollTop = clamp(
+      this.scrollerEl.scrollTop + dir * (clientH / 2),
+      0,
+      maxScroll,
+    );
     const pitch = this.linePitch();
     const linesMoved = Math.max(1, Math.round(clientH / 2 / pitch)) * dir;
-    this.cursor = clampCursor(this.rawLines, { line: this.cursor.line + linesMoved, col: this.cursor.col });
+    this.cursor = clampCursor(this.rawLines, {
+      line: this.cursor.line + linesMoved,
+      col: this.cursor.col,
+    });
     this.syncScroll();
   }
 
@@ -161,7 +172,10 @@ export class EditorState {
     this.scrollerEl.scrollTop = clamp(this.scrollerEl.scrollTop + dir * clientH, 0, maxScroll);
     const pitch = this.linePitch();
     const linesMoved = Math.max(1, Math.round(clientH / pitch)) * dir;
-    this.cursor = clampCursor(this.rawLines, { line: this.cursor.line + linesMoved, col: this.cursor.col });
+    this.cursor = clampCursor(this.rawLines, {
+      line: this.cursor.line + linesMoved,
+      col: this.cursor.col,
+    });
     this.syncScroll();
   }
 
@@ -191,14 +205,18 @@ export class EditorState {
   searchMatches = $derived(findMatches(this.rawLines, this.lastSearchQuery));
 
   scrollLabel = $derived.by(() => {
-    if (this.scrollHeightPx <= this.clientHeightPx || this.scrollTopPx <= 0) return this.labels.topLabel;
-    if (this.scrollTopPx + this.clientHeightPx >= this.scrollHeightPx - 1) return this.labels.bottomLabel;
+    if (this.scrollHeightPx <= this.clientHeightPx || this.scrollTopPx <= 0)
+      return this.labels.topLabel;
+    if (this.scrollTopPx + this.clientHeightPx >= this.scrollHeightPx - 1)
+      return this.labels.bottomLabel;
     const pct = Math.round((this.scrollTopPx / (this.scrollHeightPx - this.clientHeightPx)) * 100);
     return this.labels.percentTemplate.replace("{n}", String(pct));
   });
 
   positionText = $derived(
-    this.labels.positionTemplate.replace("{line}", String(this.cursor.line)).replace("{col}", String(this.cursor.col + 1)),
+    this.labels.positionTemplate
+      .replace("{line}", String(this.cursor.line))
+      .replace("{col}", String(this.cursor.col + 1)),
   );
 
   modeOrPromptText = $derived.by(() => {
@@ -229,16 +247,15 @@ export class EditorState {
     return spans;
   }
 
-  selectionRange = $derived.by(():
-    | { kind: "char"; range: VisualRange }
-    | { kind: "line"; range: LineRange }
-    | null => {
-    if (this.mode === "visual" && this.visualAnchor)
-      return { kind: "char", range: normalizeCharRange(this.visualAnchor, this.cursor) };
-    if (this.mode === "visualLine" && this.visualAnchor)
-      return { kind: "line", range: normalizeLineRange(this.visualAnchor, this.cursor) };
-    return null;
-  });
+  selectionRange = $derived.by(
+    (): { kind: "char"; range: VisualRange } | { kind: "line"; range: LineRange } | null => {
+      if (this.mode === "visual" && this.visualAnchor)
+        return { kind: "char", range: normalizeCharRange(this.visualAnchor, this.cursor) };
+      if (this.mode === "visualLine" && this.visualAnchor)
+        return { kind: "line", range: normalizeLineRange(this.visualAnchor, this.cursor) };
+      return null;
+    },
+  );
 
   decorations = $derived.by(() => {
     const map = new Map<number, LineDecoration>();
@@ -264,7 +281,8 @@ export class EditorState {
       // A discriminated union (tagged by `partial`), not a `{...} | "full" |
       // null` union — keeps every narrowing below a simple `.partial` check
       // instead of a string-literal comparison against an object type.
-      type SelPart = { partial: false } | { partial: true; startCol: number; endCol: number } | null;
+      type SelPart =
+        { partial: false } | { partial: true; startCol: number; endCol: number } | null;
       let selPart: SelPart = null;
       if (sel?.kind === "line") {
         selPart = { partial: false };
@@ -274,7 +292,11 @@ export class EditorState {
         else if (lineNo === r.startLine && lineNo === r.endLine)
           selPart = { partial: true, startCol: r.startCol, endCol: r.endCol };
         else if (lineNo === r.startLine)
-          selPart = { partial: true, startCol: r.startCol, endCol: Math.max(r.startCol, text.length - 1) };
+          selPart = {
+            partial: true,
+            startCol: r.startCol,
+            endCol: Math.max(r.startCol, text.length - 1),
+          };
         else if (lineNo === r.endLine) selPart = { partial: true, startCol: 0, endCol: r.endCol };
       }
 
@@ -320,10 +342,12 @@ export class EditorState {
         const eIdx = points[i + 1];
         if (s >= eIdx) continue;
         const classes: string[] = [];
-        const inSel = selPart && (!selPart.partial || (s >= selPart.startCol && eIdx <= selPart.endCol + 1));
+        const inSel =
+          selPart && (!selPart.partial || (s >= selPart.startCol && eIdx <= selPart.endCol + 1));
         if (inSel) classes.push("sel");
         if (lineMatches.some((m) => s >= m.col && eIdx <= m.col + m.length)) classes.push("match");
-        if (isCursorLine && s >= this.cursor.col && eIdx <= this.cursor.col + 1) classes.push("cursor");
+        if (isCursorLine && s >= this.cursor.col && eIdx <= this.cursor.col + 1)
+          classes.push("cursor");
         const color = tokenSpans?.find((sp) => s >= sp.start && eIdx <= sp.end)?.color;
         segments.push({ text: text.slice(s, eIdx), cls: classes.join(" "), color });
       }

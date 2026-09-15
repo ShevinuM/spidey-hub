@@ -24,7 +24,11 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { serveStatic } from "../src/common/tests/ui/support/static-server.mjs";
 import { BOOT_SEEN_STORAGE_KEY } from "../src/features/boot/lib/boot-state.ts";
-import { recipes, extraRecipes, iteration3Recipes } from "../src/common/tests/ui/support/recipes.ts";
+import {
+  recipes,
+  extraRecipes,
+  iteration3Recipes,
+} from "../src/common/tests/ui/support/recipes.ts";
 import { pickPort } from "./lib/free-port.ts";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
@@ -78,7 +82,11 @@ async function shot(context, name, { boot = false, actions = [], waitMs = 0, wai
     if (waitMs) await page.waitForTimeout(waitMs);
     await page.waitForLoadState("networkidle").catch(() => {});
   }
-  await page.screenshot({ path: join(OUT_DIR, `${name}.png`), animations: "disabled", caret: "hide" });
+  await page.screenshot({
+    path: join(OUT_DIR, `${name}.png`),
+    animations: "disabled",
+    caret: "hide",
+  });
   await page.close();
 }
 
@@ -141,12 +149,7 @@ async function main() {
     // then the following key alone" tmux prefix shape every other prefixed
     // recipe above uses, opened over Profile for a more informative shot.
     await shot(context, "copy-mode", {
-      actions: [
-        { key: "Control+b" },
-        { key: "4" },
-        { key: "Control+b" },
-        { key: "[" },
-      ],
+      actions: [{ key: "Control+b" }, { key: "4" }, { key: "Control+b" }, { key: "[" }],
       waitSelector: '[data-testid="copy-mode-overlay"]',
     });
     await shot(context, "boot-mid", { boot: true, waitMs: 2000 });

@@ -6,7 +6,9 @@ import { iteration3Recipes } from "../../../../../common/tests/ui/support/recipe
 import { captureState } from "../../../../../common/tests/ui/support/pipeline.mjs";
 
 const SHELL_FS_OWNED_RECIPE_NAMES = new Set(["16-shell", "17-host-shell"]);
-const keyRecipes = iteration3Recipes.filter((recipe) => SHELL_FS_OWNED_RECIPE_NAMES.has(recipe.name));
+const keyRecipes = iteration3Recipes.filter((recipe) =>
+  SHELL_FS_OWNED_RECIPE_NAMES.has(recipe.name),
+);
 
 test.describe("visual (shell-fs): implementation vs goldens", () => {
   test.beforeEach(async ({ page }) => {

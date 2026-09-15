@@ -16,7 +16,8 @@ const message = (page: Page) => page.locator('[data-testid="editor-message"]');
 const pasteBuffer = (page: Page) => page.locator('[data-testid="paste-buffer"]');
 const closePill = (page: Page) => page.locator('[data-testid="editor-close-pill"]');
 const overlay = (page: Page) => page.locator('[data-testid="grep-overlay"]');
-const lineText = (page: Page, n: number) => page.locator(`[data-line="${n}"] [data-testid="editor-line-text"]`);
+const lineText = (page: Page, n: number) =>
+  page.locator(`[data-line="${n}"] [data-testid="editor-line-text"]`);
 // The `:` ex-command's presentation (typed text, readonly/E492 error) lives in the site-wide Cmdline box, not Editor.svelte's own footer — see Cmdline.svelte / cmdline.spec.ts for that box's own coverage.
 const cmdlineOverlay = (page: Page) => page.locator('[data-testid="cmdline-overlay"]');
 const cmdlineInput = (page: Page) => page.locator('[data-testid="cmdline-input"]');
@@ -43,18 +44,26 @@ const entryPoints: EntryPoint[] = [
     async open(page) {
       await gotoReady(page, "/repositories");
       // transcript-tts is used here, not the default-highlighted virtual "all-projects" repo, because daily-tech-digest has two files named README.md simultaneously visible in its nested tree, which would make the locator below ambiguous.
-      await page.locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]').click();
-      await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')).toBeVisible();
+      await page
+        .locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]')
+        .click();
+      await expect(
+        page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]'),
+      ).toBeVisible();
       // Clicking a file previews it in panel [3] but does NOT open the
       // editor (click-selects/Enter-opens split); focus panel [2] and press
       // Enter to actually open it.
-      await page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]').click();
+      await page
+        .locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')
+        .click();
       await page.keyboard.press("2");
       await page.keyboard.press("Enter");
       await expect(scroller(page)).toBeVisible();
     },
     async assertParentVisible(page) {
-      await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')).toBeVisible();
+      await expect(
+        page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]'),
+      ).toBeVisible();
     },
   },
   {
@@ -69,7 +78,9 @@ const entryPoints: EntryPoint[] = [
     async assertParentVisible(page) {
       // Anchored (same convention as employment.spec.ts's `rowLocator`) on the flat list's row 0 being back and still selected, since there's no `employment-path` breadcrumb element.
       await expect(page.locator('[data-testid="employment-row"]').first()).toBeVisible();
-      await expect(page.locator('[data-testid="employment-preview-path"]')).toHaveText("enaimco/software-developer.md");
+      await expect(page.locator('[data-testid="employment-preview-path"]')).toHaveText(
+        "enaimco/software-developer.md",
+      );
     },
   },
 ];
@@ -102,7 +113,9 @@ for (const entry of entryPoints) {
       await expect(position(page)).toContainText("1:1");
     });
 
-    test("counted j/k motions (5j, 3k) move the cursor by exactly that many lines", async ({ page }) => {
+    test("counted j/k motions (5j, 3k) move the cursor by exactly that many lines", async ({
+      page,
+    }) => {
       await entry.open(page);
       const totalLines = await page.locator("[data-line]").count();
       test.skip(totalLines < 8, "fixture file too short for this count to be meaningful");
@@ -168,7 +181,9 @@ for (const entry of entryPoints) {
       await expect(modeText(page)).toHaveText("NORMAL");
     });
 
-    test("visual y yanks the selection into the shared paste buffer and the system clipboard", async ({ page }) => {
+    test("visual y yanks the selection into the shared paste buffer and the system clipboard", async ({
+      page,
+    }) => {
       await entry.open(page);
       const text1 = (await lineText(page, 1).textContent()) ?? "";
       test.skip(text1.length < 3, "fixture first line too short");
@@ -186,7 +201,9 @@ for (const entry of entryPoints) {
       expect(clip).toBe(expected);
     });
 
-    test("yy yanks the current line (linewise); 3yy yanks three lines with a count", async ({ page }) => {
+    test("yy yanks the current line (linewise); 3yy yanks three lines with a count", async ({
+      page,
+    }) => {
       await entry.open(page);
       const totalLines = await page.locator("[data-line]").count();
       const text1 = (await lineText(page, 1).textContent()) ?? "";
@@ -309,7 +326,9 @@ for (const entry of entryPoints) {
       await expect(page.locator('[data-testid="editor-selection"]')).toHaveCount(0);
     });
 
-    test(":w and :wq show a readonly error IN THE BOX and never close the editor", async ({ page }) => {
+    test(":w and :wq show a readonly error IN THE BOX and never close the editor", async ({
+      page,
+    }) => {
       await entry.open(page);
       await typeCmdline(page, "w");
       await expect(scroller(page)).toBeVisible();
@@ -327,7 +346,9 @@ for (const entry of entryPoints) {
 
     // The bang variants report the same E45 readonly error as their
     // bang-less forms, never the unknown-command E492 branch.
-    test(":wq! shows the E45 readonly error, not E492, and never closes the editor", async ({ page }) => {
+    test(":wq! shows the E45 readonly error, not E492, and never closes the editor", async ({
+      page,
+    }) => {
       await entry.open(page);
       await typeCmdline(page, "wq!");
       await expect(cmdlineError(page)).toContainText("E45");
@@ -363,7 +384,9 @@ for (const entry of entryPoints) {
       await expect(lineText(page, 1)).toHaveText(before ?? "");
     });
 
-    test("a mutating key pressed in VISUAL mode flashes the bell and exits back to NORMAL", async ({ page }) => {
+    test("a mutating key pressed in VISUAL mode flashes the bell and exits back to NORMAL", async ({
+      page,
+    }) => {
       await entry.open(page);
       await page.keyboard.press("v");
       await page.keyboard.press("d");
@@ -372,7 +395,9 @@ for (const entry of entryPoints) {
       await expect(scroller(page)).toBeVisible();
     });
 
-    test("clicking the [:q] pill closes the editor back to the exact parent view", async ({ page }) => {
+    test("clicking the [:q] pill closes the editor back to the exact parent view", async ({
+      page,
+    }) => {
       await entry.open(page);
       await closePill(page).click();
       await expect(scroller(page)).not.toBeVisible();

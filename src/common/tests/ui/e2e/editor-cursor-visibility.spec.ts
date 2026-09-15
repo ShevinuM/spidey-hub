@@ -33,7 +33,10 @@ async function fileRowUnderDir(page: Page, dirName: string, fileName: string) {
   for (let i = dirIdx + 1; i < count; i++) {
     const depth = Number(await rows.nth(i).getAttribute("data-depth"));
     if (depth <= dirDepth) break;
-    if ((await rows.nth(i).getAttribute("data-entry-name")) === fileName && depth === dirDepth + 1) {
+    if (
+      (await rows.nth(i).getAttribute("data-entry-name")) === fileName &&
+      depth === dirDepth + 1
+    ) {
       return rows.nth(i);
     }
   }
@@ -45,7 +48,9 @@ test.describe("Editor cursor visibility (regression)", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("block cursor stays visible when it lands on a leading-indentation character", async ({ page }) => {
+  test("block cursor stays visible when it lands on a leading-indentation character", async ({
+    page,
+  }) => {
     // The trailing full-file sweep below drives ~225 individual keypresses
     // plus a DOM measurement each, which comfortably clears Playwright's
     // default 30s test timeout in isolation but can brush against it under
@@ -60,14 +65,25 @@ test.describe("Editor cursor visibility (regression)", () => {
     // repos.json), so this can't drift from the actual repo content.
     const repoName = "Legend-of-Arlo-Guardians-Gauntlet";
     const relPath = "js/main.js";
-    const pins = JSON.parse(readFileSync(join(ROOT, "repos.json"), "utf8")) as Record<string, string>;
+    const pins = JSON.parse(readFileSync(join(ROOT, "repos.json"), "utf8")) as Record<
+      string,
+      string
+    >;
     const sha = pins[repoName];
-    const realLines = readFileSync(join(ROOT, ".cache/repos", `${repoName}-${sha}`, relPath), "utf8").split("\n");
+    const realLines = readFileSync(
+      join(ROOT, ".cache/repos", `${repoName}-${sha}`, relPath),
+      "utf8",
+    ).split("\n");
     const indentedLineNo = realLines.findIndex((l) => /^[ \t]/.test(l)) + 1; // 1-based, vim convention
-    expect(indentedLineNo, "fixture must contain at least one indented line for this test to be meaningful").toBeGreaterThan(0);
+    expect(
+      indentedLineNo,
+      "fixture must contain at least one indented line for this test to be meaningful",
+    ).toBeGreaterThan(0);
 
     await gotoReady(page, "/repositories");
-    await page.locator(`[data-testid="repositories-repo-row"][data-repo-name="${repoName}"]`).click();
+    await page
+      .locator(`[data-testid="repositories-repo-row"][data-repo-name="${repoName}"]`)
+      .click();
     const jsDir = page.locator('[data-testid="repositories-tree-row"][data-entry-name="js"]');
     await expect(jsDir).toBeVisible();
     const fileRow = await fileRowUnderDir(page, "js", "main.js");
@@ -92,8 +108,14 @@ test.describe("Editor cursor visibility (regression)", () => {
     await expect(cursor).toBeVisible();
     const box = await cursor.boundingBox();
     expect(box, "cursor must have a real bounding box").not.toBeNull();
-    expect(box!.width, "cursor collapsed to zero width on a leading-whitespace character").toBeGreaterThan(0);
-    expect(box!.height, "cursor collapsed to zero height on a leading-whitespace character").toBeGreaterThan(0);
+    expect(
+      box!.width,
+      "cursor collapsed to zero width on a leading-whitespace character",
+    ).toBeGreaterThan(0);
+    expect(
+      box!.height,
+      "cursor collapsed to zero height on a leading-whitespace character",
+    ).toBeGreaterThan(0);
 
     // Sweeps every remaining line too, since any line starting with whitespace could exhibit the same collapse.
     const lineCount = await page.locator("[data-line]").count();

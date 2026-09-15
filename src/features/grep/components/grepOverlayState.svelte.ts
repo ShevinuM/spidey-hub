@@ -115,7 +115,10 @@ export class GrepOverlayState {
   start = $derived(
     Math.max(
       0,
-      Math.min(Math.max(0, this.hits.length - this.listVis), Math.max(0, this.gsel - Math.floor(this.listVis / 2))),
+      Math.min(
+        Math.max(0, this.hits.length - this.listVis),
+        Math.max(0, this.gsel - Math.floor(this.listVis / 2)),
+      ),
     ),
   );
   cur = $derived(this.hits[this.gsel]);
@@ -135,7 +138,9 @@ export class GrepOverlayState {
   grepFile = $derived(this.cur ? this.cur.path : this.grep.noResultsFile);
   grepFilePos = $derived(
     this.cur && this.cur.line
-      ? this.grep.filePosTemplate.replace("{line}", String(this.cur.line)).replace("{col}", String(this.cur.col))
+      ? this.grep.filePosTemplate
+          .replace("{line}", String(this.cur.line))
+          .replace("{col}", String(this.cur.col))
       : this.curFile
         ? this.grep.fileLinesTemplate.replace("{n}", String(this.curFile.lines.length))
         : "",
@@ -151,13 +156,19 @@ export class GrepOverlayState {
         path: h.path,
         pathColor: selected ? "#f4ece9" : "rgba(196,216,232,.66)",
         selected,
-        pos: h.line ? this.grep.rowPosTemplate.replace("{line}", String(h.line)).replace("{col}", String(h.col)) : "",
+        pos: h.line
+          ? this.grep.rowPosTemplate
+              .replace("{line}", String(h.line))
+              .replace("{col}", String(h.col))
+          : "",
         pre: h.pre,
         mat: h.mat,
         post: h.post,
         style:
           "cursor:pointer;display:flex;align-items:center;gap:6px;padding:0 8px;height:22px;line-height:22px;white-space:pre;overflow:hidden;" +
-          (selected ? "background:rgba(224,69,60,.22);color:#f4ece9" : "color:rgba(196,216,232,.66)"),
+          (selected
+            ? "background:rgba(224,69,60,.22);color:#f4ece9"
+            : "color:rgba(196,216,232,.66)"),
       };
     }),
   );
@@ -179,7 +190,9 @@ export class GrepOverlayState {
         style:
           "display:grid;grid-template-columns:44px 1fr;gap:10px;white-space:pre;height:21px;line-height:21px;overflow:hidden;" +
           (on ? "background:rgba(95,198,180,.12);color:#e6f2ef" : "color:rgba(196,216,232,.62)"),
-        nStyle: on ? "text-align:right;color:#e0453c" : "text-align:right;color:rgba(196,216,232,.28)",
+        nStyle: on
+          ? "text-align:right;color:#e0453c"
+          : "text-align:right;color:rgba(196,216,232,.28)",
       };
     });
   });

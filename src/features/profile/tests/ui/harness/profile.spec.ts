@@ -5,7 +5,9 @@ import { expect, test } from "@playwright/test";
 import { ProfilePage } from "../pages/ProfilePage";
 
 test.describe("Profile harness: mounts standalone with seeded fixture props", () => {
-  test("renders the dossier, CV link, and contact rows from real content — no kernel required", async ({ page }) => {
+  test("renders the dossier, CV link, and contact rows from real content — no kernel required", async ({
+    page,
+  }) => {
     const profile = new ProfilePage(page);
     await profile.openHarness();
 
@@ -32,7 +34,9 @@ test.describe("Profile harness: mounts standalone with seeded fixture props", ()
     expect(new Set([h1, h2, h3]).size).toBeGreaterThan(1);
   });
 
-  test("no Terminal kernel chrome mounts alongside it (no status bar, no window switching)", async ({ page }) => {
+  test("no Terminal kernel chrome mounts alongside it (no status bar, no window switching)", async ({
+    page,
+  }) => {
     const profile = new ProfilePage(page);
     await profile.openHarness();
     await expect(profile.statusBar.windows).toHaveCount(0);

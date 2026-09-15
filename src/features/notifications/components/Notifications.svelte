@@ -46,11 +46,11 @@
 </script>
 
 {#if view === "home"}
-<NotificationBell {state} />
+  <NotificationBell {state} />
 
-{#if state.open}
-  <NotificationsPanel {state} />
-{/if}
+  {#if state.open}
+    <NotificationsPanel {state} />
+  {/if}
 
   <ToastStack {state} />
 {/if}

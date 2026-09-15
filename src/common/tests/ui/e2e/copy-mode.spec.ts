@@ -23,7 +23,9 @@ const linesEl = (page: Page) => page.locator('[data-testid="copy-mode-lines"]');
 const cursor = (page: Page) => page.locator('[data-testid="copy-mode-cursor"]').first();
 
 async function cursorLine(page: Page): Promise<string | null> {
-  return cursor(page).evaluate((el) => el.closest("[data-copy-mode-line]")?.getAttribute("data-copy-mode-line") ?? null);
+  return cursor(page).evaluate(
+    (el) => el.closest("[data-copy-mode-line]")?.getAttribute("data-copy-mode-line") ?? null,
+  );
 }
 
 test.describe("Copy mode (Ctrl-b [)", () => {
@@ -88,20 +90,27 @@ test.describe("Copy mode (Ctrl-b [)", () => {
   }
 
   // A program can run in more than one pane at once, so `[data-copy-source]` capture must resolve to the focused pane's program, not the window's `view` — without this, splitting retina-v and focusing the new pane would still match Wallpaper's always-present (faded) tracker HUD first, since `querySelector` returns only the first match.
-  test("a shell pane split off a retina-v window is the copy-source, not the tracker HUD", async ({ page }) => {
+  test("a shell pane split off a retina-v window is the copy-source, not the tracker HUD", async ({
+    page,
+  }) => {
     await gotoReady(page, "/retina-v");
     await expect(page.locator("[data-copy-source]")).toHaveCount(1);
 
     await ctrlB(page);
     await page.keyboard.press("|");
     await expect(page.locator('[data-testid="pane-leaf"]')).toHaveCount(2);
-    await expect(page.locator('[data-testid="pane-leaf"][data-pane-focused="true"]')).toHaveCount(1);
+    await expect(page.locator('[data-testid="pane-leaf"][data-pane-focused="true"]')).toHaveCount(
+      1,
+    );
 
     // Exactly one copy-source in the DOM, and it's the new (focused) shell
     // pane's scroller — not the wallpaper's HUD `<pre>`.
     await expect(page.locator("[data-copy-source]")).toHaveCount(1);
-    await expect(page.locator("[data-copy-source]")).toHaveAttribute("data-testid", "shell-scroller");
-    await expect(page.locator('pre[data-copy-source]')).toHaveCount(0);
+    await expect(page.locator("[data-copy-source]")).toHaveAttribute(
+      "data-testid",
+      "shell-scroller",
+    );
+    await expect(page.locator("pre[data-copy-source]")).toHaveCount(0);
   });
 
   // The editor's gutter number and line text render as sibling flex items, and `innerText` inserts a line break between flex siblings the same way it does between block boxes, so this asserts the yanked line EQUALS the buffer's real line text exactly rather than merely containing it, to catch any gutter-digit bleed into the capture.
@@ -114,13 +123,20 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     // The default-highlighted panel [1] repo is the virtual "all-projects"
     // entry (no README.md in its flat .md-only tree) — click transcript-tts's
     // own row directly, which both selects it and loads its tree.
-    await page.locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]').click();
-    await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')).toBeVisible();
-    await page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]').click();
+    await page
+      .locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]')
+      .click();
+    await expect(
+      page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]'),
+    ).toBeVisible();
+    await page
+      .locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')
+      .click();
     await page.keyboard.press("2");
     await page.keyboard.press("Enter");
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
-    const firstLine = (await page.locator('[data-line="1"] [data-testid="editor-line-text"]').textContent()) ?? "";
+    const firstLine =
+      (await page.locator('[data-line="1"] [data-testid="editor-line-text"]').textContent()) ?? "";
     expect(firstLine.length).toBeGreaterThan(0);
 
     await openCopyMode(page);
@@ -200,7 +216,10 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     await expect(page.locator('[data-testid="copy-mode-selection"]').first()).toBeVisible();
   });
 
-  test("y yanks the selection to the paste buffer + system clipboard, then exits", async ({ page, context }) => {
+  test("y yanks the selection to the paste buffer + system clipboard, then exits", async ({
+    page,
+    context,
+  }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await gotoReady(page, "/help");
     await openCopyMode(page);
@@ -215,7 +234,10 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     expect(clip.length).toBeGreaterThan(0);
   });
 
-  test("Enter yanks the current line with no selection active, then exits", async ({ page, context }) => {
+  test("Enter yanks the current line with no selection active, then exits", async ({
+    page,
+    context,
+  }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await gotoReady(page, "/profile");
     const sourceText = (await page.locator("[data-copy-source]").innerText()).trim();
@@ -244,7 +266,10 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     await expect(overlay(page)).not.toBeVisible();
   });
 
-  test("round trip: a copy-mode yank pastes into the grep query via Ctrl-b ]", async ({ page, context }) => {
+  test("round trip: a copy-mode yank pastes into the grep query via Ctrl-b ]", async ({
+    page,
+    context,
+  }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await gotoReady(page, "/help");
     await openCopyMode(page);

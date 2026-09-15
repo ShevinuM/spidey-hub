@@ -27,7 +27,9 @@ const WINDOW_NAMES: Record<string, string> = {
  * session's PREVIOUSLY active window —
  * omit it for assertions made before any in-test window switch. */
 function winText(activeId: string, lastId?: string): string {
-  return WINDOWS.map((id, i) => `${i}:${WINDOW_NAMES[id]}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
+  return WINDOWS.map(
+    (id, i) => `${i}:${WINDOW_NAMES[id]}${id === activeId ? "*" : id === lastId ? "-" : ""}`,
+  ).join(" ");
 }
 
 async function ctrlB(page: Page) {
@@ -177,7 +179,9 @@ test.describe("tmux prefix (Ctrl-b)", () => {
   });
 
   // Ctrl-b Ctrl-b is tmux's own default "send-prefix" binding: the second Ctrl-b disarms and dispatches as a literal keydown, so a digit typed right after is unprefixed (does nothing from the dashboard, which has no digit hotkeys) rather than a fresh prefix target.
-  test("Ctrl-b Ctrl-b (send-prefix) does not re-arm — a digit typed right after is unprefixed", async ({ page }) => {
+  test("Ctrl-b Ctrl-b (send-prefix) does not re-arm — a digit typed right after is unprefixed", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await ctrlB(page);
     await ctrlB(page);
@@ -187,16 +191,24 @@ test.describe("tmux prefix (Ctrl-b)", () => {
   });
 
   // Send-prefix's whole purpose is making vim's own Ctrl-b (full-page-back) reachable from a real keypress, since a bare Ctrl-b is otherwise always consumed by the prefix arm first; opens a real repo file (same entry point as editor-vim.spec.ts) long enough to scroll, jumps to the last line, then proves Ctrl-b Ctrl-b moves the cursor backward.
-  test("Ctrl-b Ctrl-b pages back in the open vim editor (send-prefix reaches vim's Ctrl-b)", async ({ page }) => {
+  test("Ctrl-b Ctrl-b pages back in the open vim editor (send-prefix reaches vim's Ctrl-b)", async ({
+    page,
+  }) => {
     await page.route("**/api.github.com/**", (route) => route.abort());
     await gotoReady(page, "/repositories");
     // The default-highlighted panel [1] repo is the virtual "all-projects"
     // entry (no README.md in its flat .md-only tree) — click transcript-tts's
     // own row directly (selects AND loads its tree; its README.md is 56
     // lines, still well over this test's 8-line floor).
-    await page.locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]').click();
-    await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')).toBeVisible();
-    await page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]').click();
+    await page
+      .locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]')
+      .click();
+    await expect(
+      page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]'),
+    ).toBeVisible();
+    await page
+      .locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')
+      .click();
     await page.keyboard.press("2");
     await page.keyboard.press("Enter");
     const position = page.locator('[data-testid="editor-position"]');
@@ -214,7 +226,9 @@ test.describe("tmux prefix (Ctrl-b)", () => {
   });
 
   // The grep overlay is window chrome, not something that survives a window switch, so switching via the prefix (or a status-bar click) always closes it — the prefix itself still works while grep is open.
-  test("Ctrl-b works even while the grep overlay is open, and the switch closes the overlay", async ({ page }) => {
+  test("Ctrl-b works even while the grep overlay is open, and the switch closes the overlay", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
     await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
@@ -229,7 +243,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
   });
 
-  test("a prefixed \"/\" is swallowed — it does not open the grep overlay", async ({ page }) => {
+  test('a prefixed "/" is swallowed — it does not open the grep overlay', async ({ page }) => {
     await gotoReady(page, "/");
     await ctrlB(page);
     await page.keyboard.press("/");
@@ -247,7 +261,9 @@ test.describe("tmux prefix (Ctrl-b)", () => {
   // consumes the key first" invariant against panel [1]'s repo selection
   // instead — panel [1] still has default content (the flat repo list) to
   // move a highlight across.
-  test("a prefixed ArrowDown does not move the Repositories repo selection (panel [1])", async ({ page }) => {
+  test("a prefixed ArrowDown does not move the Repositories repo selection (panel [1])", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     await page.keyboard.press("1"); // focus panel [1], Repositories
     const firstRow = page.locator('[data-testid="repositories-repo-row"]').first();
@@ -273,11 +289,18 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     );
   });
 
-  test("a held-modifier chord immediately after Ctrl-b still falls through untouched", async ({ page }) => {
+  test("a held-modifier chord immediately after Ctrl-b still falls through untouched", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await ctrlB(page);
     const prevented = await page.evaluate(() => {
-      const ev = new KeyboardEvent("keydown", { key: "l", metaKey: true, bubbles: true, cancelable: true });
+      const ev = new KeyboardEvent("keydown", {
+        key: "l",
+        metaKey: true,
+        bubbles: true,
+        cancelable: true,
+      });
       window.dispatchEvent(ev);
       return ev.defaultPrevented;
     });
@@ -291,7 +314,9 @@ test.describe("status bar `-` flag: the previously-active window (real tmux fide
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("no flag renders on a fresh session (activeWindowIdx === lastWindowIdx)", async ({ page }) => {
+  test("no flag renders on a fresh session (activeWindowIdx === lastWindowIdx)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     expect(await statusBarText(page)).toBe(winText("dashboard"));
   });
@@ -332,7 +357,9 @@ test.describe("Ctrl-b , rename-window", () => {
     await page.keyboard.press("Enter");
     await expect(prompt).not.toBeVisible();
 
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveText("1:repos-x*");
+    await expect(
+      page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]'),
+    ).toHaveText("1:repos-x*");
     // Navigation is unaffected by the rename — the id, not the label, still
     // drives which window is "1" and where clicking/prefix-1 goes.
     await expect(page).toHaveURL(/\/repositories$/);
@@ -345,16 +372,22 @@ test.describe("Ctrl-b , rename-window", () => {
     await page.keyboard.type("nope");
     await page.keyboard.press("Escape");
     await expect(page.locator('[data-testid="status-prompt"]')).not.toBeVisible();
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveText("1:repos*");
+    await expect(
+      page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]'),
+    ).toHaveText("1:repos*");
   });
 
-  test("an empty commit (Enter on a fully-backspaced prompt) also leaves the name unchanged", async ({ page }) => {
+  test("an empty commit (Enter on a fully-backspaced prompt) also leaves the name unchanged", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     await ctrlB(page);
     await page.keyboard.press(",");
     for (let i = 0; i < "repos".length; i++) await page.keyboard.press("Backspace");
     await page.keyboard.press("Enter");
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveText("1:repos*");
+    await expect(
+      page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]'),
+    ).toHaveText("1:repos*");
   });
 
   test("the prompt owns the keyboard — typing j does not move the Repositories repo selection behind it", async ({
@@ -377,7 +410,9 @@ test.describe("Ctrl-b , rename-window", () => {
   });
 
   // Fixing "Ctrl-b arms even while a prompt is open" must not turn every other key into a prefix command — a literal "]" with no preceding Ctrl-b is still just a character.
-  test("a literal ] keypress with no preceding Ctrl-b still types normally into the prompt", async ({ page }) => {
+  test("a literal ] keypress with no preceding Ctrl-b still types normally into the prompt", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     await ctrlB(page);
     await page.keyboard.press(",");
@@ -398,11 +433,15 @@ test.describe("Ctrl-b & kill-window", () => {
     await gotoReady(page, "/repositories");
     await ctrlB(page);
     await page.keyboard.press("&");
-    await expect(page.locator('[data-testid="status-confirm"]')).toHaveText("kill-window repos? (y/n)");
+    await expect(page.locator('[data-testid="status-confirm"]')).toHaveText(
+      "kill-window repos? (y/n)",
+    );
 
     await page.keyboard.press("y");
     await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveCount(0);
+    await expect(
+      page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]'),
+    ).toHaveCount(0);
     // repositories (index 1) was active; the window that sits right after
     // it — employment (index 2) — becomes the new active view.
     await expect(page).toHaveURL(/\/employment$/);
@@ -415,7 +454,9 @@ test.describe("Ctrl-b & kill-window", () => {
     await page.keyboard.press("n");
     await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
     await expect(page).toHaveURL(/\/repositories$/);
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveCount(1);
+    await expect(
+      page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]'),
+    ).toHaveCount(1);
   });
 
   test("Esc cancels — nothing removed, view unchanged", async ({ page }) => {
@@ -425,7 +466,9 @@ test.describe("Ctrl-b & kill-window", () => {
     await page.keyboard.press("Escape");
     await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
     await expect(page).toHaveURL(/\/repositories$/);
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveCount(1);
+    await expect(
+      page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]'),
+    ).toHaveCount(1);
   });
 
   // Killing the session's last window (with no other session to fall back to) destroys it outright and detaches the client to the host shell printing exactly `[exited]` — see sessions.spec.ts for the "another session still exists" sibling case.
@@ -477,7 +520,9 @@ test.describe("Ctrl-b c new-window", () => {
     await expect(page).toHaveURL(/\/$/);
   });
 
-  test("the new window's own prefix digit (6) reaches it, coexisting with the fixed 0-5 targets", async ({ page }) => {
+  test("the new window's own prefix digit (6) reaches it, coexisting with the fixed 0-5 targets", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await ctrlB(page);
     await page.keyboard.press("c");
@@ -500,7 +545,9 @@ test.describe("Ctrl-b c new-window", () => {
     await ctrlB(page);
     await page.keyboard.press("w");
     await expect(page.locator('[data-testid="choose-tree-overlay"]')).toBeVisible();
-    await expect(page.locator('[data-testid="choose-tree-window-row"]', { hasText: "6: zsh" })).toBeVisible();
+    await expect(
+      page.locator('[data-testid="choose-tree-window-row"]', { hasText: "6: zsh" }),
+    ).toBeVisible();
   });
 
   test("Ctrl-b & kills it cleanly, falling back to a sane active window", async ({ page }) => {
@@ -510,7 +557,9 @@ test.describe("Ctrl-b c new-window", () => {
 
     await ctrlB(page);
     await page.keyboard.press("&");
-    await expect(page.locator('[data-testid="status-confirm"]')).toHaveText("kill-window zsh? (y/n)");
+    await expect(page.locator('[data-testid="status-confirm"]')).toHaveText(
+      "kill-window zsh? (y/n)",
+    );
     await page.keyboard.press("y");
 
     await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
@@ -543,7 +592,9 @@ test.describe("Ctrl-b x kill-pane", () => {
     await page.keyboard.press("x");
     await page.keyboard.press("y");
     await expect(page.locator('[data-testid="status-confirm"]')).not.toBeVisible();
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="profile"]')).toHaveCount(0);
+    await expect(
+      page.locator('[data-testid="status-bar-window"][data-window-id="profile"]'),
+    ).toHaveCount(0);
   });
 });
 
@@ -596,12 +647,12 @@ test.describe("prompt keyboard ownership vs. the prefix system", () => {
     await page.keyboard.type("ZZZ");
     await page.keyboard.press("Enter");
     await expect(prompt).not.toBeVisible();
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="dashboard"]')).toHaveText(
-      "0:dashboardZZZ*",
-    );
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="employment"]')).toHaveText(
-      "2:employment",
-    );
+    await expect(
+      page.locator('[data-testid="status-bar-window"][data-window-id="dashboard"]'),
+    ).toHaveText("0:dashboardZZZ*");
+    await expect(
+      page.locator('[data-testid="status-bar-window"][data-window-id="employment"]'),
+    ).toHaveText("2:employment");
   });
 
   test("Ctrl-b <digit>/,/n are all inert while a kill-window confirm is open; y kills the ORIGINAL window", async ({
@@ -636,7 +687,9 @@ test.describe("prompt keyboard ownership vs. the prefix system", () => {
     // (repositories), never wherever `view` might otherwise have drifted to.
     await page.keyboard.press("y");
     await expect(confirm).not.toBeVisible();
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveCount(0);
+    await expect(
+      page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]'),
+    ).toHaveCount(0);
     await expect(page).toHaveURL(/\/employment$/);
   });
 
@@ -676,7 +729,9 @@ test.describe("grep is window chrome, the status bar is session chrome", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("the status bar is still hit-testable at its own center while grep is open", async ({ page }) => {
+  test("the status bar is still hit-testable at its own center while grep is open", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
     await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
@@ -719,10 +774,12 @@ test.describe("grep is window chrome, the status bar is session chrome", () => {
   });
 });
 
-test.describe("mobile block (README \"Mobile policy\")", () => {
+test.describe('mobile block (README "Mobile policy")', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
-  test("card is visible with the spec copy and escape-hatch link; terminal is hidden", async ({ page }) => {
+  test("card is visible with the spec copy and escape-hatch link; terminal is hidden", async ({
+    page,
+  }) => {
     await page.goto("/");
     await expect(page.locator('[data-testid="mobile-block"]')).toBeVisible();
 
@@ -755,7 +812,9 @@ test.describe("mobile block (README \"Mobile policy\")", () => {
   });
 
   // A separate assertion from "pressing a key does nothing" above — structurally guaranteed the same way (no keydown listener attaches outside desktop+fine-pointer, see Terminal.svelte's `desktopMode` effect) but called out explicitly since Ctrl-b arms state, not just a view switch, proving that state machine never gets a chance to run.
-  test("Ctrl-b does nothing on a mobile-blocked viewport (the prefix never arms)", async ({ page }) => {
+  test("Ctrl-b does nothing on a mobile-blocked viewport (the prefix never arms)", async ({
+    page,
+  }) => {
     await page.goto("/");
     await expect(page.locator('[data-testid="mobile-block"]')).toBeVisible();
 
@@ -765,7 +824,9 @@ test.describe("mobile block (README \"Mobile policy\")", () => {
     await expect(page.locator('[data-terminal-ready="false"]')).toBeAttached();
   });
 
-  test("clock/meter timers never start (status-bar clock text stays empty across faked time)", async ({ page }) => {
+  test("clock/meter timers never start (status-bar clock text stays empty across faked time)", async ({
+    page,
+  }) => {
     await page.clock.install({ time: "2026-08-15T23:34:00" });
     await page.goto("/");
     await page.clock.runFor(65_000); // would advance a live clock a full minute

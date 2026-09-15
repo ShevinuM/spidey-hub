@@ -126,7 +126,9 @@ function sortedTruth(now: { y: number; m: number }) {
 }
 
 test.describe("Employment: flat list renders from the real collection", () => {
-  test("exactly one row per org/role position, newest-first, matching the real frontmatter", async ({ page }) => {
+  test("exactly one row per org/role position, newest-first, matching the real frontmatter", async ({
+    page,
+  }) => {
     await openEmployment(page);
     const truth = readTruth();
     await expect(rows(page)).toHaveCount(truth.length);
@@ -143,7 +145,9 @@ test.describe("Employment: flat list renders from the real collection", () => {
     expect(await rowNames(page)).toEqual(expected);
   });
 
-  test("each row shows a 2-3 char org tag, `.rw-r--r--`, and a byte size — no drill-down chrome left", async ({ page }) => {
+  test("each row shows a 2-3 char org tag, `.rw-r--r--`, and a byte size — no drill-down chrome left", async ({
+    page,
+  }) => {
     await openEmployment(page);
     const first = rows(page).first();
     await expect(first).toContainText(".rw-r--r--");
@@ -153,7 +157,9 @@ test.describe("Employment: flat list renders from the real collection", () => {
     expect(orgTag).toBeTruthy();
   });
 
-  test("no filter bar, hint bar, up-row, or prompt remnants from the old drill-down browser", async ({ page }) => {
+  test("no filter bar, hint bar, up-row, or prompt remnants from the old drill-down browser", async ({
+    page,
+  }) => {
     await openEmployment(page);
     for (const testid of [
       "employment-filter-row",
@@ -180,18 +186,26 @@ test.describe("Employment: index block, derived from real content", () => {
     const yearsEnd = Math.max(...truth.map((t) => t.end.y));
 
     await expect(page.locator('[data-testid="employment-index-orgs"]')).toHaveText(String(orgs));
-    await expect(page.locator('[data-testid="employment-index-longest"]')).toHaveText(`${longest} mo`);
-    await expect(page.locator('[data-testid="employment-index-years"]')).toHaveText(`${yearsStart} – ${yearsEnd}`);
+    await expect(page.locator('[data-testid="employment-index-longest"]')).toHaveText(
+      `${longest} mo`,
+    );
+    await expect(page.locator('[data-testid="employment-index-years"]')).toHaveText(
+      `${yearsStart} – ${yearsEnd}`,
+    );
   });
 
   test("breadcrumb reads ~/employment-records", async ({ page }) => {
     await openEmployment(page);
-    await expect(page.locator('[data-testid="employment-breadcrumb"]')).toHaveText("~/employment-records");
+    await expect(page.locator('[data-testid="employment-breadcrumb"]')).toHaveText(
+      "~/employment-records",
+    );
   });
 });
 
 test.describe("Employment: badges", () => {
-  test("both panels show a top-straddling split-text PanelBadge, not the old bottom label", async ({ page }) => {
+  test("both panels show a top-straddling split-text PanelBadge, not the old bottom label", async ({
+    page,
+  }) => {
     await openEmployment(page);
     const badges = page.locator('[data-testid="panel-badge"]');
     await expect(badges).toHaveCount(2);
@@ -200,7 +214,11 @@ test.describe("Employment: badges", () => {
     await expect(badges.nth(1)).toContainText("File");
     await expect(badges.nth(1)).toContainText("Preview");
     const box = await badges.first().boundingBox();
-    const panelBox = await page.locator('[data-testid="employment-row"]').first().locator("xpath=../..").boundingBox();
+    const panelBox = await page
+      .locator('[data-testid="employment-row"]')
+      .first()
+      .locator("xpath=../..")
+      .boundingBox();
     expect(box).toBeTruthy();
     expect(panelBox).toBeTruthy();
     if (box && panelBox) expect(box.y).toBeLessThan(panelBox.y + panelBox.height / 2);
@@ -208,7 +226,9 @@ test.describe("Employment: badges", () => {
 });
 
 test.describe("Employment: selection — j/k/arrows sync preview and timeline live", () => {
-  test("j/ArrowDown moves the cursor, wraps at the end; k/ArrowUp moves back, wraps at the start", async ({ page }) => {
+  test("j/ArrowDown moves the cursor, wraps at the end; k/ArrowUp moves back, wraps at the start", async ({
+    page,
+  }) => {
     await openEmployment(page);
     const truth = sortedTruth({ y: 2026, m: 8 });
     const n = truth.length;
@@ -245,7 +265,9 @@ test.describe("Employment: selection — j/k/arrows sync preview and timeline li
     await expect(page.locator('[data-testid="employment-preview-path"]')).toContainText(targetName);
   });
 
-  test("the timeline node at the selected row's position renders the larger 'selected' dot size", async ({ page }) => {
+  test("the timeline node at the selected row's position renders the larger 'selected' dot size", async ({
+    page,
+  }) => {
     await openEmployment(page);
     const nodes = page.locator('[data-testid="employment-timeline-node"]');
     await expect(nodes).toHaveCount((await sortedTruth({ y: 2026, m: 8 })).length);
@@ -281,22 +303,28 @@ test.describe("Employment: selection — j/k/arrows sync preview and timeline li
     await page.keyboard.press("Enter");
     await expect(page.locator('[data-testid="editor-scroller"]')).toHaveCount(0);
     await expect(rows(page).nth(1)).toContainText("›");
-    await expect(page.locator('[data-testid="employment-preview-path"]')).toHaveText(pathBefore ?? "");
+    await expect(page.locator('[data-testid="employment-preview-path"]')).toHaveText(
+      pathBefore ?? "",
+    );
     // Still on the employment window — closing the editor never navigated to
     // the dashboard or anywhere else.
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="employment"]')).toHaveText(
-      "2:employment*",
-    );
+    await expect(
+      page.locator('[data-testid="status-bar-window"][data-window-id="employment"]'),
+    ).toHaveText("2:employment*");
   });
 });
 
 test.describe("Employment: preview body", () => {
-  test("the preview panel renders the selected role's real markdown body, colorized", async ({ page }) => {
+  test("the preview panel renders the selected role's real markdown body, colorized", async ({
+    page,
+  }) => {
     await openEmployment(page);
     const truth = sortedTruth({ y: 2026, m: 8 })[0];
     const raw = readFileSync(join(PERSONNEL_DIR, truth.org, truth.roleSlug, "role.md"), "utf8");
     const bodyFirstLine = raw.split("---").slice(2).join("---").trim().split("\n")[0];
-    await expect(page.locator('[data-testid="employment-doc-line"]').first()).toContainText(bodyFirstLine.replace(/^#\s*/, ""));
+    await expect(page.locator('[data-testid="employment-doc-line"]').first()).toContainText(
+      bodyFirstLine.replace(/^#\s*/, ""),
+    );
   });
 });
 
@@ -304,16 +332,20 @@ test.describe("Employment: corner sigils", () => {
   test("all four corner sigil glyphs render", async ({ page }) => {
     await openEmployment(page);
     for (const color of ["red", "blue", "teal", "gold"]) {
-      await expect(page.locator(`img[src="/assets/spider-glyph-${color}.svg"]`).first()).toBeVisible();
+      await expect(
+        page.locator(`img[src="/assets/spider-glyph-${color}.svg"]`).first(),
+      ).toBeVisible();
     }
   });
 });
 
 test.describe("Employment: window switching still works via Ctrl-b", () => {
-  test("Ctrl-b 2 opens Employment Records from the dashboard; status bar shows 2:employment*", async ({ page }) => {
+  test("Ctrl-b 2 opens Employment Records from the dashboard; status bar shows 2:employment*", async ({
+    page,
+  }) => {
     await openEmployment(page);
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="employment"]')).toHaveText(
-      "2:employment*",
-    );
+    await expect(
+      page.locator('[data-testid="status-bar-window"][data-window-id="employment"]'),
+    ).toHaveText("2:employment*");
   });
 });

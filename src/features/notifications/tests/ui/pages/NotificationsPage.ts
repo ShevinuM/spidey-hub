@@ -10,7 +10,10 @@ export class NotificationsPage {
 
   async openHarness() {
     await this.page.goto("/harness/notifications");
-    await expect(this.page.getByTestId("notifications-harness-ready")).toHaveAttribute("data-ready", "true");
+    await expect(this.page.getByTestId("notifications-harness-ready")).toHaveAttribute(
+      "data-ready",
+      "true",
+    );
   }
 
   get bell() {

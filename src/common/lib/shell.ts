@@ -152,11 +152,18 @@ export function renderTree(entries: FsEntry[], segments: string[], maxDepth = 3)
 
 export type CdResult = { ok: true; cwd: string[] } | { ok: false; error: string };
 
-export function resolveCd(entries: FsEntry[], cwd: string[], argPath: string | undefined, errors: ShellData["errors"]): CdResult {
+export function resolveCd(
+  entries: FsEntry[],
+  cwd: string[],
+  argPath: string | undefined,
+  errors: ShellData["errors"],
+): CdResult {
   const target = argPath ? resolveSegments(cwd, argPath) : [];
   const kind = kindOf(entries, target);
-  if (kind === "missing") return { ok: false, error: errors.cdNoSuchDirTemplate.replace("{path}", argPath ?? "") };
-  if (kind === "file") return { ok: false, error: errors.cdNotADirTemplate.replace("{path}", argPath ?? "") };
+  if (kind === "missing")
+    return { ok: false, error: errors.cdNoSuchDirTemplate.replace("{path}", argPath ?? "") };
+  if (kind === "file")
+    return { ok: false, error: errors.cdNotADirTemplate.replace("{path}", argPath ?? "") };
   return { ok: true, cwd: target };
 }
 
@@ -196,7 +203,12 @@ export function historyUp(state: ShellState): ShellState {
   if (state.history.length === 0) return state;
   if (state.historyIndex === null) {
     const idx = state.history.length - 1;
-    return { ...state, historyIndex: idx, draftBeforeHistory: state.input, input: state.history[idx] };
+    return {
+      ...state,
+      historyIndex: idx,
+      draftBeforeHistory: state.input,
+      input: state.history[idx],
+    };
   }
   const idx = Math.max(0, state.historyIndex - 1);
   return { ...state, historyIndex: idx, input: state.history[idx] };
@@ -307,7 +319,10 @@ function pickMostRecentUnattached(sessions: SessionRosterEntry[]): SessionRoster
 
 /** Builds the detached HOST shell's pre-seeded scrollback from shell.yaml's `host.narrative` rows, substituting each row's `{session}` placeholder. */
 export function seedHostNarrative(shell: ShellData, sessionName: string): ShellLine[] {
-  return shell.host.narrative.map((row) => ({ text: row.text.replace("{session}", sessionName), kind: row.kind }));
+  return shell.host.narrative.map((row) => ({
+    text: row.text.replace("{session}", sessionName),
+    kind: row.kind,
+  }));
 }
 
 function formatUptime(shell: ShellData, fromMs: number, toMs: number): string {
@@ -323,10 +338,16 @@ function formatUptime(shell: ShellData, fromMs: number, toMs: number): string {
 export function runCommand(state: ShellState, rawLine: string, ctx: RunContext): RunOutcome {
   const trimmedForHistory = rawLine.trim();
   if (trimmedForHistory === "") {
-    return { state: { ...state, input: "", historyIndex: null, draftBeforeHistory: "" }, effect: { kind: "none" } };
+    return {
+      state: { ...state, input: "", historyIndex: null, draftBeforeHistory: "" },
+      effect: { kind: "none" },
+    };
   }
 
-  const echoed: ShellLine = { text: formatPrompt(ctx.mode, ctx.shell, state.cwd) + rawLine, kind: "input" };
+  const echoed: ShellLine = {
+    text: formatPrompt(ctx.mode, ctx.shell, state.cwd) + rawLine,
+    kind: "input",
+  };
   const base: ShellState = {
     ...state,
     history: [...state.history, trimmedForHistory],
@@ -360,17 +381,22 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
       if (kind === "file") {
         return out([outLine(target[target.length - 1] ?? "")]);
       }
-      const rows = listDir(ctx.fsEntries, target).map((e) => e.name + (e.type === "dir" ? "/" : ""));
+      const rows = listDir(ctx.fsEntries, target).map(
+        (e) => e.name + (e.type === "dir" ? "/" : ""),
+      );
       return out(rows.map(outLine));
     }
 
     case "cat": {
       if (!args[0]) return out([errLine(ctx.shell.errors.catMissingArgMessage)]);
       const target = resolveCatTarget(ctx.fsEntries, base.cwd, args[0]);
-      if (target.kind === "missing") return out([errLine(ctx.shell.errors.catNoSuchFileTemplate.replace("{path}", args[0]))]);
-      if (target.kind === "dir") return out([errLine(ctx.shell.errors.catIsADirTemplate.replace("{path}", args[0]))]);
+      if (target.kind === "missing")
+        return out([errLine(ctx.shell.errors.catNoSuchFileTemplate.replace("{path}", args[0]))]);
+      if (target.kind === "dir")
+        return out([errLine(ctx.shell.errors.catIsADirTemplate.replace("{path}", args[0]))]);
       const content = ctx.resolveContent(target);
-      if (content === undefined) return out([errLine(ctx.shell.errors.catUnindexedTemplate.replace("{path}", args[0]))]);
+      if (content === undefined)
+        return out([errLine(ctx.shell.errors.catUnindexedTemplate.replace("{path}", args[0]))]);
       return out(content.split("\n").map(outLine));
     }
 
@@ -380,10 +406,13 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
     case "nvim": {
       if (!args[0]) return out([errLine(ctx.shell.errors.vimMissingArgMessage)]);
       const target = resolveCatTarget(ctx.fsEntries, base.cwd, args[0]);
-      if (target.kind === "missing") return out([errLine(ctx.shell.errors.vimNoSuchFileTemplate.replace("{path}", args[0]))]);
-      if (target.kind === "dir") return out([errLine(ctx.shell.errors.vimIsADirTemplate.replace("{path}", args[0]))]);
+      if (target.kind === "missing")
+        return out([errLine(ctx.shell.errors.vimNoSuchFileTemplate.replace("{path}", args[0]))]);
+      if (target.kind === "dir")
+        return out([errLine(ctx.shell.errors.vimIsADirTemplate.replace("{path}", args[0]))]);
       const content = ctx.resolveContent(target);
-      if (content === undefined) return out([errLine(ctx.shell.errors.catUnindexedTemplate.replace("{path}", args[0]))]);
+      if (content === undefined)
+        return out([errLine(ctx.shell.errors.catUnindexedTemplate.replace("{path}", args[0]))]);
       const path = joinPath(resolveSegments(base.cwd, args[0]));
       return { state: base, effect: { kind: "open-editor", path, content } };
     }
@@ -403,14 +432,19 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
       return out([outLine(ctx.shell.whoami)]);
 
     case "help":
-      return out([outLine(ctx.shell.help.intro), ...ctx.shell.help.rows.map((r) => outLine(`  ${r.cmd} — ${r.description}`))]);
+      return out([
+        outLine(ctx.shell.help.intro),
+        ...ctx.shell.help.rows.map((r) => outLine(`  ${r.cmd} — ${r.description}`)),
+      ]);
 
     case "view-names":
       return out([outLine(`${ctx.shell.viewNames.label} ${ctx.viewNames.join(" ")}`)]);
 
     case "neofetch": {
       const fields = ctx.shell.neofetch.fields.map((f) => outLine(`${f.label}: ${f.value}`));
-      const uptime = outLine(`${ctx.shell.neofetch.uptimeLabel}: ${formatUptime(ctx.shell, ctx.session.createdAt, ctx.nowMs)}`);
+      const uptime = outLine(
+        `${ctx.shell.neofetch.uptimeLabel}: ${formatUptime(ctx.shell, ctx.session.createdAt, ctx.nowMs)}`,
+      );
       return out([...ctx.shell.neofetch.art.map(outLine), ...fields, uptime]);
     }
 
@@ -428,7 +462,8 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
 
     // HOST mode only; a pane shell has nothing to attach (it's already attached), so this falls through to command-not-found.
     case "edith": {
-      if (ctx.mode !== "host") return out([errLine(ctx.shell.errors.commandNotFoundTemplate.replace("{cmd}", cmd))]);
+      if (ctx.mode !== "host")
+        return out([errLine(ctx.shell.errors.commandNotFoundTemplate.replace("{cmd}", cmd))]);
       return attachViewOutcome(base, ctx, "dashboard");
     }
 
@@ -466,7 +501,9 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
           }
           return { state: base, effect: { kind: "create-and-attach", name } };
         }
-        return out([errLine(ctx.shell.errors.tmuxUnknownSubcommandTemplate.replace("{cmd}", "new"))]);
+        return out([
+          errLine(ctx.shell.errors.tmuxUnknownSubcommandTemplate.replace("{cmd}", "new")),
+        ]);
       }
       if (sub === "a" || sub === "attach") {
         if (ctx.mode === "pane") return out([errLine(ctx.shell.errors.nestedTmuxMessage)]);
@@ -478,12 +515,15 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
         if (args[1] === "-t" && args[2]) {
           const name = args[2];
           const found = ctx.sessions.find((s) => s.name === name);
-          if (!found) return out([errLine(ctx.shell.tmux.cantFindSessionTemplate.replace("{name}", name))]);
+          if (!found)
+            return out([errLine(ctx.shell.tmux.cantFindSessionTemplate.replace("{name}", name))]);
           return { state: base, effect: { kind: "attach", sessionId: found.id } };
         }
         return out([errLine(ctx.shell.errors.tmuxUnknownSubcommandTemplate.replace("{cmd}", sub))]);
       }
-      return out([errLine(ctx.shell.errors.tmuxUnknownSubcommandTemplate.replace("{cmd}", sub ?? ""))]);
+      return out([
+        errLine(ctx.shell.errors.tmuxUnknownSubcommandTemplate.replace("{cmd}", sub ?? "")),
+      ]);
     }
 
     default:
@@ -506,11 +546,27 @@ export function runCommand(state: ShellState, rawLine: string, ctx: RunContext):
       return {
         state: {
           ...state,
-          lines: [...state.lines, errLine(runCtx.shell.tmux.cantFindSessionTemplate.replace("{name}", runCtx.defaultSessionName))],
+          lines: [
+            ...state.lines,
+            errLine(
+              runCtx.shell.tmux.cantFindSessionTemplate.replace(
+                "{name}",
+                runCtx.defaultSessionName,
+              ),
+            ),
+          ],
         },
         effect: { kind: "none" },
       };
     }
-    return { state, effect: { kind: "attach-view", sessionId: found.id, view, windowExists: found.windowIds.includes(view) } };
+    return {
+      state,
+      effect: {
+        kind: "attach-view",
+        sessionId: found.id,
+        view,
+        windowExists: found.windowIds.includes(view),
+      },
+    };
   }
 }

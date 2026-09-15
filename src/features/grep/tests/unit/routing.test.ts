@@ -5,7 +5,9 @@ import { join } from "node:path";
 import { grepPathToView } from "../../lib/routing";
 
 const ROOT = join(import.meta.dirname, "../../../../..");
-const realIndex = JSON.parse(readFileSync(join(ROOT, "public/generated/grep-index.json"), "utf8")) as {
+const realIndex = JSON.parse(
+  readFileSync(join(ROOT, "public/generated/grep-index.json"), "utf8"),
+) as {
   path: string;
 }[];
 
@@ -21,14 +23,19 @@ function expectedView(path: string): "employment" | "repositories" | "retina-v" 
 }
 
 test("every path in the real grep index routes exactly as hand-audited (no false positives)", () => {
-  expect(realIndex.length > 0, "real grep index must be non-empty (run `pnpm generate` first)").toBeTruthy();
+  expect(
+    realIndex.length > 0,
+    "real grep index must be non-empty (run `pnpm generate` first)",
+  ).toBeTruthy();
 
   const mismatches: string[] = [];
   for (const { path } of realIndex) {
     const expected = expectedView(path);
     const actual = grepPathToView(path);
     if (actual !== expected) {
-      mismatches.push(`${path}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+      mismatches.push(
+        `${path}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`,
+      );
     }
   }
   expect(mismatches).toEqual([]);
@@ -36,10 +43,15 @@ test("every path in the real grep index routes exactly as hand-audited (no false
 
 test("routed paths are exactly the personnel content dir, the repositories content dir, and the 4 named components", () => {
   const routed = realIndex.filter(({ path }) => grepPathToView(path) !== null).map((f) => f.path);
-  const expectedRouted = realIndex.filter(({ path }) => expectedView(path) !== null).map((f) => f.path);
+  const expectedRouted = realIndex
+    .filter(({ path }) => expectedView(path) !== null)
+    .map((f) => f.path);
   expect([...routed].sort()).toEqual([...expectedRouted].sort());
   // Sanity: this isn't a vacuous "always null" pass — there ARE routed paths.
-  expect(routed.length >= 8, `expected at least 8 routed real paths, got ${routed.length}`).toBeTruthy();
+  expect(
+    routed.length >= 8,
+    `expected at least 8 routed real paths, got ${routed.length}`,
+  ).toBeTruthy();
 });
 
 test("a hypothetical future real path containing the legacy bare words does NOT mis-route", () => {
@@ -53,11 +65,13 @@ test("a hypothetical future real path containing the legacy bare words does NOT 
 
 test("variable-depth personnel content paths (path-derived tree) route to employment", () => {
   // grepPathToView's real-index rule is a depth-agnostic prefix match (`(^|\/)content\/personnel\/`), so this locks in the variable-depth personnel tree (2-5 path segments) explicitly.
-  expect(grepPathToView("src/features/employment/content/personnel/enaimco/software-developer/role.md")).toBe(
-    "employment",
-  );
   expect(
-    grepPathToView("src/features/employment/content/personnel/enaimco/software-developer/full-time/role.md"),
+    grepPathToView("src/features/employment/content/personnel/enaimco/software-developer/role.md"),
+  ).toBe("employment");
+  expect(
+    grepPathToView(
+      "src/features/employment/content/personnel/enaimco/software-developer/full-time/role.md",
+    ),
   ).toBe("employment");
   expect(
     grepPathToView(

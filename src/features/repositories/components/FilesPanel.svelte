@@ -33,7 +33,9 @@
         {state.filesSubtitle}
       </div>
     {/if}
-    <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px">
+    <div
+      style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px"
+    >
       {#if !state.repoTree}
         <div style="color:rgba(196,216,232,.5)">{repositories.repoBrowser.emptyText}</div>
       {:else if state.workingTreeStatus === "loading"}
@@ -57,20 +59,29 @@
               state.activateEntry(entry, { openEditor: false });
             }}
             onkeydown={(e) => {
-              if (e.key === "Enter" || e.key === " ") state.activateEntry(entry, { openEditor: true });
+              if (e.key === "Enter" || e.key === " ")
+                state.activateEntry(entry, { openEditor: true });
             }}
             style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 4px 1px {4 +
-              entry.depth * 14}px;border-radius:2px;border-left:2px solid {i === state.repoTree.selectedIdx
+              entry.depth * 14}px;border-radius:2px;border-left:2px solid {i ===
+            state.repoTree.selectedIdx
               ? '#4a9fe0'
               : 'transparent'};{i === state.repoTree.selectedIdx
               ? 'background:linear-gradient(90deg,rgba(74,159,224,.22),rgba(74,159,224,.03));color:#f4ece9'
               : 'color:rgba(196,216,232,.7)'}"
           >
             {#if entry.type === "dir"}
-              <span class="repositories-caret" data-testid="repositories-tree-caret" aria-hidden="true"
-                >{entry.expanded ? "▾" : "▸"}</span
+              <span
+                class="repositories-caret"
+                data-testid="repositories-tree-caret"
+                aria-hidden="true">{entry.expanded ? "▾" : "▸"}</span
               >
-              <span class="repositories-icon" data-testid="repositories-tree-icon" style="color:#5fc6b4" aria-hidden="true">
+              <span
+                class="repositories-icon"
+                data-testid="repositories-tree-icon"
+                style="color:#5fc6b4"
+                aria-hidden="true"
+              >
                 <svg width="12" height="12" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"
                   ><path
                     d="M1.5 3.5a1 1 0 0 1 1-1h3.379a1 1 0 0 1 .707.293L7.914 4.12a1 1 0 0 0 .707.293H13.5a1 1 0 0 1 1 1v7.086a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V3.5Z"

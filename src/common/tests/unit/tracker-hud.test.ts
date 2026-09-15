@@ -11,7 +11,9 @@ interface TrackerYaml {
 }
 
 function realTracker(): TrackerYaml {
-  return YAML.parse(readFileSync(join(ROOT, "src/common/content/tracker.yaml"), "utf8")) as TrackerYaml;
+  return YAML.parse(
+    readFileSync(join(ROOT, "src/common/content/tracker.yaml"), "utf8"),
+  ) as TrackerYaml;
 }
 
 test("every hud.left line is exactly 37 code points wide (box alignment survives the retina-v rename)", () => {

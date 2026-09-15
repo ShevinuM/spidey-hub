@@ -6,7 +6,9 @@ import { extraRecipes, iteration3Recipes } from "../../../../../common/tests/ui/
 import { captureState } from "../../../../../common/tests/ui/support/pipeline.mjs";
 
 const HELP_OWNED_RECIPE_NAMES = new Set(["11-help", "20-help-search"]);
-const keyRecipes = [...extraRecipes, ...iteration3Recipes].filter((recipe) => HELP_OWNED_RECIPE_NAMES.has(recipe.name));
+const keyRecipes = [...extraRecipes, ...iteration3Recipes].filter((recipe) =>
+  HELP_OWNED_RECIPE_NAMES.has(recipe.name),
+);
 
 test.describe("visual (help): implementation vs goldens", () => {
   test.beforeEach(async ({ page }) => {

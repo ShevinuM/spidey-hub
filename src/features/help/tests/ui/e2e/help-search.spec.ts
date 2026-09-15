@@ -15,7 +15,9 @@ interface CmdlineYaml {
 }
 
 function loadCommands(): CmdlineCommandDef[] {
-  const doc = YAML.parse(readFileSync(join(ROOT, "src/common/content/cmdline.yaml"), "utf8")) as CmdlineYaml;
+  const doc = YAML.parse(
+    readFileSync(join(ROOT, "src/common/content/cmdline.yaml"), "utf8"),
+  ) as CmdlineYaml;
   return doc.commands;
 }
 
@@ -58,7 +60,9 @@ test.describe("HelpSearch: opening", () => {
     await expect(page).toHaveURL(/\/$/);
   });
 
-  test("a status-bar window switch closes the palette (window-chrome contract)", async ({ page }) => {
+  test("a status-bar window switch closes the palette (window-chrome contract)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("?");
     await expect(overlay(page)).toBeVisible();
@@ -67,7 +71,9 @@ test.describe("HelpSearch: opening", () => {
     await expect(page).toHaveURL(/\/repositories$/);
   });
 
-  test("clicking the status-bar ↻ reboot control closes the palette (window-chrome contract)", async ({ page }) => {
+  test("clicking the status-bar ↻ reboot control closes the palette (window-chrome contract)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("?");
     await expect(overlay(page)).toBeVisible();
@@ -90,9 +96,15 @@ test.describe("HelpSearch: gating — does NOT open in these contexts", () => {
     // The default-highlighted panel [1] repo is the virtual "all-projects"
     // entry (no README.md in its flat .md-only tree) — click transcript-tts's
     // own row directly, which both selects it and loads its tree.
-    await page.locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]').click();
-    await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')).toBeVisible();
-    await page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]').click();
+    await page
+      .locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]')
+      .click();
+    await expect(
+      page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]'),
+    ).toBeVisible();
+    await page
+      .locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')
+      .click();
     await page.keyboard.press("2");
     await page.keyboard.press("Enter");
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
@@ -134,7 +146,9 @@ test.describe("HelpSearch: gating — does NOT open in these contexts", () => {
     await expect(page.locator('[data-testid="status-prompt"]')).toBeVisible();
   });
 
-  test("? still types inside the already-open palette itself (it's a text input, not a toggle)", async ({ page }) => {
+  test("? still types inside the already-open palette itself (it's a text input, not a toggle)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("?");
     await expect(overlay(page)).toBeVisible();
@@ -172,7 +186,9 @@ test.describe("HelpSearch: empty-query listing + fuzzy filtering", () => {
     const commands = loadCommands();
     await expect(results(page)).toHaveCount(commands.length);
     for (const c of commands) {
-      await expect(page.locator(`[data-testid="help-search-result"][data-label="${c.name}"]`)).toBeVisible();
+      await expect(
+        page.locator(`[data-testid="help-search-result"][data-label="${c.name}"]`),
+      ).toBeVisible();
     }
     await expect(page.locator('[data-testid="help-search-result"][data-label="q"]')).toHaveCount(1);
   });
@@ -186,10 +202,14 @@ test.describe("HelpSearch: empty-query listing + fuzzy filtering", () => {
     // an unrelated command (e.g. "profile") no longer appears.
     await expect(results(page).first()).toHaveAttribute("data-label", "reboot");
     await expect(results(page).first()).toHaveAttribute("data-kind", "command");
-    await expect(page.locator('[data-testid="help-search-result"][data-label="profile"]')).toHaveCount(0);
+    await expect(
+      page.locator('[data-testid="help-search-result"][data-label="profile"]'),
+    ).toHaveCount(0);
   });
 
-  test('fuzzy canary: "kil" surfaces both the kill-window and kill-pane keymap rows', async ({ page }) => {
+  test('fuzzy canary: "kil" surfaces both the kill-window and kill-pane keymap rows', async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("?");
     await page.keyboard.type("kil");
@@ -228,7 +248,9 @@ test.describe("HelpSearch: Enter behavior", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("Enter on a command row (repositories) executes it and closes the palette", async ({ page }) => {
+  test("Enter on a command row (repositories) executes it and closes the palette", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("?");
     await page.keyboard.type("repositories");
@@ -237,7 +259,9 @@ test.describe("HelpSearch: Enter behavior", () => {
     await expect(page).toHaveURL(/\/repositories$/);
   });
 
-  test("Enter on a keymap row no-ops — the palette stays open, nothing navigates", async ({ page }) => {
+  test("Enter on a keymap row no-ops — the palette stays open, nothing navigates", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("?");
     await page.keyboard.type("kil");

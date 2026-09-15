@@ -54,7 +54,9 @@ test.describe("menu navigation", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("clicking each menu row navigates to its view, one at a time from the dashboard", async ({ page }) => {
+  test("clicking each menu row navigates to its view, one at a time from the dashboard", async ({
+    page,
+  }) => {
     for (const item of MENU) {
       await gotoReady(page);
       await page.locator(`[data-testid="dashboard-menu-row"][data-menu-id="${item.id}"]`).click();

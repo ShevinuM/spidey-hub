@@ -36,7 +36,9 @@
   const NON_TRACKER_OPACITY = 0.85;
   const NON_TRACKER_FILTER = "blur(6px) brightness(.55)";
   const wallOpacity = $derived(dim ? 0.14 : view === "retina-v" ? 1 : NON_TRACKER_OPACITY);
-  const wallFilter = $derived(dim ? "brightness(0.35)" : view === "retina-v" ? "none" : NON_TRACKER_FILTER);
+  const wallFilter = $derived(
+    dim ? "brightness(0.35)" : view === "retina-v" ? "none" : NON_TRACKER_FILTER,
+  );
 
   const MAP_W = "min(1100px,92vw)";
   const MAP_H = "min(600px,calc(100vh - 340px))";
@@ -86,7 +88,10 @@
 </script>
 
 <div style="position:absolute;inset:0;pointer-events:none">
-  <div data-testid="wallpaper-layer" style="position:absolute;inset:0;opacity:{wallOpacity};filter:{wallFilter}">
+  <div
+    data-testid="wallpaper-layer"
+    style="position:absolute;inset:0;opacity:{wallOpacity};filter:{wallFilter}"
+  >
     <div
       style="position:absolute;inset:0;background-image:radial-gradient(rgba(196,216,232,.16) 1px,transparent 1px);background-size:26px 26px"
     ></div>
@@ -99,7 +104,8 @@
       </div>
 
       <div
-        style="position:absolute;left:{tracker.map.capital.left}%;top:{tracker.map.capital.top}%;display:flex;align-items:center;gap:6px;color:#ff6b6f;letter-spacing:.06em;white-space:nowrap"
+        style="position:absolute;left:{tracker.map.capital.left}%;top:{tracker.map.capital
+          .top}%;display:flex;align-items:center;gap:6px;color:#ff6b6f;letter-spacing:.06em;white-space:nowrap"
       >
         <span
           style="width:13px;height:13px;background:#ff4a4a;mask:url(/assets/pin-target.svg) center/contain no-repeat;-webkit-mask:url(/assets/pin-target.svg) center/contain no-repeat;display:block"
@@ -117,19 +123,25 @@
       {/each}
 
       {#each tracker.map.mountains as mountain (mountain.label)}
-        <div style="position:absolute;left:{mountain.left}%;top:{mountain.top}%;color:rgba(217,176,74,.8);white-space:nowrap">
+        <div
+          style="position:absolute;left:{mountain.left}%;top:{mountain.top}%;color:rgba(217,176,74,.8);white-space:nowrap"
+        >
           {mountain.label}
         </div>
       {/each}
 
       {#each tracker.map.forests as forest (forest.label)}
-        <div style="position:absolute;left:{forest.left}%;top:{forest.top}%;color:rgba(111,191,127,.8);white-space:nowrap">
+        <div
+          style="position:absolute;left:{forest.left}%;top:{forest.top}%;color:rgba(111,191,127,.8);white-space:nowrap"
+        >
           {forest.label}
         </div>
       {/each}
 
       {#each tracker.map.rivers as river (river.label)}
-        <div style="position:absolute;left:{river.left}%;top:{river.top}%;color:rgba(106,169,221,.8);white-space:nowrap">
+        <div
+          style="position:absolute;left:{river.left}%;top:{river.top}%;color:rgba(106,169,221,.8);white-space:nowrap"
+        >
           {river.label}
         </div>
       {/each}
@@ -148,8 +160,12 @@
       style="position:absolute;left:50%;top:48%;width:1400px;height:1400px;transform:translate(-50%,-50%);border:1px solid rgba(224,69,60,.07);border-radius:50%"
     ></div>
 
-    <div style="position:absolute;left:0;right:0;top:48%;height:1px;background:rgba(224,69,60,.12)"></div>
-    <div style="position:absolute;top:0;bottom:0;left:50%;width:1px;background:rgba(224,69,60,.12)"></div>
+    <div
+      style="position:absolute;left:0;right:0;top:48%;height:1px;background:rgba(224,69,60,.12)"
+    ></div>
+    <div
+      style="position:absolute;top:0;bottom:0;left:50%;width:1px;background:rgba(224,69,60,.12)"
+    ></div>
 
     <div
       style="position:absolute;left:50%;top:48%;width:1400px;height:1400px;margin:-700px 0 0 -700px;border-radius:50%;pointer-events:none;mix-blend-mode:screen;background:conic-gradient(from 90deg,rgba(224,69,60,.28) 0deg,rgba(224,69,60,.16) 6deg,rgba(224,69,60,.075) 22deg,rgba(224,69,60,.028) 48deg,rgba(224,69,60,0) 96deg,rgba(224,69,60,0) 360deg);mask:radial-gradient(circle at 50% 50%,#000 0,#000 12%,rgba(0,0,0,.72) 23%,rgba(0,0,0,.34) 34%,rgba(0,0,0,.14) 46%,rgba(0,0,0,.05) 62%,transparent 82%);-webkit-mask:radial-gradient(circle at 50% 50%,#000 0,#000 12%,rgba(0,0,0,.72) 23%,rgba(0,0,0,.34) 34%,rgba(0,0,0,.14) 46%,rgba(0,0,0,.05) 62%,transparent 82%);animation:swp 9s linear infinite"
@@ -158,7 +174,9 @@
       style="position:absolute;left:50%;top:48%;width:700px;height:1px;transform-origin:0 50%;background:linear-gradient(90deg,rgba(255,150,140,.9),rgba(255,150,140,.55) 14%,rgba(224,69,60,.28) 32%,rgba(224,69,60,.08) 52%,rgba(224,69,60,0) 78%);box-shadow:0 0 6px rgba(224,69,60,.35);animation:swp 9s linear infinite"
     ></div>
 
-    <div style="position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);font-size:15px;color:#e0453c">
+    <div
+      style="position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);font-size:15px;color:#e0453c"
+    >
       {tracker.map.origin.glyph}
     </div>
     <div

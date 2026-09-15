@@ -22,8 +22,13 @@ test("root listing has no duplicate entries and only top-level names", () => {
   const names = root.map((e) => e.name);
   expect(new Set(names).size).toBe(names.length);
   for (const entry of root) {
-    expect(!entry.name.includes("/"), `root entry "${entry.name}" should not contain a slash`).toBeTruthy();
-    expect(entry.path.includes("/"), `root entry path "${entry.path}" should have no slash`).toBe(false);
+    expect(
+      !entry.name.includes("/"),
+      `root entry "${entry.name}" should not contain a slash`,
+    ).toBeTruthy();
+    expect(entry.path.includes("/"), `root entry path "${entry.path}" should have no slash`).toBe(
+      false,
+    );
   }
 });
 
@@ -97,14 +102,14 @@ test("flattenVisible: with an empty collapsed set, every dir is expanded and eve
   const tree = buildTree(fixtureFiles);
   const rows = flattenVisible(tree, new Set());
   expect(rows.map((r) => ({ type: r.type, path: r.path, depth: r.depth }))).toEqual([
-      { type: "dir", path: "src", depth: 0 },
-      { type: "dir", path: "src/lib", depth: 1 },
-      { type: "file", path: "src/lib/a.ts", depth: 2 },
-      { type: "file", path: "src/lib/b.ts", depth: 2 },
-      { type: "file", path: "src/index.ts", depth: 1 },
-      { type: "file", path: "package.json", depth: 0 },
-      { type: "file", path: "README.md", depth: 0 },
-    ]);
+    { type: "dir", path: "src", depth: 0 },
+    { type: "dir", path: "src/lib", depth: 1 },
+    { type: "file", path: "src/lib/a.ts", depth: 2 },
+    { type: "file", path: "src/lib/b.ts", depth: 2 },
+    { type: "file", path: "src/index.ts", depth: 1 },
+    { type: "file", path: "package.json", depth: 0 },
+    { type: "file", path: "README.md", depth: 0 },
+  ]);
   // No row is ever synthesized for "go up a level" — there is no `../` concept
   // in a fully-expanded tree.
   expect(rows.every((r) => r.type === "dir" || r.type === "file")).toBeTruthy();
@@ -121,7 +126,13 @@ test("flattenVisible: collapsing a dir hides its descendants but keeps its own r
 test("flattenVisible: collapsing a nested dir only hides ITS descendants, not its siblings or ancestor's other children", () => {
   const tree = buildTree(fixtureFiles);
   const rows = flattenVisible(tree, new Set(["src/lib"]));
-  expect(rows.map((r) => r.path)).toEqual(["src", "src/lib", "src/index.ts", "package.json", "README.md"]);
+  expect(rows.map((r) => r.path)).toEqual([
+    "src",
+    "src/lib",
+    "src/index.ts",
+    "package.json",
+    "README.md",
+  ]);
   const libRow = rows.find((r) => r.path === "src/lib")!;
   expect(libRow.expanded).toBe(false);
   const srcRow = rows.find((r) => r.path === "src")!;
@@ -131,7 +142,10 @@ test("flattenVisible: collapsing a nested dir only hides ITS descendants, not it
 test("buildTree/flattenVisible round-trip against the real daily-tech-digest index has no lost or duplicated files", () => {
   const tree = buildTree(dailyTechDigest.files);
   const rows = flattenVisible(tree, new Set());
-  const filePaths = rows.filter((r) => r.type === "file").map((r) => r.path).sort();
+  const filePaths = rows
+    .filter((r) => r.type === "file")
+    .map((r) => r.path)
+    .sort();
   const expected = dailyTechDigest.files.map((f) => f.path).sort();
   expect(filePaths).toEqual(expected);
 });

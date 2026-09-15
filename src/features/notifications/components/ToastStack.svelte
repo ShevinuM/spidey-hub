@@ -31,16 +31,33 @@
         style="position:absolute;left:26px;top:-13px;width:1px;height:13px;transform-origin:top;background:linear-gradient(180deg,rgba(255,255,255,0),{meta.color});animation:strand .3s ease both"
       ></span>
       <div style="display:flex;align-items:stretch">
-        <div style="width:26px;display:grid;place-items:center;background:{meta.color};color:#0a0a0a;font:800 11px/1 'JetBrains Mono',monospace">
+        <div
+          style="width:26px;display:grid;place-items:center;background:{meta.color};color:#0a0a0a;font:800 11px/1 'JetBrains Mono',monospace"
+        >
           {meta.glyph}
         </div>
-        <div style="flex:1;min-width:0;padding:8px 9px 8px 10px;display:flex;flex-direction:column;gap:3px">
+        <div
+          style="flex:1;min-width:0;padding:8px 9px 8px 10px;display:flex;flex-direction:column;gap:3px"
+        >
           <div style="display:flex;align-items:center;gap:7px">
-            <span style="font:800 9px/1.4 'JetBrains Mono',monospace;letter-spacing:.14em;color:{meta.color}">{meta.label}</span>
-            <span style="font:400 9px/1.4 'JetBrains Mono',monospace;color:rgba(255,255,255,.3)">{t.src}</span>
+            <span
+              style="font:800 9px/1.4 'JetBrains Mono',monospace;letter-spacing:.14em;color:{meta.color}"
+              >{meta.label}</span
+            >
+            <span style="font:400 9px/1.4 'JetBrains Mono',monospace;color:rgba(255,255,255,.3)"
+              >{t.src}</span
+            >
           </div>
-          <div style="font:700 12px/1.4 'JetBrains Mono',monospace;color:#eef1f3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{t.title}</div>
-          <div style="font:400 10.5px/1.45 'JetBrains Mono',monospace;color:rgba(230,232,234,.5);text-wrap:pretty">{t.body}</div>
+          <div
+            style="font:700 12px/1.4 'JetBrains Mono',monospace;color:#eef1f3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+          >
+            {t.title}
+          </div>
+          <div
+            style="font:400 10.5px/1.45 'JetBrains Mono',monospace;color:rgba(230,232,234,.5);text-wrap:pretty"
+          >
+            {t.body}
+          </div>
         </div>
       </div>
       <div style="height:2px;background:rgba(255,255,255,.06)">

@@ -238,7 +238,9 @@ async function generateBuild(buildKey, { onlyRoute } = {}) {
       const outFile = join(outPath, `${route.name}.dc.html`);
       writeFileSync(outFile, html);
       written.push(outFile);
-      console.log(`[generate-design-mirror] wrote ${outFile} (${(html.length / 1024).toFixed(1)} KB)`);
+      console.log(
+        `[generate-design-mirror] wrote ${outFile} (${(html.length / 1024).toFixed(1)} KB)`,
+      );
       await page.close();
     }
   } finally {

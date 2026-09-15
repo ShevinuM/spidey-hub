@@ -22,7 +22,9 @@ const WINDOW_NAMES: Record<string, string> = {
   help: "help",
 };
 function winText(activeId: string, lastId?: string): string {
-  return WINDOWS.map((id, i) => `${i}:${WINDOW_NAMES[id]}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
+  return WINDOWS.map(
+    (id, i) => `${i}:${WINDOW_NAMES[id]}${id === activeId ? "*" : id === lastId ? "-" : ""}`,
+  ).join(" ");
 }
 
 async function gotoReady(page: Page, path: string) {
@@ -41,7 +43,9 @@ test.describe("view routing on direct navigation", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("each of the six routes SSRs its own distinctive view and status-bar entry", async ({ page }) => {
+  test("each of the six routes SSRs its own distinctive view and status-bar entry", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await expect(page.locator('[data-testid="dashboard-wordmark"]')).toBeVisible();
     expect(await statusBarText(page)).toBe(winText("dashboard"));
@@ -73,7 +77,9 @@ test.describe("tmux prefix: arm, digit dispatch, single-shot disarm", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("Ctrl-b <digit> jumps every window in the table, in order, from the dashboard", async ({ page }) => {
+  test("Ctrl-b <digit> jumps every window in the table, in order, from the dashboard", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     let prev = "dashboard";
     for (const [digit, id] of [
@@ -159,7 +165,9 @@ test.describe("dispatch order: an open overlay claims a key before the global ba
   // handleKey() runs ahead of the bare-`r`-reboots-from-anywhere backstop
   // (see Terminal.svelte's handleKey ordering comment), so `r` typed while
   // the overlay is open types into the query instead of rebooting.
-  test("typing r while the grep overlay is open types into the query, and does not reboot", async ({ page }) => {
+  test("typing r while the grep overlay is open types into the query, and does not reboot", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
     await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
@@ -197,9 +205,9 @@ test.describe("status bar active-window highlight", () => {
   });
 
   async function bg(page: Page, id: string) {
-    return page.locator(`[data-testid="status-bar-window"][data-window-id="${id}"]`).evaluate(
-      (el) => getComputedStyle(el).backgroundColor,
-    );
+    return page
+      .locator(`[data-testid="status-bar-window"][data-window-id="${id}"]`)
+      .evaluate((el) => getComputedStyle(el).backgroundColor);
   }
 
   test("only the active window's span carries the red highlight background; it moves on switch", async ({

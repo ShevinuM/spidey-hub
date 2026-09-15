@@ -44,7 +44,9 @@ async function freshBoot(page: Page, path = "/") {
   await page.clock.install({ time: CLOCK_TIME });
   await page.goto(path);
   await terminalReady(page);
-  await page.locator('[data-testid="boot-sequence"][data-boot-running="true"]').waitFor({ state: "attached" });
+  await page
+    .locator('[data-testid="boot-sequence"][data-boot-running="true"]')
+    .waitFor({ state: "attached" });
 }
 
 /** Pre-seeds the boot-seen flag (as a real completed boot would have) so
@@ -65,7 +67,9 @@ async function skipToReady(page: Page, path = "/") {
 }
 
 test.describe("fresh boot", () => {
-  test("boot overlay is visible immediately and the dashboard is not interactive yet", async ({ page }) => {
+  test("boot overlay is visible immediately and the dashboard is not interactive yet", async ({
+    page,
+  }) => {
     await freshBoot(page);
     await expect(page.locator(BOOT_SEQUENCE)).toBeVisible();
 
@@ -84,7 +88,9 @@ test.describe("fresh boot", () => {
     await expect(page.locator(BOOT_SEQUENCE)).toBeVisible();
   });
 
-  test("pct and phase track elapsed time against src/features/boot/lib/boot.ts's own formula", async ({ page }) => {
+  test("pct and phase track elapsed time against src/features/boot/lib/boot.ts's own formula", async ({
+    page,
+  }) => {
     // Deliberately no `page.clock` here, unlike every other test in this
     // file: Playwright's fake clock resumes ticking in real time after any
     // control call, so reading an intermediate (still-ticking) value needs
@@ -100,7 +106,9 @@ test.describe("fresh boot", () => {
     // consistent DOM snapshot so the three values are never read at
     // different instants relative to each other.
     const observed = await page.evaluate(() => ({
-      elapsed: Number(document.querySelector('[data-testid="boot-sequence"]')?.getAttribute("data-elapsed")),
+      elapsed: Number(
+        document.querySelector('[data-testid="boot-sequence"]')?.getAttribute("data-elapsed"),
+      ),
       pctText: document.querySelector('[data-testid="boot-pct"]')?.textContent ?? null,
       phaseText: document.querySelector('[data-testid="boot-phase"]')?.textContent ?? null,
     }));
@@ -129,7 +137,9 @@ test.describe("fresh boot", () => {
     await expect(page.locator(BOOT_PHASE)).toHaveText("READY");
   });
 
-  test("outro bloom fires after the boot duration, then hands off to the dashboard", async ({ page }) => {
+  test("outro bloom fires after the boot duration, then hands off to the dashboard", async ({
+    page,
+  }) => {
     await freshBoot(page);
 
     // Just past the hard-stop: phase is "out" — the outro bloom is visible
@@ -177,7 +187,9 @@ test.describe("session-once skip", () => {
 });
 
 test.describe("replay", () => {
-  test("r on the ready dashboard replays boot, independent of the session flag", async ({ page }) => {
+  test("r on the ready dashboard replays boot, independent of the session flag", async ({
+    page,
+  }) => {
     await skipToReady(page);
     await expect(page.locator(BOOT_SEQUENCE)).toHaveCount(0);
 
@@ -194,7 +206,9 @@ test.describe("replay", () => {
     await expect(page.locator(BOOT_SEQUENCE)).toHaveCount(0);
   });
 
-  test("r in a non-dashboard view does not reboot — Profile's own r still downloads the resume", async ({ page }) => {
+  test("r in a non-dashboard view does not reboot — Profile's own r still downloads the resume", async ({
+    page,
+  }) => {
     await skipToReady(page);
     await page.keyboard.down("Control");
     await page.keyboard.press("b");
@@ -213,7 +227,9 @@ test.describe("replay", () => {
     await page.keyboard.press("r");
 
     await expect(page.locator(BOOT_SEQUENCE)).toHaveCount(0);
-    const opened = await page.evaluate(() => (window as unknown as { __opened: unknown[] }).__opened);
+    const opened = await page.evaluate(
+      () => (window as unknown as { __opened: unknown[] }).__opened,
+    );
     expect(opened).toEqual([{ url: "/assets/resume.pdf", target: "_blank" }]);
   });
 

@@ -155,7 +155,9 @@
   }
 
   const statusBoxText = $derived(
-    [boot.statusBox.top, ...boot.statusBox.rows.map(statusRowText), boot.statusBox.bottom].join("\n"),
+    [boot.statusBox.top, ...boot.statusBox.rows.map(statusRowText), boot.statusBox.bottom].join(
+      "\n",
+    ),
   );
 </script>
 
@@ -223,31 +225,51 @@
         style="position:absolute;inset:0;margin:auto;width:100%;height:100%;border-radius:50%;border:1px solid rgba(224,69,60,.34);pointer-events:none;animation:bWave 3.6s cubic-bezier(.15,.6,.3,1) 2.7s infinite"
       ></div>
 
-      <div style="position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(224,69,60,.1)"></div>
-      <div style="position:absolute;top:0;bottom:0;left:50%;width:1px;background:rgba(224,69,60,.1)"></div>
+      <div
+        style="position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(224,69,60,.1)"
+      ></div>
+      <div
+        style="position:absolute;top:0;bottom:0;left:50%;width:1px;background:rgba(224,69,60,.1)"
+      ></div>
 
-      <div style="position:absolute;left:50%;top:-2px;transform:translate(-50%,-100%);font-size:9px;color:rgba(224,69,60,.7)">
+      <div
+        style="position:absolute;left:50%;top:-2px;transform:translate(-50%,-100%);font-size:9px;color:rgba(224,69,60,.7)"
+      >
         {boot.compass.top}
       </div>
-      <div style="position:absolute;left:50%;bottom:-2px;transform:translate(-50%,100%);font-size:9px;color:rgba(224,69,60,.7)">
+      <div
+        style="position:absolute;left:50%;bottom:-2px;transform:translate(-50%,100%);font-size:9px;color:rgba(224,69,60,.7)"
+      >
         {boot.compass.bottom}
       </div>
-      <div style="position:absolute;top:50%;left:-4px;transform:translate(-100%,-50%);font-size:9px;color:rgba(224,69,60,.5)">
+      <div
+        style="position:absolute;top:50%;left:-4px;transform:translate(-100%,-50%);font-size:9px;color:rgba(224,69,60,.5)"
+      >
         {boot.compass.left}
       </div>
-      <div style="position:absolute;top:50%;right:-4px;transform:translate(100%,-50%);font-size:9px;color:rgba(224,69,60,.5)">
+      <div
+        style="position:absolute;top:50%;right:-4px;transform:translate(100%,-50%);font-size:9px;color:rgba(224,69,60,.5)"
+      >
         {boot.compass.right}
       </div>
-      <div style="position:absolute;left:52%;top:3%;font-size:9px;letter-spacing:.16em;color:rgba(196,216,232,.32)">
+      <div
+        style="position:absolute;left:52%;top:3%;font-size:9px;letter-spacing:.16em;color:rgba(196,216,232,.32)"
+      >
         {boot.compass.degrees[0]}
       </div>
-      <div style="position:absolute;right:2%;top:51%;font-size:9px;letter-spacing:.16em;color:rgba(196,216,232,.32)">
+      <div
+        style="position:absolute;right:2%;top:51%;font-size:9px;letter-spacing:.16em;color:rgba(196,216,232,.32)"
+      >
         {boot.compass.degrees[1]}
       </div>
-      <div style="position:absolute;left:52%;bottom:2%;font-size:9px;letter-spacing:.16em;color:rgba(196,216,232,.32)">
+      <div
+        style="position:absolute;left:52%;bottom:2%;font-size:9px;letter-spacing:.16em;color:rgba(196,216,232,.32)"
+      >
         {boot.compass.degrees[2]}
       </div>
-      <div style="position:absolute;left:2%;top:51%;font-size:9px;letter-spacing:.16em;color:rgba(196,216,232,.32)">
+      <div
+        style="position:absolute;left:2%;top:51%;font-size:9px;letter-spacing:.16em;color:rgba(196,216,232,.32)"
+      >
         {boot.compass.degrees[3]}
       </div>
 
@@ -285,7 +307,9 @@
       <div
         style="position:absolute;inset:0;margin:auto;width:30%;height:30%;border-radius:50%;border:1px solid {tint.border};background:radial-gradient(circle at 50% 40%,{tint.glowStart},{tint.glowEnd} 74%);box-shadow:inset 0 0 34px {tint.shadowInset},0 0 26px {tint.shadowOuter};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;animation:bIn .9s ease-out .58s both"
       >
-        <div style="white-space:nowrap;font-size:clamp(8px,1.9cqw,13px);letter-spacing:.2em;color:{tint.labelColor}">
+        <div
+          style="white-space:nowrap;font-size:clamp(8px,1.9cqw,13px);letter-spacing:.2em;color:{tint.labelColor}"
+        >
           {boot.coreLabel}
         </div>
         <div
@@ -319,7 +343,10 @@
         ></span>
       </div>
       <div style="font-size:12px;white-space:nowrap;color:rgba(196,216,232,.45)">
-        {boot.handshake.label}<span data-testid="boot-handshake" style="display:inline-block;min-width:126px">{handshake}</span>
+        {boot.handshake.label}<span
+          data-testid="boot-handshake"
+          style="display:inline-block;min-width:126px">{handshake}</span
+        >
       </div>
     </div>
 
@@ -334,16 +361,22 @@
         <div
           style="flex:none;width:min(430px,34vw);height:126px;box-sizing:border-box;background:rgba(9,13,18,.78);border:1px solid rgba(224,69,60,.22);border-radius:4px;padding:8px 12px;display:flex;flex-direction:column;gap:3px;font-size:12px;animation:bIn .6s ease-out .3s both"
         >
-          <div style="flex:none;color:rgba(224,69,60,.75);letter-spacing:.1em">{boot.bootLogTitle}</div>
+          <div style="flex:none;color:rgba(224,69,60,.75);letter-spacing:.1em">
+            {boot.bootLogTitle}
+          </div>
           <div
             data-testid="boot-log"
             style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:3px"
           >
             {#each rows as row, i (i)}
-              <div data-testid="boot-log-row" style="display:flex;align-items:baseline;gap:7px;white-space:nowrap">
+              <div
+                data-testid="boot-log-row"
+                style="display:flex;align-items:baseline;gap:7px;white-space:nowrap"
+              >
                 <span style="flex:none;font-weight:700;color:{row.tagColor}">{row.tag}</span>
                 <span style="color:rgba(196,216,232,.72)">{row.label}</span>
-                <span style="flex:1;min-width:12px;border-bottom:1px dotted rgba(196,216,232,.22);transform:translateY(-3px)"
+                <span
+                  style="flex:1;min-width:12px;border-bottom:1px dotted rgba(196,216,232,.22);transform:translateY(-3px)"
                 ></span>
                 <span style="flex:none;color:{row.valColor}">{row.val}</span>
               </div>

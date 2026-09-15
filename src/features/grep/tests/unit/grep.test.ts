@@ -4,7 +4,9 @@ import { join } from "node:path";
 import { search, totalLines, formatCount, type RepoFile } from "../../lib/grep";
 
 const ROOT = join(import.meta.dirname, "../../../../..");
-const grepIndex = JSON.parse(readFileSync(join(ROOT, "src/features/grep/tests/ui/support/grep-index.json"), "utf8")) as RepoFile[];
+const grepIndex = JSON.parse(
+  readFileSync(join(ROOT, "src/features/grep/tests/ui/support/grep-index.json"), "utf8"),
+) as RepoFile[];
 
 test("empty query returns one row per file, sized to the real fixture index (24 files)", () => {
   expect(grepIndex.length).toBe(24);

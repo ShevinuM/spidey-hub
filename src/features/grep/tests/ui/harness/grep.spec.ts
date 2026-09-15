@@ -93,7 +93,9 @@ test.describe("Grep harness: mounts standalone with seeded fixture props", () =>
     await expect(grep.overlay).toHaveCount(0);
   });
 
-  test("no Terminal kernel chrome mounts alongside it (no status bar, no window switching)", async ({ page }) => {
+  test("no Terminal kernel chrome mounts alongside it (no status bar, no window switching)", async ({
+    page,
+  }) => {
     const grep = new GrepPage(page);
     await grep.openHarness();
 

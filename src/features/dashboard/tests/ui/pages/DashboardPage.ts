@@ -12,7 +12,10 @@ export class DashboardPage {
   /** Navigates to the harness route and waits for DashboardHarness.svelte's hydration flag, not a content locator (see that flag's own comment for why). */
   async openHarness() {
     await this.page.goto("/harness/dashboard");
-    await expect(this.page.getByTestId("dashboard-harness-ready")).toHaveAttribute("data-ready", "true");
+    await expect(this.page.getByTestId("dashboard-harness-ready")).toHaveAttribute(
+      "data-ready",
+      "true",
+    );
   }
 
   get wordmark() {

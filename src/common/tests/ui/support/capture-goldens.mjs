@@ -49,7 +49,7 @@ async function main() {
         "golden is produced.",
         "",
         "To re-baseline for real (the normal path), see",
-        "docs/testing/visual/running-tests.md's \"Rebaselining\" section:",
+        'docs/testing/visual/running-tests.md\'s "Rebaselining" section:',
         "  pnpm build:fixtures && playwright test --project=<feature>-visual-1512x945 --project=<feature>-visual-1920x1080 --update-snapshots",
         "",
         "If you specifically intend to restore prototype parity (rare —",

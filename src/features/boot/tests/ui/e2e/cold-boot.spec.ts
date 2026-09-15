@@ -46,7 +46,9 @@ test.describe("cold boot: unread bell + senseRing ring", () => {
   // notifications-boot.spec.ts uses) — a fresh visit always injects 2
   // unseen entries, so the bell is unread regardless of which 2 land.
   for (let i = 1; i <= 3; i++) {
-    test(`run ${i}: bell shows unread and its ring is a live animation once boot clears`, async ({ page }) => {
+    test(`run ${i}: bell shows unread and its ring is a live animation once boot clears`, async ({
+      page,
+    }) => {
       await coldBootToReady(page);
 
       const bell = page.locator(BELL);

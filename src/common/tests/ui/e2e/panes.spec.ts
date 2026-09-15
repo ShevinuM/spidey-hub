@@ -17,10 +17,11 @@ async function prefixed(page: Page, key: string) {
 }
 
 const panes = (page: Page) => page.locator('[data-testid="pane-leaf"]');
-const focusedPane = (page: Page) => page.locator('[data-testid="pane-leaf"][data-pane-focused="true"]');
+const focusedPane = (page: Page) =>
+  page.locator('[data-testid="pane-leaf"][data-pane-focused="true"]');
 const statusConfirm = (page: Page) => page.locator('[data-testid="status-confirm"]');
 
-test.describe("splits (Ctrl-b | / % / - / \")", () => {
+test.describe('splits (Ctrl-b | / % / - / ")', () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
@@ -58,7 +59,9 @@ test.describe("splits (Ctrl-b | / % / - / \")", () => {
     expect(Math.abs(top.width - bottom.width)).toBeLessThan(3);
   });
 
-  test("| then - produces 3 panes: one full-height pane on the left, two stacked on the right", async ({ page }) => {
+  test("| then - produces 3 panes: one full-height pane on the left, two stacked on the right", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await prefixed(page, "|");
     await prefixed(page, "-");
@@ -79,7 +82,7 @@ test.describe("splits (Ctrl-b | / % / - / \")", () => {
     expect(left.height).toBeGreaterThan(topRight.height + bottomRight.height - 6);
   });
 
-  test("% and \" are stock aliases for | and -", async ({ page }) => {
+  test('% and " are stock aliases for | and -', async ({ page }) => {
     await gotoReady(page, "/");
     await prefixed(page, "%");
     await expect(panes(page)).toHaveCount(2);
@@ -181,7 +184,9 @@ test.describe("Ctrl-b x real kill-pane", () => {
     await expect(panes(page)).toHaveCount(1);
   });
 
-  test("ANY key other than lowercase y cancels the confirm (uppercase Y does NOT confirm here)", async ({ page }) => {
+  test("ANY key other than lowercase y cancels the confirm (uppercase Y does NOT confirm here)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await prefixed(page, "|");
     await prefixed(page, "x");
@@ -200,11 +205,15 @@ test.describe("Ctrl-b x real kill-pane", () => {
     await prefixed(page, "x");
     await expect(statusConfirm(page)).toHaveText("kill-pane 0? (y/n)");
     await page.keyboard.press("y");
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveCount(0);
+    await expect(
+      page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]'),
+    ).toHaveCount(0);
     await expect(page).toHaveURL(/\/employment$/);
   });
 
-  test("killing the last pane of the last window cascades all the way to [exited]", async ({ page }) => {
+  test("killing the last pane of the last window cascades all the way to [exited]", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     for (let i = 0; i < 5; i++) {
       await prefixed(page, "&");
@@ -218,7 +227,9 @@ test.describe("Ctrl-b x real kill-pane", () => {
     await expect(page.locator('[data-testid="shell-line"]').last()).toHaveText("[exited]");
   });
 
-  test("kill-pane tmux command (Ctrl-b :) kills the focused pane with NO confirm", async ({ page }) => {
+  test("kill-pane tmux command (Ctrl-b :) kills the focused pane with NO confirm", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await prefixed(page, "|");
     await expect(panes(page)).toHaveCount(2);
@@ -249,7 +260,11 @@ test.describe("layouts: Ctrl-b Space cycles the 7 presets", () => {
 
     // even-horizontal: 3 columns, all roughly the same width, full height.
     await prefixed(page, " ");
-    let boxes = await Promise.all([panes(page).nth(0).boundingBox(), panes(page).nth(1).boundingBox(), panes(page).nth(2).boundingBox()]);
+    let boxes = await Promise.all([
+      panes(page).nth(0).boundingBox(),
+      panes(page).nth(1).boundingBox(),
+      panes(page).nth(2).boundingBox(),
+    ]);
     if (boxes.some((b) => !b)) throw new Error("not laid out");
     let [a, b, c] = boxes as { x: number; y: number; width: number; height: number }[];
     expect(Math.abs(a.y - b.y)).toBeLessThan(3);
@@ -259,7 +274,11 @@ test.describe("layouts: Ctrl-b Space cycles the 7 presets", () => {
 
     // even-vertical: 3 rows, all roughly the same height, full width.
     await prefixed(page, " ");
-    boxes = await Promise.all([panes(page).nth(0).boundingBox(), panes(page).nth(1).boundingBox(), panes(page).nth(2).boundingBox()]);
+    boxes = await Promise.all([
+      panes(page).nth(0).boundingBox(),
+      panes(page).nth(1).boundingBox(),
+      panes(page).nth(2).boundingBox(),
+    ]);
     [a, b, c] = boxes as { x: number; y: number; width: number; height: number }[];
     expect(Math.abs(a.x - b.x)).toBeLessThan(3);
     expect(Math.abs(b.x - c.x)).toBeLessThan(3);
@@ -311,13 +330,19 @@ test.describe("layouts: Ctrl-b Space cycles the 7 presets", () => {
 
     // Wraps back to even-horizontal (3 equal columns again).
     await prefixed(page, " ");
-    boxes = await Promise.all([panes(page).nth(0).boundingBox(), panes(page).nth(1).boundingBox(), panes(page).nth(2).boundingBox()]);
+    boxes = await Promise.all([
+      panes(page).nth(0).boundingBox(),
+      panes(page).nth(1).boundingBox(),
+      panes(page).nth(2).boundingBox(),
+    ]);
     [a, b, c] = boxes as { x: number; y: number; width: number; height: number }[];
     expect(Math.abs(a.y - b.y)).toBeLessThan(3);
     expect(Math.abs(a.x + a.width - b.x)).toBeLessThan(3);
   });
 
-  test("select-layout <name> applies a named preset from the Ctrl-b : command prompt", async ({ page }) => {
+  test("select-layout <name> applies a named preset from the Ctrl-b : command prompt", async ({
+    page,
+  }) => {
     await makeThreePanes(page);
     await prefixed(page, ":");
     await page.keyboard.type("select-layout main-vertical");
@@ -339,9 +364,7 @@ test.describe("layouts: Ctrl-b Space cycles the 7 presets", () => {
     await prefixed(page, ":");
     await page.keyboard.type("select-layout");
     await page.keyboard.press("Enter");
-    const boxes = await Promise.all(
-      [0, 1, 2, 3].map((i) => panes(page).nth(i).boundingBox()),
-    );
+    const boxes = await Promise.all([0, 1, 2, 3].map((i) => panes(page).nth(i).boundingBox()));
     if (boxes.some((b) => !b)) throw new Error("not laid out");
     const [r0, r1, r2, r3] = boxes as { x: number; width: number }[];
     expect(Math.abs(r0.x - r1.x)).toBeLessThan(3);
@@ -356,7 +379,9 @@ test.describe("layouts: Ctrl-b Space cycles the 7 presets", () => {
     await prefixed(page, ":");
     await page.keyboard.type("select-layout bogus-layout");
     await page.keyboard.press("Enter");
-    await expect(page.locator('[data-testid="cmdline-error"]')).toHaveText("unknown layout: bogus-layout");
+    await expect(page.locator('[data-testid="cmdline-error"]')).toHaveText(
+      "unknown layout: bogus-layout",
+    );
     await page.keyboard.press("Escape");
 
     // Bare `select-layout` on a window that never had a layout applied is a true no-op (tmux.ts's reapplyLastLayout returns early) — the box closes cleanly via Cmdline.svelte's close-on-undefined contract, and the window stays exactly as it was.

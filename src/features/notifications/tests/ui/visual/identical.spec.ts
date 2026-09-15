@@ -6,7 +6,9 @@ import { notificationsRecipes } from "../../../../../common/tests/ui/support/rec
 import { captureState } from "../../../../../common/tests/ui/support/pipeline.mjs";
 
 const NOTIFICATIONS_OWNED_RECIPE_NAMES = new Set(["21-notifications-panel-open"]);
-const keyRecipes = notificationsRecipes.filter((recipe) => NOTIFICATIONS_OWNED_RECIPE_NAMES.has(recipe.name));
+const keyRecipes = notificationsRecipes.filter((recipe) =>
+  NOTIFICATIONS_OWNED_RECIPE_NAMES.has(recipe.name),
+);
 
 test.describe("visual (notifications): signal-inbox panel vs goldens", () => {
   test.beforeEach(async ({ page }) => {

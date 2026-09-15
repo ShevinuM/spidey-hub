@@ -124,12 +124,16 @@
     data-testid="grep-overlay"
     style="position:fixed;left:0;top:0;right:0;bottom:{STATUS_BAR_HEIGHT_PX}px;z-index:40;background:rgba(6,9,13,.5);backdrop-filter:blur(2.5px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:4vh 3vw"
   >
-    <div style="width:min(1480px,96vw);height:min(760px,80vh);display:flex;gap:12px;font-size:13px;line-height:1.62">
+    <div
+      style="width:min(1480px,96vw);height:min(760px,80vh);display:flex;gap:12px;font-size:13px;line-height:1.62"
+    >
       <QueryListPanel {grep} {state} onPickRow={pickRow} />
       <PreviewPanel {state} />
     </div>
 
-    <div style="width:min(1480px,96vw);display:flex;justify-content:space-between;font-size:12px;color:rgba(196,216,232,.45)">
+    <div
+      style="width:min(1480px,96vw);display:flex;justify-content:space-between;font-size:12px;color:rgba(196,216,232,.45)"
+    >
       <span>{grep.footer.hintsLeft}</span>
       <span
         role="button"

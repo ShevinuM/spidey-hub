@@ -32,7 +32,9 @@ const WINDOW_NAMES: Record<string, string> = {
  * session's PREVIOUSLY active window —
  * omit it for assertions made before any in-test window switch. */
 function winText(activeId: string, lastId?: string): string {
-  return WINDOWS.map((id, i) => `${i}:${WINDOW_NAMES[id]}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
+  return WINDOWS.map(
+    (id, i) => `${i}:${WINDOW_NAMES[id]}${id === activeId ? "*" : id === lastId ? "-" : ""}`,
+  ).join(" ");
 }
 
 async function gotoReady(page: Page, path: string) {
@@ -62,7 +64,9 @@ test.describe("Profile: resume hotkey + CV link", () => {
       }) as typeof window.open;
     });
     await page.keyboard.press("r");
-    const opened = await page.evaluate(() => (window as unknown as { __opened: unknown[] }).__opened);
+    const opened = await page.evaluate(
+      () => (window as unknown as { __opened: unknown[] }).__opened,
+    );
     expect(opened).toEqual([{ url: "/assets/resume.pdf", target: "_blank" }]);
   });
 
@@ -77,7 +81,9 @@ test.describe("Profile: resume hotkey + CV link", () => {
 test.describe("Profile: contact rows", () => {
   // Contact data taken from the resume, verbatim — no phone number is
   // published on the site.
-  test("github/linkedin/mail hrefs are exact (resume values); discord is not a link", async ({ page }) => {
+  test("github/linkedin/mail hrefs are exact (resume values); discord is not a link", async ({
+    page,
+  }) => {
     await openProfile(page);
     const links = page.locator('[data-testid="profile-contact-link"]');
     await expect(links).toHaveCount(3);
@@ -146,15 +152,20 @@ test.describe("Profile: live meter (SIGNAL row)", () => {
     expect(background).toContain("repeating-linear-gradient");
 
     const readout = page.locator('[data-testid="signal-net-readout"]');
-    await expect(readout).toHaveText(/^(measuring…|offline|\d+(\.\d)? Mb\/s · \d+ ms · [A-Z0-9-]+)$/, {
-      timeout: 10000,
-    });
+    await expect(readout).toHaveText(
+      /^(measuring…|offline|\d+(\.\d)? Mb\/s · \d+ ms · [A-Z0-9-]+)$/,
+      {
+        timeout: 10000,
+      },
+    );
   });
 
-  test("goes offline: readout eventually reads exactly \"offline\"", async ({ page, context }) => {
+  test('goes offline: readout eventually reads exactly "offline"', async ({ page, context }) => {
     await openProfile(page);
     await context.setOffline(true);
-    await expect(page.locator('[data-testid="signal-net-readout"]')).toHaveText("offline", { timeout: 10000 });
+    await expect(page.locator('[data-testid="signal-net-readout"]')).toHaveText("offline", {
+      timeout: 10000,
+    });
     await context.setOffline(false);
   });
 });
@@ -169,7 +180,9 @@ test.describe("Profile: summary section removed", () => {
 });
 
 test.describe("Profile: DOSSIER panel", () => {
-  test("renders the content collection's real bio, from src/content/profile (not hardcoded)", async ({ page }) => {
+  test("renders the content collection's real bio, from src/content/profile (not hardcoded)", async ({
+    page,
+  }) => {
     await openProfile(page);
     const dossier = page.locator('[data-testid="profile-dossier"]');
     await expect(dossier).toBeVisible();

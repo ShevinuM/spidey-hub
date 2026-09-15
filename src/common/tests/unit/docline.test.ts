@@ -38,7 +38,9 @@ for (const doc of expected.docs) {
     const lines = bodyLines(raw);
     const mode = doc.kind === "project" ? "project" : "personnel";
     const kinds = classifyDoc(lines, mode);
-    expect(lines.length, "line count must match the prototype doc array length").toBe(doc.kinds.length);
+    expect(lines.length, "line count must match the prototype doc array length").toBe(
+      doc.kinds.length,
+    );
     expect(kinds).toEqual(doc.kinds);
   });
 }

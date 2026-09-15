@@ -12,7 +12,13 @@ import {
   viewIdToProgram,
   windowIdToView,
 } from "../common/lib/views";
-import type { Client, ProgramName, Session, LayoutName, PaneDirection } from "../common/engines/tmux/tmux";
+import type {
+  Client,
+  ProgramName,
+  Session,
+  LayoutName,
+  PaneDirection,
+} from "../common/engines/tmux/tmux";
 import {
   activeSessionOf,
   activeWindowOf,
@@ -214,7 +220,11 @@ export class TerminalState {
    * hardcoded number.
    *
    * 0 while detached (no session owns any panes then). */
-  totalPaneCount = $derived(this.activeSession ? this.activeSession.windows.reduce((sum, w) => sum + allPanes(w.root).length, 0) : 0);
+  totalPaneCount = $derived(
+    this.activeSession
+      ? this.activeSession.windows.reduce((sum, w) => sum + allPanes(w.root).length, 0)
+      : 0,
+  );
 
   /** StatusBar's real tmux `-` flag — the session's previously-active window.
    *
@@ -243,7 +253,11 @@ export class TerminalState {
    *
    * Empty while detached (StatusBar isn't even mounted then — see
    * the template). */
-  statusWindows = $derived(this.activeSession ? this.activeSession.windows.map((w) => ({ number: w.number, id: w.id, name: w.name })) : []);
+  statusWindows = $derived(
+    this.activeSession
+      ? this.activeSession.windows.map((w) => ({ number: w.number, id: w.id, name: w.name }))
+      : [],
+  );
 
   /** Window id (a `ProgramName`) -> its live tmux window number — the
    * dashboard menu's hotkey column reads this so it always shows the real
@@ -267,7 +281,12 @@ export class TerminalState {
   shellSession = $derived.by(() => {
     const s = this.activeSession;
     if (!s) return { name: "", windowCount: 0, createdAt: resolvePageEpoch(), attached: false };
-    return { name: s.name, windowCount: s.windows.length, createdAt: s.createdAt, attached: this.client.attachedSessionId === s.id };
+    return {
+      name: s.name,
+      windowCount: s.windows.length,
+      createdAt: s.createdAt,
+      attached: this.client.attachedSessionId === s.id,
+    };
   });
 
   /** Every session the client
@@ -279,17 +298,15 @@ export class TerminalState {
    * Threaded to BOTH pane-mode Shell instances (via PaneTree) and
    * the host-mode one below — `tmux ls` works everywhere. */
   sessionsRoster = $derived.by(() =>
-    this.client.sessions.map(
-      (s): SessionRosterEntry => ({
-        id: s.id,
-        name: s.name,
-        windowCount: s.windows.length,
-        createdAt: s.createdAt,
-        attached: this.client.attachedSessionId === s.id,
-        lastAttachedSeq: s.lastAttachedSeq,
-        windowIds: s.windows.map((w) => w.id),
-      }),
-    ),
+    this.client.sessions.map((s): SessionRosterEntry => ({
+      id: s.id,
+      name: s.name,
+      windowCount: s.windows.length,
+      createdAt: s.createdAt,
+      attached: this.client.attachedSessionId === s.id,
+      lastAttachedSeq: s.lastAttachedSeq,
+      windowIds: s.windows.map((w) => w.id),
+    })),
   );
 
   /** The detached HOST shell's own `session` prop (neofetch's uptime
@@ -486,7 +503,10 @@ export class TerminalState {
    * this is the one place Terminal.svelte writes into a shell buffer
    * directly. */
   appendHostLine(text: string, kind: ShellLineKind = "output"): void {
-    this.client.hostPane.shell = { ...this.client.hostPane.shell, lines: [...this.client.hostPane.shell.lines, { text, kind }] };
+    this.client.hostPane.shell = {
+      ...this.client.hostPane.shell,
+      lines: [...this.client.hostPane.shell.lines, { text, kind }],
+    };
   }
 
   /** Ctrl-b & — routed through tmux.ts's `killWindowCascade` instead of the
@@ -572,12 +592,17 @@ export class TerminalState {
 
   startRenamePrompt(): void {
     const id = this.activeWindow!.id;
-    this.getStatusBarRef()?.startRename(this.currentWindowName(), (name) => this.renameWindowById(id, name));
+    this.getStatusBarRef()?.startRename(this.currentWindowName(), (name) =>
+      this.renameWindowById(id, name),
+    );
   }
 
   startKillWindowConfirm(): void {
     const id = this.activeWindow!.id;
-    const text = this.site.statusBar.prompts.killWindowTemplate.replace("{name}", this.currentWindowName());
+    const text = this.site.statusBar.prompts.killWindowTemplate.replace(
+      "{name}",
+      this.currentWindowName(),
+    );
     this.getStatusBarRef()?.startConfirm(text, () => this.killWindowById(id));
   }
 
@@ -628,7 +653,11 @@ export class TerminalState {
    * anyway (staying on whatever window that session is already on) and
    * surfaces a transient status-bar message for a window that's since
    * been killed. */
-  onHostAttachView = async (sessionId: string, view: string, windowExists: boolean): Promise<void> => {
+  onHostAttachView = async (
+    sessionId: string,
+    view: string,
+    windowExists: boolean,
+  ): Promise<void> => {
     const session = this.client.sessions.find((s) => s.id === sessionId);
     if (!session) return; // defensive — shell.ts already checked this session exists
     attachSession(this.client, sessionId);
@@ -645,7 +674,9 @@ export class TerminalState {
       // shown, so it actually lands on the StatusBar that just mounted
       // rather than silently no-op'ing through the `?.`.
       await tick();
-      this.getStatusBarRef()?.showMessage(this.shell.host.windowGoneTemplate.replace("{view}", view).replace("{name}", session.name));
+      this.getStatusBarRef()?.showMessage(
+        this.shell.host.windowGoneTemplate.replace("{view}", view).replace("{name}", session.name),
+      );
     }
     this.syncUrl();
   };
@@ -949,7 +980,8 @@ export class TerminalState {
         return undefined;
       }
       const target = this.prefixTargets[String(parsed.index)];
-      if (!target) return this.cmdlineData.errors.noSuchWindowTemplate.replace("{arg}", String(parsed.index));
+      if (!target)
+        return this.cmdlineData.errors.noSuchWindowTemplate.replace("{arg}", String(parsed.index));
       this.switchToWindowById(target);
       return undefined;
     }
@@ -961,7 +993,9 @@ export class TerminalState {
       return this.cmdlineData.errors.unknownLayoutTemplate.replace("{name}", parsed.name);
     }
     if (parsed.kind === "usage") {
-      return parsed.command === "rename-window" ? this.cmdlineData.errors.usageRenameWindow : this.cmdlineData.errors.usageSelectWindow;
+      return parsed.command === "rename-window"
+        ? this.cmdlineData.errors.usageRenameWindow
+        : this.cmdlineData.errors.usageSelectWindow;
     }
     return this.formatUnknownCommand(trimmed);
   }

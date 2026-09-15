@@ -164,12 +164,16 @@ test("comparePos", () => {
 
 test("extractCharRange: single line is an inclusive slice", () => {
   const lines = ["hello world"];
-  expect(extractCharRange(lines, { startLine: 1, startCol: 0, endLine: 1, endCol: 4 })).toBe("hello");
+  expect(extractCharRange(lines, { startLine: 1, startCol: 0, endLine: 1, endCol: 4 })).toBe(
+    "hello",
+  );
 });
 
 test("extractCharRange: multi-line joins with newlines, first/last lines partial", () => {
   const lines = ["one two", "middle", "three four"];
-  expect(extractCharRange(lines, { startLine: 1, startCol: 4, endLine: 3, endCol: 4 })).toBe("two\nmiddle\nthree");
+  expect(extractCharRange(lines, { startLine: 1, startCol: 4, endLine: 3, endCol: 4 })).toBe(
+    "two\nmiddle\nthree",
+  );
 });
 
 test("extractLineRange: whole lines joined with a trailing newline (linewise yank)", () => {

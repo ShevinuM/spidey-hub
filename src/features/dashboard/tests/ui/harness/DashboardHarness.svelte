@@ -30,5 +30,11 @@
   });
 </script>
 
-<Dashboard {dashboard} isFocused={true} windowNumbers={WINDOW_NUMBERS} paneCount={6} onSelect={() => {}} />
+<Dashboard
+  {dashboard}
+  isFocused={true}
+  windowNumbers={WINDOW_NUMBERS}
+  paneCount={6}
+  onSelect={() => {}}
+/>
 <div data-testid="dashboard-harness-ready" data-ready={ready}></div>

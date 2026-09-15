@@ -55,7 +55,9 @@
   $effect(() => {
     if (!open) return;
     void cursor; // tracked dependency — re-run on every cursor move
-    overlayEl?.querySelector<HTMLElement>('[data-testid="copy-mode-cursor"]')?.scrollIntoView({ block: "nearest" });
+    overlayEl
+      ?.querySelector<HTMLElement>('[data-testid="copy-mode-cursor"]')
+      ?.scrollIntoView({ block: "nearest" });
   });
 
   /** Ctrl-b [ — captures the active pane's rendered text as lines; an
@@ -106,7 +108,10 @@
   export function handleKey(e: KeyboardEvent): boolean {
     if (!open) return false;
 
-    if (e.key === "Escape" || (e.key.toLowerCase() === "q" && !e.metaKey && !e.ctrlKey && !e.altKey)) {
+    if (
+      e.key === "Escape" ||
+      (e.key.toLowerCase() === "q" && !e.metaKey && !e.ctrlKey && !e.altKey)
+    ) {
       close();
       return true;
     }
@@ -197,7 +202,9 @@
     segments: { text: string; cls: string }[];
   }
 
-  const selRange = $derived(mode === "visual" && anchor ? normalizeCharRange(anchor, cursor) : null);
+  const selRange = $derived(
+    mode === "visual" && anchor ? normalizeCharRange(anchor, cursor) : null,
+  );
 
   const renderLines = $derived.by((): RenderLine[] =>
     lines.map((text, i): RenderLine => {
@@ -262,16 +269,23 @@
       >
         {copyMode.titlePrefix}<span style="color:#5fc6b4">{copyMode.titleTilde}</span>
       </div>
-      <div bind:this={overlayEl} data-testid="copy-mode-lines" style="flex:1;min-height:0;overflow-y:auto;padding:6px 10px">
+      <div
+        bind:this={overlayEl}
+        data-testid="copy-mode-lines"
+        style="flex:1;min-height:0;overflow-y:auto;padding:6px 10px"
+      >
         {#if lines.length === 1 && lines[0] === ""}
           <div style="color:rgba(196,216,232,.5)">{copyMode.emptyText}</div>
         {:else}
           {#each renderLines as l (l.n)}
             <div data-copy-mode-line={l.n} style="display:flex;gap:14px;white-space:pre">
-              <span style="flex:none;width:34px;text-align:right;color:rgba(224,69,60,.4)">{l.n}</span>
+              <span style="flex:none;width:34px;text-align:right;color:rgba(224,69,60,.4)"
+                >{l.n}</span
+              >
               <span style="color:rgba(196,216,232,.75)"
-                >{#each l.segments as seg}<span style={segStyle(seg.cls)} data-testid={segTestId(seg.cls)}
-                    >{seg.text}</span
+                >{#each l.segments as seg}<span
+                    style={segStyle(seg.cls)}
+                    data-testid={segTestId(seg.cls)}>{seg.text}</span
                   >{/each}</span
               >
             </div>

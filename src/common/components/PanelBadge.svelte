@@ -47,7 +47,15 @@
     variant?: "repositories" | "default";
   }
 
-  const { n, label, left, right, accent = "blue", inline = false, variant = "default" }: Props = $props();
+  const {
+    n,
+    label,
+    left,
+    right,
+    accent = "blue",
+    inline = false,
+    variant = "default",
+  }: Props = $props();
   const isSplit = left !== undefined && right !== undefined;
   const isRepositories = variant === "repositories";
   const wrapperStyle = inline
@@ -62,8 +70,14 @@
     <span
       style="display:flex;align-items:center;gap:8px;border:1px solid rgba(87,226,201,.5);border-radius:3px;background:rgba(5,7,10,.92);box-shadow:0 0 14px rgba(87,226,201,.16);padding:3px 12px;font:600 11.5px 'JetBrains Mono',monospace;letter-spacing:.16em;color:#57e2c9;white-space:nowrap"
     >
-      <img src="/assets/spiderman-teal.svg" alt="" aria-hidden="true" style="width:10px;height:14px;display:block" />
-      {#if n !== undefined}{n} · {/if}{label}
+      <img
+        src="/assets/spiderman-teal.svg"
+        alt=""
+        aria-hidden="true"
+        style="width:10px;height:14px;display:block"
+      />
+      {#if n !== undefined}{n} ·
+      {/if}{label}
     </span>
   {:else}
     <span

@@ -32,7 +32,9 @@ const repoSchema = z.object({
 const repositories = defineCollection({
   loader: glob({
     pattern: "**/*.md",
-    base: useFixtures ? "src/features/repositories/tests/ui/support/repositories" : "src/features/repositories/content/repositories",
+    base: useFixtures
+      ? "src/features/repositories/tests/ui/support/repositories"
+      : "src/features/repositories/content/repositories",
     // Astro's default generateId lowercases the slug, silently turning
     // "SafePass.md" into "safepass" — wrong once the Repositories Files
     // panel renders `${project.id}.md` as the displayed filename; this uses
@@ -49,7 +51,9 @@ const repositories = defineCollection({
 const personnel = defineCollection({
   loader: glob({
     pattern: "**/*.md",
-    base: useFixtures ? "src/features/employment/tests/ui/support/personnel" : "src/features/employment/content/personnel",
+    base: useFixtures
+      ? "src/features/employment/tests/ui/support/personnel"
+      : "src/features/employment/content/personnel",
     // Same rationale as `repositories` above: preserves the on-disk relative
     // path (minus extension) as-is rather than trusting Astro's slugify step.
     generateId: ({ entry }) => entry.replace(/\.md$/, ""),

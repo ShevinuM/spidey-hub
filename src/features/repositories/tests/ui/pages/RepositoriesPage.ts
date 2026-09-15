@@ -12,7 +12,10 @@ export class RepositoriesPage {
   /** Navigates to the harness route and waits for the hydration-ready flag, not a content locator, since the server-rendered markup would otherwise resolve before client-side listeners attach. */
   async openHarness() {
     await this.page.goto("/harness/repositories");
-    await expect(this.page.getByTestId("repositories-harness-ready")).toHaveAttribute("data-ready", "true");
+    await expect(this.page.getByTestId("repositories-harness-ready")).toHaveAttribute(
+      "data-ready",
+      "true",
+    );
   }
 
   get repoRows() {

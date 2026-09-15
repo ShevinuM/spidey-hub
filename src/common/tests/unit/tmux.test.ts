@@ -54,7 +54,11 @@ const SIX_WINDOWS: WindowSeed[] = [
 ];
 
 function freshClient(): Client {
-  return createFactoryClient({ sessionName: "10.42.7.13", windows: SIX_WINDOWS, epoch: 1_723_000_000_000 });
+  return createFactoryClient({
+    sessionName: "10.42.7.13",
+    windows: SIX_WINDOWS,
+    epoch: 1_723_000_000_000,
+  });
 }
 
 function freshSession(): Session {
@@ -80,7 +84,14 @@ test("createFactoryClient repositories one session with six windows in seed orde
   const session = activeSessionOf(client)!;
   expect(session.name).toBe("10.42.7.13");
   expect(session.windows.length).toBe(6);
-  expect(session.windows.map((w) => w.id)).toEqual(["dashboard", "repositories", "employment", "retina-v", "profile", "help"]);
+  expect(session.windows.map((w) => w.id)).toEqual([
+    "dashboard",
+    "repositories",
+    "employment",
+    "retina-v",
+    "profile",
+    "help",
+  ]);
   expect(session.activeWindowIdx).toBe(0);
   expect(session.lastWindowIdx).toBe(0);
   expect(session.createdAt).toBe(1_723_000_000_000);
@@ -102,7 +113,9 @@ test("createFactoryClient pane ids are deterministic — a function of (windowId
   const b = freshClient();
   const sessionA = activeSessionOf(a)!;
   const sessionB = activeSessionOf(b)!;
-  expect(sessionA.windows.map((w) => focusedPane(w).id)).toEqual(sessionB.windows.map((w) => focusedPane(w).id));
+  expect(sessionA.windows.map((w) => focusedPane(w).id)).toEqual(
+    sessionB.windows.map((w) => focusedPane(w).id),
+  );
   expect(focusedPane(sessionA.windows[1]).id).toBe("repositories#0");
 });
 
@@ -215,7 +228,13 @@ test("killWindow on the active window falls back to the window that sat right af
   const session = freshSession(); // active: dashboard (idx 0)
   const result = killWindow(session, "dashboard");
   expect(result).toEqual({ ok: true });
-  expect(session.windows.map((w) => w.id)).toEqual(["repositories", "employment", "retina-v", "profile", "help"]);
+  expect(session.windows.map((w) => w.id)).toEqual([
+    "repositories",
+    "employment",
+    "retina-v",
+    "profile",
+    "help",
+  ]);
   expect(session.windows[session.activeWindowIdx].id).toBe("repositories");
 });
 
@@ -246,7 +265,13 @@ test("killWindow on a NON-active window shifts activeWindowIdx/lastWindowIdx dow
   const session = freshSession();
   selectWindowIndex(session, 4); // profile active; lastWindowIdx = 0 (dashboard)
   killWindow(session, "repositories"); // idx 1, before both 4 and 0... only before 4
-  expect(session.windows.map((w) => w.id)).toEqual(["dashboard", "employment", "retina-v", "profile", "help"]);
+  expect(session.windows.map((w) => w.id)).toEqual([
+    "dashboard",
+    "employment",
+    "retina-v",
+    "profile",
+    "help",
+  ]);
   // profile shifted from idx 4 to idx 3; dashboard (lastWindowIdx target) stayed at 0.
   expect(session.windows[session.activeWindowIdx].id).toBe("profile");
   expect(session.activeWindowIdx).toBe(3);
@@ -777,7 +802,11 @@ test("computePaneRects / findDirectionalPane resolve geometrically for a main-ve
 // ---------------------------------------------------------------------
 
 function makeTestPanes(n: number): Pane[] {
-  return Array.from({ length: n }, (_, i) => ({ id: `p${i}`, program: "shell" as const, shell: createShellState() }));
+  return Array.from({ length: n }, (_, i) => ({
+    id: `p${i}`,
+    program: "shell" as const,
+    shell: createShellState(),
+  }));
 }
 
 test("isLayoutName accepts exactly the 7 preset names", () => {
@@ -881,7 +910,8 @@ test("buildLayoutTree: tiled forms a near-even grid for 2/3/4/5 panes", () => {
   expect(t4.type).toBe("split");
   if (t4.type !== "split") throw new Error("unreachable");
   expect(t4.children.length).toBe(2);
-  for (const row of t4.children as { type: "split"; children: unknown[] }[]) expect(row.children.length).toBe(2);
+  for (const row of t4.children as { type: "split"; children: unknown[] }[])
+    expect(row.children.length).toBe(2);
 
   // n=5 -> cols=3,rows=2: row of 3, then a short row of 2.
   const t5 = buildLayoutTree(makeTestPanes(5), "tiled");

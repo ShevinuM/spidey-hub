@@ -37,7 +37,9 @@ for (const route of ROUTES) {
     // slow CI runner shouldn't flake a broad health check.
     await new TerminalPage(page).waitUntilBooted();
 
-    expect(consoleErrors, `console errors on ${route}: ${JSON.stringify(consoleErrors)}`).toEqual([]);
+    expect(consoleErrors, `console errors on ${route}: ${JSON.stringify(consoleErrors)}`).toEqual(
+      [],
+    );
     expect(pageErrors, `page errors on ${route}: ${JSON.stringify(pageErrors)}`).toEqual([]);
   });
 }

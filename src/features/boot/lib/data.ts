@@ -9,12 +9,17 @@ export const buildBoot = (entries: CollectionEntry<"boot">[]): BootData => {
   const textById = new Map(entries.flatMap((e) => e.data.entries).map((row) => [row.id, row]));
   const log = config.log.map((row) => {
     const text = textById.get(row.id);
-    if (!text) throw new Error(`src/features/boot/lib/data.ts: boot.yaml log id "${row.id}" has no matching src/content/boot entry`);
+    if (!text)
+      throw new Error(
+        `src/features/boot/lib/data.ts: boot.yaml log id "${row.id}" has no matching src/content/boot entry`,
+      );
     return { threshold: row.threshold, tag: row.tag, label: text.label, val: text.val };
   });
   const unmatched = [...textById.keys()].filter((id) => !config.log.some((row) => row.id === id));
   if (unmatched.length > 0) {
-    throw new Error(`src/features/boot/lib/data.ts: src/content/boot has entries with no matching boot.yaml log id: ${unmatched.join(", ")}`);
+    throw new Error(
+      `src/features/boot/lib/data.ts: src/content/boot has entries with no matching boot.yaml log id: ${unmatched.join(", ")}`,
+    );
   }
   return { ...config, log };
 };

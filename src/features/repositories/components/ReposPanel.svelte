@@ -24,7 +24,9 @@
   label={repositories.panels.repos.label}
 >
   {#snippet children()}
-    <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px">
+    <div
+      style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px"
+    >
       {#each state.flatRepos as repo, i (repo.key)}
         <div
           role="button"
@@ -47,8 +49,11 @@
             ? 'background:linear-gradient(90deg,rgba(224,69,60,.30),rgba(224,69,60,.04));color:#f4ece9'
             : 'color:rgba(196,216,232,.75)'}"
         >
-          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-            <span style="color:#5fc6b4">{repo.mark}</span> {repo.key}
+          <span
+            style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+          >
+            <span style="color:#5fc6b4">{repo.mark}</span>
+            {repo.key}
             <span style="color:rgba(217,176,74,.75)">{repo.branch}</span>
           </span>
           <!-- Fixed slot at the row's right edge so the status dot never drifts with name/branch length. -->
@@ -60,7 +65,8 @@
                 aria-label={repositories.spinner.ariaLabel}
                 style="color:#5fc6b4"
               >
-                {repositories.spinner.label} {repositories.spinner.frames[state.spinnerFrame]}
+                {repositories.spinner.label}
+                {repositories.spinner.frames[state.spinnerFrame]}
               </span>
             {:else if state.repoTree?.source.repoName === repo.key}
               <span

@@ -51,7 +51,11 @@ function readTruth(): Truth[] {
       const order = Number(/^order:\s*(\d+)/m.exec(raw)?.[1] ?? "0");
       const [startRaw] = dates.split("–").map((s) => s.trim());
       const [monthName, yearStr] = startRaw.split(/\s+/);
-      out.push({ name: `${role.name}.md`, start: { y: Number(yearStr), m: MONTH_NUM[monthName] }, order });
+      out.push({
+        name: `${role.name}.md`,
+        start: { y: Number(yearStr), m: MONTH_NUM[monthName] },
+        order,
+      });
     }
   }
   return out;
@@ -67,7 +71,9 @@ const sortedTruth = [...readTruth()].sort((a, b) => {
 });
 
 test.describe("Employment harness: mounts standalone with seeded fixture props", () => {
-  test("one row renders per org/role position from the fixture personnel tree, newest-first", async ({ page }) => {
+  test("one row renders per org/role position from the fixture personnel tree, newest-first", async ({
+    page,
+  }) => {
     const employment = new EmploymentPage(page);
     await employment.openHarness();
 
@@ -114,7 +120,9 @@ test.describe("Employment harness: mounts standalone with seeded fixture props",
     await expect(employment.editorScroller).toBeVisible();
   });
 
-  test("no Terminal kernel chrome mounts alongside it (no status bar, no window switching)", async ({ page }) => {
+  test("no Terminal kernel chrome mounts alongside it (no status bar, no window switching)", async ({
+    page,
+  }) => {
     const employment = new EmploymentPage(page);
     await employment.openHarness();
 

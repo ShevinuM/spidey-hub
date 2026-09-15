@@ -39,12 +39,18 @@ export const recipes: Recipe[] = [
   {
     name: "02-repositories",
     actions: [{ key: "Control+b" }, { key: "1" }],
-    check: { url: /\/repositories$/, visible: '[data-testid="repositories-panel-2"][data-copy-source]' },
+    check: {
+      url: /\/repositories$/,
+      visible: '[data-testid="repositories-panel-2"][data-copy-source]',
+    },
   },
   {
     name: "03-repositories-arrow",
     actions: [{ key: "Control+b" }, { key: "1" }, { key: "1" }, { key: "ArrowDown" }],
-    check: { url: /\/repositories$/, visible: '[data-testid="repositories-panel-1"][data-copy-source]' },
+    check: {
+      url: /\/repositories$/,
+      visible: '[data-testid="repositories-panel-1"][data-copy-source]',
+    },
   },
   {
     // Row 0 (default selection) is `damage-control/evidence-cataloguer`, a deliberately
@@ -61,7 +67,10 @@ export const recipes: Recipe[] = [
     // following the moved selection live.
     name: "05-employment-l1",
     actions: [{ key: "Control+b" }, { key: "2" }, { key: "j" }, { key: "j" }],
-    check: { url: /\/employment$/, visible: '[data-testid="employment-row"][data-selected]:nth-child(3)' },
+    check: {
+      url: /\/employment$/,
+      visible: '[data-testid="employment-row"][data-selected]:nth-child(3)',
+    },
   },
   {
     // Enter opens the shared vim editor directly from the flat list's default (row 0) selection.
@@ -106,7 +115,10 @@ export const extraRecipes: Recipe[] = [
   {
     name: "12-all-projects",
     actions: [{ key: "Control+b" }, { key: "1" }, { key: "1" }, { key: "Enter" }],
-    check: { url: /\/repositories$/, visible: '[data-testid="repositories-panel-2"]:has-text("all-projects")' },
+    check: {
+      url: /\/repositories$/,
+      visible: '[data-testid="repositories-panel-2"]:has-text("all-projects")',
+    },
   },
 ];
 
@@ -157,7 +169,9 @@ export const bootRecipes: BootRecipe[] = [
  *
  * Never presses Enter, so the capture has no navigation side effect baked in.
  */
-export const cmdlineRecipes: Recipe[] = [{ name: "15-cmdline", actions: [{ key: ":" }, { type: "rep" }] }];
+export const cmdlineRecipes: Recipe[] = [
+  { name: "15-cmdline", actions: [{ key: ":" }, { type: "rep" }] },
+];
 
 /**
  * Five recipes covering pane splits, layouts, choose-tree, and the in-window/host shell —

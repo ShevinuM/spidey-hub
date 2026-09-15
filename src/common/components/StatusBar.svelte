@@ -42,7 +42,8 @@
     onReboot: () => void;
   }
 
-  const { site, sessionName, windows, activeWindowId, lastWindowId, onSelect, onReboot }: Props = $props();
+  const { site, sessionName, windows, activeWindowId, lastWindowId, onSelect, onReboot }: Props =
+    $props();
 
   let clockTime = $state("");
   let clockDate = $state("");
@@ -196,8 +197,13 @@
   }
 </script>
 
-<div style="height:{STATUS_BAR_HEIGHT_PX}px;flex:none;display:flex;align-items:center;background:#0d2a2f;font-size:14px">
-  <div data-testid="status-bar-session" style="flex:none;padding:0 8px;color:#7fd8a8;letter-spacing:.02em;white-space:nowrap">
+<div
+  style="height:{STATUS_BAR_HEIGHT_PX}px;flex:none;display:flex;align-items:center;background:#0d2a2f;font-size:14px"
+>
+  <div
+    data-testid="status-bar-session"
+    style="flex:none;padding:0 8px;color:#7fd8a8;letter-spacing:.02em;white-space:nowrap"
+  >
     {site.statusBar.sessionTemplate.replace("{name}", sessionName)}
   </div>
   <div style="color:rgba(127,216,200,.45)">{site.statusBar.separator}</div>
@@ -250,9 +256,15 @@
               (e.currentTarget as HTMLElement).blur();
             }
           }}
-          style={win.id === activeWindowId ? "cursor:pointer;background:#e0453c;color:#0b0f14;padding:0 6px" : "cursor:pointer"}
+          style={win.id === activeWindowId
+            ? "cursor:pointer;background:#e0453c;color:#0b0f14;padding:0 6px"
+            : "cursor:pointer"}
         >
-          {win.number}:{win.name}{win.id === activeWindowId ? "*" : win.id === lastWindowId ? "-" : ""}
+          {win.number}:{win.name}{win.id === activeWindowId
+            ? "*"
+            : win.id === lastWindowId
+              ? "-"
+              : ""}
         </span>
       {/each}
     </div>

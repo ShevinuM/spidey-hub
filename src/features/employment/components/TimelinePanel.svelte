@@ -17,12 +17,23 @@
 </script>
 
 <div style="position:relative;width:188px;flex:none;margin:0 10px">
-  <div style="position:absolute;left:50%;top:2px;transform:translateX(-50%);width:112px;height:54px;overflow:hidden;pointer-events:none">
-    <img src="/assets/spider-web-red.svg" alt="" aria-hidden="true" style="width:112px;height:108px;display:block;opacity:.55" />
+  <div
+    style="position:absolute;left:50%;top:2px;transform:translateX(-50%);width:112px;height:54px;overflow:hidden;pointer-events:none"
+  >
+    <img
+      src="/assets/spider-web-red.svg"
+      alt=""
+      aria-hidden="true"
+      style="width:112px;height:108px;display:block;opacity:.55"
+    />
   </div>
 
-  <div style="position:absolute;left:50%;top:56px;bottom:16px;width:1px;transform:translateX(-50%);background:rgba(224,69,60,.55)"></div>
-  <div style="position:absolute;left:50%;top:56px;bottom:16px;width:3px;transform:translateX(-50%);overflow:hidden">
+  <div
+    style="position:absolute;left:50%;top:56px;bottom:16px;width:1px;transform:translateX(-50%);background:rgba(224,69,60,.55)"
+  ></div>
+  <div
+    style="position:absolute;left:50%;top:56px;bottom:16px;width:3px;transform:translateX(-50%);overflow:hidden"
+  >
     <div
       data-testid="employment-timeline-spark"
       style="position:absolute;left:0;right:0;height:34px;background:linear-gradient(180deg,rgba(140,220,255,0),rgba(140,220,255,.9),rgba(140,220,255,0));animation:spark 4.6s linear infinite"
@@ -43,7 +54,10 @@
     ></div>
   </div>
 
-  <div style="position:absolute;inset:56px 0 16px;display:grid;grid-template-rows:repeat({state.records.length},1fr)">
+  <div
+    style="position:absolute;inset:56px 0 16px;display:grid;grid-template-rows:repeat({state.records
+      .length},1fr)"
+  >
     {#each state.records as row, i (row.entry.id)}
       {@const on = i === state.sel}
       {@const pos = state.records.length - i}
@@ -65,12 +79,18 @@
         >
           {row.start.y}
         </span>
-        <span style="position:absolute;left:calc(50% + 32px);display:flex;flex-direction:column;line-height:1.25;white-space:nowrap">
-          <span style="font-size:11px;color:{on ? 'rgba(217,176,74,.95)' : 'rgba(196,216,232,.28)'};transition:color .3s"
-            >{row.months}mo</span
+        <span
+          style="position:absolute;left:calc(50% + 32px);display:flex;flex-direction:column;line-height:1.25;white-space:nowrap"
+        >
+          <span
+            style="font-size:11px;color:{on
+              ? 'rgba(217,176,74,.95)'
+              : 'rgba(196,216,232,.28)'};transition:color .3s">{row.months}mo</span
           >
-          <span style="font-size:9.5px;letter-spacing:.06em;color:{row.live ? 'rgba(95,198,180,.6)' : 'rgba(196,216,232,.2)'}"
-            >{row.live ? "active" : "ended"}</span
+          <span
+            style="font-size:9.5px;letter-spacing:.06em;color:{row.live
+              ? 'rgba(95,198,180,.6)'
+              : 'rgba(196,216,232,.2)'}">{row.live ? "active" : "ended"}</span
           >
         </span>
         <span
@@ -79,7 +99,9 @@
             ? '54px'
             : '30px'};border-radius:50%;border:1px dashed {on
             ? 'rgba(224,69,60,.85)'
-            : 'rgba(140,200,240,.2)'};animation:spin {on ? '9s' : '24s'} linear infinite;transition:width .4s,height .4s"
+            : 'rgba(140,200,240,.2)'};animation:spin {on
+            ? '9s'
+            : '24s'} linear infinite;transition:width .4s,height .4s"
         ></span>
         <span
           data-testid="employment-timeline-ring-rspin"
@@ -101,7 +123,9 @@
             ? '0 0 18px rgba(224,69,60,.55),0 0 34px rgba(74,159,224,.28)'
             : 'none'};display:flex;align-items:center;justify-content:center;font-size:{on
             ? '12.5px'
-            : '10.5px'};font-weight:700;color:{on ? '#0b0f14' : 'rgba(196,216,232,.5)'};transition:width .4s,height .4s,background .3s,color .3s"
+            : '10.5px'};font-weight:700;color:{on
+            ? '#0b0f14'
+            : 'rgba(196,216,232,.5)'};transition:width .4s,height .4s,background .3s,color .3s"
         >
           {pos}
         </span>

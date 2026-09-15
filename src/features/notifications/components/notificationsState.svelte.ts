@@ -85,7 +85,12 @@ export class NotificationsState {
       }
       const loaded = loadState();
       const rand = resolveInjectRand();
-      const { state: next, injected } = injectVisit(loaded, this.notifications.pool, Date.now(), rand);
+      const { state: next, injected } = injectVisit(
+        loaded,
+        this.notifications.pool,
+        Date.now(),
+        rand,
+      );
       this.items = next.items;
       saveState(next);
       for (const it of injected) this.spawnToast(it);
@@ -118,7 +123,10 @@ export class NotificationsState {
   // Timer bookkeeping is deliberately NOT `$state` — consulted on
   // hover/timeout callbacks, never rendered through the template, same
   // non-reactive-Map convention PaneTree.svelte's `refs` registry uses.
-  timers = new Map<string, { handle: ReturnType<typeof setTimeout> | undefined; endAt: number; remaining?: number }>();
+  timers = new Map<
+    string,
+    { handle: ReturnType<typeof setTimeout> | undefined; endAt: number; remaining?: number }
+  >();
 
   mutate(fn: (s: NotificationState) => NotificationState) {
     const next = fn({ items: this.items });
@@ -129,9 +137,10 @@ export class NotificationsState {
   spawnToast(item: NotificationItem) {
     const scale = resolveToastDurationScale();
     const durationMs = toastDurationMs(item.sev, scale);
-    this.toasts = [...this.toasts, { id: item.id, sev: item.sev, title: item.title, body: item.body, src: item.src, durationMs }].slice(
-      -TOAST_STACK_CAP,
-    );
+    this.toasts = [
+      ...this.toasts,
+      { id: item.id, sev: item.sev, title: item.title, body: item.body, src: item.src, durationMs },
+    ].slice(-TOAST_STACK_CAP);
   }
 
   armTimer(id: string, ms: number) {
@@ -187,7 +196,8 @@ export class NotificationsState {
    * affordance would disagree with `dismissItem()`'s own folder-keyed
    * transition for items shown there. */
   dismissAffordance(folder: NotificationFolder): { glyph: string; title: string } {
-    if (folder === "inbox") return { glyph: this.ui.dismissGlyphArchive, title: this.ui.dismissTitleArchive };
+    if (folder === "inbox")
+      return { glyph: this.ui.dismissGlyphArchive, title: this.ui.dismissTitleArchive };
     return { glyph: this.ui.dismissGlyphDelete, title: this.ui.dismissTitleDelete };
   }
 
@@ -231,7 +241,11 @@ export class NotificationsState {
 
   emptyLine = $derived(this.ui.empty[this.tab]);
 
-  feedStatus = $derived(this.hasUnread ? this.ui.feedStatusUnread.replace("{n}", String(this.unreadCount)) : this.ui.feedStatusClear);
+  feedStatus = $derived(
+    this.hasUnread
+      ? this.ui.feedStatusUnread.replace("{n}", String(this.unreadCount))
+      : this.ui.feedStatusClear,
+  );
   unreadBadge = $derived(this.unreadCount > 99 ? "99+" : String(this.unreadCount));
 
   togglePanel() {

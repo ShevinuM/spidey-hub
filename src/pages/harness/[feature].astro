@@ -56,35 +56,38 @@ export async function getStaticPaths() {
 
 const { feature } = Astro.params;
 
-const profile = feature === "profile" ? buildProfile((await getCollection("profile"))[0]) : undefined;
+const profile =
+  feature === "profile" ? buildProfile((await getCollection("profile"))[0]) : undefined;
 const help = feature === "help" ? buildHelp(await getCollection("help")) : undefined;
 const helpSearch = feature === "help" ? getHelpSearch() : undefined;
 const cmdline = feature === "help" ? getCmdline() : undefined;
 const shell = feature === "help" ? getShell() : undefined;
 const boot = feature === "boot" ? buildBoot(await getCollection("boot")) : undefined;
-const notifications = feature === "notifications" ? buildNotifications(await getCollection("notifications")) : undefined;
+const notifications =
+  feature === "notifications"
+    ? buildNotifications(await getCollection("notifications"))
+    : undefined;
 const dashboard = feature === "dashboard" ? getDashboard() : undefined;
 const personnel = feature === "employment" ? getPersonnel() : undefined;
 const personnelEntries = feature === "employment" ? await getCollection("personnel") : undefined;
 const repositories = feature === "repositories" ? getRepositories() : undefined;
 const projects = feature === "repositories" ? await getCollection("repositories") : undefined;
-const commitsByRepo = feature === "repositories" && projects ? getCommitsByRepo(projects) : undefined;
+const commitsByRepo =
+  feature === "repositories" && projects ? getCommitsByRepo(projects) : undefined;
 const grep = feature === "grep" ? getGrep() : undefined;
 // Named `shellFs`, not `shell`, since `const shell` above already holds help's `getShell()` result.
 const shellFs = feature === "shell-fs" ? getShell() : undefined;
 ---
 
 <Layout title={`Harness: ${feature} — shevinum.dev`}>
-  {
-    feature === "profile" && profile !== undefined && (
-      <Profile client:load profile={profile} isFocused={true} />
-    )
-  }
-  {
-    feature === "help" && help !== undefined && helpSearch !== undefined && cmdline !== undefined && shell !== undefined && (
-      <HelpHarness client:load {help} {helpSearch} {cmdline} {shell} />
-    )
-  }
+  {feature === "profile" && profile !== undefined && (
+    <Profile client:load profile={profile} isFocused={true} />
+  )}
+  {feature === "help" &&
+    help !== undefined &&
+    helpSearch !== undefined &&
+    cmdline !== undefined &&
+    shell !== undefined && <HelpHarness client:load {help} {helpSearch} {cmdline} {shell} />}
   {
     // Mounted directly (no wrapper): BootSequence is already boot's own
     // self-contained orchestrator, and this harness's assertions (mount,
@@ -93,7 +96,9 @@ const shellFs = feature === "shell-fs" ? getShell() : undefined;
     //
     // `desktopMode={true}` is required:
     // BootSequence's own `$effect` no-ops without it.
-    feature === "boot" && boot !== undefined && <BootSequence client:load {boot} desktopMode={true} />
+    feature === "boot" && boot !== undefined && (
+      <BootSequence client:load {boot} desktopMode={true} />
+    )
   }
   {
     // Wrapped (not mounted directly): Notifications.svelte attaches no
@@ -102,7 +107,9 @@ const shellFs = feature === "shell-fs" ? getShell() : undefined;
     // NotificationsHarness reproduces — and hardcodes `fixtureMode={false}`
     // so its keydown/open-close assertions exercise live behavior rather
     // than the frozen golden-capture state `fixtureMode={true}` produces.
-    feature === "notifications" && notifications !== undefined && <NotificationsHarness client:load {notifications} />
+    feature === "notifications" && notifications !== undefined && (
+      <NotificationsHarness client:load {notifications} />
+    )
   }
   {
     // Wrapped despite Dashboard.svelte being a real, already-shipping
@@ -112,7 +119,9 @@ const shellFs = feature === "shell-fs" ? getShell() : undefined;
     // frontmatter cannot express itself, plus the synthetic
     // isFocused/windowNumbers/paneCount/onSelect props a kernel-free mount
     // has no live tmux state to derive (see DashboardHarness's own header).
-    feature === "dashboard" && dashboard !== undefined && <DashboardHarness client:load {dashboard} />
+    feature === "dashboard" && dashboard !== undefined && (
+      <DashboardHarness client:load {dashboard} />
+    )
   }
   {
     // Wrapped for the same keydown-delegation reason as notifications
@@ -121,9 +130,9 @@ const shellFs = feature === "shell-fs" ? getShell() : undefined;
     // The `personnel` collection fixture-switches itself via
     // content.config.ts's own `base:` ternary, so no special handling is
     // needed here beyond the two data fetches above.
-    feature === "employment" &&
-      personnel !== undefined &&
-      personnelEntries !== undefined && <EmploymentHarness client:load {personnel} {personnelEntries} />
+    feature === "employment" && personnel !== undefined && personnelEntries !== undefined && (
+      <EmploymentHarness client:load {personnel} {personnelEntries} />
+    )
   }
   {
     // Wrapped for the same keydown-delegation reason as notifications
@@ -132,7 +141,9 @@ const shellFs = feature === "shell-fs" ? getShell() : undefined;
     feature === "repositories" &&
       repositories !== undefined &&
       projects !== undefined &&
-      commitsByRepo !== undefined && <RepositoriesHarness client:load {repositories} {projects} {commitsByRepo} />
+      commitsByRepo !== undefined && (
+        <RepositoriesHarness client:load {repositories} {projects} {commitsByRepo} />
+      )
   }
   {
     // Wrapped for the same keydown-delegation reason as notifications above
@@ -148,6 +159,8 @@ const shellFs = feature === "shell-fs" ? getShell() : undefined;
     //
     // No content collection, same as grep above, so `getShell()` alone is
     // enough.
-    feature === "shell-fs" && shellFs !== undefined && <ShellFsHarness client:load shell={shellFs} />
+    feature === "shell-fs" && shellFs !== undefined && (
+      <ShellFsHarness client:load shell={shellFs} />
+    )
   }
 </Layout>

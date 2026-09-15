@@ -45,7 +45,8 @@ async function cruiseFixture(files: Record<string, string>): Promise<ICruiseResu
       validate: true,
       ruleSet: config,
     });
-    if (typeof result.output === "string") throw new Error("expected a cruise result object, got a report string");
+    if (typeof result.output === "string")
+      throw new Error("expected a cruise result object, got a report string");
     return result.output;
   } finally {
     rmSync(directory, { recursive: true, force: true });
@@ -57,7 +58,10 @@ function expectResolvedEdge(output: ICruiseResult, from: string, to: string): vo
   expect(module, `${from} is absent from the cruise output, so nothing was planted`).toBeDefined();
 
   const dependency = module?.dependencies.find((candidate) => candidate.resolved === to);
-  expect(dependency, `${from} has no edge to ${to}: the planted import resolved to nothing`).toBeDefined();
+  expect(
+    dependency,
+    `${from} has no edge to ${to}: the planted import resolved to nothing`,
+  ).toBeDefined();
   expect(dependency?.couldNotResolve, `${from} -> ${to} did not resolve`).toBe(false);
 }
 
@@ -67,8 +71,10 @@ function firedRules(output: ICruiseResult): string[] {
 
 test("no-circular reports a dependency cycle", async () => {
   const output = await cruiseFixture({
-    "src/features/alpha/index.ts": 'import { helper } from "./helper";\nexport const alpha = helper;\n',
-    "src/features/alpha/helper.ts": 'import { alpha } from "./index";\nexport const helper = alpha;\n',
+    "src/features/alpha/index.ts":
+      'import { helper } from "./helper";\nexport const alpha = helper;\n',
+    "src/features/alpha/helper.ts":
+      'import { alpha } from "./index";\nexport const helper = alpha;\n',
   });
 
   expectResolvedEdge(output, "src/features/alpha/index.ts", "src/features/alpha/helper.ts");
@@ -79,8 +85,10 @@ test("no-circular reports a dependency cycle", async () => {
 
 test("no-transitive-peer-feature reports a feature reaching a peer through common/", async () => {
   const output = await cruiseFixture({
-    "src/features/alpha/index.ts": 'import { bridge } from "../../common/bridge";\nexport const alpha = bridge;\n',
-    "src/common/bridge.ts": 'import { beta } from "../features/beta/index";\nexport const bridge = beta;\n',
+    "src/features/alpha/index.ts":
+      'import { bridge } from "../../common/bridge";\nexport const alpha = bridge;\n',
+    "src/common/bridge.ts":
+      'import { beta } from "../features/beta/index";\nexport const bridge = beta;\n',
     "src/features/beta/index.ts": "export const beta = 1;\n",
   });
 

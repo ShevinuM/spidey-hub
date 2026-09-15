@@ -191,7 +191,11 @@ export interface PaneRect {
 /** Walks the tree accumulating each leaf's rect — a split's `direction`
  * determines which axis its `sizes` subdivide (row = x/width, column =
  * y/height); every other axis is inherited unchanged from the parent. */
-export function computePaneRects(node: PaneNode, rect: PaneRect = { x: 0, y: 0, w: 1, h: 1 }, out: Map<string, PaneRect> = new Map()): Map<string, PaneRect> {
+export function computePaneRects(
+  node: PaneNode,
+  rect: PaneRect = { x: 0, y: 0, w: 1, h: 1 },
+  out: Map<string, PaneRect> = new Map(),
+): Map<string, PaneRect> {
   if (node.type === "leaf") {
     out.set(node.pane.id, rect);
     return out;
@@ -216,7 +220,11 @@ export type PaneDirection = "up" | "down" | "left" | "right";
  *
  * Candidates must also overlap the focused pane on the perpendicular axis, or a full-span pane (e.g. main-vertical's main pane) would wrongly out-distance its column neighbors by center-distance alone; with no overlapping candidate, this returns `undefined` rather than guessing a wrong-axis hop.
  */
-export function findDirectionalPane(rects: Map<string, PaneRect>, fromId: string, dir: PaneDirection): string | undefined {
+export function findDirectionalPane(
+  rects: Map<string, PaneRect>,
+  fromId: string,
+  dir: PaneDirection,
+): string | undefined {
   const from = rects.get(fromId);
   if (!from) return undefined;
   const fromCenter = { x: from.x + from.w / 2, y: from.y + from.h / 2 };
@@ -257,7 +265,11 @@ export function findDirectionalPane(rects: Map<string, PaneRect>, fromId: string
 
   let best: Candidate | undefined;
   for (const c of overlapping) {
-    if (!best || c.primary < best.primary - EPS || (Math.abs(c.primary - best.primary) <= EPS && c.secondary < best.secondary)) {
+    if (
+      !best ||
+      c.primary < best.primary - EPS ||
+      (Math.abs(c.primary - best.primary) <= EPS && c.secondary < best.secondary)
+    ) {
       best = c;
     }
   }
@@ -355,7 +367,12 @@ export function killWindow(session: Session, windowId: string): KillWindowResult
  *
  * Rebuilds new objects back up to the root rather than mutating in place, the same convention `removePaneNode` uses.
  */
-function insertSplit(node: PaneNode, targetPaneId: string, direction: "row" | "column", newLeaf: PaneLeaf): PaneNode {
+function insertSplit(
+  node: PaneNode,
+  targetPaneId: string,
+  direction: "row" | "column",
+  newLeaf: PaneLeaf,
+): PaneNode {
   if (node.type === "leaf") {
     if (node.pane.id !== targetPaneId) return node;
     return { type: "split", direction, children: [node, newLeaf], sizes: [0.5, 0.5] };
@@ -521,7 +538,9 @@ export function buildLayoutTree(panes: Pane[], layoutName: LayoutName): PaneNode
       for (let i = 0; i < n; i += cols) rowsOfPanes.push(panes.slice(i, i + cols));
       // The "no 1-child splits" invariant applies per row too: a short final row of exactly one pane is a bare leaf, not a 1-child row split.
       const rowNodes = rowsOfPanes.map((rowPanes) =>
-        rowPanes.length === 1 ? leafOf(rowPanes[0]) : rowOf(rowPanes.map(leafOf), evenSizes(rowPanes.length)),
+        rowPanes.length === 1
+          ? leafOf(rowPanes[0])
+          : rowOf(rowPanes.map(leafOf), evenSizes(rowPanes.length)),
       );
       if (rowNodes.length === 1) return rowNodes[0];
       return columnOf(rowNodes, evenSizes(rowNodes.length));
@@ -531,7 +550,9 @@ export function buildLayoutTree(panes: Pane[], layoutName: LayoutName): PaneNode
 
 /** `select-layout <name>` — applies `layoutName` to `window` now, rebuilding its tree from the current `paneOrder`, and records it as `lastLayout` so a following bare `Ctrl-b Space` continues from here. */
 export function applyLayout(window: Window, layoutName: LayoutName): void {
-  const panes = window.paneOrder.map((id) => findPaneById(window.root, id)).filter((p): p is Pane => !!p);
+  const panes = window.paneOrder
+    .map((id) => findPaneById(window.root, id))
+    .filter((p): p is Pane => !!p);
   if (panes.length === 0) return;
   window.root = buildLayoutTree(panes, layoutName);
   window.lastLayout = layoutName;
@@ -654,7 +675,11 @@ function destroySession(client: Client, sessionId: string): { detachedToHost: bo
  *
  * Killing a window that isn't the session's last one just removes it; killing the last window destroys the session outright, real tmux's own behavior.
  */
-export function killWindowCascade(client: Client, session: Session, windowId: string): KillWindowCascadeResult {
+export function killWindowCascade(
+  client: Client,
+  session: Session,
+  windowId: string,
+): KillWindowCascadeResult {
   if (session.windows.length <= 1) {
     const { detachedToHost } = destroySession(client, session.id);
     return { kind: "session-destroyed", detachedToHost };
@@ -664,7 +689,10 @@ export function killWindowCascade(client: Client, session: Session, windowId: st
 }
 
 /** choose-tree `x` on a session row — kills the whole session in one step, unlike `killWindowCascade`, which only destroys a session as a side effect of its last window dying. */
-export function killSession(client: Client, sessionId: string): { kind: "session-destroyed"; detachedToHost: boolean } {
+export function killSession(
+  client: Client,
+  sessionId: string,
+): { kind: "session-destroyed"; detachedToHost: boolean } {
   const { detachedToHost } = destroySession(client, sessionId);
   return { kind: "session-destroyed", detachedToHost };
 }

@@ -19,7 +19,9 @@ interface ShellYaml {
 }
 
 function loadShellYaml(): ShellYaml {
-  return YAML.parse(readFileSync(join(ROOT, "src/features/shell-fs/content/shell.yaml"), "utf8")) as ShellYaml;
+  return YAML.parse(
+    readFileSync(join(ROOT, "src/features/shell-fs/content/shell.yaml"), "utf8"),
+  ) as ShellYaml;
 }
 
 const shellYaml = loadShellYaml();
@@ -59,7 +61,8 @@ const hostShell = (page: Page) => page.locator('[data-shell-mode="host"]');
 const scroller = (page: Page) => page.locator('[data-testid="shell-scroller"]');
 const shellInput = (page: Page) => page.locator('[data-testid="shell-input"]');
 const shellPrompt = (page: Page) => page.locator('[data-testid="shell-prompt"]');
-const statusWindow = (page: Page, id: string) => page.locator(`[data-testid="status-bar-window"][data-window-id="${id}"]`);
+const statusWindow = (page: Page, id: string) =>
+  page.locator(`[data-testid="status-bar-window"][data-window-id="${id}"]`);
 const statusBarWindows = (page: Page) => page.locator('[data-testid="status-bar-windows"]');
 const sessionLabel = (page: Page) => page.locator('[data-testid="status-bar-session"]');
 
@@ -68,7 +71,9 @@ test.describe("Ctrl-b d detaches to the host shell", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("shows the pre-seeded narrative + a fresh [detached] line, no status bar, dim radar", async ({ page }) => {
+  test("shows the pre-seeded narrative + a fresh [detached] line, no status bar, dim radar", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await detach(page);
 
@@ -82,12 +87,16 @@ test.describe("Ctrl-b d detaches to the host shell", () => {
     await expect(shellPrompt(page)).toContainText("git:(main) $");
 
     // A coarse numeric check, not an exact string, since the precise dim value is a design choice, not a fidelity-locked constant.
-    const opacity = await page.locator('[data-testid="wallpaper-layer"]').evaluate((el) => Number(getComputedStyle(el).opacity));
+    const opacity = await page
+      .locator('[data-testid="wallpaper-layer"]')
+      .evaluate((el) => Number(getComputedStyle(el).opacity));
     expect(opacity).toBeLessThan(0.3);
     expect(opacity).toBeGreaterThan(0);
   });
 
-  test("the host shell buffer persists across a detach -> reattach -> detach round trip", async ({ page }) => {
+  test("the host shell buffer persists across a detach -> reattach -> detach round trip", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await detach(page);
     await runInShell(page, "whoami");
@@ -102,7 +111,9 @@ test.describe("Ctrl-b d detaches to the host shell", () => {
     // narrative itself already contains one such line — see shell.yaml's
     // own `host.narrative` — so two REAL detaches makes three total).
     await expect(scroller(page)).toContainText("shev");
-    const detachLines = await page.locator('[data-testid="shell-line"]', { hasText: detachedLine() }).count();
+    const detachLines = await page
+      .locator('[data-testid="shell-line"]', { hasText: detachedLine() })
+      .count();
     expect(detachLines).toBe(3);
   });
 
@@ -132,7 +143,9 @@ test.describe("Ctrl-b d detaches to the host shell", () => {
   // the host shell is exactly such a pane (Shell.svelte's own handleKey
   // claims every printable character before the bare-"?" fallback opener
   // ever runs), so the palette must never appear over the host shell.
-  test("? types a literal ? into the host shell input and does NOT open the HelpSearch palette", async ({ page }) => {
+  test("? types a literal ? into the host shell input and does NOT open the HelpSearch palette", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await detach(page);
     await page.keyboard.press("?");
@@ -146,7 +159,9 @@ test.describe("tmux ls (real tmux fidelity)", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("lists the default session with NO (attached) suffix while detached — exact format", async ({ page }) => {
+  test("lists the default session with NO (attached) suffix while detached — exact format", async ({
+    page,
+  }) => {
     // `clock.install` alone drifts with real wall-clock time (see nav.spec.ts's "live clock" test), but `setFixedTime` pins `Date.now()` outright with no fake-timer machinery needed, which this exact ctime-string equality requires.
     await page.clock.setFixedTime(CLOCK_TIME);
     await gotoReady(page, "/");
@@ -160,7 +175,9 @@ test.describe("tmux ls (real tmux fidelity)", () => {
     await expect(page.locator('[data-testid="shell-line"]').last()).toHaveText(expectedRow);
   });
 
-  test("shows (attached) for the currently attached session from inside a PANE shell", async ({ page }) => {
+  test("shows (attached) for the currently attached session from inside a PANE shell", async ({
+    page,
+  }) => {
     // See the sibling "no (attached) suffix" test above for why
     // `setFixedTime` is required here too.
     await page.clock.setFixedTime(CLOCK_TIME);
@@ -173,7 +190,8 @@ test.describe("tmux ls (real tmux fidelity)", () => {
       shellYaml.tmux.lsRowTemplate
         .replace("{name}", DEFAULT_SESSION_NAME)
         .replace("{n}", "6")
-        .replace("{ctime}", formatCtime(new Date(Date.parse(CLOCK_TIME)))) + shellYaml.tmux.lsAttachedSuffix;
+        .replace("{ctime}", formatCtime(new Date(Date.parse(CLOCK_TIME)))) +
+      shellYaml.tmux.lsAttachedSuffix;
     await expect(page.locator('[data-testid="shell-line"]').last()).toHaveText(expectedRow);
   });
 
@@ -193,8 +211,14 @@ test.describe("tmux ls (real tmux fidelity)", () => {
     const rows = (await page.locator('[data-testid="shell-line"]').allTextContents()).slice(-2);
     expect(rows).toHaveLength(2);
     expect(rows).toEqual([
-      shellYaml.tmux.lsRowTemplate.replace("{name}", DEFAULT_SESSION_NAME).replace("{n}", "6").replace("{ctime}", ctime),
-      shellYaml.tmux.lsRowTemplate.replace("{name}", "test").replace("{n}", "1").replace("{ctime}", ctime),
+      shellYaml.tmux.lsRowTemplate
+        .replace("{name}", DEFAULT_SESSION_NAME)
+        .replace("{n}", "6")
+        .replace("{ctime}", ctime),
+      shellYaml.tmux.lsRowTemplate
+        .replace("{name}", "test")
+        .replace("{n}", "1")
+        .replace("{ctime}", ctime),
     ]);
     for (const row of rows) expect(row).not.toContain(shellYaml.tmux.lsAttachedSuffix);
   });
@@ -228,7 +252,9 @@ test.describe("tmux new [-s name] (host mode)", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("tmux new -s test creates AND attaches — status bar shows Session: test, window 0:zsh", async ({ page }) => {
+  test("tmux new -s test creates AND attaches — status bar shows Session: test, window 0:zsh", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await detach(page);
     await runInShell(page, "tmux new -s test");
@@ -287,7 +313,9 @@ test.describe("tmux a / attach (host mode)", () => {
     await expect(statusWindow(page, "profile")).toHaveCount(0);
   });
 
-  test("tmux a -t <missing name> errors — exact fidelity string, stays detached", async ({ page }) => {
+  test("tmux a -t <missing name> errors — exact fidelity string, stays detached", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await detach(page);
     await runInShell(page, "tmux a -t nope");
@@ -295,7 +323,9 @@ test.describe("tmux a / attach (host mode)", () => {
     await expect(statusBarWindows(page)).not.toBeVisible();
   });
 
-  test("bare tmux a attaches the MOST RECENTLY USED session, not merely the first", async ({ page }) => {
+  test("bare tmux a attaches the MOST RECENTLY USED session, not merely the first", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await detach(page);
     await runInShell(page, "tmux new -s test"); // creates + attaches "test" (now most recent)
@@ -315,7 +345,9 @@ test.describe("tmux a / attach (host mode)", () => {
     await page.keyboard.press("&");
     await page.keyboard.press("y");
     // Last window of the only session — [exited].
-    await expect(page.locator('[data-testid="shell-line"]').last()).toHaveText(shellYaml.host.exitedMessage);
+    await expect(page.locator('[data-testid="shell-line"]').last()).toHaveText(
+      shellYaml.host.exitedMessage,
+    );
 
     await runInShell(page, "tmux a");
     await expect(scroller(page)).toContainText("no sessions");
@@ -341,7 +373,9 @@ test.describe("kill cascades: destroyed session vs. switch-to-remaining", () => 
     await page.keyboard.press("y");
 
     await expect(hostShell(page)).toBeVisible();
-    await expect(page.locator('[data-testid="shell-line"]').last()).toHaveText(shellYaml.host.exitedMessage);
+    await expect(page.locator('[data-testid="shell-line"]').last()).toHaveText(
+      shellYaml.host.exitedMessage,
+    );
 
     await runInShell(page, "tmux ls");
     await expect(scroller(page)).toContainText("no sessions");
@@ -416,7 +450,9 @@ test.describe("edith / open <view> (host mode)", () => {
     // while it's up (StatusBar.svelte's own mutually-exclusive states), so
     // this is checked first; the window list reappears once it auto-clears.
     await expect(page.locator('[data-testid="status-message"]')).toContainText(
-      shellYaml.host.windowGoneTemplate.replace("{view}", "repositories").replace("{name}", DEFAULT_SESSION_NAME),
+      shellYaml.host.windowGoneTemplate
+        .replace("{view}", "repositories")
+        .replace("{name}", DEFAULT_SESSION_NAME),
     );
     await expect(page.locator('[data-testid="status-message"]')).not.toBeVisible();
     await expect(statusBarWindows(page)).toBeVisible();

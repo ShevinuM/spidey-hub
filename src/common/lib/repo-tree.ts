@@ -148,7 +148,11 @@ export interface FlatTreeRow {
 }
 
 /** Flattens a tree into the rows currently visible given a `collapsedDirs` set; pass an empty set to show every descendant expanded. */
-export function flattenVisible(root: TreeNode, collapsedDirs: ReadonlySet<string>, depth = 0): FlatTreeRow[] {
+export function flattenVisible(
+  root: TreeNode,
+  collapsedDirs: ReadonlySet<string>,
+  depth = 0,
+): FlatTreeRow[] {
   const rows: FlatTreeRow[] = [];
   for (const child of root.children ?? []) {
     if (child.type === "dir") {

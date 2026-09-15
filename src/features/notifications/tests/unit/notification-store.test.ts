@@ -71,7 +71,11 @@ test("parseStoredState: wrong shape (no items array) returns null", () => {
 });
 
 test("parseStoredState: an item missing a required field returns null", () => {
-  const bad = { items: [{ id: "x", sev: "alert", title: "t", body: "b", src: "s", read: false, folder: "inbox" }] };
+  const bad = {
+    items: [
+      { id: "x", sev: "alert", title: "t", body: "b", src: "s", read: false, folder: "inbox" },
+    ],
+  };
   expect(parseStoredState(JSON.stringify(bad))).toBe(null);
 });
 
@@ -213,7 +217,9 @@ test("injectVisit: exhausted pool re-injects exactly one oldest archived non-spa
 });
 
 test("injectVisit: re-injected item is unread, in the inbox folder, restamped `now`, and returned in injected[]", () => {
-  const existing: NotificationItem[] = POOL.map((p, i) => item({ id: p.id, folder: i === 0 ? "archive" : "inbox", ts: 1, read: true }));
+  const existing: NotificationItem[] = POOL.map((p, i) =>
+    item({ id: p.id, folder: i === 0 ? "archive" : "inbox", ts: 1, read: true }),
+  );
   const { state, injected } = injectVisit({ items: existing }, POOL, 7777, Math.random);
   expect(injected.length).toBe(1);
   const revived = injected[0];
@@ -225,7 +231,9 @@ test("injectVisit: re-injected item is unread, in the inbox folder, restamped `n
 });
 
 test("injectVisit: exhausted pool with only spam archived injects none and leaves state unchanged", () => {
-  const existing: NotificationItem[] = POOL.map((p, i) => item({ id: p.id, folder: i === 0 ? "spam" : "inbox" }));
+  const existing: NotificationItem[] = POOL.map((p, i) =>
+    item({ id: p.id, folder: i === 0 ? "spam" : "inbox" }),
+  );
   const before: NotificationState = { items: existing };
   const { state, injected } = injectVisit(before, POOL, 1, Math.random);
   expect(injected).toEqual([]);
@@ -259,7 +267,9 @@ test("injectVisit: repeat visits re-circulate oldest-first, deterministically, u
 
 test("injectVisit: re-circulated state round-trips through save/load", () => {
   withLocalStorage({}, () => {
-    const existing: NotificationItem[] = POOL.map((p, i) => item({ id: p.id, folder: i === 0 ? "archive" : "inbox", ts: 1 }));
+    const existing: NotificationItem[] = POOL.map((p, i) =>
+      item({ id: p.id, folder: i === 0 ? "archive" : "inbox", ts: 1 }),
+    );
     const { state } = injectVisit({ items: existing }, POOL, 4242, Math.random);
     saveState(state);
     expect(loadState()).toEqual(state);
@@ -279,7 +289,9 @@ test("injectVisit: pool with exactly 1 unseen entry injects only that 1", () => 
 // ---------------------------------------------------------------------------
 
 test("toggleRead: flips only the matching item's read flag", () => {
-  const state: NotificationState = { items: [item({ id: "a", read: false }), item({ id: "b", read: true })] };
+  const state: NotificationState = {
+    items: [item({ id: "a", read: false }), item({ id: "b", read: true })],
+  };
   const next = toggleRead(state, "a");
   expect(next.items.find((i) => i.id === "a")!.read).toBe(true);
   expect(next.items.find((i) => i.id === "b")!.read).toBe(true);

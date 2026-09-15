@@ -105,7 +105,7 @@ test("markBootPlayed: writes the exact key BootSequence.svelte pre-seeds/reads e
   expect(store.get(BOOT_SEEN_STORAGE_KEY)).toBe("1");
 });
 
-test("hasBootPlayed: any other stored value (not exactly \"1\") reads as not-played", () => {
+test('hasBootPlayed: any other stored value (not exactly "1") reads as not-played', () => {
   const store = installWorkingSessionStorage();
   store.set(BOOT_SEEN_STORAGE_KEY, "true");
   expect(hasBootPlayed()).toBe(false);

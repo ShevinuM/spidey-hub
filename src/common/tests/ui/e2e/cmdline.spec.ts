@@ -22,7 +22,9 @@ interface CmdlineYaml {
 }
 
 function loadCmdlineYaml(): CmdlineYaml {
-  return YAML.parse(readFileSync(join(ROOT, "src/common/content/cmdline.yaml"), "utf8")) as CmdlineYaml;
+  return YAML.parse(
+    readFileSync(join(ROOT, "src/common/content/cmdline.yaml"), "utf8"),
+  ) as CmdlineYaml;
 }
 
 async function gotoReady(page: Page, path: string) {
@@ -132,7 +134,9 @@ test.describe("Cmdline: opening", () => {
     await expect(page).toHaveURL(/\/$/);
   });
 
-  test("a status-bar prompt already open blocks Ctrl-b : from opening the box", async ({ page }) => {
+  test("a status-bar prompt already open blocks Ctrl-b : from opening the box", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await ctrlB(page);
     await page.keyboard.press(","); // rename-window prompt
@@ -163,7 +167,9 @@ test.describe("Cmdline: opening", () => {
     await expect(overlay(page)).toBeVisible();
   });
 
-  test("the box never covers the status bar — it stays hit-testable at its own center", async ({ page }) => {
+  test("the box never covers the status bar — it stays hit-testable at its own center", async ({
+    page,
+  }) => {
     // Same elementFromPoint hit-test tmux.spec.ts's own "grep is window
     // chrome, the status bar is session chrome" suite uses for the grep
     // overlay's backdrop.
@@ -225,7 +231,9 @@ test.describe("Cmdline: `:` stays literal inside other text inputs", () => {
     await expect(overlay(page)).not.toBeVisible();
   });
 
-  test(": types literally into the rename-window prompt, never opening the box", async ({ page }) => {
+  test(": types literally into the rename-window prompt, never opening the box", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await ctrlB(page);
     await page.keyboard.press(",");
@@ -241,7 +249,9 @@ test.describe("Cmdline: palette feel — silent Tab completion + zsh-style cycli
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("Tab completes the unique match, silently (no suggestions list ever appears)", async ({ page }) => {
+  test("Tab completes the unique match, silently (no suggestions list ever appears)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.keyboard.press(":");
     await page.keyboard.type("reb");
@@ -291,7 +301,9 @@ test.describe("Cmdline: palette feel — silent Tab completion + zsh-style cycli
     await expect(input(page)).toContainText("k");
   });
 
-  test("ArrowDown/ArrowUp are consumed no-ops (no suggestions list to navigate)", async ({ page }) => {
+  test("ArrowDown/ArrowUp are consumed no-ops (no suggestions list to navigate)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.keyboard.press(":");
     await page.keyboard.type("bui");
@@ -307,7 +319,9 @@ test.describe("Cmdline: unknown command (E492)", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("a gibberish command shows an E492-style error in the box and does not navigate", async ({ page }) => {
+  test("a gibberish command shows an E492-style error in the box and does not navigate", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.keyboard.press(":");
     await typeAndEnter(page, "zzzbogus");
@@ -374,15 +388,23 @@ test.describe("Cmdline: editor ex-mode still works through the box", () => {
       async open(page) {
         await gotoReady(page, "/repositories");
         // transcript-tts is used here, not the default-highlighted virtual "all-projects" repo, because daily-tech-digest has two files named README.md simultaneously visible in its nested tree, which would make the locator below ambiguous — same choice as editor-vim.spec.ts's Repositories entry point.
-        await page.locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]').click();
-        await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')).toBeVisible();
-        await page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]').click();
+        await page
+          .locator('[data-testid="repositories-repo-row"][data-repo-name="transcript-tts"]')
+          .click();
+        await expect(
+          page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]'),
+        ).toBeVisible();
+        await page
+          .locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')
+          .click();
         await page.keyboard.press("2");
         await page.keyboard.press("Enter");
         await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
       },
       async assertParentVisible(page) {
-        await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]')).toBeVisible();
+        await expect(
+          page.locator('[data-testid="repositories-tree-row"][data-entry-name="README.md"]'),
+        ).toBeVisible();
       },
     },
     {
@@ -397,7 +419,9 @@ test.describe("Cmdline: editor ex-mode still works through the box", () => {
       async assertParentVisible(page) {
         // Anchored on the flat list's row 0 being back and still selected (its own preview path is the exact file this entry point opened), since there's no `employment-path` breadcrumb element.
         await expect(page.locator('[data-testid="employment-row"]').first()).toBeVisible();
-        await expect(page.locator('[data-testid="employment-preview-path"]')).toHaveText("enaimco/software-developer.md");
+        await expect(page.locator('[data-testid="employment-preview-path"]')).toHaveText(
+          "enaimco/software-developer.md",
+        );
       },
     },
   ];
@@ -447,7 +471,9 @@ test.describe("Cmdline: editor ex-mode still works through the box", () => {
       // Bang variants of a recognized command ("w!"/"wq!") report the exact
       // same E45 readonly error as their bang-less forms, never the
       // unknown-command E492.
-      test(":wq! shows the E45 readonly error, not E492, and never closes the editor", async ({ page }) => {
+      test(":wq! shows the E45 readonly error, not E492, and never closes the editor", async ({
+        page,
+      }) => {
         await entry.open(page);
         await page.keyboard.press(":");
         await typeAndEnter(page, "wq!");
@@ -492,9 +518,9 @@ test.describe("Cmdline: tmux command-prompt mode (executes through the same flow
     await page.keyboard.press(":");
     await typeAndEnter(page, "rename-window scratch");
     await expect(overlay(page)).not.toBeVisible();
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="dashboard"]')).toHaveText(
-      "0:scratch*",
-    );
+    await expect(
+      page.locator('[data-testid="status-bar-window"][data-window-id="dashboard"]'),
+    ).toHaveText("0:scratch*");
   });
 
   test("rename-window with no argument shows a usage error", async ({ page }) => {
@@ -513,7 +539,9 @@ test.describe("Cmdline: tmux command-prompt mode (executes through the same flow
     await page.keyboard.press(":");
     await typeAndEnter(page, "kill-window");
     await expect(overlay(page)).not.toBeVisible();
-    await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveCount(0);
+    await expect(
+      page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]'),
+    ).toHaveCount(0);
   });
 
   // Killing the session's last window destroys the session outright and, with no other session to fall back to, detaches the client to the host shell printing exactly `[exited]` (see tmux.spec.ts's "killing every window down to the last one" test).
@@ -549,7 +577,9 @@ test.describe("Cmdline: tmux command-prompt mode (executes through the same flow
     await expect(page.locator('[data-testid="repositories-panel-2"]')).toHaveCount(0);
   });
 
-  test("select-window <n> jumps straight to that window, matching the Ctrl-b <digit> targets", async ({ page }) => {
+  test("select-window <n> jumps straight to that window, matching the Ctrl-b <digit> targets", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await ctrlB(page);
     await page.keyboard.press(":");
@@ -574,7 +604,9 @@ test.describe("Cmdline: tmux command-prompt mode (executes through the same flow
     await expect(errorText(page)).toContainText("usage");
   });
 
-  test("select-window with an out-of-range numeric index shows 'no such window'", async ({ page }) => {
+  test("select-window with an out-of-range numeric index shows 'no such window'", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await ctrlB(page);
     await page.keyboard.press(":");
@@ -614,7 +646,9 @@ test.describe("Cmdline: data-driven sweep of every src/common/content/cmdline.ya
     }
 
     if (action === "grep") {
-      test(`:${def.name} <query> opens the grep overlay pre-filled and already searching`, async ({ page }) => {
+      test(`:${def.name} <query> opens the grep overlay pre-filled and already searching`, async ({
+        page,
+      }) => {
         await gotoReady(page, "/");
         await page.keyboard.press(":");
         await typeAndEnter(page, `${def.name} svelte`);
@@ -629,7 +663,9 @@ test.describe("Cmdline: data-driven sweep of every src/common/content/cmdline.ya
         const hits = search(files, "svelte");
         test.skip(hits.length === 0, "fixture/real index has no 'svelte' hits to assert against");
         await expect(page.locator('[data-testid="grep-row"]')).not.toHaveCount(0);
-        await expect(page.locator('[data-testid="grep-counter"]')).toHaveText(formatCount(hits, files, "svelte"));
+        await expect(page.locator('[data-testid="grep-counter"]')).toHaveText(
+          formatCount(hits, files, "svelte"),
+        );
       });
       continue;
     }
@@ -647,7 +683,9 @@ test.describe("Cmdline: data-driven sweep of every src/common/content/cmdline.ya
     }
 
     if (action === "resume") {
-      test(`:${def.name} downloads the resume via window.open, same as Profile's r`, async ({ page }) => {
+      test(`:${def.name} downloads the resume via window.open, same as Profile's r`, async ({
+        page,
+      }) => {
         await gotoReady(page, "/");
         await mockOpen(page);
         await page.keyboard.press(":");
@@ -660,13 +698,17 @@ test.describe("Cmdline: data-driven sweep of every src/common/content/cmdline.ya
 
     if (action === "exit-program") {
       // Exits the active pane's program to a shell in the same window without killing it; the last-remaining-window case is its own test below, since nothing here is actually being killed.
-      test(`:${def.name} exits the active pane's program to a shell in the same window`, async ({ page }) => {
+      test(`:${def.name} exits the active pane's program to a shell in the same window`, async ({
+        page,
+      }) => {
         await gotoReady(page, "/repositories");
         await page.keyboard.press(":");
         await typeAndEnter(page, def.name);
         await expect(overlay(page)).not.toBeVisible();
         // Window survives (same stable id) and is auto-renamed live to "zsh"; its URL stays frozen since pushState only happens for canonical program windows, and "shell" isn't one.
-        await expect(page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]')).toHaveText(/zsh/);
+        await expect(
+          page.locator('[data-testid="status-bar-window"][data-window-id="repositories"]'),
+        ).toHaveText(/zsh/);
         await expect(page.locator('[data-testid="shell-prompt"]')).toBeVisible();
         await expect(page).toHaveURL(/\/repositories$/);
       });

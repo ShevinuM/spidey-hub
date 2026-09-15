@@ -180,7 +180,11 @@
             >
               {t.label}
             </div>
-            <div style="font:400 10px 'JetBrains Mono',monospace;color:rgba(223,232,230,.35);flex:none">{t.count}</div>
+            <div
+              style="font:400 10px 'JetBrains Mono',monospace;color:rgba(223,232,230,.35);flex:none"
+            >
+              {t.count}
+            </div>
             <div class="help-scope-bar"></div>
           </div>
         {/each}
@@ -207,7 +211,9 @@
               <div
                 style="flex:1;height:1px;background:repeating-linear-gradient(90deg,rgba(87,226,201,.3) 0 3px,transparent 3px 7px)"
               ></div>
-              <div style="font:400 10px 'JetBrains Mono',monospace;color:rgba(223,232,230,.35);white-space:nowrap;flex:none">
+              <div
+                style="font:400 10px 'JetBrains Mono',monospace;color:rgba(223,232,230,.35);white-space:nowrap;flex:none"
+              >
                 {scope.hint}
               </div>
             </div>
@@ -231,12 +237,17 @@
                     {row.desc}
                   </div>
                 </div>
-                <div data-testid="help-row-keys" style="display:flex;flex-wrap:nowrap;gap:6px;justify-content:flex-end">
+                <div
+                  data-testid="help-row-keys"
+                  style="display:flex;flex-wrap:nowrap;gap:6px;justify-content:flex-end"
+                >
                   {#each row.keys as k}
                     <div
                       style="transform:skewX(-16deg);border:1px solid rgba(255,59,78,.55);background:linear-gradient(180deg,rgba(255,59,78,.16),rgba(255,59,78,.03));padding:4px 12px;min-width:34px;text-align:center;flex:none"
                     >
-                      <div style="transform:skewX(16deg);font:500 12px 'JetBrains Mono',monospace;color:#ffd7dc;white-space:nowrap">
+                      <div
+                        style="transform:skewX(16deg);font:500 12px 'JetBrains Mono',monospace;color:#ffd7dc;white-space:nowrap"
+                      >
                         {k}
                       </div>
                     </div>

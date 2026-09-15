@@ -1,6 +1,6 @@
 # Playwright
 
-Playwright-API mechanics: locators, assertions, waiting, and fixture/context semantics. Testing *strategy* — what earns an e2e vs. a visual test, the page-object structure, file placement — lives in `../testing/e2e-testing.md` and `../testing/visual-testing.md`.
+Playwright-API mechanics: locators, assertions, waiting, and fixture/context semantics. Testing _strategy_ — what earns an e2e vs. a visual test, the page-object structure, file placement — lives in `../testing/e2e-testing.md` and `../testing/visual-testing.md`.
 
 ## Locators
 
@@ -24,5 +24,5 @@ Playwright-API mechanics: locators, assertions, waiting, and fixture/context sem
 
 `toHaveScreenshot`/`toMatchSnapshot` use pixelmatch as their comparator internally — there's no separate library to install or call by hand, only Playwright's own `expect` options to configure.
 
-- [ ] **R010** `threshold` and `maxDiffPixels`/`maxDiffPixelRatio` are different knobs, not interchangeable: `threshold` (0–1, compared in YIQ color space) controls how different two pixels' *colors* must be before they count as differing at all; `maxDiffPixels`/`maxDiffPixelRatio` controls how many already-counted differing pixels the whole comparison tolerates before failing. Per `../testing/visual-testing.md`'s self-baseline policy, leave both tolerance options unset (effectively zero) rather than widening either to make a flaky golden pass — see that file's R007 for why a wider tolerance hides non-determinism instead of fixing it.
+- [ ] **R010** `threshold` and `maxDiffPixels`/`maxDiffPixelRatio` are different knobs, not interchangeable: `threshold` (0–1, compared in YIQ color space) controls how different two pixels' _colors_ must be before they count as differing at all; `maxDiffPixels`/`maxDiffPixelRatio` controls how many already-counted differing pixels the whole comparison tolerates before failing. Per `../testing/visual-testing.md`'s self-baseline policy, leave both tolerance options unset (effectively zero) rather than widening either to make a flaky golden pass — see that file's R007 for why a wider tolerance hides non-determinism instead of fixing it.
 - [ ] **R011** On a failed screenshot assertion, read the generated diff image before the differing-pixel count — a small `maxDiffPixels` overage can be one solid mis-rendered region (a real bug) or scattered single-pixel noise across the page (usually a determinism problem, not a rendering one), and only the image tells you which.

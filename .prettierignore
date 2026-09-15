@@ -6,6 +6,18 @@ src/generated/**
 **/goldens/**
 src/features/grep/tests/ui/support/grep-index.json
 
+# Copied verbatim into dist/generated/ by build:fixtures — these bytes reach the rendered artifact.
+src/features/repositories/tests/ui/support/repos/*.json
+src/features/shell-fs/tests/ui/support/fs-index.json
+src/features/repositories/tests/ui/support/contributions.json
+
+# Rendered one source line per terminal row, and prettier inserts a blank line after YAML
+# frontmatter and after every ATX heading, so a reformat here is a pixel change by construction.
+src/features/employment/content/personnel/**/*.md
+src/features/employment/tests/ui/support/personnel/**/*.md
+src/features/repositories/content/repositories/*.md
+src/features/repositories/tests/ui/support/repositories/*.md
+
 # Vendored third-party design handoff — not this repo's source.
 reference/
 

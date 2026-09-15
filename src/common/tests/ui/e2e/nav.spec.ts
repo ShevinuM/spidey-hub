@@ -31,7 +31,9 @@ const WINDOW_NAMES: Record<string, string> = {
  * omit it for assertions made before any in-test window switch (a fresh
  * `gotoReady`/SSR load has no previous window, so no flag renders). */
 function winText(activeId: string, lastId?: string): string {
-  return WINDOWS.map((id, i) => `${i}:${WINDOW_NAMES[id]}${id === activeId ? "*" : id === lastId ? "-" : ""}`).join(" ");
+  return WINDOWS.map(
+    (id, i) => `${i}:${WINDOW_NAMES[id]}${id === activeId ? "*" : id === lastId ? "-" : ""}`,
+  ).join(" ");
 }
 
 /** Waits for Terminal.svelte's real keydown/popstate listeners to attach (`[data-terminal-ready="true"]`) — SSR markup renders before hydration completes, so visibility alone isn't proof the app can handle a keypress yet (this race was observed flaking without the wait). */
@@ -83,7 +85,9 @@ test.describe("view switching + status bar (bug fix 1: numeric order)", () => {
     expect(await statusBarText(page)).toBe(winText("profile", "dashboard"));
   });
 
-  test("Ctrl-b 3 switches to retina-v — renders BETWEEN employment and profile (bug fix 1)", async ({ page }) => {
+  test("Ctrl-b 3 switches to retina-v — renders BETWEEN employment and profile (bug fix 1)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await prefixDigit(page, "3");
     await expect(page).toHaveURL(/\/retina-v$/);
@@ -164,7 +168,9 @@ test.describe("status bar navigation (mouse)", () => {
     await gotoReady(page, "/");
     const windows = page.locator('[data-testid="status-bar-window"]');
     await expect(windows).toHaveCount(6);
-    const cursors = await windows.evaluateAll((els) => els.map((el) => getComputedStyle(el).cursor));
+    const cursors = await windows.evaluateAll((els) =>
+      els.map((el) => getComputedStyle(el).cursor),
+    );
     expect(cursors.every((c) => c === "pointer")).toBe(true);
   });
 
@@ -216,7 +222,9 @@ test.describe("dashboard rename + live footer pane count", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("the tracker menu row reads plain 'Retina-V', not 'E.D.I.T.H: Retina-V'", async ({ page }) => {
+  test("the tracker menu row reads plain 'Retina-V', not 'E.D.I.T.H: Retina-V'", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     const row = page.locator('[data-testid="dashboard-menu-row"][data-menu-id="tracker"]');
     await expect(row).toHaveText(/Retina-V/);
@@ -276,7 +284,12 @@ test.describe("modifier fall-through", () => {
   test("a held-modifier `/` keydown (Cmd+/) is NOT preventDefault-ed", async ({ page }) => {
     await gotoReady(page, "/");
     const prevented = await page.evaluate(() => {
-      const ev = new KeyboardEvent("keydown", { key: "/", metaKey: true, bubbles: true, cancelable: true });
+      const ev = new KeyboardEvent("keydown", {
+        key: "/",
+        metaKey: true,
+        bubbles: true,
+        cancelable: true,
+      });
       window.dispatchEvent(ev);
       return ev.defaultPrevented;
     });
@@ -311,7 +324,9 @@ test.describe("live clock (bug fix 2)", () => {
 
 test.describe("wallpaper blur/darken behind windowed views", () => {
   async function wallpaperFilter(page: Page): Promise<string> {
-    return page.locator('[data-testid="wallpaper-layer"]').evaluate((el) => getComputedStyle(el).filter);
+    return page
+      .locator('[data-testid="wallpaper-layer"]')
+      .evaluate((el) => getComputedStyle(el).filter);
   }
 
   test("dashboard/repositories/employment views blur+darken the wallpaper", async ({ page }) => {
@@ -339,29 +354,45 @@ test.describe("wallpaper blur/darken behind windowed views", () => {
 });
 
 test.describe("dashboard wordmark restyle + outer chrome removal", () => {
-  test("SPIDEY-HUB wordmark is unplated: white fill + red stroke, no bordered plate wrapper", async ({ page }) => {
+  test("SPIDEY-HUB wordmark is unplated: white fill + red stroke, no bordered plate wrapper", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     const wordmark = page.locator('[data-testid="dashboard-wordmark"]');
     await expect(wordmark).toBeVisible();
 
     const style = await wordmark.evaluate((el) => {
       const cs = getComputedStyle(el);
-      return { color: cs.color, strokeWidth: cs.webkitTextStrokeWidth, strokeColor: cs.webkitTextStrokeColor };
+      return {
+        color: cs.color,
+        strokeWidth: cs.webkitTextStrokeWidth,
+        strokeColor: cs.webkitTextStrokeColor,
+      };
     });
     expect(style.color).toBe("rgb(255, 255, 255)");
     expect(style.strokeWidth).not.toBe("0px");
     expect(style.strokeColor).not.toBe("");
 
-    const parentBorder = await wordmark.evaluate((el) => getComputedStyle(el.parentElement as Element).borderStyle);
+    const parentBorder = await wordmark.evaluate(
+      (el) => getComputedStyle(el.parentElement as Element).borderStyle,
+    );
     expect(parentBorder).toBe("none");
   });
 
-  test("dashboard's outer window card has no background/border/shadow chrome (item 11)", async ({ page }) => {
+  test("dashboard's outer window card has no background/border/shadow chrome (item 11)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
-    const card = page.locator('[data-testid="dashboard-wordmark"]').locator("xpath=ancestor::div[2]");
+    const card = page
+      .locator('[data-testid="dashboard-wordmark"]')
+      .locator("xpath=ancestor::div[2]");
     const style = await card.evaluate((el) => {
       const cs = getComputedStyle(el);
-      return { boxShadow: cs.boxShadow, backdropFilter: cs.backdropFilter, borderStyle: cs.borderStyle };
+      return {
+        boxShadow: cs.boxShadow,
+        backdropFilter: cs.backdropFilter,
+        borderStyle: cs.borderStyle,
+      };
     });
     expect(style.boxShadow).toBe("none");
     expect(style.backdropFilter === "none" || style.backdropFilter === "").toBe(true);

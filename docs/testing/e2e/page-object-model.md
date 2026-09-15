@@ -11,11 +11,12 @@ class RepositoriesPage {
   constructor(private readonly page: Page) {}
 
   get repoRow() {
-    return (name: string) => this.page.getByTestId('repositories-repo-row').filter({ hasText: name });
+    return (name: string) =>
+      this.page.getByTestId("repositories-repo-row").filter({ hasText: name });
   }
 
   get filesPanel() {
-    return this.page.getByTestId('repositories-panel-2');
+    return this.page.getByTestId("repositories-panel-2");
   }
 }
 ```

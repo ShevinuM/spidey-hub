@@ -17,7 +17,9 @@ const MENU = [
 ] as const;
 
 test.describe("Dashboard harness: mounts standalone with seeded fixture props", () => {
-  test("the SPIDEY-HUB wordmark renders with its aria-label — no kernel required", async ({ page }) => {
+  test("the SPIDEY-HUB wordmark renders with its aria-label — no kernel required", async ({
+    page,
+  }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.openHarness();
 
@@ -25,7 +27,9 @@ test.describe("Dashboard harness: mounts standalone with seeded fixture props", 
     await expect(dashboard.wordmark).toHaveAttribute("aria-label", "SPIDEY-HUB");
   });
 
-  test("all 5 menu rows render, in yaml order, with their real labels/icons and synthetic hotkey bindings", async ({ page }) => {
+  test("all 5 menu rows render, in yaml order, with their real labels/icons and synthetic hotkey bindings", async ({
+    page,
+  }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.openHarness();
 
@@ -53,7 +57,9 @@ test.describe("Dashboard harness: mounts standalone with seeded fixture props", 
     await expect(dashboard.footerSyncLine).toHaveText("⚡ synced 6/6 panes in 48.23ms");
   });
 
-  test("no Terminal kernel chrome mounts alongside it (no status bar, no window switching)", async ({ page }) => {
+  test("no Terminal kernel chrome mounts alongside it (no status bar, no window switching)", async ({
+    page,
+  }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.openHarness();
 

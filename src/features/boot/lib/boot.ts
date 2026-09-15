@@ -24,10 +24,7 @@ export function pct(elapsedMs: number, durationMs: number): number {
   return Math.max(0, Math.min(100, Math.round(eased * 100 + jitter)));
 }
 
-export function phaseLabel(
-  pctValue: number,
-  labels: BootData["phaseLabels"],
-): string {
+export function phaseLabel(pctValue: number, labels: BootData["phaseLabels"]): string {
   if (pctValue >= 99) return labels.ready;
   if (pctValue >= 86) return labels.lock;
   if (pctValue >= 60) return labels.link;
@@ -76,7 +73,12 @@ export function logRows(progressValue: number, log: BootLogEntry[]): BootLogRow[
       tagColor: LOG_TAG_COLOR[entry.tag],
       label: entry.label,
       val: entry.val,
-      valColor: entry.tag === "warn" ? "#ff6b6f" : entry.tag === "done" ? "#d9b04a" : "rgba(244,236,233,.9)",
+      valColor:
+        entry.tag === "warn"
+          ? "#ff6b6f"
+          : entry.tag === "done"
+            ? "#d9b04a"
+            : "rgba(244,236,233,.9)",
     }));
   return rows.slice(-5);
 }

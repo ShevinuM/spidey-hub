@@ -60,7 +60,10 @@ export function programToViewId(program: ProgramName): ViewId | null {
  *
  * `undefined` if that view's window isn't present (e.g. it was killed).
  */
-export function viewToTmuxBinding(view: ViewId, windowNumbers: Record<string, number>): string | undefined {
+export function viewToTmuxBinding(
+  view: ViewId,
+  windowNumbers: Record<string, number>,
+): string | undefined {
   const number = windowNumbers[viewIdToProgram(view)];
   return number === undefined ? undefined : `C-b ${number}`;
 }

@@ -40,15 +40,15 @@ playwright.config.ts           root config — see "Playwright projects" below
 
 There is one root `playwright.config.ts`, and every tier is a Playwright `project` entry in it rather than a separate folder-based pipeline. Folder grouping (`tests/ui/`) and project grouping (the `projects` array) are independent — e2e and visual sit under the same `ui/` parent but stay separate projects because they run against different builds and different `use` options:
 
-| project | scope | what it's for |
-|---|---|---|
-| `smoke` | `tests/ui/smoke/**` | Fast, shallow, cross-feature checks (every route loads with no console error, the terminal boots, navigation between features works). Runs on every PR — the pre-merge gate. |
-| `<feature>` (one per feature) | `src/features/<feature>/tests/ui/e2e/**` | The thorough tier for that feature's own behavior, against the real build. There's no separate "acceptance" tier, because a feature project already scopes depth by feature rather than by an arbitrary shallow/deep split. |
-| `<feature>-visual` (one per feature) | `src/features/<feature>/tests/ui/visual/**` | Golden pixel comparison against the fixture build, with `animations: "disabled"` — a project-wide `use` option the e2e project doesn't set. |
+| project                              | scope                                       | what it's for                                                                                                                                                                                                               |
+| ------------------------------------ | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `smoke`                              | `tests/ui/smoke/**`                         | Fast, shallow, cross-feature checks (every route loads with no console error, the terminal boots, navigation between features works). Runs on every PR — the pre-merge gate.                                                |
+| `<feature>` (one per feature)        | `src/features/<feature>/tests/ui/e2e/**`    | The thorough tier for that feature's own behavior, against the real build. There's no separate "acceptance" tier, because a feature project already scopes depth by feature rather than by an arbitrary shallow/deep split. |
+| `<feature>-visual` (one per feature) | `src/features/<feature>/tests/ui/visual/**` | Golden pixel comparison against the fixture build, with `animations: "disabled"` — a project-wide `use` option the e2e project doesn't set.                                                                                 |
 
 Running `pnpm exec playwright test --project=repositories` runs only that feature's e2e specs; `--project=smoke` runs only the cross-feature health checks. This is the actual mechanism behind `../../rules/testing/README.md`'s "each feature's tests live inside its own folder" rule — the projects array is what turns that folder layout into independently runnable suites.
 
-The tier decision when adding a new spec: *is this deep, feature-specific behavior?* → the feature's own `tests/ui/e2e/`. *Is this a broad, whole-app check cheap enough to run on every single PR regardless of what changed?* → root `tests/ui/smoke/`.
+The tier decision when adding a new spec: _is this deep, feature-specific behavior?_ → the feature's own `tests/ui/e2e/`. _Is this a broad, whole-app check cheap enough to run on every single PR regardless of what changed?_ → root `tests/ui/smoke/`.
 
 ## `tests/ui/pages/` — page object model (POM)
 
@@ -59,7 +59,8 @@ class RepositoriesPage {
   constructor(private readonly page: Page) {}
 
   get repoRow() {
-    return (name: string) => this.page.getByTestId('repositories-repo-row').filter({ hasText: name });
+    return (name: string) =>
+      this.page.getByTestId("repositories-repo-row").filter({ hasText: name });
   }
 
   async openRepo(name: string) {
@@ -79,7 +80,7 @@ Fixtures power shared per-feature setup (seeding a fixture build, navigating to 
 ```ts
 export const test = base.extend<{ repositoriesPage: RepositoriesPage }>({
   repositoriesPage: async ({ page }, use) => {
-    await page.goto('/repositories');
+    await page.goto("/repositories");
     await use(new RepositoriesPage(page));
   },
 });

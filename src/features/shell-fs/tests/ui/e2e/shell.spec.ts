@@ -35,7 +35,9 @@ interface ShellYaml {
 }
 
 function loadShellYaml(): ShellYaml {
-  return YAML.parse(readFileSync(join(ROOT, "src/features/shell-fs/content/shell.yaml"), "utf8")) as ShellYaml;
+  return YAML.parse(
+    readFileSync(join(ROOT, "src/features/shell-fs/content/shell.yaml"), "utf8"),
+  ) as ShellYaml;
 }
 
 function loadFsIndex(): FsEntry[] {
@@ -51,11 +53,15 @@ interface RepoFile {
 }
 
 function loadGrepFiles(): RepoFile[] {
-  return JSON.parse(readFileSync(join(ROOT, "public/generated/grep-index.json"), "utf8")) as RepoFile[];
+  return JSON.parse(
+    readFileSync(join(ROOT, "public/generated/grep-index.json"), "utf8"),
+  ) as RepoFile[];
 }
 
 function loadRepoFiles(name: string): RepoFile[] {
-  const doc = JSON.parse(readFileSync(join(ROOT, `public/generated/repos/${name}.json`), "utf8")) as {
+  const doc = JSON.parse(
+    readFileSync(join(ROOT, `public/generated/repos/${name}.json`), "utf8"),
+  ) as {
     files: RepoFile[];
   };
   return doc.files;
@@ -72,7 +78,8 @@ async function gotoReady(page: Page, path: string) {
 const scroller = (page: Page) => page.locator('[data-testid="shell-scroller"]');
 const shellInput = (page: Page) => page.locator('[data-testid="shell-input"]');
 const shellPrompt = (page: Page) => page.locator('[data-testid="shell-prompt"]');
-const statusWindow = (page: Page, id: string) => page.locator(`[data-testid="status-bar-window"][data-window-id="${id}"]`);
+const statusWindow = (page: Page, id: string) =>
+  page.locator(`[data-testid="status-bar-window"][data-window-id="${id}"]`);
 
 /** `:q` from a fresh dashboard load — the shared setup every test below
  * except the relaunch/reboot ones starts from. */
@@ -94,7 +101,9 @@ test.describe("`:q` exits the active pane's program to a shell", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("the shell prompt replaces the dashboard, and the window auto-renames live to zsh", async ({ page }) => {
+  test("the shell prompt replaces the dashboard, and the window auto-renames live to zsh", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await expect(statusWindow(page, "dashboard")).toHaveText("0:dashboard*");
     await page.keyboard.press(":");
@@ -114,7 +123,9 @@ test.describe("typing a bare view name relaunches that program in the pane", () 
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("`dashboard` round-trips the window's auto-rename: dashboard -> zsh -> dashboard", async ({ page }) => {
+  test("`dashboard` round-trips the window's auto-rename: dashboard -> zsh -> dashboard", async ({
+    page,
+  }) => {
     await dropToShell(page);
     await expect(statusWindow(page, "dashboard")).toHaveText("0:zsh*");
     await runInShell(page, "dashboard");
@@ -154,7 +165,9 @@ test.describe("manual rename wins over auto-rename", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("a Ctrl-b , renamed window keeps its manual name through `:q` — no auto-rename to zsh", async ({ page }) => {
+  test("a Ctrl-b , renamed window keeps its manual name through `:q` — no auto-rename to zsh", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.keyboard.down("Control");
     await page.keyboard.press("b");
@@ -182,7 +195,9 @@ test.describe("shell builtins", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("pwd/cd: navigates into a real directory and back, matching the real fs-index", async ({ page }) => {
+  test("pwd/cd: navigates into a real directory and back, matching the real fs-index", async ({
+    page,
+  }) => {
     await dropToShell(page);
     await runInShell(page, "pwd");
     await expect(scroller(page)).toContainText(shellYaml.homeLabel);
@@ -206,11 +221,15 @@ test.describe("shell builtins", () => {
     }
   });
 
-  test("tree: renders the real fs-index as a tree(1)-style listing, rooted at `.`", async ({ page }) => {
+  test("tree: renders the real fs-index as a tree(1)-style listing, rooted at `.`", async ({
+    page,
+  }) => {
     await dropToShell(page);
     await runInShell(page, "tree");
     const expected = renderTree(fsEntries, []);
-    await expect(page.locator('[data-testid="shell-line"]', { hasText: "." }).first()).toBeVisible();
+    await expect(
+      page.locator('[data-testid="shell-line"]', { hasText: "." }).first(),
+    ).toBeVisible();
     // Spot-check a couple of real rendered rows (connectors included) rather
     // than the whole (potentially long) tree.
     for (const row of expected.slice(1, 3)) {
@@ -254,7 +273,9 @@ test.describe("shell builtins", () => {
     await expect(scroller(page)).toContainText(pkg!.lines[1]);
   });
 
-  test("cat repos/Sheldon/README.md prints the real repo content (per-repo index)", async ({ page }) => {
+  test("cat repos/Sheldon/README.md prints the real repo content (per-repo index)", async ({
+    page,
+  }) => {
     await dropToShell(page);
     await runInShell(page, "cat repos/Sheldon/README.md");
     const files = loadRepoFiles("Sheldon");
@@ -274,7 +295,9 @@ test.describe("vim / vi / nvim", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("vim package.json opens the real site file read-only, and :q returns to the shell", async ({ page }) => {
+  test("vim package.json opens the real site file read-only, and :q returns to the shell", async ({
+    page,
+  }) => {
     await dropToShell(page);
     await runInShell(page, "vim package.json");
     const files = loadGrepFiles();
@@ -282,7 +305,9 @@ test.describe("vim / vi / nvim", () => {
     test.skip(!pkg, "package.json missing from the real grep index");
 
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
-    await expect(page.locator('[data-testid="editor-line-text"]').first()).toHaveText(pkg!.lines[0]);
+    await expect(page.locator('[data-testid="editor-line-text"]').first()).toHaveText(
+      pkg!.lines[0],
+    );
     await expect(shellPrompt(page)).toHaveCount(0);
 
     await page.keyboard.press(":");
@@ -305,7 +330,9 @@ test.describe("vim / vi / nvim", () => {
     await expect(page.locator('[data-testid="editor-scroller"]')).toBeVisible();
   });
 
-  test("vim <nonexistent file> reports a vim-style error line and stays in the shell", async ({ page }) => {
+  test("vim <nonexistent file> reports a vim-style error line and stays in the shell", async ({
+    page,
+  }) => {
     await dropToShell(page);
     await runInShell(page, "vim nonexistent-file-xyz.md");
     await expect(scroller(page)).toContainText(

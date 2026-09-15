@@ -52,7 +52,10 @@ export const TOAST_DURATION_SCALE_STORAGE_KEY = "edith:notifications-toast-scale
  * pick randomly via `Math.random`, never deterministically. */
 export const NOTIFICATIONS_INJECT_SEED_STORAGE_KEY = "edith:notifications-inject-seed";
 
-export const SEVERITY_META: Record<NotificationSeverity, { color: string; glow: string; glyph: string; label: string }> = {
+export const SEVERITY_META: Record<
+  NotificationSeverity,
+  { color: string; glow: string; glyph: string; label: string }
+> = {
   alert: { color: "#ff5c66", glow: "rgba(255,92,102,.22)", glyph: "▲", label: "ALERT" },
   warn: { color: "#e8b04b", glow: "rgba(232,176,75,.20)", glyph: "■", label: "WARN" },
   info: { color: "#4fd1c5", glow: "rgba(79,209,197,.18)", glyph: "●", label: "INFO" },
@@ -94,7 +97,12 @@ export function parseStoredState(raw: string | null | undefined): NotificationSt
   } catch {
     return null;
   }
-  if (!parsed || typeof parsed !== "object" || !Array.isArray((parsed as Record<string, unknown>).items)) return null;
+  if (
+    !parsed ||
+    typeof parsed !== "object" ||
+    !Array.isArray((parsed as Record<string, unknown>).items)
+  )
+    return null;
   const items = (parsed as { items: unknown[] }).items;
   if (!items.every(isNotificationItem)) return null;
   return { items: items as NotificationItem[] };
@@ -216,7 +224,12 @@ export function injectVisit(
   const seen = new Set(state.items.map((i) => i.id));
   const picks = pickRandomUnseen(pool, seen, count, rand);
   if (picks.length > 0) {
-    const injected: NotificationItem[] = picks.map((p) => ({ ...p, ts: now, read: false, folder: "inbox" }));
+    const injected: NotificationItem[] = picks.map((p) => ({
+      ...p,
+      ts: now,
+      read: false,
+      folder: "inbox",
+    }));
     return { state: { items: [...injected, ...state.items] }, injected };
   }
   const stale = oldestArchivedEntry(state.items);
@@ -263,7 +276,10 @@ export function markAllRead(state: NotificationState): NotificationState {
 // Derived selectors
 // ---------------------------------------------------------------------------
 
-export function folderItems(state: NotificationState, folder: NotificationFolder): NotificationItem[] {
+export function folderItems(
+  state: NotificationState,
+  folder: NotificationFolder,
+): NotificationItem[] {
   return state.items.filter((i) => i.folder === folder);
 }
 
@@ -306,7 +322,9 @@ export function parseToastDurationScale(raw: string | null | undefined): number 
 export function resolveToastDurationScale(): number {
   try {
     if (typeof sessionStorage !== "undefined") {
-      const parsed = parseToastDurationScale(sessionStorage.getItem(TOAST_DURATION_SCALE_STORAGE_KEY));
+      const parsed = parseToastDurationScale(
+        sessionStorage.getItem(TOAST_DURATION_SCALE_STORAGE_KEY),
+      );
       if (parsed !== null) return parsed;
     }
   } catch {
@@ -388,7 +406,7 @@ export function buildFixtureState(now: number): NotificationState {
       {
         id: "fixture-info-spam",
         sev: "info",
-        title: "\"You have won 6 web-fluid cartridges\"",
+        title: '"You have won 6 web-fluid cartridges"',
         body: "Sender spoofed oscorp-labs.co · quarantined on arrival.",
         src: "mail/unknown",
         ts: now - 3 * HOUR,

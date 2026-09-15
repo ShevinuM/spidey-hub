@@ -18,14 +18,26 @@
     children?: Snippet;
   }
 
-  const { testid, copySource, flex, minHeight = false, padding, columnBody = false, border, n, label, children }: Props =
-    $props();
+  const {
+    testid,
+    copySource,
+    flex,
+    minHeight = false,
+    padding,
+    columnBody = false,
+    border,
+    n,
+    label,
+    children,
+  }: Props = $props();
 </script>
 
 <div
   data-testid={testid}
   data-copy-source={copySource ? "" : undefined}
-  style="position:relative;flex:{flex};{minHeight ? 'min-height:0;' : ''}border:1px solid {border};border-radius:4px;padding:{padding}{columnBody
+  style="position:relative;flex:{flex};{minHeight
+    ? 'min-height:0;'
+    : ''}border:1px solid {border};border-radius:4px;padding:{padding}{columnBody
     ? ';display:flex;flex-direction:column'
     : ''}"
 >

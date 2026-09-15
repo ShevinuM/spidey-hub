@@ -10,7 +10,11 @@
 import { expect, test } from "@playwright/test";
 import { BootPage } from "../pages/BootPage";
 import { pct, phaseLabel } from "../../../lib/boot";
-import { BOOT_HARD_STOP_MS, BOOT_MS, BOOT_OUT_MS } from "../../../../../common/tests/ui/support/recipes";
+import {
+  BOOT_HARD_STOP_MS,
+  BOOT_MS,
+  BOOT_OUT_MS,
+} from "../../../../../common/tests/ui/support/recipes";
 
 // Hand-mirrored from content/boot.yaml — no runtime import is possible here
 // (Vite-only `?raw` syntax), same convention as boot.spec.ts's own literals.
@@ -26,7 +30,9 @@ test.describe("Boot harness: mounts standalone with seeded fixture props", () =>
     await expect(boot.phase).toBeVisible();
   });
 
-  test("pct/phase advance under the driven clock, tracking src/features/boot/lib/boot.ts's own formula", async ({ page }) => {
+  test("pct/phase advance under the driven clock, tracking src/features/boot/lib/boot.ts's own formula", async ({
+    page,
+  }) => {
     const boot = new BootPage(page);
     await boot.openHarnessAndAwaitBootRunning();
 
@@ -52,7 +58,9 @@ test.describe("Boot harness: mounts standalone with seeded fixture props", () =>
     await expect(boot.phase).toHaveText(expectedPhase);
   });
 
-  test("reaches 100%/READY and shows the outro bloom once the hard-stop timeout has fired", async ({ page }) => {
+  test("reaches 100%/READY and shows the outro bloom once the hard-stop timeout has fired", async ({
+    page,
+  }) => {
     const boot = new BootPage(page);
     await boot.openHarnessAndAwaitBootRunning();
 
@@ -73,7 +81,9 @@ test.describe("Boot harness: mounts standalone with seeded fixture props", () =>
     await expect(boot.bootSequence).toHaveCount(0);
   });
 
-  test("no Terminal kernel chrome mounts alongside it (no status bar, no window switching)", async ({ page }) => {
+  test("no Terminal kernel chrome mounts alongside it (no status bar, no window switching)", async ({
+    page,
+  }) => {
     const boot = new BootPage(page);
     await boot.openHarnessAndAwaitBootRunning();
     await expect(boot.statusBar.windows).toHaveCount(0);

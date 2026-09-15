@@ -16,7 +16,10 @@ export class EmploymentPage {
   /** Navigates to the standalone harness route and waits for the wrapper's `data-ready` hydration flag rather than a content locator, since the content markup is present in the static HTML before `client:load`'s listener attaches. */
   async openHarness() {
     await this.page.goto("/harness/employment");
-    await expect(this.page.getByTestId("employment-harness-ready")).toHaveAttribute("data-ready", "true");
+    await expect(this.page.getByTestId("employment-harness-ready")).toHaveAttribute(
+      "data-ready",
+      "true",
+    );
   }
 
   get rows() {

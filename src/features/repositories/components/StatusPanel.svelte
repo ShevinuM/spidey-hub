@@ -43,13 +43,18 @@
         style="flex:1;min-width:0;overflow:hidden;display:grid;grid-template-rows:repeat(7,6px);grid-auto-flow:column;grid-auto-columns:6px;gap:2px;justify-content:center"
       >
         {#each state.contributionLevels as level, i (i)}
-          <div data-testid="repositories-contrib-cell" style="border-radius:1px;background:{CONTRIB_LEVEL_COLORS[level]}"></div>
+          <div
+            data-testid="repositories-contrib-cell"
+            style="border-radius:1px;background:{CONTRIB_LEVEL_COLORS[level]}"
+          ></div>
         {/each}
       </div>
       <div style="display:flex;align-items:center;gap:16px;white-space:nowrap">
         <span style="color:rgba(217,176,74,.85)">{repositories.statusLine.mainLabel}</span>
         {#if state.lastPushLabel}
-          <span data-testid="repositories-last-push" style="color:rgba(196,216,232,.45)">{state.lastPushLabel}</span>
+          <span data-testid="repositories-last-push" style="color:rgba(196,216,232,.45)"
+            >{state.lastPushLabel}</span
+          >
         {/if}
         <span style="display:flex;align-items:center;gap:6px;color:#5fc6b4">
           <span
@@ -61,4 +66,3 @@
     </div>
   {/snippet}
 </RepositoriesPanel>
-

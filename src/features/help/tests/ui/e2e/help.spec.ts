@@ -41,7 +41,9 @@ interface HelpScopeFrontmatter {
 }
 
 function realHelp(): HelpData {
-  const chrome = YAML.parse(readFileSync(join(ROOT, "src/features/help/content/help.yaml"), "utf8")) as HelpChrome;
+  const chrome = YAML.parse(
+    readFileSync(join(ROOT, "src/features/help/content/help.yaml"), "utf8"),
+  ) as HelpChrome;
   const entries = readContentDir<HelpScopeFrontmatter>(join(ROOT, "src/features/help/content"));
   const scopes = entries
     .slice()
@@ -119,7 +121,9 @@ test.describe("Help: content is sourced from src/features/help/content/help.yaml
     await expect(rows(page).first()).toContainText(firstRow.desc);
   });
 
-  test("the sidebar lists 'All bindings' plus one tab per scope, with matching counts", async ({ page }) => {
+  test("the sidebar lists 'All bindings' plus one tab per scope, with matching counts", async ({
+    page,
+  }) => {
     await gotoReady(page, "/help");
     const help = realHelp();
     const totalRows = help.scopes.reduce((n, s) => n + s.rows.length, 0);
@@ -129,7 +133,9 @@ test.describe("Help: content is sourced from src/features/help/content/help.yaml
     await expect(scopeTabs(page).first()).toContainText(String(totalRows));
 
     const secondScope = help.scopes[1];
-    const secondTab = page.locator(`[data-testid="help-scope-tab"][data-scope-id="${secondScope.id}"]`);
+    const secondTab = page.locator(
+      `[data-testid="help-scope-tab"][data-scope-id="${secondScope.id}"]`,
+    );
     await expect(secondTab).toContainText(secondScope.label);
     await expect(secondTab).toContainText(String(secondScope.rows.length));
   });
@@ -150,7 +156,9 @@ test.describe("Help: content is sourced from src/features/help/content/help.yaml
   test("the previously-undocumented Profile `r` resume key is listed", async ({ page }) => {
     await gotoReady(page, "/help");
     const help = realHelp();
-    const hasR = help.scopes.some((s) => s.rows.some((r) => r.keys.includes("r") && /résumé/i.test(r.desc)));
+    const hasR = help.scopes.some((s) =>
+      s.rows.some((r) => r.keys.includes("r") && /résumé/i.test(r.desc)),
+    );
     expect(hasR).toBe(true);
     await expect(page.locator('[data-testid="help-row"]', { hasText: "PDF" })).toBeVisible();
   });
@@ -163,7 +171,9 @@ test.describe("Help: filter", () => {
     await expect(page.locator('[data-testid="help-filter-cursor"]')).toBeVisible();
   });
 
-  test("typing filters rows by name/description/keys and updates the shown count", async ({ page }) => {
+  test("typing filters rows by name/description/keys and updates the shown count", async ({
+    page,
+  }) => {
     await gotoReady(page, "/help");
     const before = await rows(page).count();
 

@@ -48,7 +48,9 @@ test.describe("cold boot: toasts survive the boot overlay", () => {
   // Severity (and duration) is drawn randomly per visit with no seed
   // pre-set, so 5 independent runs cover the info/warn/alert mix.
   for (let i = 1; i <= 5; i++) {
-    test(`run ${i}: at least one toast is visible and still counting down once boot clears`, async ({ page }) => {
+    test(`run ${i}: at least one toast is visible and still counting down once boot clears`, async ({
+      page,
+    }) => {
       await page.route("**/api.github.com/**", (route) => route.abort());
       await freshBoot(page);
 
@@ -68,7 +70,9 @@ test.describe("cold boot: toasts survive the boot overlay", () => {
 });
 
 test.describe("returning visitor: boot-seen already set", () => {
-  test("toasts still arm immediately and auto-dismiss on their normal schedule (no-op gate)", async ({ page }) => {
+  test("toasts still arm immediately and auto-dismiss on their normal schedule (no-op gate)", async ({
+    page,
+  }) => {
     await page.route("**/api.github.com/**", (route) => route.abort());
     await page.addInitScript((key) => {
       try {

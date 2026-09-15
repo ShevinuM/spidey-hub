@@ -51,9 +51,11 @@ test("netStats: prefers navigator.connection's own downlink/rtt; falls back to m
   expect(netStats({ rtt: 0 }, null, null).rtt).toBe(60);
 });
 
-test("formatReadout: bare \"offline\" when offline, else \"X.X Mb/s · NNN ms · TYPE\"", () => {
+test('formatReadout: bare "offline" when offline, else "X.X Mb/s · NNN ms · TYPE"', () => {
   expect(formatReadout({ down: 1.3, rtt: 745, type: "LINK" }, false)).toBe("offline");
-  expect(formatReadout({ down: 1.3, rtt: 745, type: "LINK" }, true)).toBe("1.3 Mb/s · 745 ms · LINK");
+  expect(formatReadout({ down: 1.3, rtt: 745, type: "LINK" }, true)).toBe(
+    "1.3 Mb/s · 745 ms · LINK",
+  );
 });
 
 test("smoothRtt: 0.6/0.4 blend, rounded; first sample passes through as-is", () => {
@@ -78,16 +80,34 @@ test("hueForHeight: 212 at h=0 (blue), 0 at h=1 (red)", () => {
 });
 
 test("barHeight: deterministic with an injected rand, clamped to [0.07, cap]", () => {
-  const h = barHeight({ index: 0, barCount: 60, tSeconds: 0, env: 0, cap: 1, burst: 0, rand: () => 0.5 });
+  const h = barHeight({
+    index: 0,
+    barCount: 60,
+    tSeconds: 0,
+    env: 0,
+    cap: 1,
+    burst: 0,
+    rand: () => 0.5,
+  });
   // env=0, burst=0, rand()-0.5=0 => raw value is 0, clamped up to the 0.07 floor.
   expect(h).toBe(0.07);
 
-  const capped = barHeight({ index: 0, barCount: 60, tSeconds: 0, env: 10, cap: 0.3, burst: 0, rand: () => 0.5 });
+  const capped = barHeight({
+    index: 0,
+    barCount: 60,
+    tSeconds: 0,
+    env: 10,
+    cap: 0.3,
+    burst: 0,
+    rand: () => 0.5,
+  });
   expect(capped).toBe(0.3);
 });
 
 test("barBackground / barBoxShadow: segmented-LED gradient string + glow threshold at h>0.7", () => {
-  expect(barBackground(212)).toBe("repeating-linear-gradient(to top, hsl(212 92% 55%) 0 3px, rgba(9,13,18,.85) 3px 4px)");
+  expect(barBackground(212)).toBe(
+    "repeating-linear-gradient(to top, hsl(212 92% 55%) 0 3px, rgba(9,13,18,.85) 3px 4px)",
+  );
   expect(barBoxShadow(0.71, 100)).toBe("0 0 6px hsl(100 92% 55% / .5)");
   expect(barBoxShadow(0.7, 100)).toBe("none");
 });

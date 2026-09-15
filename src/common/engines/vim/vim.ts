@@ -221,7 +221,10 @@ export function normalizeCharRange(anchor: CursorPos, cursor: CursorPos): Visual
 }
 
 export function normalizeLineRange(anchor: CursorPos, cursor: CursorPos): LineRange {
-  return { startLine: Math.min(anchor.line, cursor.line), endLine: Math.max(anchor.line, cursor.line) };
+  return {
+    startLine: Math.min(anchor.line, cursor.line),
+    endLine: Math.max(anchor.line, cursor.line),
+  };
 }
 
 /** The literal text a charwise visual selection would yank, re-inserting newlines between spanned lines to match vim's own yanked-text shape. */
@@ -268,7 +271,11 @@ export function findMatches(lines: string[], query: string): SearchMatch[] {
 }
 
 /** `n`/`N` — the next match strictly after (or, for `-1`, before) `from`, wrapping around the buffer's ends; `null` only when there are no matches at all. */
-export function nextMatch(matches: SearchMatch[], from: CursorPos, direction: 1 | -1): SearchMatch | null {
+export function nextMatch(
+  matches: SearchMatch[],
+  from: CursorPos,
+  direction: 1 | -1,
+): SearchMatch | null {
   if (matches.length === 0) return null;
   if (direction === 1) {
     for (const m of matches) {

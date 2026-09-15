@@ -22,6 +22,10 @@ export function readContentDir<T>(dir: string): ContentEntry<T>[] {
       const match = FRONTMATTER_RE.exec(raw);
       if (!match) throw new Error(`${join(dir, name)}: missing frontmatter block`);
       const [, frontmatter, body] = match;
-      return { id: name.replace(/\.md$/, ""), data: YAML.parse(frontmatter) as T, body: body.trim() };
+      return {
+        id: name.replace(/\.md$/, ""),
+        data: YAML.parse(frontmatter) as T,
+        body: body.trim(),
+      };
     });
 }

@@ -36,7 +36,11 @@ test.describe("Repositories preview: scroll + no horizontal clipping", () => {
     const body = page.locator('[data-testid="repositories-changes-body"]');
     await expect(body).toHaveCSS("overflow-y", "auto");
 
-    const before = await body.evaluate((el) => ({ scrollHeight: el.scrollHeight, clientHeight: el.clientHeight, scrollTop: el.scrollTop }));
+    const before = await body.evaluate((el) => ({
+      scrollHeight: el.scrollHeight,
+      clientHeight: el.clientHeight,
+      scrollTop: el.scrollTop,
+    }));
     expect(before.scrollHeight).toBeGreaterThan(before.clientHeight);
     expect(before.scrollTop).toBe(0);
 
@@ -46,7 +50,10 @@ test.describe("Repositories preview: scroll + no horizontal clipping", () => {
 
     // No horizontal clipping anywhere in the body, even with the 574-char
     // line rendered: content wraps instead of overflowing the ancestor.
-    const overflowX = await body.evaluate((el) => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
+    const overflowX = await body.evaluate((el) => ({
+      scrollWidth: el.scrollWidth,
+      clientWidth: el.clientWidth,
+    }));
     expect(overflowX.scrollWidth).toBeLessThanOrEqual(overflowX.clientWidth);
   });
 });

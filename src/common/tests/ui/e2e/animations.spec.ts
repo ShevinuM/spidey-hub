@@ -1,9 +1,18 @@
 // Svelte scopes `@keyframes` declared in a component `<style>` block but does not rewrite an `animation:` value written in an inline `style="..."` attribute, so a keyframe name ported verbatim into markup can silently resolve to nothing; `getComputedStyle().animationName` can't detect that (it returns the declared name regardless), so this suite cross-checks every live `animation-name` against the actual `CSSKeyframesRule`s in `document.styleSheets` instead.
 //
 // Run directly against a real build — `pnpm exec playwright test src/common/tests/ui/e2e/animations.spec.ts` against `pnpm build` + `node src/common/tests/ui/support/static-server.mjs dist 4322` — never via `pnpm test:e2e`/`pnpm test:visual`.
-import { expect, test, E2E_NOTIFICATIONS_INJECT_SEED, E2E_TOAST_DURATION_SCALE, type Page } from "../support/fixtures";
+import {
+  expect,
+  test,
+  E2E_NOTIFICATIONS_INJECT_SEED,
+  E2E_TOAST_DURATION_SCALE,
+  type Page,
+} from "../support/fixtures";
 import { BOOT_SEEN_STORAGE_KEY } from "../../../../features/boot/lib/boot-state";
-import { NOTIFICATIONS_INJECT_SEED_STORAGE_KEY, TOAST_DURATION_SCALE_STORAGE_KEY } from "../../../../features/notifications/lib/notification-store";
+import {
+  NOTIFICATIONS_INJECT_SEED_STORAGE_KEY,
+  TOAST_DURATION_SCALE_STORAGE_KEY,
+} from "../../../../features/notifications/lib/notification-store";
 
 async function gotoReady(page: Page, path = "/") {
   await page.goto(path);
@@ -47,19 +56,27 @@ test.describe("Phase 1: every animation-name resolves to a real @keyframes rule 
     test(`no dead animation-name on ${route}`, async ({ page }) => {
       await gotoReady(page, route);
       const unresolved = await findUnresolvedAnimationNames(page);
-      expect(unresolved, `dead animation-name(s) on ${route}: ${unresolved.join(", ")}`).toEqual([]);
+      expect(unresolved, `dead animation-name(s) on ${route}: ${unresolved.join(", ")}`).toEqual(
+        [],
+      );
     });
   }
 
-  test("no dead animation-name with the notifications panel open (panelIn, sweep)", async ({ page }) => {
+  test("no dead animation-name with the notifications panel open (panelIn, sweep)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.locator('[data-testid="notifications-bell"]').click();
     await page.locator('[data-testid="notifications-panel"]').waitFor({ state: "visible" });
     const unresolved = await findUnresolvedAnimationNames(page);
-    expect(unresolved, `dead animation-name(s) with panel open: ${unresolved.join(", ")}`).toEqual([]);
+    expect(unresolved, `dead animation-name(s) with panel open: ${unresolved.join(", ")}`).toEqual(
+      [],
+    );
   });
 
-  test("no dead animation-name once a real repo is opened in Repositories (pls open-dot)", async ({ page }) => {
+  test("no dead animation-name once a real repo is opened in Repositories (pls open-dot)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     // Row 0 is the pinned `all-projects` virtual repo (never carries a
     // pulse dot — see ReposPanel.svelte); row 1 is the first real repo.
@@ -70,7 +87,9 @@ test.describe("Phase 1: every animation-name resolves to a real @keyframes rule 
       .first()
       .waitFor({ state: "visible" });
     const unresolved = await findUnresolvedAnimationNames(page);
-    expect(unresolved, `dead animation-name(s) with a repo open: ${unresolved.join(", ")}`).toEqual([]);
+    expect(unresolved, `dead animation-name(s) with a repo open: ${unresolved.join(", ")}`).toEqual(
+      [],
+    );
   });
 });
 
@@ -84,7 +103,9 @@ const INFINITE_ANIMATION_TESTIDS = [
   "employment-timeline-ring-rspin",
 ] as const;
 
-async function sampleTransformTwice(locator: ReturnType<Page["locator"]>): Promise<[string, string]> {
+async function sampleTransformTwice(
+  locator: ReturnType<Page["locator"]>,
+): Promise<[string, string]> {
   const first = await locator.evaluate((el) => getComputedStyle(el).transform);
   await new Promise((r) => setTimeout(r, 400));
   const second = await locator.evaluate((el) => getComputedStyle(el).transform);
@@ -151,7 +172,9 @@ test.describe("Phase 1: prefers-reduced-motion suppresses the repaired infinite 
     expect(await el.evaluate((e) => e.getAnimations().length)).toBe(0);
   }
 
-  test(`${INFINITE_ANIMATION_TESTIDS.join(", ")} carry no live animation under reduced motion`, async ({ browser }) => {
+  test(`${INFINITE_ANIMATION_TESTIDS.join(", ")} carry no live animation under reduced motion`, async ({
+    browser,
+  }) => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     await context.addInitScript(
       ({ bootKey, injectSeedKey, injectSeed, durationScaleKey, durationScale }) => {

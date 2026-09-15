@@ -57,7 +57,12 @@ export function setCachedTree(repo: string, ref: string, paths: string[]): void 
 export function getCachedContent(repo: string, ref: string, path: string): ContentResult | null {
   return readCache<ContentResult>(contentCacheKey(repo, ref, path));
 }
-export function setCachedContent(repo: string, ref: string, path: string, result: ContentResult): void {
+export function setCachedContent(
+  repo: string,
+  ref: string,
+  path: string,
+  result: ContentResult,
+): void {
   writeCache(contentCacheKey(repo, ref, path), result);
 }
 
@@ -68,9 +73,12 @@ interface RawTreeEntry {
 
 /** Maps a GitHub Git Trees API response to its flat list of blob paths, or null if the shape is unrecognizable. */
 export function mapTreeResponse(data: unknown): string[] | null {
-  if (!data || typeof data !== "object" || !Array.isArray((data as { tree?: unknown }).tree)) return null;
+  if (!data || typeof data !== "object" || !Array.isArray((data as { tree?: unknown }).tree))
+    return null;
   const tree = (data as { tree: RawTreeEntry[] }).tree;
-  return tree.filter((e) => e && e.type === "blob" && typeof e.path === "string").map((e) => e.path as string);
+  return tree
+    .filter((e) => e && e.type === "blob" && typeof e.path === "string")
+    .map((e) => e.path as string);
 }
 
 async function fetchTreeForRef(repo: string, ref: string): Promise<string[] | null> {
@@ -85,7 +93,11 @@ async function fetchTreeForRef(repo: string, ref: string): Promise<string[] | nu
 }
 
 /** Lists a repo's file paths at a commit, trying `sha` then falling back to `sha8` (both resolve directly against the Trees API, so no second lookup is needed) — caches the result and returns null on any failure. */
-export async function fetchCommitTree(repo: string, sha: string | undefined, sha8: string): Promise<string[] | null> {
+export async function fetchCommitTree(
+  repo: string,
+  sha: string | undefined,
+  sha8: string,
+): Promise<string[] | null> {
   const candidates = [...new Set([sha, sha8].filter((s): s is string => !!s))];
   for (const ref of candidates) {
     const cached = getCachedTree(repo, ref);
@@ -120,7 +132,11 @@ interface RawContentResponse {
   content?: string;
 }
 
-async function fetchContentForRef(repo: string, path: string, ref: string): Promise<ContentResult | null> {
+async function fetchContentForRef(
+  repo: string,
+  path: string,
+  ref: string,
+): Promise<ContentResult | null> {
   try {
     const encodedPath = path.split("/").map(encodeURIComponent).join("/");
     const url = `https://api.github.com/repos/${GITHUB_OWNER}/${repo}/contents/${encodedPath}?ref=${encodeURIComponent(ref)}`;

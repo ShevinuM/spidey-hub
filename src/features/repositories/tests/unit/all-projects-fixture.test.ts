@@ -5,7 +5,10 @@ import { join } from "node:path";
 
 const ROOT = join(import.meta.dirname, "../../../../..");
 const FIXTURES_PROJECTS_DIR = join(ROOT, "src/features/repositories/tests/ui/support/repositories");
-const FIXTURES_ALL_PROJECTS_JSON = join(ROOT, "src/features/repositories/tests/ui/support/repos/all-projects.json");
+const FIXTURES_ALL_PROJECTS_JSON = join(
+  ROOT,
+  "src/features/repositories/tests/ui/support/repos/all-projects.json",
+);
 
 interface RepoFile {
   path: string;
@@ -33,8 +36,11 @@ function buildAllProjectsIndex(srcDir: string): RepoIndex {
 test("src/features/repositories/tests/ui/support/repos/all-projects.json exactly matches an index freshly built from src/features/repositories/tests/ui/support/repositories/*.md", () => {
   const expected = buildAllProjectsIndex(FIXTURES_PROJECTS_DIR);
   const committed = JSON.parse(readFileSync(FIXTURES_ALL_PROJECTS_JSON, "utf8")) as RepoIndex;
-  expect(committed, "src/features/repositories/tests/ui/support/repos/all-projects.json is stale — regenerate it from src/features/repositories/tests/ui/support/repositories/*.md (see README's " +
-      '"all-projects fixture" section) after editing any fixture project markdown file').toEqual(expected);
+  expect(
+    committed,
+    "src/features/repositories/tests/ui/support/repos/all-projects.json is stale — regenerate it from src/features/repositories/tests/ui/support/repositories/*.md (see README's " +
+      '"all-projects fixture" section) after editing any fixture project markdown file',
+  ).toEqual(expected);
 });
 
 test("the fixture all-projects index is non-empty and every file has non-trivial content", () => {

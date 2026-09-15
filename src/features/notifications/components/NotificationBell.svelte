@@ -10,7 +10,9 @@
 
 <div style="position:fixed;top:14px;right:16px;z-index:60;display:flex;align-items:center;gap:10px">
   {#if state.hasUnread}
-    <div style="font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;color:#ff5c66;text-transform:uppercase;opacity:.85">
+    <div
+      style="font:500 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;color:#ff5c66;text-transform:uppercase;opacity:.85"
+    >
       inbox
     </div>
   {/if}
@@ -28,7 +30,10 @@
         style="position:absolute;inset:-1px;border:1px solid rgba(255,92,102,.7);pointer-events:none;animation:senseRing 1.9s ease-out infinite"
       ></span>
     {/if}
-    <span style="font-size:17px;line-height:1;color:#ff5c66;text-shadow:0 0 12px rgba(255,92,102,.7)">✉</span>
+    <span
+      style="font-size:17px;line-height:1;color:#ff5c66;text-shadow:0 0 12px rgba(255,92,102,.7)"
+      >✉</span
+    >
     {#if state.hasUnread}
       <span
         style="position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;padding:0 4px;display:grid;place-items:center;background:#e5484d;color:#0a0a0a;font:800 10px/1 'JetBrains Mono',monospace;box-shadow:0 0 14px rgba(229,72,77,.8)"

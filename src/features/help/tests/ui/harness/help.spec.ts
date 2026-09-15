@@ -6,7 +6,9 @@ import { expect, test } from "@playwright/test";
 import { HelpPage } from "../pages/HelpPage";
 
 test.describe("Help harness: mounts standalone with seeded fixture props", () => {
-  test("renders the help title and keymap rows from real content — no kernel required", async ({ page }) => {
+  test("renders the help title and keymap rows from real content — no kernel required", async ({
+    page,
+  }) => {
     const help = new HelpPage(page);
     await help.openHarness();
 
@@ -28,7 +30,9 @@ test.describe("Help harness: mounts standalone with seeded fixture props", () =>
     await expect(help.searchInput).toBeVisible();
   });
 
-  test('fuzzy canary: "kil" surfaces both the kill-window and kill-pane keymap rows', async ({ page }) => {
+  test('fuzzy canary: "kil" surfaces both the kill-window and kill-pane keymap rows', async ({
+    page,
+  }) => {
     const help = new HelpPage(page);
     await help.openHarness();
 
@@ -38,7 +42,9 @@ test.describe("Help harness: mounts standalone with seeded fixture props", () =>
     await expect(help.searchResults.filter({ hasText: "kill-pane" })).not.toHaveCount(0);
   });
 
-  test("Enter on a keymap row no-ops — the palette stays open, nothing navigates", async ({ page }) => {
+  test("Enter on a keymap row no-ops — the palette stays open, nothing navigates", async ({
+    page,
+  }) => {
     const help = new HelpPage(page);
     await help.openHarness();
 
@@ -71,7 +77,9 @@ test.describe("Help harness: mounts standalone with seeded fixture props", () =>
     await expect(help.searchOverlay).not.toBeVisible();
   });
 
-  test("no Terminal kernel chrome mounts alongside it (no status bar, no window switching)", async ({ page }) => {
+  test("no Terminal kernel chrome mounts alongside it (no status bar, no window switching)", async ({
+    page,
+  }) => {
     const help = new HelpPage(page);
     await help.openHarness();
     await expect(help.statusBar.windows).toHaveCount(0);

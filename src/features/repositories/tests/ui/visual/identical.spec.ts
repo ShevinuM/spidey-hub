@@ -7,8 +7,14 @@ import { expect, test } from "@playwright/test";
 import { extraRecipes, recipes } from "../../../../../common/tests/ui/support/recipes";
 import { captureState } from "../../../../../common/tests/ui/support/pipeline.mjs";
 
-const REPOSITORIES_OWNED_RECIPE_NAMES = new Set(["02-repositories", "03-repositories-arrow", "12-all-projects"]);
-const keyRecipes = [...recipes, ...extraRecipes].filter((recipe) => REPOSITORIES_OWNED_RECIPE_NAMES.has(recipe.name));
+const REPOSITORIES_OWNED_RECIPE_NAMES = new Set([
+  "02-repositories",
+  "03-repositories-arrow",
+  "12-all-projects",
+]);
+const keyRecipes = [...recipes, ...extraRecipes].filter((recipe) =>
+  REPOSITORIES_OWNED_RECIPE_NAMES.has(recipe.name),
+);
 
 test.describe("visual (repositories): implementation vs goldens", () => {
   test.beforeEach(async ({ page }) => {

@@ -57,7 +57,9 @@ test.describe("PanelBadge: [N] Label composition", () => {
       [4, "Commits"],
     ];
     for (const [n, label] of expected) {
-      const badge = page.locator(`[data-testid="repositories-panel-${n}"] [data-testid="panel-badge"]`);
+      const badge = page.locator(
+        `[data-testid="repositories-panel-${n}"] [data-testid="panel-badge"]`,
+      );
       await expect(badge).toHaveText(`[${n}] ${label}`);
     }
   });
@@ -69,7 +71,9 @@ test.describe("PanelBadge: spider glyph position (scoped, not removed)", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("Repositories badges carry the red spider glyph BETWEEN the bracketed number and the label", async ({ page }) => {
+  test("Repositories badges carry the red spider glyph BETWEEN the bracketed number and the label", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     const badges = page.locator('[data-testid="panel-badge"][data-accent="blue"]');
     await expect(badges).toHaveCount(5);
@@ -109,14 +113,18 @@ test.describe("PanelBadge: spider glyph position (scoped, not removed)", () => {
     expect(previewHtml.indexOf("<img")).toBeLessThan(previewHtml.indexOf("Preview"));
   });
 
-  test("Help badges keep the teal spiderman glyph, across every section header (pre-f1cb7ee look)", async ({ page }) => {
+  test("Help badges keep the teal spiderman glyph, across every section header (pre-f1cb7ee look)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/help");
     const badges = page.locator('[data-testid="panel-badge"][data-accent="teal"]');
     const count = await badges.count();
     // Asserts a floor, not the exact count, since that's Help's own content, not this spec's concern.
     expect(count).toBeGreaterThanOrEqual(10);
     await expect(
-      page.locator('[data-testid="panel-badge"][data-accent="teal"] img[src="/assets/spiderman-teal.svg"]'),
+      page.locator(
+        '[data-testid="panel-badge"][data-accent="teal"] img[src="/assets/spiderman-teal.svg"]',
+      ),
     ).toHaveCount(count);
   });
 });
@@ -130,7 +138,12 @@ test.describe("PanelBadge: Repositories left-aligned, Employment Records centere
   test("Repositories badge pill sits near its wrapper's left edge", async ({ page }) => {
     await gotoReady(page, "/repositories");
     const wrapper = await box(page, "panel-badge", 0);
-    const pillBox = await page.locator('[data-testid="panel-badge"]').nth(0).locator("span").first().boundingBox();
+    const pillBox = await page
+      .locator('[data-testid="panel-badge"]')
+      .nth(0)
+      .locator("span")
+      .first()
+      .boundingBox();
     expect(pillBox).toBeTruthy();
     if (!pillBox) return;
     const leftInset = pillBox.x - wrapper.x;
@@ -142,10 +155,17 @@ test.describe("PanelBadge: Repositories left-aligned, Employment Records centere
     expect(Math.abs(leftInset - wouldBeCenteredInset)).toBeGreaterThan(20);
   });
 
-  test("Employment Records badge pill is centered, not left-aligned (pre-f1cb7ee look restored)", async ({ page }) => {
+  test("Employment Records badge pill is centered, not left-aligned (pre-f1cb7ee look restored)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/employment");
     const wrapper = await box(page, "panel-badge", 0);
-    const pillBox = await page.locator('[data-testid="panel-badge"]').nth(0).locator("span").first().boundingBox();
+    const pillBox = await page
+      .locator('[data-testid="panel-badge"]')
+      .nth(0)
+      .locator("span")
+      .first()
+      .boundingBox();
     expect(pillBox).toBeTruthy();
     if (!pillBox) return;
     const leftInset = pillBox.x - wrapper.x;

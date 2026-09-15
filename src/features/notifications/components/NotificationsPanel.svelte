@@ -17,14 +17,22 @@
     style="position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px 9px 12px;border-bottom:1px solid rgba(229,72,77,.28);background:linear-gradient(180deg,rgba(229,72,77,.10),rgba(229,72,77,.02)),repeating-linear-gradient(45deg,rgba(255,255,255,.028) 0 1px,transparent 1px 9px),repeating-linear-gradient(-45deg,rgba(255,255,255,.028) 0 1px,transparent 1px 9px);overflow:hidden"
   >
     <div style="display:flex;align-items:center;gap:8px;min-width:0">
-      <span style="display:inline-block;padding:2px 6px;background:#e5484d;color:#0a0a0a;font:800 10px/1.4 'JetBrains Mono',monospace;letter-spacing:.06em"
+      <span
+        style="display:inline-block;padding:2px 6px;background:#e5484d;color:#0a0a0a;font:800 10px/1.4 'JetBrains Mono',monospace;letter-spacing:.06em"
         >{state.ui.badge}</span
       >
-      <span style="font:700 11px/1.4 'JetBrains Mono',monospace;letter-spacing:.16em;color:#ffd9db;text-transform:uppercase">{state.ui.title}</span>
-      <span style="font:400 10px/1.4 'JetBrains Mono',monospace;color:rgba(255,255,255,.32)">{state.ui.version}</span>
+      <span
+        style="font:700 11px/1.4 'JetBrains Mono',monospace;letter-spacing:.16em;color:#ffd9db;text-transform:uppercase"
+        >{state.ui.title}</span
+      >
+      <span style="font:400 10px/1.4 'JetBrains Mono',monospace;color:rgba(255,255,255,.32)"
+        >{state.ui.version}</span
+      >
     </div>
     <div style="display:flex;align-items:center;gap:8px">
-      <span style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#4fd1c5;opacity:.75">{state.feedStatus}</span>
+      <span style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#4fd1c5;opacity:.75"
+        >{state.feedStatus}</span
+      >
       <button
         class="eh-close"
         data-testid="notifications-close"
@@ -39,7 +47,9 @@
     ></span>
   </div>
 
-  <div style="display:flex;align-items:stretch;gap:1px;padding:6px 8px 0;background:rgba(255,255,255,.015)">
+  <div
+    style="display:flex;align-items:stretch;gap:1px;padding:6px 8px 0;background:rgba(255,255,255,.015)"
+  >
     {#each state.tabDefs as t (t.id)}
       <button
         class="eh-tab"
@@ -78,24 +88,38 @@
         style="position:relative;display:flex;align-items:stretch;border-bottom:1px solid rgba(255,255,255,.05);--row-bg:{r.rowBg}"
       >
         <div style="width:2px;background:{r.bar}"></div>
-        <div style="width:26px;display:flex;align-items:flex-start;justify-content:center;padding-top:11px;font:700 10px/1 'JetBrains Mono',monospace;color:{r.color};opacity:{r.dim}">
+        <div
+          style="width:26px;display:flex;align-items:flex-start;justify-content:center;padding-top:11px;font:700 10px/1 'JetBrains Mono',monospace;color:{r.color};opacity:{r.dim}"
+        >
           {r.glyph}
         </div>
-        <div style="flex:1;min-width:0;padding:9px 8px 10px 0;display:flex;flex-direction:column;gap:3px;opacity:{r.dim}">
+        <div
+          style="flex:1;min-width:0;padding:9px 8px 10px 0;display:flex;flex-direction:column;gap:3px;opacity:{r.dim}"
+        >
           <div style="display:flex;align-items:center;gap:7px">
-            <span style="padding:1px 5px;border:1px solid {r.color};color:{r.color};font:700 8.5px/1.5 'JetBrains Mono',monospace;letter-spacing:.1em"
+            <span
+              style="padding:1px 5px;border:1px solid {r.color};color:{r.color};font:700 8.5px/1.5 'JetBrains Mono',monospace;letter-spacing:.1em"
               >{r.sevLabel}</span
             >
-            <span style="font:{r.titleWeight} 12px/1.35 'JetBrains Mono',monospace;color:#eef1f3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+            <span
+              style="font:{r.titleWeight} 12px/1.35 'JetBrains Mono',monospace;color:#eef1f3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
               >{r.title}</span
             >
           </div>
-          <div style="font:400 10.5px/1.5 'JetBrains Mono',monospace;color:rgba(230,232,234,.55);text-wrap:pretty">{r.body}</div>
-          <div style="display:flex;align-items:center;gap:8px;font:400 9.5px/1.4 'JetBrains Mono',monospace;color:rgba(255,255,255,.3)">
+          <div
+            style="font:400 10.5px/1.5 'JetBrains Mono',monospace;color:rgba(230,232,234,.55);text-wrap:pretty"
+          >
+            {r.body}
+          </div>
+          <div
+            style="display:flex;align-items:center;gap:8px;font:400 9.5px/1.4 'JetBrains Mono',monospace;color:rgba(255,255,255,.3)"
+          >
             <span>{r.src}</span><span>·</span><span>{r.ago}</span>
           </div>
         </div>
-        <div style="display:flex;flex-direction:column;justify-content:center;gap:4px;padding:0 8px 0 4px">
+        <div
+          style="display:flex;flex-direction:column;justify-content:center;gap:4px;padding:0 8px 0 4px"
+        >
           <button
             class="eh-toggle-read"
             data-testid="notification-toggle-read"
@@ -126,9 +150,14 @@
       </div>
     {/each}
     {#if state.rows.length === 0}
-      <div data-testid="notifications-empty" style="padding:38px 16px;display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center">
+      <div
+        data-testid="notifications-empty"
+        style="padding:38px 16px;display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center"
+      >
         <span style="font-size:18px;opacity:.35">{state.ui.emptyGlyph}</span>
-        <span style="font:400 11px/1.5 'JetBrains Mono',monospace;color:rgba(255,255,255,.35)">{state.emptyLine}</span>
+        <span style="font:400 11px/1.5 'JetBrains Mono',monospace;color:rgba(255,255,255,.35)"
+          >{state.emptyLine}</span
+        >
       </div>
     {/if}
   </div>
@@ -136,7 +165,9 @@
   <div
     style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;border-top:1px solid rgba(229,72,77,.24);background:rgba(229,72,77,.05)"
   >
-    <div style="display:flex;align-items:center;gap:9px;font:400 9.5px/1.4 'JetBrains Mono',monospace;color:rgba(255,255,255,.34)">
+    <div
+      style="display:flex;align-items:center;gap:9px;font:400 9.5px/1.4 'JetBrains Mono',monospace;color:rgba(255,255,255,.34)"
+    >
       {#each state.ui.footerHints as hint (hint.key)}
         <span><span style="color:#4fd1c5">{hint.key}</span> {hint.label}</span>
       {/each}

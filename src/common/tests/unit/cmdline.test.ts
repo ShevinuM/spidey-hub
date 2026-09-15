@@ -13,7 +13,12 @@ import {
 } from "../../lib/cmdline";
 
 const commands: CommandDef[] = [
-  { name: "dashboard", aliases: ["home"], description: "jump to the dashboard", action: "view:home" },
+  {
+    name: "dashboard",
+    aliases: ["home"],
+    description: "jump to the dashboard",
+    action: "view:home",
+  },
   { name: "repositories", description: "jump to Repositories", action: "view:repositories" },
   { name: "grep", description: "open grep", action: "grep", takesArgs: true },
   { name: "reboot", description: "replay boot", action: "reboot" },
@@ -34,7 +39,10 @@ test("parseInput splits a command with a single-word argument", () => {
 });
 
 test("parseInput preserves internal spaces in the argument", () => {
-  expect(parseInput("rename-window my window")).toEqual({ name: "rename-window", args: "my window" });
+  expect(parseInput("rename-window my window")).toEqual({
+    name: "rename-window",
+    args: "my window",
+  });
 });
 
 test("parseInput trims surrounding whitespace and a leading colon", () => {
@@ -225,7 +233,10 @@ test("parseExCommand reports unknown for anything else (site-wide commands inclu
 // ---------------------------------------------------------------------
 
 test("parseTmuxCommand parses rename-window with its argument", () => {
-  expect(parseTmuxCommand("rename-window scratch")).toEqual({ kind: "rename-window", name: "scratch" });
+  expect(parseTmuxCommand("rename-window scratch")).toEqual({
+    kind: "rename-window",
+    name: "scratch",
+  });
 });
 
 test("parseTmuxCommand reports usage when rename-window has no argument", () => {
@@ -245,7 +256,10 @@ test("parseTmuxCommand parses select-window with a numeric index", () => {
 
 test("parseTmuxCommand reports usage when select-window's argument isn't numeric", () => {
   expect(parseTmuxCommand("select-window")).toEqual({ kind: "usage", command: "select-window" });
-  expect(parseTmuxCommand("select-window abc")).toEqual({ kind: "usage", command: "select-window" });
+  expect(parseTmuxCommand("select-window abc")).toEqual({
+    kind: "usage",
+    command: "select-window",
+  });
 });
 
 test("parseTmuxCommand reports unknown for anything else", () => {
@@ -255,5 +269,8 @@ test("parseTmuxCommand reports unknown for anything else", () => {
 
 test("parseTmuxCommand is case-insensitive on the command name but not the rename argument", () => {
   expect(parseTmuxCommand("Kill-Window")).toEqual({ kind: "kill-window" });
-  expect(parseTmuxCommand("Rename-Window MyWindow")).toEqual({ kind: "rename-window", name: "MyWindow" });
+  expect(parseTmuxCommand("Rename-Window MyWindow")).toEqual({
+    kind: "rename-window",
+    name: "MyWindow",
+  });
 });

@@ -18,7 +18,12 @@
   // `cycleComplete`) with no visible suggestion list — the `?` help
   // palette is the browsable surface instead.
   import type { CmdlineData } from "../lib/data";
-  import { cycleComplete, mergeCommandLists, type CommandDef, type TabCycleState } from "../lib/cmdline";
+  import {
+    cycleComplete,
+    mergeCommandLists,
+    type CommandDef,
+    type TabCycleState,
+  } from "../lib/cmdline";
   import { pushPasteTarget, removePasteTarget } from "../lib/paste-targets";
   import { STATUS_BAR_HEIGHT_PX } from "../lib/layout";
 
@@ -190,8 +195,11 @@
           style="display:flex;align-items:baseline;gap:8px;padding:2px 4px 8px;border-bottom:1px solid rgba(224,69,60,.28)"
         >
           <span style="color:#5fc6b4">{cmdline.prompt.glyph}</span>
-          <span data-testid="cmdline-input" style="flex:1;min-width:0;color:#f4ece9;white-space:pre;overflow:hidden"
-            >{text}<span style="animation:blk 1.05s steps(1) infinite;color:#e0453c">{cmdline.prompt.cursorGlyph}</span
+          <span
+            data-testid="cmdline-input"
+            style="flex:1;min-width:0;color:#f4ece9;white-space:pre;overflow:hidden"
+            >{text}<span style="animation:blk 1.05s steps(1) infinite;color:#e0453c"
+              >{cmdline.prompt.cursorGlyph}</span
             ></span
           >
         </div>

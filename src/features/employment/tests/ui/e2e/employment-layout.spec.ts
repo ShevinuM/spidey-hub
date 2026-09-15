@@ -5,7 +5,10 @@ import { expect, test, type Page } from "../../../../../common/tests/ui/support/
 
 const ROOT = join(import.meta.dirname, "../../../../../..");
 const PERSONNEL_DIR = join(ROOT, "src/features/employment/content/personnel");
-const PERSONNEL_YAML = readFileSync(join(ROOT, "src/features/employment/content/personnel.yaml"), "utf8");
+const PERSONNEL_YAML = readFileSync(
+  join(ROOT, "src/features/employment/content/personnel.yaml"),
+  "utf8",
+);
 
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);
@@ -55,7 +58,9 @@ function longestRecord(): { name: string; orgTag: string } {
 }
 
 function rowFor(page: Page, name: string, orgTag: string) {
-  return page.locator(`[data-testid="employment-row"][data-row-name="${name}"]`).filter({ hasText: orgTag });
+  return page
+    .locator(`[data-testid="employment-row"][data-row-name="${name}"]`)
+    .filter({ hasText: orgTag });
 }
 
 test.describe("Employment: left panel is top-stacked, no bottom-anchored void", () => {
@@ -66,7 +71,10 @@ test.describe("Employment: left panel is top-stacked, no bottom-anchored void", 
     const breadcrumb = await page.locator('[data-testid="employment-breadcrumb"]').boundingBox();
     const firstRow = await page.locator('[data-testid="employment-row"]').first().boundingBox();
     const lastRow = await page.locator('[data-testid="employment-row"]').last().boundingBox();
-    const box = await page.locator('[data-testid="employment-records-list"]').locator("xpath=..").boundingBox();
+    const box = await page
+      .locator('[data-testid="employment-records-list"]')
+      .locator("xpath=..")
+      .boundingBox();
     expect(breadcrumb && firstRow && lastRow && box).toBeTruthy();
     if (!breadcrumb || !firstRow || !lastRow || !box) return;
 
@@ -79,7 +87,9 @@ test.describe("Employment: left panel is top-stacked, no bottom-anchored void", 
 });
 
 test.describe("Employment: no line is clipped horizontally (the preview panel's width itself is constant)", () => {
-  test("the preview panel's own width is constant across every record at 1470x842", async ({ page }) => {
+  test("the preview panel's own width is constant across every record at 1470x842", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1470, height: 842 });
     await openEmployment(page);
     const rows = page.locator('[data-testid="employment-row"]');
@@ -94,7 +104,9 @@ test.describe("Employment: no line is clipped horizontally (the preview panel's 
     expect(new Set(widths).size).toBe(1);
   });
 
-  test("every doc line's own text span fits its available width — no line is truncated", async ({ page }) => {
+  test("every doc line's own text span fits its available width — no line is truncated", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1470, height: 842 });
     await openEmployment(page);
     const rec = longestRecord();
@@ -104,7 +116,9 @@ test.describe("Employment: no line is clipped horizontally (the preview panel's 
     const count = await spans.count();
     expect(count).toBeGreaterThan(0);
     for (let i = 0; i < count; i++) {
-      const metrics = await spans.nth(i).evaluate((el) => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
+      const metrics = await spans
+        .nth(i)
+        .evaluate((el) => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }));
       expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
     }
   });
@@ -119,7 +133,9 @@ test.describe("Employment: the row list and preview scroll when content overflow
   test("both containers declare overflow-y:auto", async ({ page }) => {
     await openEmployment(page);
     for (const testid of ["employment-records-list", "employment-preview"]) {
-      const overflowY = await page.locator(`[data-testid="${testid}"]`).evaluate((el) => getComputedStyle(el).overflowY);
+      const overflowY = await page
+        .locator(`[data-testid="${testid}"]`)
+        .evaluate((el) => getComputedStyle(el).overflowY);
       expect(overflowY).toBe("auto");
     }
   });
@@ -127,7 +143,10 @@ test.describe("Employment: the row list and preview scroll when content overflow
   test("the row list overflows and the mouse wheel scrolls it", async ({ page }) => {
     await openEmployment(page);
     const list = page.locator('[data-testid="employment-records-list"]');
-    const metrics = await list.evaluate((el) => ({ scrollHeight: el.scrollHeight, clientHeight: el.clientHeight }));
+    const metrics = await list.evaluate((el) => ({
+      scrollHeight: el.scrollHeight,
+      clientHeight: el.clientHeight,
+    }));
     expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight);
 
     const before = await list.evaluate((el) => el.scrollTop);
@@ -139,13 +158,18 @@ test.describe("Employment: the row list and preview scroll when content overflow
     await expect.poll(() => list.evaluate((el) => el.scrollTop)).toBeGreaterThan(before);
   });
 
-  test("the preview overflows for the longest real record and the mouse wheel scrolls it", async ({ page }) => {
+  test("the preview overflows for the longest real record and the mouse wheel scrolls it", async ({
+    page,
+  }) => {
     await openEmployment(page);
     const rec = longestRecord();
     await rowFor(page, rec.name, rec.orgTag).click();
 
     const preview = page.locator('[data-testid="employment-preview"]');
-    const metrics = await preview.evaluate((el) => ({ scrollHeight: el.scrollHeight, clientHeight: el.clientHeight }));
+    const metrics = await preview.evaluate((el) => ({
+      scrollHeight: el.scrollHeight,
+      clientHeight: el.clientHeight,
+    }));
     expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight);
 
     const before = await preview.evaluate((el) => el.scrollTop);

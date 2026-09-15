@@ -7,7 +7,8 @@ import type { HelpChrome, HelpData, HelpSearchData } from "../../../common/lib/d
 
 const getHelpChrome = (): HelpChrome => parseYaml<HelpChrome>(helpRaw, "help.yaml");
 
-export const getHelpSearch = (): HelpSearchData => parseYaml<HelpSearchData>(helpsearchRaw, "helpsearch.yaml");
+export const getHelpSearch = (): HelpSearchData =>
+  parseYaml<HelpSearchData>(helpsearchRaw, "helpsearch.yaml");
 
 export const buildHelp = (entries: CollectionEntry<"help">[]): HelpData => {
   const scopes = entries

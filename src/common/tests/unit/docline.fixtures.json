@@ -16,116 +16,32 @@
     {
       "kind": "project",
       "path": "src/features/repositories/tests/ui/support/repositories/shevinum-dev.md",
-      "kinds": [
-        "h",
-        "p",
-        "p",
-        "p",
-        "p",
-        "h",
-        "b",
-        "b",
-        "b",
-        "p",
-        "h",
-        "c"
-      ]
+      "kinds": ["h", "p", "p", "p", "p", "h", "b", "b", "b", "p", "h", "c"]
     },
     {
       "kind": "project",
       "path": "src/features/repositories/tests/ui/support/repositories/spider-tracker.md",
-      "kinds": [
-        "h",
-        "p",
-        "p",
-        "p",
-        "p",
-        "h",
-        "b",
-        "b",
-        "b",
-        "p",
-        "p",
-        "h",
-        "c"
-      ]
+      "kinds": ["h", "p", "p", "p", "p", "h", "b", "b", "b", "p", "p", "h", "c"]
     },
     {
       "kind": "project",
       "path": "src/features/repositories/tests/ui/support/repositories/flerken-watch.md",
-      "kinds": [
-        "h",
-        "p",
-        "p",
-        "p",
-        "p",
-        "h",
-        "b",
-        "b",
-        "p",
-        "h",
-        "p",
-        "p",
-        "p",
-        "p",
-        "h",
-        "c"
-      ]
+      "kinds": ["h", "p", "p", "p", "p", "h", "b", "b", "p", "h", "p", "p", "p", "p", "h", "c"]
     },
     {
       "kind": "project",
       "path": "src/features/repositories/tests/ui/support/repositories/latveria-atlas.md",
-      "kinds": [
-        "h",
-        "p",
-        "p",
-        "p",
-        "p",
-        "h",
-        "b",
-        "b",
-        "b",
-        "p",
-        "h",
-        "c"
-      ]
+      "kinds": ["h", "p", "p", "p", "p", "h", "b", "b", "b", "p", "h", "c"]
     },
     {
       "kind": "personnel",
       "path": "src/features/employment/content/personnel/enaimco/software-developer/full-time/role.md",
-      "kinds": [
-        "h",
-        "m",
-        "p",
-        "c",
-        "p",
-        "h",
-        "b",
-        "p",
-        "p",
-        "b",
-        "p",
-        "p"
-      ]
+      "kinds": ["h", "m", "p", "c", "p", "h", "b", "p", "p", "b", "p", "p"]
     },
     {
       "kind": "personnel",
       "path": "src/features/employment/content/personnel/enaimco/software-developer/part-time/role.md",
-      "kinds": [
-        "h",
-        "m",
-        "p",
-        "c",
-        "p",
-        "h",
-        "b",
-        "p",
-        "b",
-        "p",
-        "b",
-        "p",
-        "p"
-      ]
+      "kinds": ["h", "m", "p", "c", "p", "h", "b", "p", "b", "p", "b", "p", "p"]
     },
     {
       "kind": "personnel",

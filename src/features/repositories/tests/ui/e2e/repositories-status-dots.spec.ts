@@ -24,9 +24,11 @@ test.describe("Repositories: status dot column alignment", () => {
 
     const dotRights: number[] = [];
     for (let i = 0; i < rowCount; i++) {
-      const dot = rows.nth(i).locator(
-        '[data-testid="repositories-repo-idle-dot"], [data-testid="repositories-repo-open-dot"]',
-      );
+      const dot = rows
+        .nth(i)
+        .locator(
+          '[data-testid="repositories-repo-idle-dot"], [data-testid="repositories-repo-open-dot"]',
+        );
       if (await dot.count()) {
         const box = await dot.first().boundingBox();
         expect(box).not.toBeNull();
@@ -42,17 +44,25 @@ test.describe("Repositories: status dot column alignment", () => {
     expect(max - min).toBeLessThanOrEqual(1);
   });
 
-  test("the all-projects row has a status dot, gold (open) by default on load", async ({ page }) => {
+  test("the all-projects row has a status dot, gold (open) by default on load", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1470, height: 842 });
     await gotoReady(page, "/repositories");
 
-    const allProjectsRow = page.locator('[data-testid="repositories-repo-row"][data-all-projects="true"]');
+    const allProjectsRow = page.locator(
+      '[data-testid="repositories-repo-row"][data-all-projects="true"]',
+    );
     await expect(allProjectsRow).toBeVisible();
     // all-projects is pinned first and auto-opened by the mount effect, so
     // on a fresh load it is the active repo and gets the gold open-dot, not
     // the idle two-tone one.
-    await expect(allProjectsRow.locator('[data-testid="repositories-repo-open-dot"]')).toHaveCount(1);
-    await expect(allProjectsRow.locator('[data-testid="repositories-repo-idle-dot"]')).toHaveCount(0);
+    await expect(allProjectsRow.locator('[data-testid="repositories-repo-open-dot"]')).toHaveCount(
+      1,
+    );
+    await expect(allProjectsRow.locator('[data-testid="repositories-repo-idle-dot"]')).toHaveCount(
+      0,
+    );
   });
 });
 
@@ -62,7 +72,9 @@ test.describe("Repositories: selection highlight matches actual selection on loa
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("exactly one row is highlighted on first paint, and it is all-projects", async ({ page }) => {
+  test("exactly one row is highlighted on first paint, and it is all-projects", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
 
     const rows = page.locator('[data-testid="repositories-repo-row"]');

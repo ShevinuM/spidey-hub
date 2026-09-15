@@ -35,7 +35,9 @@ interface CommitSnapshotEntry {
 
 /** The committed snapshot Repositories.svelte falls back to on a failed live fetch, parsed at test time rather than a hardcoded sha8 so a `pnpm generate` refresh can never break these assertions. */
 function loadCommitSnapshot(repo: string): CommitSnapshotEntry[] {
-  return JSON.parse(readFileSync(join(ROOT, "src/generated/commits", `${repo}.json`), "utf8")) as CommitSnapshotEntry[];
+  return JSON.parse(
+    readFileSync(join(ROOT, "src/generated/commits", `${repo}.json`), "utf8"),
+  ) as CommitSnapshotEntry[];
 }
 
 /** The head commit of daily-tech-digest's own committed snapshot; every "keeps the committed snapshot intact" assertion below checks against this rather than a hardcoded sha. */
@@ -57,7 +59,9 @@ async function openRepoTree(page: Page, repoName: string) {
  * renders at once). */
 function treeRow(page: Page, name: string, depth?: number) {
   const depthSelector = depth === undefined ? "" : `[data-depth="${depth}"]`;
-  return page.locator(`[data-testid="repositories-tree-row"][data-entry-name="${name}"]${depthSelector}`);
+  return page.locator(
+    `[data-testid="repositories-tree-row"][data-entry-name="${name}"]${depthSelector}`,
+  );
 }
 
 /** Clicking a row leaves real DOM focus on it, so a later keyboard-driven selection change without a blur would hit that row's own stale Enter handler before Terminal's global listener sees it. */
@@ -75,11 +79,15 @@ test.describe("Repositories: panel [1] repo list — all-projects pinned first +
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("all-projects is row 0; the 8 real repos follow in frontmatter order (Item 5)", async ({ page }) => {
+  test("all-projects is row 0; the 8 real repos follow in frontmatter order (Item 5)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     const rows = page.locator('[data-testid="repositories-repo-row"]');
     await expect(rows).toHaveCount(9);
-    const names = await rows.evaluateAll((els) => els.map((el) => el.getAttribute("data-repo-name")));
+    const names = await rows.evaluateAll((els) =>
+      els.map((el) => el.getAttribute("data-repo-name")),
+    );
     expect(names).toEqual([
       "all-projects",
       "daily-tech-digest",
@@ -97,10 +105,14 @@ test.describe("Repositories: panel [1] repo list — all-projects pinned first +
     }
   });
 
-  test("Files pane shows the all-projects tree on mount — no click or keypress needed (Item 5)", async ({ page }) => {
+  test("Files pane shows the all-projects tree on mount — no click or keypress needed (Item 5)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     await expect(page.locator('[data-testid="repositories-tree-row"]').first()).toBeVisible();
-    await expect(page.locator('[data-testid="repositories-panel-2"]')).toContainText("all-projects");
+    await expect(page.locator('[data-testid="repositories-panel-2"]')).toContainText(
+      "all-projects",
+    );
 
     const names = await page
       .locator('[data-testid="repositories-tree-row"]')
@@ -131,17 +143,27 @@ test.describe("Repositories: panel [1] repo list — all-projects pinned first +
     );
   });
 
-  test("clicking a different repo row swaps panel [2] over to that repo's tree", async ({ page }) => {
+  test("clicking a different repo row swaps panel [2] over to that repo's tree", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
-    await expect(page.locator('[data-testid="repositories-panel-2"]')).toContainText("all-projects");
+    await expect(page.locator('[data-testid="repositories-panel-2"]')).toContainText(
+      "all-projects",
+    );
 
     await openRepoTree(page, "transcript-tts");
     await expect(treeRow(page, "README.md")).toBeVisible();
-    await expect(page.locator('[data-testid="repositories-panel-2"]')).toContainText("transcript-tts");
-    await expect(page.locator('[data-testid="repositories-panel-2"]')).not.toContainText("all-projects");
+    await expect(page.locator('[data-testid="repositories-panel-2"]')).toContainText(
+      "transcript-tts",
+    );
+    await expect(page.locator('[data-testid="repositories-panel-2"]')).not.toContainText(
+      "all-projects",
+    );
   });
 
-  test("Enter on the highlighted repo row also loads its tree (keyboard path)", async ({ page }) => {
+  test("Enter on the highlighted repo row also loads its tree (keyboard path)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     // Move off the mount-time default (all-projects) first so pressing
     // Enter below is actually exercising the keyboard path, not just
@@ -165,7 +187,9 @@ test.describe("Repositories: panel [1] repo list — all-projects pinned first +
   test("all-projects lists all 8 real project .md files", async ({ page }) => {
     await gotoReady(page, "/repositories");
     const rows = page.locator('[data-testid="repositories-tree-row"]');
-    const names = await rows.evaluateAll((els) => els.map((el) => el.getAttribute("data-entry-name")));
+    const names = await rows.evaluateAll((els) =>
+      els.map((el) => el.getAttribute("data-entry-name")),
+    );
     expect(names.sort()).toEqual(
       [
         "daily-tech-digest.md",
@@ -179,19 +203,24 @@ test.describe("Repositories: panel [1] repo list — all-projects pinned first +
       ].sort(),
     );
     // all-projects is a flat doc bundle — no directories in its tree.
-    await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-type="dir"]')).toHaveCount(0);
+    await expect(
+      page.locator('[data-testid="repositories-tree-row"][data-entry-type="dir"]'),
+    ).toHaveCount(0);
   });
 
-  test("all-projects: commits panel shows the data-driven local-only line, not commit rows", async ({ page }) => {
+  test("all-projects: commits panel shows the data-driven local-only line, not commit rows", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     await page.keyboard.press("1");
-    await page.locator('[data-testid="repositories-repo-row"][data-repo-name="all-projects"]').click();
+    await page
+      .locator('[data-testid="repositories-repo-row"][data-repo-name="all-projects"]')
+      .click();
     // See the sibling assertion above — selection is a border-left color
     // now, not a flat background fill.
-    await expect(page.locator('[data-testid="repositories-repo-row"][data-all-projects="true"]')).toHaveCSS(
-      "border-left-color",
-      "rgb(224, 69, 60)",
-    );
+    await expect(
+      page.locator('[data-testid="repositories-repo-row"][data-all-projects="true"]'),
+    ).toHaveCSS("border-left-color", "rgb(224, 69, 60)");
     await expect(page.locator('[data-testid="repositories-commit-row"]')).toHaveCount(0);
     await expect(page.locator('[data-testid="repositories-panel-4"]')).toContainText("local only");
   });
@@ -202,7 +231,9 @@ test.describe("Repositories: panel [2] lazygit-style tree — expand/collapse, n
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("a known subdir's children render immediately on load — no click needed to descend", async ({ page }) => {
+  test("a known subdir's children render immediately on load — no click needed to descend", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     await openRepoTree(page, "daily-tech-digest");
 
@@ -221,7 +252,9 @@ test.describe("Repositories: panel [2] lazygit-style tree — expand/collapse, n
     await expect(devTo).toHaveAttribute("data-depth", "1");
   });
 
-  test("Enter/click on an expanded dir collapses it (children disappear); repeating re-expands", async ({ page }) => {
+  test("Enter/click on an expanded dir collapses it (children disappear); repeating re-expands", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     await openRepoTree(page, "daily-tech-digest");
     await expect(treeRow(page, "dev_to.py")).toBeVisible();
@@ -252,7 +285,9 @@ test.describe("Repositories: panel [2] lazygit-style tree — expand/collapse, n
     await gotoReady(page, "/repositories");
     await openRepoTree(page, "daily-tech-digest");
     await expect(treeRow(page, "../")).toHaveCount(0);
-    await expect(page.locator('[data-testid="repositories-tree-row"][data-entry-type="up"]')).toHaveCount(0);
+    await expect(
+      page.locator('[data-testid="repositories-tree-row"][data-entry-type="up"]'),
+    ).toHaveCount(0);
   });
 
   test("bare j does not move the tree selection while ArrowDown does", async ({ page }) => {
@@ -302,18 +337,24 @@ test.describe("Repositories: panel [2] file preview + panel [3] preview", () => 
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("clicking a file previews its content in panel [3] without opening the editor", async ({ page }) => {
+  test("clicking a file previews its content in panel [3] without opening the editor", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     await openRepoTree(page, "transcript-tts");
     await treeRow(page, "server.py").click();
 
     const expectedLines = fileLines("transcript-tts/server.py");
-    await expect(page.locator('[data-testid="repositories-preview-line"]').first()).toContainText(expectedLines[0]);
+    await expect(page.locator('[data-testid="repositories-preview-line"]').first()).toContainText(
+      expectedLines[0],
+    );
     // Click previews only — the full-screen editor must not open.
     await expect(page.locator('[data-testid="editor-scroller"]')).toHaveCount(0);
   });
 
-  test("Enter on a file opens the full-screen vim editor; :q returns to the tree", async ({ page }) => {
+  test("Enter on a file opens the full-screen vim editor; :q returns to the tree", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     await openRepoTree(page, "transcript-tts");
     // Click-select README.md (previews only), then focus panel [2] and press
@@ -326,7 +367,9 @@ test.describe("Repositories: panel [2] file preview + panel [3] preview", () => 
     const scroller = page.locator('[data-testid="editor-scroller"]');
     await expect(scroller).toBeVisible();
     const expectedFirstLine = fileLines("transcript-tts/README.md")[0];
-    await expect(scroller.locator('[data-line="1"] [data-testid="editor-line-text"]')).toHaveText(expectedFirstLine);
+    await expect(scroller.locator('[data-line="1"] [data-testid="editor-line-text"]')).toHaveText(
+      expectedFirstLine,
+    );
 
     await page.keyboard.press(":");
     await page.keyboard.type("q");
@@ -335,18 +378,24 @@ test.describe("Repositories: panel [2] file preview + panel [3] preview", () => 
     await expect(page.locator('[data-testid="repositories-tree-row"]').first()).toBeVisible();
   });
 
-  test("a file several levels deep in the tree previews correctly, with no descend/ascend step", async ({ page }) => {
+  test("a file several levels deep in the tree previews correctly, with no descend/ascend step", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     await openRepoTree(page, "daily-tech-digest");
     await expect(treeRow(page, "dev_to.py")).toBeVisible();
 
     await treeRow(page, "dev_to.py").click();
     const expectedLines = fileLines("daily-tech-digest/feeds/dev_to.py");
-    await expect(page.locator('[data-testid="repositories-preview-line"]').first()).toContainText(expectedLines[0]);
+    await expect(page.locator('[data-testid="repositories-preview-line"]').first()).toContainText(
+      expectedLines[0],
+    );
 
     // Files panel [2] title reflects the open repo (no commit suffix — this
     // is the working tree).
-    await expect(page.locator('[data-testid="repositories-panel-2"]')).toContainText("daily-tech-digest");
+    await expect(page.locator('[data-testid="repositories-panel-2"]')).toContainText(
+      "daily-tech-digest",
+    );
     await expect(page.locator('[data-testid="repositories-panel-2"]')).not.toContainText("@");
   });
 
@@ -386,9 +435,12 @@ test.describe("Repositories: panel [4] commits track ONLY panel [1] (bug fix)", 
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("commits stay fixed while navigating panel [2]/[3]; change only on panel [1] selection", async ({ page }) => {
+  test("commits stay fixed while navigating panel [2]/[3]; change only on panel [1] selection", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
-    const shaOf = () => page.locator('[data-testid="repositories-commit-row"]').first().getAttribute("data-sha8");
+    const shaOf = () =>
+      page.locator('[data-testid="repositories-commit-row"]').first().getAttribute("data-sha8");
 
     // Selecting + opening daily-tech-digest via panel [1] IS a legitimate
     // panel [1] selection change, so commits update to match it once.
@@ -415,11 +467,22 @@ test.describe("Repositories: panel [4] commits track ONLY panel [1] (bug fix)", 
 });
 
 test.describe("Repositories: commit click loads a tree (no popup); 'o' opens GitHub", () => {
-  test("clicking a commit fetches its tree into panel [2] — no new tab", async ({ page, context }) => {
-    const fakeTree = { sha: "deadbeef", tree: [{ path: "README.md", type: "blob" }], truncated: false };
+  test("clicking a commit fetches its tree into panel [2] — no new tab", async ({
+    page,
+    context,
+  }) => {
+    const fakeTree = {
+      sha: "deadbeef",
+      tree: [{ path: "README.md", type: "blob" }],
+      truncated: false,
+    };
     await page.route("**/api.github.com/**", (route) => route.abort());
     await page.route("**/api.github.com/repos/ShevinuM/daily-tech-digest/git/trees/**", (route) =>
-      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(fakeTree) }),
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(fakeTree),
+      }),
     );
     await gotoReady(page, "/repositories");
     // all-projects is selected by default and has no commits — pick
@@ -436,12 +499,17 @@ test.describe("Repositories: commit click loads a tree (no popup); 'o' opens Git
     // locator unambiguous through that transient frame instead of racing a
     // strict-mode violation against the "site/README.md" depth-1 duplicate.
     await expect(treeRow(page, "README.md", 0)).toBeVisible();
-    await expect(page.locator('[data-testid="repositories-panel-2"]')).toContainText(`@${dailyTechDigestHead.sha8}`);
+    await expect(page.locator('[data-testid="repositories-panel-2"]')).toContainText(
+      `@${dailyTechDigestHead.sha8}`,
+    );
     expect(popupSeen).toBe(false);
     expect(context.pages().length).toBe(1);
   });
 
-  test("'o' on the selected commit opens its html_url on GitHub in a new tab", async ({ page, context }) => {
+  test("'o' on the selected commit opens its html_url on GitHub in a new tab", async ({
+    page,
+    context,
+  }) => {
     let requestedUrl: string | null = null;
     await context.route("https://github.com/**", (route) => {
       requestedUrl = route.request().url();
@@ -456,7 +524,10 @@ test.describe("Repositories: commit click loads a tree (no popup); 'o' opens Git
       "style",
       /border: 1px solid rgb\(224, 69, 60\)/,
     );
-    const expectedHref = await page.locator('[data-testid="repositories-commit-row"]').first().getAttribute("data-html-url");
+    const expectedHref = await page
+      .locator('[data-testid="repositories-commit-row"]')
+      .first()
+      .getAttribute("data-html-url");
     expect(expectedHref).toMatch(COMMIT_URL_RE);
 
     const popupPromise = context.waitForEvent("page");
@@ -485,7 +556,9 @@ test.describe("Repositories: commit click loads a tree (no popup); 'o' opens Git
 });
 
 test.describe("Repositories: commit-tree / file-content fetch failures preserve state", () => {
-  test("commit-tree fetch failure shows a transient error and keeps the previously open tree", async ({ page }) => {
+  test("commit-tree fetch failure shows a transient error and keeps the previously open tree", async ({
+    page,
+  }) => {
     await page.route("**/api.github.com/**", (route) => route.abort());
     await gotoReady(page, "/repositories");
     await openRepoTree(page, "transcript-tts");
@@ -501,9 +574,15 @@ test.describe("Repositories: commit-tree / file-content fetch failures preserve 
     await expect(page.locator('[data-testid="repositories-panel-2"]')).not.toContainText("@");
   });
 
-  test("commit-tree fetch 403 (rate limit) behaves the same as a network abort", async ({ page }) => {
+  test("commit-tree fetch 403 (rate limit) behaves the same as a network abort", async ({
+    page,
+  }) => {
     await page.route("**/api.github.com/**", (route) =>
-      route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ message: "rate limited" }) }),
+      route.fulfill({
+        status: 403,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "rate limited" }),
+      }),
     );
     await gotoReady(page, "/repositories");
     await openRepoTree(page, "daily-tech-digest");
@@ -511,11 +590,21 @@ test.describe("Repositories: commit-tree / file-content fetch failures preserve 
     await expect(page.locator('[data-testid="repositories-commit-error"]')).toBeVisible();
   });
 
-  test("file-content fetch failure inside a commit tree shows an error line, keeps the tree", async ({ page }) => {
-    const fakeTree = { sha: "deadbeef", tree: [{ path: "README.md", type: "blob" }], truncated: false };
+  test("file-content fetch failure inside a commit tree shows an error line, keeps the tree", async ({
+    page,
+  }) => {
+    const fakeTree = {
+      sha: "deadbeef",
+      tree: [{ path: "README.md", type: "blob" }],
+      truncated: false,
+    };
     await page.route("**/api.github.com/**", (route) => route.abort());
     await page.route("**/api.github.com/repos/ShevinuM/daily-tech-digest/git/trees/**", (route) =>
-      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(fakeTree) }),
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(fakeTree),
+      }),
     );
     // contents/** is still covered by the broad abort above.
     await gotoReady(page, "/repositories");
@@ -526,16 +615,28 @@ test.describe("Repositories: commit-tree / file-content fetch failures preserve 
     await expect(treeRow(page, "README.md", 0)).toBeVisible();
 
     await treeRow(page, "README.md", 0).click();
-    await expect(page.locator('[data-testid="repositories-changes-body"]')).toContainText("Failed to load that file.");
+    await expect(page.locator('[data-testid="repositories-changes-body"]')).toContainText(
+      "Failed to load that file.",
+    );
     // The tree itself is untouched by the preview failure.
     await expect(treeRow(page, "README.md", 0)).toBeVisible();
   });
 
-  test("binary/oversize file at a commit shows the binary message, not garbled content", async ({ page }) => {
-    const fakeTree = { sha: "deadbeef", tree: [{ path: "asset.bin", type: "blob" }], truncated: false };
+  test("binary/oversize file at a commit shows the binary message, not garbled content", async ({
+    page,
+  }) => {
+    const fakeTree = {
+      sha: "deadbeef",
+      tree: [{ path: "asset.bin", type: "blob" }],
+      truncated: false,
+    };
     await page.route("**/api.github.com/**", (route) => route.abort());
     await page.route("**/api.github.com/repos/ShevinuM/daily-tech-digest/git/trees/**", (route) =>
-      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(fakeTree) }),
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(fakeTree),
+      }),
     );
     await page.route("**/api.github.com/repos/ShevinuM/daily-tech-digest/contents/**", (route) =>
       route.fulfill({
@@ -548,29 +649,43 @@ test.describe("Repositories: commit-tree / file-content fetch failures preserve 
     await openRepoTree(page, "daily-tech-digest");
     await page.locator('[data-testid="repositories-commit-row"]').first().click();
     await treeRow(page, "asset.bin").click();
-    await expect(page.locator('[data-testid="repositories-changes-body"]')).toContainText("Binary or too large to preview.");
+    await expect(page.locator('[data-testid="repositories-changes-body"]')).toContainText(
+      "Binary or too large to preview.",
+    );
   });
 });
 
 test.describe("Repositories: panel [1] spinner while a fetch is in flight", () => {
-  test("spinner appears on the repo row during a delayed fetch and disappears after", async ({ page }) => {
+  test("spinner appears on the repo row during a delayed fetch and disappears after", async ({
+    page,
+  }) => {
     const fakeCommit = {
       sha: "deadbeef00001111222233334444555566667777",
       commit: { message: "fake live commit for e2e", author: { name: "Test Bot" } },
       author: { login: "TestBot" },
-      html_url: "https://github.com/ShevinuM/daily-tech-digest/commit/deadbeef00001111222233334444555566667777",
+      html_url:
+        "https://github.com/ShevinuM/daily-tech-digest/commit/deadbeef00001111222233334444555566667777",
     };
     await page.route("**/api.github.com/**", (route) => route.abort());
-    await page.route("**/api.github.com/repos/ShevinuM/daily-tech-digest/commits**", async (route) => {
-      await new Promise((r) => setTimeout(r, 500));
-      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([fakeCommit]) });
-    });
+    await page.route(
+      "**/api.github.com/repos/ShevinuM/daily-tech-digest/commits**",
+      async (route) => {
+        await new Promise((r) => setTimeout(r, 500));
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify([fakeCommit]),
+        });
+      },
+    );
 
     await gotoReady(page, "/repositories");
     // all-projects is the default selection and never triggers
     // a live-commits fetch — select daily-tech-digest explicitly to match
     // the delayed route above.
-    await page.locator('[data-testid="repositories-repo-row"][data-repo-name="daily-tech-digest"]').click();
+    await page
+      .locator('[data-testid="repositories-repo-row"][data-repo-name="daily-tech-digest"]')
+      .click();
     const spinner = page.locator('[data-testid="repositories-repo-spinner"]');
     await expect(spinner).toBeVisible();
     await expect(spinner).toHaveCount(0, { timeout: 5000 });
@@ -582,17 +697,26 @@ test.describe("Repositories: commit row heights render at full glyph height", ()
     await page.setViewportSize({ width: 1512, height: 945 });
     const fakeCommits = Array.from({ length: 15 }, (_, i) => ({
       sha: `${i.toString(16).padStart(2, "0")}${"deadbeefcafefeed1234567890abcdef123456".slice(2)}`,
-      commit: { message: `fake commit number ${i} with a reasonably long message`, author: { name: "Test Bot" } },
+      commit: {
+        message: `fake commit number ${i} with a reasonably long message`,
+        author: { name: "Test Bot" },
+      },
       author: { login: "TestBot" },
       html_url: `https://github.com/ShevinuM/daily-tech-digest/commit/fake${i}`,
     }));
     await page.route("**/api.github.com/**", (route) => route.abort());
     await page.route("**/api.github.com/repos/ShevinuM/daily-tech-digest/commits**", (route) =>
-      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(fakeCommits) }),
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(fakeCommits),
+      }),
     );
 
     await gotoReady(page, "/repositories");
-    await page.locator('[data-testid="repositories-repo-row"][data-repo-name="daily-tech-digest"]').click();
+    await page
+      .locator('[data-testid="repositories-repo-row"][data-repo-name="daily-tech-digest"]')
+      .click();
     const rows = page.locator('[data-testid="repositories-commit-row"]');
     await expect(rows).toHaveCount(15);
     // Waits for the mocked commits' own text (absent from the real snapshot) before measuring, since both the initial static snapshot and the live swap can independently satisfy `toHaveCount(15)`.
@@ -617,7 +741,9 @@ test.describe("Repositories: t is not bound", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("t from repositories does nothing — Retina-V is reachable only via Ctrl-b 3 or a click", async ({ page }) => {
+  test("t from repositories does nothing — Retina-V is reachable only via Ctrl-b 3 or a click", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     await page.keyboard.press("t");
     await expect(page).toHaveURL(/\/repositories$/);
@@ -629,53 +755,88 @@ test.describe("Repositories: panel focus border (panels 0, 3, and 4)", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("0 focuses the Status panel (border); 3 focuses the Content panel (border); 4 focuses the Commits panel (border)", async ({ page }) => {
+  test("0 focuses the Status panel (border); 3 focuses the Content panel (border); 4 focuses the Commits panel (border)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/repositories");
     const FOCUSED = /border: 1px solid rgb\(224, 69, 60\)/;
     const UNFOCUSED = /border: 1px solid rgba\(224, 69, 60, 0\.35\)/;
 
     // The style attribute only shows the normalized rgba() text once its value has genuinely changed from the SSR default — panel [2] (the default-focused one) is the only panel guaranteed to flip and prove that, so this asserts against it rather than panel [3].
     await page.keyboard.press("0");
-    await expect(page.locator('[data-testid="repositories-panel-0"]')).toHaveAttribute("style", FOCUSED);
-    await expect(page.locator('[data-testid="repositories-panel-2"]')).toHaveAttribute("style", UNFOCUSED);
+    await expect(page.locator('[data-testid="repositories-panel-0"]')).toHaveAttribute(
+      "style",
+      FOCUSED,
+    );
+    await expect(page.locator('[data-testid="repositories-panel-2"]')).toHaveAttribute(
+      "style",
+      UNFOCUSED,
+    );
 
     await page.keyboard.press("3");
-    await expect(page.locator('[data-testid="repositories-panel-3"]')).toHaveAttribute("style", FOCUSED);
-    await expect(page.locator('[data-testid="repositories-panel-0"]')).toHaveAttribute("style", UNFOCUSED);
+    await expect(page.locator('[data-testid="repositories-panel-3"]')).toHaveAttribute(
+      "style",
+      FOCUSED,
+    );
+    await expect(page.locator('[data-testid="repositories-panel-0"]')).toHaveAttribute(
+      "style",
+      UNFOCUSED,
+    );
 
     await page.keyboard.press("4");
-    await expect(page.locator('[data-testid="repositories-panel-4"]')).toHaveAttribute("style", FOCUSED);
-    await expect(page.locator('[data-testid="repositories-panel-3"]')).toHaveAttribute("style", UNFOCUSED);
+    await expect(page.locator('[data-testid="repositories-panel-4"]')).toHaveAttribute(
+      "style",
+      FOCUSED,
+    );
+    await expect(page.locator('[data-testid="repositories-panel-3"]')).toHaveAttribute(
+      "style",
+      UNFOCUSED,
+    );
   });
 });
 
 test.describe("Repositories: client-side commit refresh (panel [1] selection only)", () => {
   // daily-tech-digest isn't the default selection, so every test here explicitly selects it to match its committed snapshot head, loaded (not hardcoded) from `dailyTechDigestHead`.
-  test("route-fulfill with a fake commit replaces the snapshot list for the selected repo", async ({ page }) => {
+  test("route-fulfill with a fake commit replaces the snapshot list for the selected repo", async ({
+    page,
+  }) => {
     const fakeCommit = {
       sha: "deadbeef00001111222233334444555566667777",
       commit: { message: "fake live commit for e2e\n\nbody text", author: { name: "Test Bot" } },
       author: { login: "TestBot" },
-      html_url: "https://github.com/ShevinuM/daily-tech-digest/commit/deadbeef00001111222233334444555566667777",
+      html_url:
+        "https://github.com/ShevinuM/daily-tech-digest/commit/deadbeef00001111222233334444555566667777",
     };
     await page.route("**/api.github.com/**", (route) => route.abort());
     await page.route("**/api.github.com/repos/ShevinuM/daily-tech-digest/commits**", (route) =>
-      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify([fakeCommit]) }),
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([fakeCommit]),
+      }),
     );
 
     await gotoReady(page, "/repositories");
-    await page.locator('[data-testid="repositories-repo-row"][data-repo-name="daily-tech-digest"]').click();
+    await page
+      .locator('[data-testid="repositories-repo-row"][data-repo-name="daily-tech-digest"]')
+      .click();
     await expect
-      .poll(async () => page.locator('[data-testid="repositories-commit-row"]').first().getAttribute("data-sha8"), {
-        timeout: 5000,
-      })
+      .poll(
+        async () =>
+          page.locator('[data-testid="repositories-commit-row"]').first().getAttribute("data-sha8"),
+        {
+          timeout: 5000,
+        },
+      )
       .toBe("deadbeef");
   });
 
   test("route-abort keeps the committed snapshot list intact", async ({ page }) => {
     await page.route("**/api.github.com/**", (route) => route.abort());
     await gotoReady(page, "/repositories");
-    await page.locator('[data-testid="repositories-repo-row"][data-repo-name="daily-tech-digest"]').click();
+    await page
+      .locator('[data-testid="repositories-repo-row"][data-repo-name="daily-tech-digest"]')
+      .click();
     await page.waitForTimeout(500);
     await expect(page.locator('[data-testid="repositories-commit-row"]').first()).toHaveAttribute(
       "data-sha8",
@@ -685,10 +846,16 @@ test.describe("Repositories: client-side commit refresh (panel [1] selection onl
 
   test("API 403 keeps the committed snapshot list intact", async ({ page }) => {
     await page.route("**/api.github.com/**", (route) =>
-      route.fulfill({ status: 403, contentType: "application/json", body: JSON.stringify({ message: "API rate limit exceeded" }) }),
+      route.fulfill({
+        status: 403,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "API rate limit exceeded" }),
+      }),
     );
     await gotoReady(page, "/repositories");
-    await page.locator('[data-testid="repositories-repo-row"][data-repo-name="daily-tech-digest"]').click();
+    await page
+      .locator('[data-testid="repositories-repo-row"][data-repo-name="daily-tech-digest"]')
+      .click();
     await page.waitForTimeout(500);
     await expect(page.locator('[data-testid="repositories-commit-row"]').first()).toHaveAttribute(
       "data-sha8",
@@ -702,7 +869,9 @@ test.describe("Repositories: editor statusline stays a single line", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("statusline height is identical for a short breadcrumb and a long nested-path breadcrumb", async ({ page }) => {
+  test("statusline height is identical for a short breadcrumb and a long nested-path breadcrumb", async ({
+    page,
+  }) => {
     // Viewport narrowed just enough to force the long breadcrumb to overflow (below 900px the desktop keyboard-listener gate never attaches) — only the breadcrumb's own ellipsis/nowrap CSS keeps this single-line.
     await page.setViewportSize({ width: 900, height: 700 });
     await gotoReady(page, "/repositories");

@@ -9,16 +9,16 @@ The ranking below runs from most to least preferred. Pick the highest-ranked str
 ## 1. `getByRole`
 
 ```ts
-page.getByRole('button', { name: 'Reboot' });
+page.getByRole("button", { name: "Reboot" });
 ```
 
-Resolves through the accessibility tree — the same thing screen readers use. It's tied to what the element *is* (a button, a link, a checkbox) and its accessible name, not to markup. A `<button>` refactored into a styled `<div role="button">` still matches.
+Resolves through the accessibility tree — the same thing screen readers use. It's tied to what the element _is_ (a button, a link, a checkbox) and its accessible name, not to markup. A `<button>` refactored into a styled `<div role="button">` still matches.
 
 ## 2. `getByLabel`, `getByPlaceholder`, `getByText`
 
 ```ts
-page.getByPlaceholder('Search files');
-page.getByText('No commits yet');
+page.getByPlaceholder("Search files");
+page.getByText("No commits yet");
 ```
 
 Resolves through user-facing text — what a real visitor reads on screen. Breaks only if the copy changes, which is a real content change worth a test update, not an incidental refactor.
@@ -26,7 +26,7 @@ Resolves through user-facing text — what a real visitor reads on screen. Break
 ## 3. `getByTestId`
 
 ```ts
-page.getByTestId('repositories-repo-row');
+page.getByTestId("repositories-repo-row");
 ```
 
 Stable across markup and copy changes, but invisible to real users — it only exists for tests. Reach for this when an element has no accessible role or stable text: a repeated repo row, a decorative panel border, an icon-only status dot.
@@ -36,7 +36,7 @@ If the element doesn't have a `data-testid` yet, **add one to the component** ra
 ## 4. CSS selector / XPath — avoid at all costs
 
 ```ts
-page.locator('.repositories-panel:nth-child(2) > .repo-row'); // never do this
+page.locator(".repositories-panel:nth-child(2) > .repo-row"); // never do this
 ```
 
 This is not a fallback tier. If a locator ends up here, the correct fix is to add a `data-testid` and rewrite the locator to use step 3 instead — not to ship the CSS/XPath locator. It couples the test to implementation details — class names, DOM nesting, sibling order — that change for reasons unrelated to the feature under test, and it produces the most confusing possible failure: a test that breaks because someone reordered a `<div>` in an unrelated feature.

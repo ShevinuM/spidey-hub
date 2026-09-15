@@ -6,9 +6,13 @@ test("maps a GitHub commits API response to {sha8, msg, html_url, initials}", ()
   const api = [
     {
       sha: "ab88cac7eb2fba7cccc6915055a5983c4a6b77f4",
-      commit: { message: "Add transcript-tts MCP server\n\nLonger body text.", author: { name: "Shevinu M" } },
+      commit: {
+        message: "Add transcript-tts MCP server\n\nLonger body text.",
+        author: { name: "Shevinu M" },
+      },
       author: { login: "ShevinuM" },
-      html_url: "https://github.com/ShevinuM/transcript-tts/commit/ab88cac7eb2fba7cccc6915055a5983c4a6b77f4",
+      html_url:
+        "https://github.com/ShevinuM/transcript-tts/commit/ab88cac7eb2fba7cccc6915055a5983c4a6b77f4",
     },
   ];
   expect(mapGithubCommits(api)).toEqual([
@@ -16,7 +20,8 @@ test("maps a GitHub commits API response to {sha8, msg, html_url, initials}", ()
       sha: "ab88cac7eb2fba7cccc6915055a5983c4a6b77f4",
       sha8: "ab88cac7",
       msg: "Add transcript-tts MCP server",
-      html_url: "https://github.com/ShevinuM/transcript-tts/commit/ab88cac7eb2fba7cccc6915055a5983c4a6b77f4",
+      html_url:
+        "https://github.com/ShevinuM/transcript-tts/commit/ab88cac7eb2fba7cccc6915055a5983c4a6b77f4",
       initials: "Sh",
     },
   ]);

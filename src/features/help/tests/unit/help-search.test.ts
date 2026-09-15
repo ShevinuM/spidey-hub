@@ -12,7 +12,12 @@ import {
 } from "../../lib/help-search";
 
 const commands: CommandSource[] = [
-  { name: "dashboard", aliases: ["home"], description: "jump to the dashboard", action: "view:home" },
+  {
+    name: "dashboard",
+    aliases: ["home"],
+    description: "jump to the dashboard",
+    action: "view:home",
+  },
   { name: "repositories", description: "jump to Repositories", action: "view:repositories" },
   { name: "employment", description: "jump to Employment Records", action: "view:employment" },
   { name: "profile", description: "jump to Profile", action: "view:profile" },
@@ -20,8 +25,17 @@ const commands: CommandSource[] = [
   { name: "help", description: "jump to Help", action: "view:help" },
   { name: "grep", description: "open the grep overlay", action: "grep", takesArgs: true },
   { name: "reboot", description: "replay the E.D.I.T.H boot sequence", action: "reboot" },
-  { name: "resume", aliases: ["cv"], description: "download resume.pdf in a new tab", action: "resume" },
-  { name: "q", description: "quit the current program to a shell in this window", action: "exit-program" },
+  {
+    name: "resume",
+    aliases: ["cv"],
+    description: "download resume.pdf in a new tab",
+    action: "resume",
+  },
+  {
+    name: "q",
+    description: "quit the current program to a shell in this window",
+    action: "exit-program",
+  },
 ];
 
 const sections: HelpSectionSource[] = [
@@ -30,7 +44,8 @@ const sections: HelpSectionSource[] = [
     rows: [
       {
         key: "&",
-        description: "kill-window: status bar prompts \"kill-window <name>? (y/n)\"; y removes the window",
+        description:
+          'kill-window: status bar prompts "kill-window <name>? (y/n)"; y removes the window',
       },
       {
         key: "x",
@@ -65,7 +80,18 @@ test("commandEntries includes q (exitProgram meaning)", () => {
 
 test("commandEntries preserves cmdline.yaml's own declared order", () => {
   const entries = commandEntries(commands);
-  expect(entries.map((e) => e.label)).toEqual(["dashboard", "repositories", "employment", "profile", "retina-v", "help", "grep", "reboot", "resume", "q"]);
+  expect(entries.map((e) => e.label)).toEqual([
+    "dashboard",
+    "repositories",
+    "employment",
+    "profile",
+    "retina-v",
+    "help",
+    "grep",
+    "reboot",
+    "resume",
+    "q",
+  ]);
 });
 
 test("keymapEntries flattens every section's rows in file order", () => {
@@ -83,16 +109,22 @@ test("buildEntries puts commands before keymap rows", () => {
 
 test("shellEntries maps shell.yaml's help rows to keymap-shaped entries (cmd -> label, description -> description)", () => {
   const entries = shellEntries(shellRows);
-  expect(entries.map((e) => ({ kind: e.kind, label: e.label, description: e.description }))).toEqual([
-      { kind: "keymap", label: "cd <path>", description: "change directory" },
-      { kind: "keymap", label: "neofetch", description: "system info card" },
-      { kind: "keymap", label: "sudo <...>", description: "try it" },
-    ]);
+  expect(
+    entries.map((e) => ({ kind: e.kind, label: e.label, description: e.description })),
+  ).toEqual([
+    { kind: "keymap", label: "cd <path>", description: "change directory" },
+    { kind: "keymap", label: "neofetch", description: "system info card" },
+    { kind: "keymap", label: "sudo <...>", description: "try it" },
+  ]);
 });
 
 test("buildEntries appends shell builtins LAST — commands, then help scope keymap rows, then shell rows", () => {
   const entries = buildEntries(commands, sections, shellRows);
-  expect(entries.length).toBe(commandEntries(commands).length + keymapEntries(sections).length + shellEntries(shellRows).length);
+  expect(entries.length).toBe(
+    commandEntries(commands).length +
+      keymapEntries(sections).length +
+      shellEntries(shellRows).length,
+  );
   expect(entries[entries.length - 1].label).toBe("sudo <...>");
 });
 
@@ -109,8 +141,14 @@ test('searchHelp: "kil" ranks the kill-window and kill-pane keymap rows at the t
   const entries = buildEntries(commands, sections);
   const results = searchHelp("kil", entries, commands);
   const topLabels = results.slice(0, 2).map((r) => r.label);
-  expect(topLabels.includes("&"), `expected "&" (kill-window) near the top, got ${JSON.stringify(topLabels)}`).toBeTruthy();
-  expect(topLabels.includes("x"), `expected "x" (kill-pane) near the top, got ${JSON.stringify(topLabels)}`).toBeTruthy();
+  expect(
+    topLabels.includes("&"),
+    `expected "&" (kill-window) near the top, got ${JSON.stringify(topLabels)}`,
+  ).toBeTruthy();
+  expect(
+    topLabels.includes("x"),
+    `expected "x" (kill-pane) near the top, got ${JSON.stringify(topLabels)}`,
+  ).toBeTruthy();
 });
 
 test('searchHelp: "dash" resolves to the dashboard COMMAND, not the "d / w / 0" keymap row whose description also contains "dashboard" (corpus-order tiebreak)', () => {
@@ -172,8 +210,14 @@ test("searchHelp: matches a command's alias, not just its name", () => {
 
 test("searchHelp: word-boundary match on a later word within a description outranks an unrelated subsequence match", () => {
   const wordBoundarySections: HelpSectionSource[] = [
-    { title: "Section A", rows: [{ key: "z", description: "status bar prompts a rename window dialog" }] },
-    { title: "Section B", rows: [{ key: "y", description: "totally unrelated filler text with scattered letters" }] },
+    {
+      title: "Section A",
+      rows: [{ key: "z", description: "status bar prompts a rename window dialog" }],
+    },
+    {
+      title: "Section B",
+      rows: [{ key: "y", description: "totally unrelated filler text with scattered letters" }],
+    },
   ];
   const entries = buildEntries([], wordBoundarySections);
   const results = searchHelp("win", entries, []);

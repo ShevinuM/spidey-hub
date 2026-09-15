@@ -31,7 +31,10 @@ function listStyleBearingFiles(dir: string): string[] {
 /** Every `@keyframes <name>` (bare or `-global-`-prefixed) declaration
  * site, keyed by its resolved (prefix-stripped) name — the name a
  * inline-style `animation:` reference actually has to match. */
-function findKeyframeDeclarations(text: string, file: string): Array<{ name: string; file: string }> {
+function findKeyframeDeclarations(
+  text: string,
+  file: string,
+): Array<{ name: string; file: string }> {
   const found: Array<{ name: string; file: string }> = [];
   const re = /@keyframes\s+(-global-)?([A-Za-z_][\w-]*)/g;
   for (const m of text.matchAll(re)) {
@@ -45,7 +48,9 @@ function findKeyframeDeclarations(text: string, file: string): Array<{ name: str
  *
  * Pure over its inputs, so the proof below can fire it at synthetic files
  * rather than by dirtying the tree. */
-function findDuplicateKeyframeNames(files: Array<{ path: string; text: string }>): Array<[string, string[]]> {
+function findDuplicateKeyframeNames(
+  files: Array<{ path: string; text: string }>,
+): Array<[string, string[]]> {
   const byName = new Map<string, string[]>();
   for (const { path, text } of files) {
     for (const { name } of findKeyframeDeclarations(text, path)) {
@@ -65,7 +70,10 @@ test("no @keyframes name is declared in more than one place across src/", () => 
     })),
   );
 
-  expect(duplicates, `duplicate @keyframes declaration(s): ${duplicates.map(([name, sites]) => `${name} in [${sites.join(", ")}]`).join("; ")}`).toEqual([]);
+  expect(
+    duplicates,
+    `duplicate @keyframes declaration(s): ${duplicates.map(([name, sites]) => `${name} in [${sites.join(", ")}]`).join("; ")}`,
+  ).toEqual([]);
 });
 
 // The proof clause: a scan that matches nothing reports the same empty result
@@ -92,6 +100,9 @@ test("a name declared in both the plain and -global- forms is reported with its 
   ]);
 
   expect(duplicates).toEqual([
-    ["flicker", ["src/features/boot/components/Synthetic.svelte", "src/common/styles/synthetic.css"]],
+    [
+      "flicker",
+      ["src/features/boot/components/Synthetic.svelte", "src/common/styles/synthetic.css"],
+    ],
   ]);
 });

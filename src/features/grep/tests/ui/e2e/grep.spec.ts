@@ -21,7 +21,9 @@ async function gotoReady(page: Page, path: string) {
 }
 
 function realIndex(): RepoFile[] {
-  return JSON.parse(readFileSync(join(ROOT, "public/generated/grep-index.json"), "utf8")) as RepoFile[];
+  return JSON.parse(
+    readFileSync(join(ROOT, "public/generated/grep-index.json"), "utf8"),
+  ) as RepoFile[];
 }
 
 const overlay = (page: Page) => page.locator('[data-testid="grep-overlay"]');
@@ -30,7 +32,8 @@ const queryText = (page: Page) => page.locator('[data-testid="grep-query"]');
 const counterText = (page: Page) => page.locator('[data-testid="grep-counter"]');
 const modeText = (page: Page) => page.locator('[data-testid="grep-mode"]');
 const rows = (page: Page) => page.locator('[data-testid="grep-row"]');
-const rowByPath = (page: Page, path: string) => page.locator(`[data-testid="grep-row"][data-path="${path}"]`);
+const rowByPath = (page: Page, path: string) =>
+  page.locator(`[data-testid="grep-row"][data-path="${path}"]`);
 const selectedRow = (page: Page) => page.locator('[data-testid="grep-row"][data-selected="true"]');
 
 test.describe("Grep overlay", () => {
@@ -41,7 +44,9 @@ test.describe("Grep overlay", () => {
     await page.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("/ from the dashboard opens the overlay; empty-query counter is file-count/file-count", async ({ page }) => {
+  test("/ from the dashboard opens the overlay; empty-query counter is file-count/file-count", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
     await expect(overlay(page)).toBeVisible();
@@ -67,7 +72,9 @@ test.describe("Grep overlay", () => {
     await expect(page.locator('[data-testid="profile-signal-row"]')).toBeVisible();
   });
 
-  test("typing filters the results — 'grep.ts' finds src/features/grep/lib/grep.ts by path", async ({ page }) => {
+  test("typing filters the results — 'grep.ts' finds src/features/grep/lib/grep.ts by path", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
     await page.keyboard.type("grep.ts");
@@ -75,7 +82,9 @@ test.describe("Grep overlay", () => {
     await expect(rowByPath(page, "src/features/grep/lib/grep.ts")).toBeVisible();
   });
 
-  test("counter format for a live query matches the real index (hits/totalLines)", async ({ page }) => {
+  test("counter format for a live query matches the real index (hits/totalLines)", async ({
+    page,
+  }) => {
     await gotoReady(page, "/");
     await page.keyboard.press("/");
     await page.keyboard.type("svelte");
@@ -114,7 +123,13 @@ test.describe("Grep overlay", () => {
     // Assembled at run time rather than written verbatim, for the same
     // reason the next test builds a run-time `nonceQuery`: this spec's own
     // source is indexed too, so a literal copy would out-rank the target.
-    const REPOSITORIES_PATH = ["src", "features", "repositories", "components", "Repositories.svelte"].join("/");
+    const REPOSITORIES_PATH = [
+      "src",
+      "features",
+      "repositories",
+      "components",
+      "Repositories.svelte",
+    ].join("/");
     await page.keyboard.type(REPOSITORIES_PATH);
     // Wait for the filtered list to settle on the target's own row before
     // moving selection onto it — ArrowDown moves relative to whatever list
@@ -237,7 +252,9 @@ test.describe("Grep overlay", () => {
     await page.keyboard.press("/");
     await expect(listEl(page)).toBeVisible();
 
-    const expectedRows = await listEl(page).evaluate((el) => Math.max(4, Math.floor(el.clientHeight / 22)));
+    const expectedRows = await listEl(page).evaluate((el) =>
+      Math.max(4, Math.floor(el.clientHeight / 22)),
+    );
     await expect(rows(page)).toHaveCount(expectedRows);
   });
 
@@ -288,9 +305,14 @@ test.describe("Grep overlay", () => {
 
   for (const vp of EXTRA_VIEWPORTS) {
     test.describe(`right preview pane labels are never clipped by an ancestor — ${vp.width}x${vp.height}@${vp.deviceScaleFactor}x`, () => {
-      test.use({ viewport: { width: vp.width, height: vp.height }, deviceScaleFactor: vp.deviceScaleFactor });
+      test.use({
+        viewport: { width: vp.width, height: vp.height },
+        deviceScaleFactor: vp.deviceScaleFactor,
+      });
 
-      test("grep-file / grep-file-pos fully contained in every clipping ancestor", async ({ page }) => {
+      test("grep-file / grep-file-pos fully contained in every clipping ancestor", async ({
+        page,
+      }) => {
         await gotoReady(page, "/");
         await page.keyboard.press("/");
         await expect(overlay(page)).toBeVisible();

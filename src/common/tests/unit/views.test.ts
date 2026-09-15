@@ -3,7 +3,14 @@ import { expect, test } from "vitest";
 import { viewToTmuxBinding } from "../../lib/views";
 
 test("viewToTmuxBinding looks up the live window number, never a fixed table", () => {
-  const windowNumbers = { dashboard: 0, repositories: 1, employment: 2, "retina-v": 3, profile: 4, help: 5 };
+  const windowNumbers = {
+    dashboard: 0,
+    repositories: 1,
+    employment: 2,
+    "retina-v": 3,
+    profile: 4,
+    help: 5,
+  };
   expect(viewToTmuxBinding("repositories", windowNumbers)).toBe("C-b 1");
   expect(viewToTmuxBinding("help", windowNumbers)).toBe("C-b 5");
 
