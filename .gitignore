@@ -13,3 +13,5 @@ Instructions/
 .cache/
 .claude/
 Tasks/
+# vitest --coverage report — regenerated, not source.
+coverage/

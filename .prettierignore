@@ -24,6 +24,7 @@ reference/
 # Build outputs and caches.
 .cache/
 dist/
+coverage/
 
 # Machine-managed lockfile.
 pnpm-lock.yaml

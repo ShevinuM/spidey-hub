@@ -11,5 +11,20 @@ export default defineConfig({
       "src/common/tests/unit/**/*.test.ts",
       "src/features/*/tests/unit/**/*.test.ts",
     ],
+    // Scoped to the plain-TypeScript surface unit tests actually exercise.
+    // Svelte components are covered by Playwright and emit no V8
+    // instrumentation, so letting this include glob run unscoped would
+    // report a near-zero percentage that misrepresents the repo.
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "lcov"],
+      include: [
+        "src/common/lib/**/*.ts",
+        "src/common/engines/**/*.ts",
+        "src/features/*/lib/**/*.ts",
+        "scripts/lib/**/*.ts",
+      ],
+      exclude: ["**/tests/**", "src/generated/**"],
+    },
   },
 });
