@@ -37,6 +37,7 @@
     "@shikijs/types": "4.4.3",
     "@tailwindcss/vite": "4.3.3",
     "@types/node": "26.2.0",
+    "@vitest/coverage-v8": "4.1.11",
     "dependency-cruiser": "18.3.1",
     "material-file-icons": "2.4.0",
     "oxlint": "1.80.0",
