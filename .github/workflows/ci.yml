@@ -2,9 +2,14 @@ name: CI
 
 on:
   pull_request:
+  push:
+    branches: [main]
 
 concurrency:
-  group: ci-${{ github.head_ref }}
+  # On a push event github.head_ref is empty, so without the fallback every
+  # push to main shares one group under cancel-in-progress: true, and a
+  # second merge cancels the first merge's coverage upload.
+  group: ci-${{ github.head_ref || github.sha }}
   cancel-in-progress: true
 
 permissions:
@@ -16,6 +21,9 @@ jobs:
   # saves the minutes the later stages would have spent.
   gate:
     name: gate
+    # main runs no tests by design, so the 15-30 minute gate has nothing to
+    # do there.
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -51,7 +59,7 @@ jobs:
 
       - run: pnpm test:unit --coverage
 
-      # Codacy coverage upload (PR 4.4) and CodeQL (PR 4.5) land here.
+      # CodeQL (PR 4.5) lands here.
 
       - name: Restore Playwright browser cache
         uses: actions/cache@v6
@@ -73,3 +81,48 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  # Codacy owns exactly three things in this stack: diff coverage on the pull request,
+  # cyclomatic complexity, and the grade trend. Everything else it can do is already
+  # owned by a check in `gate`, so it is turned off on the Codacy side.
+  #
+  # This is deliberately a separate job from `gate`, for two reasons. A Codacy outage or
+  # a failed upload must not be able to fail the check that gates merges. And Codacy
+  # computes diff coverage by comparing the head commit against the pull request's common
+  # ancestor, so coverage has to exist for `main` too — with nothing to diff against it
+  # reports coverage as missing. deploy.yml deliberately runs no tests, which is why the
+  # main-side upload is triggered from here rather than from there.
+  coverage:
+    name: coverage
+    runs-on: ubuntu-latest
+    steps:
+      # The default checkout on a pull request is GitHub's ephemeral merge commit, whose
+      # tree is the head commit plus whatever `main` has moved by. The reporter files the
+      # report against the head commit, so the coverage has to describe the head commit's
+      # tree. `gate` still tests the merge commit, which is the right thing for a gate.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "26"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # No build step: scripts/generate.mjs's output is tracked, so the unit tests run
+      # against it directly. vitest's reporters are text and lcov, so this writes
+      # coverage/lcov.info.
+      - run: pnpm test:unit --coverage
+
+      # The secret holds a Codacy ACCOUNT token, not a project token, so the reporter
+      # needs the organization, username and project name alongside it. The action
+      # derives all three from GITHUB_SERVER_URL and GITHUB_REPOSITORY and passes
+      # them itself whenever api-token is set — it exposes no inputs for them.
+      - uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699 # v1.3.0
+        with:
+          api-token: ${{ secrets.CODACY_API_TOKEN }}
+          coverage-reports: coverage/lcov.info
