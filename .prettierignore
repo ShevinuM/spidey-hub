@@ -2,6 +2,10 @@
 public/generated/**
 src/generated/**
 
+# Gitleaks SARIF report — the gate's secret-scan step writes this into the
+# workspace root before pnpm format runs, so it only ever exists in CI.
+results.sarif
+
 # Frozen fixture bytes — a reformat here changes what a test compares against.
 **/goldens/**
 
