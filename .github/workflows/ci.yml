@@ -46,7 +46,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # jscpd and knip land here (PR 4.3).
+      - run: pnpm duplication
+      - run: pnpm knip
 
       - run: pnpm test:unit --coverage
 
