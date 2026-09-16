@@ -1,6 +1,6 @@
 # The five checks
 
-Five commands check this repo without starting a browser. Each one is standalone and each exits 0 on a clean tree.
+Five commands check this repo without starting a browser. Each one is standalone and each exits 0 on a clean tree. (The CI gate also runs `pnpm duplication` and `pnpm knip`, two more browserless, exit-0-on-clean commands — see "What CI runs" below; they are gate-only additions, not part of this five.)
 
 | command             | what it runs                                                         | what it checks                                                                                                                                                                                                                                                                                                                                                                                               |
 | ------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -34,7 +34,7 @@ These five are the static checks. Running the tests is a different altitude, wit
 
 ## What CI runs
 
-`.github/workflows/ci.yml` runs on every pull request and is the gate. It runs all five checks above in the order this file lists them, then `pnpm test:unit`, then `pnpm test:e2e`.
+`.github/workflows/ci.yml` runs on every pull request and is the gate. It runs all five checks above in the order this file lists them, then two more gate-only commands not in that table — `pnpm duplication` (jscpd, gating `src` duplication at 1%) and `pnpm knip` (unused files, dependencies and exports) — then `pnpm test:unit --coverage`, then `pnpm test:e2e`. The `--coverage` flag measures statement coverage over `src/common/lib/**`, `src/common/engines/**`, `src/features/*/lib/**` and `scripts/lib/**` — the plain-TypeScript surface unit tests actually exercise, scoped there because Svelte components emit no V8 instrumentation and are covered by Playwright instead. Reporters are `text` and `lcov`, so the run also writes `coverage/lcov.info`.
 
 `.github/workflows/deploy.yml` runs on every push to `main` and only builds and deploys — its `pnpm build` produces the `dist/` that publishes to GitHub Pages. The gate already ran on the pull request, which is why it is not repeated there.
 
