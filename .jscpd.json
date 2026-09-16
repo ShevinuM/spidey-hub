@@ -1,0 +1,6 @@
+{
+  "path": ["src"],
+  "minTokens": 50,
+  "threshold": 1,
+  "ignore": ["**/tests/**", "**/content/**", "src/generated/**"]
+}
