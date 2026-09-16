@@ -23,6 +23,7 @@
   import { pathToView, viewIdToProgram } from "../common/lib/views";
   import type { Pane, PaneDirection } from "../common/engines/tmux/tmux";
   import type { ShellMode } from "../common/lib/shell";
+  import { untrack } from "svelte";
   import { TerminalState, DEFAULT_SESSION_NAME } from "./terminalState.svelte";
   import Wallpaper from "../common/components/Wallpaper.svelte";
   import StatusBar from "../common/components/StatusBar.svelte";
@@ -279,10 +280,17 @@
   /** Constructed here as `core`, never `state`: naming it `state` breaks svelte2tsx's
    * rune recognition for the explicit-generic `$state<{...}>()` refs declared above it. */
   const core = new TerminalState(
-    site,
-    shell,
-    cmdline,
-    initialView,
+    // `site`/`shell`/`cmdline`/`initialView` are bootstrap data passed by
+    // value ONCE, deliberately — everything below that must stay live is
+    // passed as a `() => x` getter instead. `untrack` makes that one-time
+    // snapshot explicit rather than leaving it looking like an oversight
+    // (svelte-check's state_referenced_locally warning); it does not
+    // change what is passed, so `TerminalState`'s constructor contract is
+    // unaffected.
+    untrack(() => site),
+    untrack(() => shell),
+    untrack(() => cmdline),
+    untrack(() => initialView),
     () => grepRef,
     () => statusBarRef,
     () => copyModeRef,
