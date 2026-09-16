@@ -26,7 +26,12 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
+      # fetch-depth: 0 (full history) rather than the default shallow clone:
+      # Gitleaks scans the pull_request event's commit range, which a depth-1
+      # checkout does not contain.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
 
@@ -45,7 +50,32 @@ jobs:
           path: .cache/repos
           key: repos-${{ hashFiles('repos.json') }}
 
-      # Gitleaks and Trivy land here (PR 4.5).
+      # Secrets: Gitleaks is the blocking scanner here, backed by GitHub's
+      # native (free, already-on) secret scanning as a second, non-blocking
+      # net. Pinned to the v2 line rather than the just-released v3.0.0 — v2's
+      # config surface is long-documented and stable; v3 is a fresh major
+      # whose behavior isn't worth guessing at in a blocking gate step.
+      - name: Gitleaks secret scan
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Dependencies: Trivy is the single blocking scanner for known-vulnerable
+      # dependencies (scanners: vuln only — its secret and misconfig scanners
+      # are deliberately off so it doesn't duplicate Gitleaks, and this repo
+      # has no containers/IaC for misconfig to check). Dependabot lands in PR
+      # 4.6 as remediation (it opens fix PRs); it does not gate a PR, so it
+      # isn't a second blocking owner of this signal.
+      - name: Trivy dependency vulnerability scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln
+          severity: CRITICAL,HIGH
+          exit-code: 1
+          ignore-unfixed: true
+
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm architecture
@@ -59,7 +89,11 @@ jobs:
 
       - run: pnpm test:unit --coverage
 
-      # CodeQL (PR 4.5) lands here.
+      # SAST: CodeQL owns this signal, but runs as its own workflow
+      # (.github/workflows/codeql.yml) rather than a step here — it needs its
+      # own `security-events: write` permission and a language matrix, which
+      # produce two independent check runs: "CodeQL (javascript-typescript)"
+      # and "CodeQL (actions)".
 
       - name: Restore Playwright browser cache
         uses: actions/cache@v6
