@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { NotificationsData } from "../../../common/lib/data";
   import type { ViewId } from "../../../common/lib/views";
+  import { untrack } from "svelte";
   import { NotificationsState } from "./notificationsState.svelte";
   import NotificationBell from "./NotificationBell.svelte";
   import NotificationsPanel from "./NotificationsPanel.svelte";
@@ -24,7 +25,11 @@
     () => notifications,
     () => view,
     () => fixtureMode,
-    bootActive,
+    // `bootActive` is already typed `?: () => boolean` — a thunk, not a
+    // value. `untrack` documents that it is deliberately captured once
+    // rather than re-read; wrapping it as `() => bootActive` would change
+    // the type to `() => (() => boolean)` and break the callee.
+    untrack(() => bootActive),
   );
 
   export function close(): void {

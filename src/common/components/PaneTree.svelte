@@ -20,6 +20,7 @@
   // `multiPane` is true.
   import type { Snippet } from "svelte";
   import type { Pane, PaneNode } from "../engines/tmux/tmux";
+  import PaneTree from "./PaneTree.svelte";
 
   interface Props {
     node: PaneNode;
@@ -92,7 +93,7 @@
             : 'border-top:1px solid rgba(196,216,232,.18)'
           : ''}"
       >
-        <svelte:self node={child} {activePaneId} {multiPane} {refs} {paneLeaf} />
+        <PaneTree node={child} {activePaneId} {multiPane} {refs} {paneLeaf} />
       </div>
     {/each}
   </div>
