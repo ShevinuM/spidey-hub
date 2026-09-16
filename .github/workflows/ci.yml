@@ -66,6 +66,12 @@ jobs:
       # has no containers/IaC for misconfig to check). Dependabot lands in PR
       # 4.6 as remediation (it opens fix PRs); it does not gate a PR, so it
       # isn't a second blocking owner of this signal.
+      # .cache/repos holds SHA-pinned tarballs of other people's repositories that
+      # scripts/generate.mjs fetches so the site can display them in its portfolio
+      # showcase. They are content, not this project's dependencies — never installed,
+      # never executed, never deployed — so their CVEs are real for those projects and
+      # irrelevant here. Excluding the directory (not the pip ecosystem) keeps a real
+      # requirements.txt this repo might add later genuinely scanned.
       - name: Trivy dependency vulnerability scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -75,6 +81,7 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: 1
           ignore-unfixed: true
+          skip-dirs: .cache
 
       - run: pnpm typecheck
       - run: pnpm lint
