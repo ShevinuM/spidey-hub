@@ -11,10 +11,8 @@
     RepositoriesData,
     PersonnelData,
     GrepData,
-    HelpData,
     BootData,
     CmdlineData,
-    HelpSearchData,
     ShellData,
     ChooseTreeData,
   } from "../common/lib/data";
@@ -31,7 +29,6 @@
   import Repositories from "../features/repositories/components/Repositories.svelte";
   import EmploymentRecords from "../features/employment/components/EmploymentRecords.svelte";
   import Profile from "../features/profile/components/Profile.svelte";
-  import HelpView from "../features/help/components/HelpView.svelte";
   import Shell from "../features/shell-fs/components/Shell.svelte";
   import Notifications from "../features/notifications/components/Notifications.svelte";
   import GrepOverlay from "../features/grep/components/GrepOverlay.svelte";
@@ -39,7 +36,6 @@
   import ChooseTree from "../common/components/ChooseTree.svelte";
   import BootSequence from "../features/boot/components/BootSequence.svelte";
   import Cmdline from "../common/components/Cmdline.svelte";
-  import HelpSearch from "../features/help/components/HelpSearch.svelte";
 
   /** Unified optional-methods contract every mounted program component's
    * `bind:this` ref may expose, since PaneTree.svelte's single ref registry
@@ -47,9 +43,8 @@
    *
    * Every field stays optional:
    * Dashboard/retina-v export no ref at all, Profile only ever exports
-   * `handleKey`; HelpView also exports `isEditorOpen` (its own filter box
-   * needs the same "owns the keyboard while focused" treatment an open vim
-   * Editor already gets).
+   * `handleKey`; EmploymentRecords/Repositories also export `isEditorOpen`
+   * (an open vim Editor owns the keyboard while focused).
    *
    * `Ctrl-b x` always kills the real tmux PANE (src/common/engines/tmux/tmux.ts), never a
    * Repositories-internal panel. */
@@ -77,10 +72,8 @@
     repositories: RepositoriesData;
     personnel: PersonnelData;
     grep: GrepData;
-    help: HelpData;
     boot: BootData;
     cmdline: CmdlineData;
-    helpSearch: HelpSearchData;
     shell: ShellData;
     chooseTree: ChooseTreeData;
     projects: CollectionEntry<"repositories">[];
@@ -99,10 +92,8 @@
     repositories,
     personnel,
     grep,
-    help,
     boot,
     cmdline,
-    helpSearch,
     shell,
     chooseTree,
     projects,
@@ -114,14 +105,7 @@
    * except "shell") — Shell.svelte's own
    * bare-command/`open <view>` validation, and the palette this file's
    * `viewIdToProgram`/`programToViewId` bridge already agrees with. */
-  const VIEW_NAMES = [
-    "dashboard",
-    "repositories",
-    "employment",
-    "retina-v",
-    "profile",
-    "help",
-  ] as const;
+  const VIEW_NAMES = ["dashboard", "repositories", "employment", "retina-v", "profile"] as const;
 
   /** Every in-pane Shell instance is "pane" mode; the one host-shell
    * instance rendered directly below (not through PaneTree) is "host" mode —
@@ -244,21 +228,8 @@
     close: () => void;
   } | null>(null);
 
-  /** HelpSearch.svelte — same always-mounted / bind:this /
-   * handleKey():boolean / isOpen() / close()
-   * contract as Cmdline above; `openPalette()` is called from the bare-`?`
-   * opener further down (mirroring the bare-`:` opener that calls
-   * cmdlineRef.openSite()). */
-  let helpSearchRef = $state<{
-    isOpen: () => boolean;
-    openPalette: () => void;
-    close: () => void;
-    handleKey: (e: KeyboardEvent) => boolean;
-  } | null>(null);
-
   /** ChooseTree.svelte (`Ctrl-b w`) — same always-mounted / bind:this /
-   * handleKey():boolean / isOpen()/close() contract as Cmdline/HelpSearch
-   * above.
+   * handleKey():boolean / isOpen()/close() contract as Cmdline above.
    *
    * `openOverlay()` is called from the prefix `w` binding;
    * `handleKey()` is consulted in its own documented slot (see ChooseTree.
@@ -288,11 +259,10 @@
     () => copyModeRef,
     () => bootRef,
     () => cmdlineRef,
-    () => helpSearchRef,
     () => chooseTreeRef,
     () => notificationsRef,
     focusedRef,
-    { "?": "help" },
+    {},
   );
 
   /** Plays the mock's `bDashIn` entrance animation on the site chrome the
@@ -380,10 +350,10 @@
 
     if (e.key === "Escape") return true; // cancel — swallowed, no action
 
-    // While a status-bar prompt, the Cmdline box, or the `?` HelpSearch palette is
-    // open, it owns the keyboard and only Ctrl-b arm + `]` (paste) pass through the
-    // prefix system, checked before every other branch below.
-    if (statusBarRef?.isPromptActive() || cmdlineRef?.isOpen?.() || helpSearchRef?.isOpen?.()) {
+    // While a status-bar prompt or the Cmdline box is open, it owns the
+    // keyboard and only Ctrl-b arm + `]` (paste) pass through the prefix
+    // system, checked before every other branch below.
+    if (statusBarRef?.isPromptActive() || cmdlineRef?.isOpen?.()) {
       if (e.key === "]") {
         e.preventDefault();
         core.pasteFromBuffer();
@@ -439,10 +409,10 @@
       // `w` is real tmux choose-tree (`0` still always selects window 0,
       // unaffected).
       //
-      // Closes grep/cmdline/palette first (window-chrome
-      // contract) — reachable in practice only for grep (Cmdline/HelpSearch
-      // being open already blocks every prefixed key including this one,
-      // per the combined gate above), same "prefix precedence over grep"
+      // Closes grep/cmdline first (window-chrome
+      // contract) — reachable in practice only for grep (Cmdline being open
+      // already blocks every prefixed key including this one, per the
+      // combined gate above), same "prefix precedence over grep"
       // rule every other window-switch prefix key already follows.
       e.preventDefault();
       core.closeWindowChrome();
@@ -587,7 +557,6 @@
       if (
         !statusBarRef?.isPromptActive() &&
         !cmdlineRef?.isOpen?.() &&
-        !helpSearchRef?.isOpen?.() &&
         e.ctrlKey &&
         !e.metaKey &&
         !e.altKey &&
@@ -631,14 +600,6 @@
     // still arm and the following `]` can still dispatch into its paste target instead
     // of typing a literal `]`.
     if (cmdlineRef?.handleKey(e)) return;
-
-    // The `?` HelpSearch palette gets
-    // the exact same relative slot as Cmdline immediately above it (right
-    // after the prefix system, right before the status-bar prompt) — same
-    // "Ctrl-b ] must still reach it" reasoning, and mutually exclusive with
-    // Cmdline in practice (the combined isPromptActive/isOpen gate further
-    // up already stops either one from opening while the other is up).
-    if (helpSearchRef?.handleKey(e)) return;
 
     if (statusBarRef?.handleKey(e)) return;
 
@@ -721,7 +682,7 @@
     }
 
     // Covers Repositories/Personnel's non-editor handling (e.g. Repositories' arrow-key
-    // repo navigation) AND Profile's `r`/HelpView's arrow-key scroll — both
+    // repo navigation) AND Profile's `r` scroll — both
     // refs simply never export
     // `isEditorOpen`, so `editorIsOpen` is already false for them and this
     // one call reaches them in exactly the same relative position).
@@ -736,16 +697,6 @@
       e.preventDefault();
       if (editorIsOpen) cmdlineRef?.openEx();
       else cmdlineRef?.openSite();
-      return;
-    }
-
-    // A bare `?` nothing above already consumed opens the HelpSearch palette,
-    // mirroring the `:` fallback opener above except that it's fully excluded
-    // (not just mode-switched) while a file editor is open, since Editor.svelte's
-    // own handleKey already returns false for an unrecognized `?`.
-    if (!e.metaKey && !e.ctrlKey && !e.altKey && e.key === "?" && !editorIsOpen) {
-      e.preventDefault();
-      helpSearchRef?.openPalette();
       return;
     }
 
@@ -781,9 +732,9 @@
   }
 
   /** Popstate goes through the exact same `switchToWindowById` every other
-   * window-switch path uses: closes grep/cmdline/help-palette, then
+   * window-switch path uses: closes grep/cmdline, then
    * selects the DEFAULT session's window whose id matches the popped
-   * route (a browser back/forward always lands on one of the six
+   * route (a browser back/forward always lands on one of the five
    * canonical routes, never a mid-shell core) — maps route to session 0's
    * window if present, else no-op; no-op is automatic here since
    * `switchToWindowById` already no-ops for a missing id.
@@ -885,8 +836,6 @@
             {personnelEntries}
             {isFocused}
           />
-        {:else if pane.program === "help"}
-          <HelpView bind:this={getLeafRef, setLeafRef} {help} {isFocused} />
         {:else if pane.program === "profile"}
           <Profile bind:this={getLeafRef, setLeafRef} {profile} {isFocused} />
         {:else}
@@ -959,14 +908,6 @@
   <CopyMode bind:this={copyModeRef} copyMode={site.copyMode} />
   <BootSequence bind:this={bootRef} {boot} {desktopMode} onReady={onBootReady} />
   <Cmdline bind:this={cmdlineRef} {cmdline} onSubmit={core.onCmdlineSubmit} />
-  <HelpSearch
-    bind:this={helpSearchRef}
-    {helpSearch}
-    {cmdline}
-    {help}
-    {shell}
-    onExecute={core.onHelpSearchExecute}
-  />
   <ChooseTree
     bind:this={chooseTreeRef}
     client={core.client}

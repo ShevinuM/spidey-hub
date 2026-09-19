@@ -8,12 +8,12 @@ statusBar:
   # StatusBar.svelte substitutes `{name}` from the live client model.
   sessionTemplate: "Session: {name}"
   separator: "·"
-  # Window list, always rendered in this numeric order 0-5 (the prototype's
+  # Window list, always rendered in this numeric order 0-4 (the prototype's
   # Retina-V view renders "...4:profile 3:retina-v*" — out of
   # order — because the tracker window is appended after profile instead of
-  # rendered in place; we always render 0-5 with the active one highlighted
-  # in place instead of reordered). Dashboard
-  # and help are real, clickable windows, not implicit/absent.
+  # rendered in place; we always render 0-4 with the active one highlighted
+  # in place instead of reordered). Dashboard is a real, clickable window,
+  # not implicit/absent.
   windows:
     - number: 0
       id: dashboard
@@ -30,9 +30,6 @@ statusBar:
     - number: 4
       id: profile
       name: profile
-    - number: 5
-      id: help
-      name: help
   grepHint: "[/] grep"
   # ↻ reboot — status-bar right-cluster control that replays the boot
   # sequence from any view.

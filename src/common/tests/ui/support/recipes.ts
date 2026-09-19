@@ -28,8 +28,8 @@ export interface Recipe {
 }
 
 /**
- * Windows switch via `Ctrl-b <N>` (1 repositories, 2 employment, 3 retina-v, 4 profile, 5
- * help) or a click; Repositories panels navigate via ArrowUp/ArrowDown.
+ * Windows switch via `Ctrl-b <N>` (1 repositories, 2 employment, 3 retina-v, 4 profile)
+ * or a click; Repositories panels navigate via ArrowUp/ArrowDown.
  *
  * "03-repositories-arrow" focuses panel [1] (bare `1`, unrelated to the `Ctrl-b` prefix)
  * before `ArrowDown`, which moves the repo-list selection highlight.
@@ -166,7 +166,7 @@ export const cmdlineRecipes: Recipe[] = [
 ];
 
 /**
- * Five recipes covering pane splits, layouts, choose-tree, and the in-window/host shell —
+ * Four recipes covering pane splits, layouts, choose-tree, and the in-window/host shell —
  * kept in their own array for the same reason as the arrays above.
  *
  * A tmux prefix chord is two separate key actions: `Ctrl-b` arms the prefix, then the

@@ -8,7 +8,6 @@ import { getDashboard } from "../features/dashboard/lib/data";
 import { getRepositories } from "../features/repositories/lib/data";
 import { getPersonnel } from "../features/employment/lib/data";
 import { getGrep } from "../features/grep/lib/data";
-import { getHelpSearch, buildHelp } from "../features/help/lib/data";
 import { getShell } from "../features/shell-fs/lib/data";
 import { buildProfile } from "../features/profile/lib/data";
 import { buildNotifications } from "../features/notifications/lib/data";
@@ -27,13 +26,11 @@ export async function loadTerminalProps() {
     personnel: getPersonnel(),
     grep: getGrep(),
     cmdline: getCmdline(),
-    helpSearch: getHelpSearch(),
     shell: getShell(),
     chooseTree: getChooseTree(),
     projects,
     personnelEntries: await getCollection("personnel"),
     profile: buildProfile((await getCollection("profile"))[0]),
-    help: buildHelp(await getCollection("help")),
     notifications: buildNotifications(await getCollection("notifications")),
     boot: buildBoot(await getCollection("boot")),
     commitsByRepo: getCommitsByRepo(projects),

@@ -4,7 +4,7 @@
   // pane area while leaving the status line visible.
   //
   // Always mounted, same `bind:this`/`handleKey(): boolean`/`close()`/
-  // `isOpen()` contract as GrepOverlay/CopyMode/Cmdline/HelpSearch.
+  // `isOpen()` contract as GrepOverlay/CopyMode/Cmdline.
   //
   // Terminal.svelte consults this component's `handleKey()` after copy-mode
   // and the tmux prefix system, but before Cmdline/StatusBar/every view
@@ -276,8 +276,8 @@
       return true;
     }
 
-    // Everything else (incl. `?` — the help palette must NOT open while
-    // this overlay is open) is silently swallowed.
+    // Every other single-character key is silently swallowed so nothing
+    // below this overlay sees it.
     if (e.key.length === 1) e.preventDefault();
     return true;
   }
