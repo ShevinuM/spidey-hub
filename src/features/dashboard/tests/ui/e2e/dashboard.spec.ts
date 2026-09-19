@@ -16,7 +16,6 @@ const MENU = [
   { id: "xp", icon: "◆", label: "Employment Records", binding: "C-b 2", route: "/employment" },
   { id: "info", icon: "◉", label: "Profile", binding: "C-b 4", route: "/profile" },
   { id: "tracker", icon: "spider-mask", label: "Retina-V", binding: "C-b 3", route: "/retina-v" },
-  { id: "help", icon: "?", label: "Help", binding: "C-b 5", route: "/help" },
 ] as const;
 
 test.describe("dashboard wordmark", () => {
@@ -75,10 +74,10 @@ test.describe("menu navigation", () => {
 
   test("Space on a focused row navigates, same as a click", async ({ page }) => {
     await gotoReady(page);
-    const row = page.locator('[data-testid="dashboard-menu-row"][data-menu-id="help"]');
+    const row = page.locator('[data-testid="dashboard-menu-row"][data-menu-id="info"]');
     await row.focus();
     await page.keyboard.press(" ");
-    await expect(page).toHaveURL(/\/help$/);
+    await expect(page).toHaveURL(/\/profile$/);
   });
 });
 
@@ -86,7 +85,7 @@ test.describe("footer synced-panes line", () => {
   test("reads the exact template with the live pane count substituted twice", async ({ page }) => {
     await gotoReady(page);
     await expect(page.getByText(/⚡ synced \d+\/\d+ panes in 48\.23ms/)).toHaveText(
-      "⚡ synced 6/6 panes in 48.23ms",
+      "⚡ synced 5/5 panes in 48.23ms",
     );
   });
 });

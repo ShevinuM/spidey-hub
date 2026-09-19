@@ -8,7 +8,7 @@ entries:
     val: Terminal.svelte
   - id: tmux-session
     label: tmux session
-    val: 6 windows
+    val: 5 windows
   - id: grep-index
     label: grep index
     val: 22 files

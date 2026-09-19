@@ -9,7 +9,7 @@ async function statusBarText(page: Page) {
 /** Same six-window table as nav.spec.ts/tmux.spec.ts — kept as a local copy
  * per this suite's own convention rather than a shared import, matching how
  * every other e2e spec hand-mirrors this list. */
-const WINDOWS = ["dashboard", "repositories", "employment", "retina-v", "profile", "help"];
+const WINDOWS = ["dashboard", "repositories", "employment", "retina-v", "profile"];
 /** Display NAME per window id — every id equals its own name except
  * "repositories", whose site.yaml name is the shorter "repos" (status bar
  * real estate). */
@@ -19,7 +19,6 @@ const WINDOW_NAMES: Record<string, string> = {
   employment: "employment",
   "retina-v": "retina-v",
   profile: "profile",
-  help: "help",
 };
 function winText(activeId: string, lastId?: string): string {
   return WINDOWS.map(
@@ -65,10 +64,6 @@ test.describe("view routing on direct navigation", () => {
     await gotoReady(page, "/profile");
     await expect(page.locator('[data-testid="profile-signal-row"]')).toBeVisible();
     expect(await statusBarText(page)).toBe(winText("profile"));
-
-    await gotoReady(page, "/help");
-    await expect(page.locator('[data-testid="help-scroller"]')).toBeVisible();
-    expect(await statusBarText(page)).toBe(winText("help"));
   });
 });
 
@@ -87,19 +82,18 @@ test.describe("tmux prefix: arm, digit dispatch, single-shot disarm", () => {
       ["2", "employment"],
       ["3", "retina-v"],
       ["4", "profile"],
-      ["5", "help"],
     ] as const) {
       await ctrlB(page);
       await page.keyboard.press(digit);
-      await expect(page).toHaveURL(id === "help" ? /\/help$/ : new RegExp(`\\/${id}$`));
+      await expect(page).toHaveURL(new RegExp(`\\/${id}$`));
       expect(await statusBarText(page)).toBe(winText(id, prev));
       prev = id;
     }
-    // 0 returns to the dashboard from wherever the loop above landed (help).
+    // 0 returns to the dashboard from wherever the loop above landed (profile).
     await ctrlB(page);
     await page.keyboard.press("0");
     await expect(page).toHaveURL(/\/$/);
-    expect(await statusBarText(page)).toBe(winText("dashboard", "help"));
+    expect(await statusBarText(page)).toBe(winText("dashboard", "profile"));
   });
 
   test("bare Ctrl-b alone (no following key) navigates nothing — arming is not itself a dispatch", async ({
@@ -144,7 +138,6 @@ test.describe("global `r` reboot backstop reaches every view except Profile's ow
     ["/repositories", /\/repositories$/],
     ["/employment", /\/employment$/],
     ["/retina-v", /\/retina-v$/],
-    ["/help", /\/help$/],
   ] as const) {
     test(`r reboots from ${path}`, async ({ page }) => {
       await gotoReady(page, path);
@@ -215,7 +208,7 @@ test.describe("status bar active-window highlight", () => {
   }) => {
     await gotoReady(page, "/");
     expect(await bg(page, "dashboard")).toBe("rgb(224, 69, 60)");
-    for (const id of ["repositories", "employment", "retina-v", "profile", "help"]) {
+    for (const id of ["repositories", "employment", "retina-v", "profile"]) {
       expect(await bg(page, id)).not.toBe("rgb(224, 69, 60)");
     }
 

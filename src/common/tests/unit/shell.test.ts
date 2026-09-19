@@ -106,23 +106,16 @@ const SHELL: ShellData = {
   },
 };
 
-const VIEW_NAMES = [
-  "dashboard",
-  "repositories",
-  "employment",
-  "retina-v",
-  "profile",
-  "help",
-] as const;
+const VIEW_NAMES = ["dashboard", "repositories", "employment", "retina-v", "profile"] as const;
 
 const DEFAULT_SESSION: SessionRosterEntry = {
   id: "session-0",
   name: "10.42.7.13",
-  windowCount: 6,
+  windowCount: 5,
   createdAt: 1_723_000_000_000,
   attached: true,
   lastAttachedSeq: 1,
-  windowIds: ["dashboard", "repositories", "employment", "retina-v", "profile", "help"],
+  windowIds: ["dashboard", "repositories", "employment", "retina-v", "profile"],
 };
 
 function ctx(overrides: Partial<RunContext> = {}): RunContext {
@@ -439,10 +432,10 @@ test("runCommand: help prints the intro then one row per builtin", () => {
   expect(state.lines[2].text).toMatch(/cd <path>/);
 });
 
-test("runCommand: view-names lists the six canonical programs", () => {
+test("runCommand: view-names lists the five canonical programs", () => {
   const { state } = run(createShellState(), "view-names");
   expect(state.lines.at(-1)?.text).toBe(
-    "available views: dashboard repositories employment retina-v profile help",
+    "available views: dashboard repositories employment retina-v profile",
   );
 });
 
@@ -507,7 +500,7 @@ test("runCommand: tmux ls lists EVERY session in the roster, each with its own a
     ],
   });
   const lines = state.lines.slice(1).map((l) => l.text);
-  expect(lines[0]).toMatch(/^10\.42\.7\.13: 6 windows \(created .+\) \(attached\)$/);
+  expect(lines[0]).toMatch(/^10\.42\.7\.13: 5 windows \(created .+\) \(attached\)$/);
   expect(lines[1]).toBe(`test: 1 windows (created ${formatCtime(new Date(testCreatedAt))})`);
 });
 

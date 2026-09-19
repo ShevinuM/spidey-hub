@@ -56,20 +56,20 @@ test.describe("choose-tree opening / initial state (real tmux fidelity)", () => 
     await expect(statusBarWindows(page)).toBeVisible();
   });
 
-  test("the current session starts expanded (6 window rows visible) and the current window is initially selected", async ({
+  test("the current session starts expanded (5 window rows visible) and the current window is initially selected", async ({
     page,
   }) => {
     await gotoReady(page, "/repositories");
     await openChooseTree(page);
     await expect(sessionRows(page)).toHaveCount(1);
-    await expect(windowRows(page)).toHaveCount(6);
+    await expect(windowRows(page)).toHaveCount(5);
     await expect(selectedRow(page)).toHaveAttribute("data-window-id", "repositories");
   });
 
   test("session row text: {name}: {n} windows, (attached)", async ({ page }) => {
     await gotoReady(page, "/");
     await openChooseTree(page);
-    await expect(sessionRows(page).first()).toContainText("10.42.7.13: 6 windows, (attached)");
+    await expect(sessionRows(page).first()).toContainText("10.42.7.13: 5 windows, (attached)");
   });
 
   test("window row text and flags: {index}: {name} with * on the active window", async ({
@@ -112,7 +112,7 @@ test.describe("choose-tree navigation (arrows/h/l)", () => {
   }) => {
     await gotoReady(page, "/repositories");
     await openChooseTree(page);
-    await expect(windowRows(page)).toHaveCount(6);
+    await expect(windowRows(page)).toHaveCount(5);
     await page.keyboard.press("h");
     await expect(selectedRow(page)).toHaveAttribute("data-session-id", /.+/);
     await expect(selectedRow(page)).toHaveAttribute("data-window-id", "");
@@ -128,7 +128,7 @@ test.describe("choose-tree navigation (arrows/h/l)", () => {
     await page.keyboard.press("h"); // session row (already selected) -> collapse it
     await expect(windowRows(page)).toHaveCount(0);
     await page.keyboard.press("l"); // re-expand
-    await expect(windowRows(page)).toHaveCount(6);
+    await expect(windowRows(page)).toHaveCount(5);
   });
 });
 
@@ -170,7 +170,7 @@ test.describe("choose-tree Enter switches window/session; x kills; q/Esc close",
     await page.keyboard.press("Y"); // case-insensitive — the real tmux quirk
     await expect(killConfirm(page)).not.toBeVisible();
     await expect(overlay(page)).toBeVisible();
-    await expect(windowRows(page)).toHaveCount(5);
+    await expect(windowRows(page)).toHaveCount(4);
     await expect(windowRows(page).filter({ hasText: "employment" })).toHaveCount(0);
   });
 
@@ -184,7 +184,7 @@ test.describe("choose-tree Enter switches window/session; x kills; q/Esc close",
     await page.keyboard.press("z");
     await expect(killConfirm(page)).not.toBeVisible();
     await expect(overlay(page)).toBeVisible();
-    await expect(windowRows(page)).toHaveCount(6);
+    await expect(windowRows(page)).toHaveCount(5);
   });
 
   test("killing every window down to the last one still cascades to [exited], same as Ctrl-b &", async ({
@@ -192,7 +192,7 @@ test.describe("choose-tree Enter switches window/session; x kills; q/Esc close",
   }) => {
     await gotoReady(page, "/");
     await openChooseTree(page);
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       await page.keyboard.press("x");
       await page.keyboard.press("y");
     }
@@ -217,14 +217,6 @@ test.describe("choose-tree does NOT open competing modals while open (window-chr
     await expect(page.locator('[data-testid="grep-overlay"]')).toBeVisible();
     await openChooseTree(page);
     await expect(page.locator('[data-testid="grep-overlay"]')).not.toBeVisible();
-    await expect(overlay(page)).toBeVisible();
-  });
-
-  test("? does not open the help palette while choose-tree is open", async ({ page }) => {
-    await gotoReady(page, "/");
-    await openChooseTree(page);
-    await page.keyboard.press("?");
-    await expect(page.locator('[data-testid="help-search-overlay"]')).not.toBeVisible();
     await expect(overlay(page)).toBeVisible();
   });
 
@@ -297,12 +289,12 @@ test.describe("choose-tree across sessions (create a second session via the host
     await expect(windowRows(page)).toHaveCount(1); // just test's own 0:zsh
 
     const otherSessionRow = sessionRows(page).filter({ hasText: "10.42.7.13" });
-    await expect(otherSessionRow).toContainText("10.42.7.13: 6 windows");
+    await expect(otherSessionRow).toContainText("10.42.7.13: 5 windows");
     await expect(otherSessionRow).not.toContainText("(attached)");
 
     await otherSessionRow.click();
     await page.keyboard.press("l");
-    await expect(windowRows(page)).toHaveCount(7); // test's 1 + the other session's 6
+    await expect(windowRows(page)).toHaveCount(6); // test's 1 + the other session's 5
 
     const reposRow = windowRows(page).filter({ hasText: "1: repos" });
     await expect(reposRow).toBeVisible();

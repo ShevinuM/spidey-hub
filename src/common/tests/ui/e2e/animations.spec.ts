@@ -19,7 +19,7 @@ async function gotoReady(page: Page, path = "/") {
   await page.locator('[data-terminal-ready="true"]').waitFor({ state: "attached" });
 }
 
-const ROUTES = ["/", "/repositories", "/employment", "/retina-v", "/profile", "/help"];
+const ROUTES = ["/", "/repositories", "/employment", "/retina-v", "/profile"];
 
 /** Every currently-applied `animation-name` (split on `,`) with no matching `CSSKeyframesRule` anywhere in `document.styleSheets`, including within nested `@media` rules. */
 async function findUnresolvedAnimationNames(page: Page): Promise<string[]> {

@@ -71,7 +71,6 @@ test.describe("Cmdline: opening", () => {
     { path: "/employment" },
     { path: "/retina-v" },
     { path: "/profile" },
-    { path: "/help" },
   ];
 
   for (const v of views) {
@@ -549,7 +548,7 @@ test.describe("Cmdline: tmux command-prompt mode (executes through the same flow
     page,
   }) => {
     await gotoReady(page, "/");
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       await ctrlB(page);
       await page.keyboard.press("&");
       await page.keyboard.press("y");
@@ -621,7 +620,6 @@ const VIEW_ROUTE_BY_ACTION: Record<string, RegExp> = {
   "view:employment": /\/employment$/,
   "view:profile": /\/profile$/,
   "view:retina-v": /\/retina-v$/,
-  "view:help": /\/help$/,
 };
 
 test.describe("Cmdline: data-driven sweep of every src/common/content/cmdline.yaml command", () => {
@@ -727,7 +725,7 @@ test.describe("Cmdline: data-driven sweep of every src/common/content/cmdline.ya
     page,
   }) => {
     await gotoReady(page, "/");
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       await ctrlB(page);
       await page.keyboard.press("&");
       await page.keyboard.press("y");

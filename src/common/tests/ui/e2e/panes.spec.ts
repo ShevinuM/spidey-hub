@@ -215,7 +215,7 @@ test.describe("Ctrl-b x real kill-pane", () => {
     page,
   }) => {
     await gotoReady(page, "/");
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       await prefixed(page, "&");
       await page.keyboard.press("y");
     }
