@@ -31,3 +31,4 @@ pnpm-lock.yaml
 # Agent tooling state, not project source — untracked and outside the build.
 .claude/
 .remember/
+Tasks/
