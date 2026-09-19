@@ -99,19 +99,11 @@ export const recipes: Recipe[] = [
  * Kept in their own array, not appended to `recipes`, because they reach states the
  * vendored prototype has no code path for at all.
  *
- * "11-help" reaches the Help window with `Ctrl-b 5` — the dashboard has no bare-key
- * shortcut for it.
- *
  * "12-all-projects" focuses panel [1] (bare `1`) and re-activates the already-highlighted
  * all-projects row with `Enter`, keeping this golden distinct from "02-repositories"
  * (which lands on the same tree but with panel [1] unfocused).
  */
 export const extraRecipes: Recipe[] = [
-  {
-    name: "11-help",
-    actions: [{ key: "Control+b" }, { key: "5" }],
-    check: { url: /\/help$/, visible: '[data-testid="help-title"]' },
-  },
   {
     name: "12-all-projects",
     actions: [{ key: "Control+b" }, { key: "1" }, { key: "1" }, { key: "Enter" }],
@@ -227,9 +219,6 @@ export const iteration3Recipes: Recipe[] = [
     name: "19-choose-tree",
     actions: [{ key: "Control+b" }, { key: "|" }, { key: "Control+b" }, { key: "w" }],
   },
-  // The "kil" fuzzy canary (see help-search.spec.ts) surfaces both the kill-window and
-  // kill-pane keymap rows, so the golden captures a populated, non-empty result list.
-  { name: "20-help-search", actions: [{ key: "?" }, { type: "kil" }] },
 ];
 
 /**

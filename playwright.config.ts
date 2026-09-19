@@ -113,42 +113,6 @@ export default defineConfig({
         deviceScaleFactor: 1,
       },
     },
-    // `help`: the 3 specs (help.spec.ts, help-layout.spec.ts,
-    // help-search.spec.ts), one project per viewport.
-    ...viewports.map((viewport) => ({
-      name: `help-${viewport.name}`,
-      testDir: "./src/features/help/tests/ui/e2e",
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: viewport.width, height: viewport.height },
-        deviceScaleFactor: 1,
-      },
-    })),
-    // `help-visual`: owns recipes "11-help" and "20-help-search" (not
-    // common-visual); reuses common-visual's per-project
-    // snapshotPathTemplate shape.
-    ...viewports.map((viewport) => ({
-      name: `help-visual-${viewport.name}`,
-      testDir: "./src/features/help/tests/ui/visual",
-      snapshotPathTemplate: `src/features/help/tests/ui/visual/goldens/${viewport.name}/{arg}{ext}`,
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: viewport.width, height: viewport.height },
-        deviceScaleFactor: 1,
-      },
-    })),
-    // `help-harness`: fixture-build-only, functional assertions only, no
-    // goldens -- one project at the primary viewport, same shape as
-    // `profile-harness` above.
-    {
-      name: "help-harness",
-      testDir: "./src/features/help/tests/ui/harness",
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: viewports[0].width, height: viewports[0].height },
-        deviceScaleFactor: 1,
-      },
-    },
     // `boot`: the 2 specs (boot.spec.ts, cold-boot.spec.ts), one project
     // per viewport.
     ...viewports.map((viewport) => ({

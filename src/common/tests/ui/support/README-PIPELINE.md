@@ -8,6 +8,12 @@ cannot drift apart. A second
 function, `captureBootState()`, exists solely for the two boot-sequence
 recipes — see "Boot-sequence goldens" below.
 
+The counts quoted throughout the sections below are the counts as of the
+re-baseline each section describes, not a running total. The Help window and
+the `?` HelpSearch palette are no longer wired into the app, so the recipes
+that reached them (`11-help`, `20-help-search`) and their four goldens are
+gone; 38 goldens remain on disk today.
+
 ## History: goldens are now self-baselines
 
 Originally, `tests/visual/goldens/` was captured from, and compared

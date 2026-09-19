@@ -6,8 +6,8 @@ import { BOOT_HARD_STOP_MS, CLOCK_TIME } from "../../../../../common/tests/ui/su
  * Page object for the boot feature's harness mount (`BootSequence.svelte`,
  * mounted directly by `src/pages/harness/[feature].astro`).
  *
- * Named for the feature it models, not the suite that uses it (matching
- * `ProfilePage`/`HelpPage` convention).
+ * Named for the feature it models, not the suite that uses it (matching the
+ * `ProfilePage` convention).
  *
  * Kernel-chrome locators (the status bar, etc.) are never redefined here —
  * `e2e-testing.md` R005 — this composes the shared `StatusBarPage` instead.

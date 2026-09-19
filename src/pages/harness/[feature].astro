@@ -18,7 +18,6 @@
 // `getCollection("profile")` needs no extra handling here.
 import Layout from "../../bootstrap/Layout.astro";
 import Profile from "../../features/profile/components/Profile.svelte";
-import HelpHarness from "../../features/help/tests/ui/harness/HelpHarness.svelte";
 import BootSequence from "../../features/boot/components/BootSequence.svelte";
 import NotificationsHarness from "../../features/notifications/tests/ui/harness/NotificationsHarness.svelte";
 import DashboardHarness from "../../features/dashboard/tests/ui/harness/DashboardHarness.svelte";
@@ -27,10 +26,8 @@ import RepositoriesHarness from "../../features/repositories/tests/ui/harness/Re
 import GrepHarness from "../../features/grep/tests/ui/harness/GrepHarness.svelte";
 import ShellFsHarness from "../../features/shell-fs/tests/ui/harness/ShellFsHarness.svelte";
 import { getCollection } from "astro:content";
-import { getCmdline } from "../../common/lib/data";
 import { getCommitsByRepo } from "../../common/lib/commits";
 import { buildProfile } from "../../features/profile/lib/data";
-import { buildHelp, getHelpSearch } from "../../features/help/lib/data";
 import { buildBoot } from "../../features/boot/lib/data";
 import { buildNotifications } from "../../features/notifications/lib/data";
 import { getShell } from "../../features/shell-fs/lib/data";
@@ -43,7 +40,6 @@ export async function getStaticPaths() {
   if (process.env.PORTFOLIO_FIXTURES !== "1") return [];
   return [
     { params: { feature: "profile" } },
-    { params: { feature: "help" } },
     { params: { feature: "boot" } },
     { params: { feature: "notifications" } },
     { params: { feature: "dashboard" } },
@@ -58,10 +54,6 @@ const { feature } = Astro.params;
 
 const profile =
   feature === "profile" ? buildProfile((await getCollection("profile"))[0]) : undefined;
-const help = feature === "help" ? buildHelp(await getCollection("help")) : undefined;
-const helpSearch = feature === "help" ? getHelpSearch() : undefined;
-const cmdline = feature === "help" ? getCmdline() : undefined;
-const shell = feature === "help" ? getShell() : undefined;
 const boot = feature === "boot" ? buildBoot(await getCollection("boot")) : undefined;
 const notifications =
   feature === "notifications"
@@ -75,7 +67,6 @@ const projects = feature === "repositories" ? await getCollection("repositories"
 const commitsByRepo =
   feature === "repositories" && projects ? getCommitsByRepo(projects) : undefined;
 const grep = feature === "grep" ? getGrep() : undefined;
-// Named `shellFs`, not `shell`, since `const shell` above already holds help's `getShell()` result.
 const shellFs = feature === "shell-fs" ? getShell() : undefined;
 ---
 
@@ -83,11 +74,6 @@ const shellFs = feature === "shell-fs" ? getShell() : undefined;
   {feature === "profile" && profile !== undefined && (
     <Profile client:load profile={profile} isFocused={true} />
   )}
-  {feature === "help" &&
-    help !== undefined &&
-    helpSearch !== undefined &&
-    cmdline !== undefined &&
-    shell !== undefined && <HelpHarness client:load {help} {helpSearch} {cmdline} {shell} />}
   {
     // Mounted directly (no wrapper): BootSequence is already boot's own
     // self-contained orchestrator, and this harness's assertions (mount,
