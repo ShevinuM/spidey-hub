@@ -60,7 +60,7 @@ test.describe("cold boot: toasts survive the boot overlay", () => {
       await page.clock.runFor(HARD_STOP_MS + OUT_MS + 100);
       await expect(page.locator(BOOT_SEQUENCE)).toHaveCount(0);
 
-      // A fresh visit always injects 2 unseen pool entries (30 real content
+      // A fresh visit always injects 2 unseen pool entries (29 real content
       // entries, never exhausted on a first visit), so both toasts should
       // now be visible and freshly armed.
       await expect(toasts(page)).toHaveCount(2);
