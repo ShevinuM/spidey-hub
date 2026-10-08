@@ -57,7 +57,7 @@ const PREFERRED_PORT = 4324;
 const VIEWPORT = { width: 1512, height: 945 };
 
 /**
- * Six routes, each its own Astro page (src/pages/<x>.astro) with its own
+ * Five routes, each its own Astro page (src/pages/<x>.astro) with its own
  * `initialView` — a direct `goto` to `path` lands on that page's default
  * state.
  *
@@ -71,7 +71,6 @@ const ROUTES = [
   { name: "repositories", path: "/repositories" },
   { name: "employment", path: "/employment" },
   { name: "profile", path: "/profile" },
-  { name: "help", path: "/help" },
   { name: "retina-v", path: "/retina-v" },
 ];
 

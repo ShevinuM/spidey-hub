@@ -126,10 +126,6 @@ async function main() {
       actions: actionsOf("07-profile"),
       waitSelector: '[data-testid="profile-dossier"]',
     });
-    await shot(context, "help", {
-      actions: actionsOf("11-help"),
-      waitSelector: '[data-testid="help-title"]',
-    });
     await shot(context, "notifications-panel-open", {
       actions: [{ key: "n" }],
       waitSelector: '[data-testid="notifications-panel"]',
