@@ -103,8 +103,7 @@ pipeline.mjs:
 1. `page.clock.install({ time: '2026-08-15T23:34:00' })` — **before** navigation.
 2. `page.goto(url, { waitUntil: 'load' })`.
 3. `page.clock.runFor(RUN_FOR_MS)` (5000ms by default, from `recipes.ts`).
-4. Wait for the dashboard-mount marker to prove the app mounted and its
-   keydown listener is attached — `page.getByText("SHEVINUM.DEV").or(page
+4. Wait for the dashboard-mount marker to prove the app mounted — `page.getByText("SHEVINUM.DEV").or(page
 .locator('[data-testid="dashboard-wordmark"]'))`, an `.or()` of BOTH the
    vendored prototype's literal plate text (still current for
    `capture-goldens.mjs`'s historical/guarded path, which has no
@@ -112,6 +111,10 @@ pipeline.mjs:
    wordmark testid (the "SHEVINUM.DEV" title
    text was retired from the real dashboard entirely) — whichever side actually exists
    resolves first, so this one function keeps serving both callers.
+   On the real implementation the wordmark is SSR markup that paints before
+   the keydown listener attaches, so the pipeline then also waits for
+   `[data-terminal-ready="true"]` (set by `Terminal.svelte` once its listeners
+   are live); the prototype has no such flag and skips that wait.
 5. Replay the recipe's key/type actions.
 6. `page.clock.runFor(RUN_FOR_MS)` again.
 7. Wait `document.fonts.ready`, then Playwright's `networkidle` load state.
