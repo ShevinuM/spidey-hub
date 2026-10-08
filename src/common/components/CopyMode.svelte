@@ -5,7 +5,7 @@
   // Each view marks its own "primary pane" with a bare `data-copy-source`
   // attribute (Editor.svelte,
   // Repositories.svelte, EmploymentRecords.svelte, Profile.svelte,
-  // Wallpaper.svelte's HUD, HelpView.svelte, Dashboard.svelte), and exactly
+  // Wallpaper.svelte's HUD, Dashboard.svelte), and exactly
   // one such element exists in the DOM at a time, so an untargeted
   // `document.querySelector('[data-copy-source]')` at open-time finds the
   // active pane with no view-aware wiring here.
