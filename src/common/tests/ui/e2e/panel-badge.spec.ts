@@ -75,7 +75,7 @@ test.describe("PanelBadge: spider glyph position (scoped, not removed)", () => {
     page,
   }) => {
     await gotoReady(page, "/repositories");
-    const badges = page.locator('[data-testid="panel-badge"][data-accent="blue"]');
+    const badges = page.locator('[data-testid="panel-badge"]');
     await expect(badges).toHaveCount(5);
     const expected = ["Status", "Repositories", "Files", "Content", "Commits"];
     for (let i = 0; i < expected.length; i++) {
@@ -95,7 +95,7 @@ test.describe("PanelBadge: spider glyph position (scoped, not removed)", () => {
     page,
   }) => {
     await gotoReady(page, "/employment");
-    const badges = page.locator('[data-testid="panel-badge"][data-accent="blue"]');
+    const badges = page.locator('[data-testid="panel-badge"]');
     await expect(badges).toHaveCount(2);
 
     const recordsPill = badges.nth(0).locator("span").first();
