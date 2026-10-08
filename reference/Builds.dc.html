@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- FONT PARITY PATCH (vendored design reference): the original google fonts
+     <link>s in the <helmet> below were replaced with the same self-hosted
+     @fontsource/jetbrains-mono files the built site imports (400/500/700,
+     multi-subset, font-family unchanged), so this page renders with no
+     network dependency. See README-PATCH.md in this folder. -->
+<!-- REACT VENDOR PATCH (vendored design reference): support.js's
+     loadReactUmd() short-circuits when window.React/window.ReactDOM already
+     exist, so preloading the exact pinned react@18.3.1 / react-dom@18.3.1 UMD
+     builds here removes the unpkg.com CDN dependency without touching any
+     other code path. See README-PATCH.md in this folder. -->
+<script src="./vendor/react.production.min.js"></script>
+<script src="./vendor/react-dom.production.min.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="fonts/400.css" rel="stylesheet"><link href="fonts/500.css" rel="stylesheet"><link href="fonts/700.css" rel="stylesheet">
+<style>
+body{margin:0;background:#0b0f14;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+a{color:#e0453c;text-decoration:none}
+a:hover{color:#f4a374}
+@keyframes pls{0%,100%{opacity:.45}50%{opacity:1}}
+</style>
+</helmet>
+<div style="position:absolute;inset:0;background:#0b0f14;overflow:hidden;color:#f4ece9;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace">
+  <div style="position:absolute;inset:0;opacity:.95;filter:{{ wallFilter }}">
+    <dc-import name="RadarWall" hint-size="100%,100%" style="position:absolute;inset:0"></dc-import>
+  </div>
+
+  <!-- one uniform scrim: panels and the gaps between them read equally dark -->
+  <div style="position:absolute;inset:0;background:{{ scrim }}"></div>
+  <div style="position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 44%,rgba(0,0,0,0) 45%,rgba(0,0,0,.3) 100%);pointer-events:none"></div>
+  <sc-if value="{{ scanlines }}" hint-placeholder-val="{{ true }}">
+    <div style="position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;background:repeating-linear-gradient(180deg,rgba(0,0,0,.2) 0px,rgba(0,0,0,.2) 1px,rgba(0,0,0,0) 1px,rgba(0,0,0,0) 3px)"></div>
+    <div style="position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 140px rgba(224,69,60,.10),inset 0 0 40px rgba(74,159,224,.06)"></div>
+  </sc-if>
+
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column">
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:12px;padding:12px;font-size:13px">
+
+      <!-- [1] Status -->
+      <div style="position:relative;flex:none;border:1px solid rgba(224,69,60,.35);border-radius:4px;padding:10px 12px 9px;display:flex;align-items:center;gap:22px">
+        <div style="position:absolute;left:0;right:0;top:0;transform:translateY(-50%);display:flex;justify-content:center;pointer-events:none;z-index:4">
+          <span style="display:flex;align-items:center;gap:9px;border:1px solid rgba(74,159,224,.5);border-radius:3px;background:rgba(10,14,19,.96);box-shadow:0 0 20px rgba(224,69,60,.18),inset 0 0 14px rgba(74,159,224,.12);padding:2px 13px;font-size:11.5px;letter-spacing:.2em;color:#8fd0f5;white-space:nowrap">
+            <img src="assets/spider-glyph-red.svg" style="width:13px;height:13px;display:block;filter:drop-shadow(0 0 6px rgba(224,69,60,.6))">
+            0 · Status
+          </span>
+        </div>
+        <div style="display:flex;align-items:center;gap:9px;white-space:nowrap">
+          <span style="color:#5fc6b4">shevinum.dev</span>
+          <span style="color:rgba(196,216,232,.45)">→</span>
+          <span style="color:#e0453c">8 repos</span>
+        </div>
+        <div style="flex:1;min-width:0;overflow:hidden;display:grid;grid-template-rows:repeat(7,6px);grid-auto-flow:column;grid-auto-columns:6px;gap:2px;justify-content:center">
+          <sc-for list="{{ cells }}" as="cell" hint-placeholder-count="364">
+            <div style="border-radius:1px;background:{{ cell.c }}"></div>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;white-space:nowrap">
+          <span style="color:rgba(217,176,74,.85)">main</span>
+          <span style="color:rgba(196,216,232,.45)">last push 2d ago</span>
+          <span style="display:flex;align-items:center;gap:6px;color:#5fc6b4"><span style="width:7px;height:7px;border-radius:50%;background:#5fc6b4;animation:pls 2.4s ease-in-out infinite"></span>connected</span>
+        </div>
+      </div>
+
+      <div style="flex:1;min-height:0;display:flex;gap:12px">
+        <div style="width:31%;min-width:0;display:flex;flex-direction:column;gap:12px">
+
+          <!-- [3] Local Repositories — focused -->
+          <div style="position:relative;flex:1.1;min-height:0;border:1px solid #e0453c;border-radius:4px;box-shadow:0 0 26px rgba(224,69,60,.10);padding:12px 10px 8px;display:flex;flex-direction:column">
+            <div style="position:absolute;left:0;right:0;top:0;transform:translateY(-50%);display:flex;justify-content:center;pointer-events:none;z-index:4">
+              <span style="display:flex;align-items:center;gap:9px;border:1px solid rgba(74,159,224,.5);border-radius:3px;background:rgba(10,14,19,.96);box-shadow:0 0 20px rgba(224,69,60,.18),inset 0 0 14px rgba(74,159,224,.12);padding:2px 13px;font-size:11.5px;letter-spacing:.2em;color:#8fd0f5;white-space:nowrap">
+                <img src="assets/spider-glyph-red.svg" style="width:13px;height:13px;display:block;filter:drop-shadow(0 0 6px rgba(224,69,60,.6))">
+                1 · Repositories
+              </span>
+            </div>
+            <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:2px;line-height:1.62">
+              <div style="display:flex;align-items:center;gap:8px;padding:1px 8px;border-left:2px solid transparent;color:rgba(196,216,232,.72);white-space:nowrap">
+                <span style="color:rgba(95,198,180,.8)">•</span>
+                <span>all-projects</span>
+                <span style="flex:1"></span>
+                <span style="color:rgba(217,176,74,.6);font-size:12px">local</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:1px 8px;border-left:2px solid transparent;color:rgba(196,216,232,.72);white-space:nowrap">
+                <span style="color:rgba(95,198,180,.8)">*</span>
+                <span>daily-tech-digest</span>
+                <span style="flex:1"></span>
+                <span style="width:6px;height:6px;border-radius:50%;background:#4a9fe0;flex:none"></span>
+                <span style="color:rgba(196,216,232,.32);font-size:12px;width:26px;text-align:right;flex:none">4d</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:1px 8px;border-left:2px solid transparent;color:rgba(196,216,232,.72);white-space:nowrap">
+                <span style="color:rgba(95,198,180,.8)">*</span>
+                <span>transcript-tts</span>
+                <span style="flex:1"></span>
+                <span style="width:6px;height:6px;border-radius:50%;background:#4a9fe0;flex:none"></span>
+                <span style="color:rgba(196,216,232,.32);font-size:12px;width:26px;text-align:right;flex:none">3w</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:1px 8px;border-left:2px solid #e0453c;background:linear-gradient(90deg,rgba(224,69,60,.30),rgba(224,69,60,.04));color:#f4ece9;white-space:nowrap">
+                <span style="color:#ff6b6f">*</span>
+                <span style="overflow:hidden;text-overflow:ellipsis">Legend-of-Arlo-Guardians-Gauntlet</span>
+                <span style="flex:1"></span>
+                <span style="width:6px;height:6px;border-radius:50%;background:#ffca28;flex:none;animation:pls 1.6s ease-in-out infinite"></span>
+                <span style="color:rgba(244,236,233,.55);font-size:12px;width:26px;text-align:right;flex:none">2d</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:1px 8px;border-left:2px solid transparent;color:rgba(196,216,232,.72);white-space:nowrap">
+                <span style="color:rgba(95,198,180,.8)">*</span>
+                <span>SpotifyPal</span>
+                <span style="flex:1"></span>
+                <span style="width:6px;height:6px;border-radius:50%;background:#3c78aa;flex:none"></span>
+                <span style="color:rgba(196,216,232,.32);font-size:12px;width:26px;text-align:right;flex:none">7mo</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:1px 8px;border-left:2px solid transparent;color:rgba(196,216,232,.72);white-space:nowrap">
+                <span style="color:rgba(95,198,180,.8)">*</span>
+                <span>Advent-of-Code-2024</span>
+                <span style="flex:1"></span>
+                <span style="width:6px;height:6px;border-radius:50%;background:#3c78aa;flex:none"></span>
+                <span style="color:rgba(196,216,232,.32);font-size:12px;width:26px;text-align:right;flex:none">1y</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:1px 8px;border-left:2px solid transparent;color:rgba(196,216,232,.72);white-space:nowrap">
+                <span style="color:rgba(95,198,180,.8)">*</span>
+                <span>Advent-Of-Code-2023</span>
+                <span style="flex:1"></span>
+                <span style="width:6px;height:6px;border-radius:50%;background:#3c78aa;flex:none"></span>
+                <span style="color:rgba(196,216,232,.32);font-size:12px;width:26px;text-align:right;flex:none">2y</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:1px 8px;border-left:2px solid transparent;color:rgba(196,216,232,.72);white-space:nowrap">
+                <span style="color:rgba(95,198,180,.8)">*</span>
+                <span>Sheldon</span>
+                <span style="flex:1"></span>
+                <span style="width:6px;height:6px;border-radius:50%;background:#3c78aa;flex:none"></span>
+                <span style="color:rgba(196,216,232,.32);font-size:12px;width:26px;text-align:right;flex:none">2y</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- [2] Files -->
+          <div style="position:relative;flex:1.5;min-height:0;border:1px solid rgba(224,69,60,.35);border-radius:4px;padding:18px 10px 8px;display:flex;flex-direction:column">
+            <div style="position:absolute;left:0;right:0;top:0;transform:translateY(-50%);display:flex;justify-content:center;pointer-events:none;z-index:4">
+              <span style="display:flex;align-items:center;gap:9px;border:1px solid rgba(74,159,224,.5);border-radius:3px;background:rgba(10,14,19,.96);box-shadow:0 0 20px rgba(224,69,60,.18),inset 0 0 14px rgba(74,159,224,.12);padding:2px 13px;font-size:11.5px;letter-spacing:.2em;color:#8fd0f5;white-space:nowrap">
+                <img src="assets/spider-glyph-red.svg" style="width:13px;height:13px;display:block;filter:drop-shadow(0 0 6px rgba(224,69,60,.6))">
+                2 · Files
+              </span>
+            </div>
+            <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:2px;line-height:1.62">
+              <div style="color:rgba(143,208,245,.6);font-size:11px;padding:0 4px 6px;margin-bottom:2px;border-bottom:1px solid rgba(224,69,60,.14);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Legend-of-Arlo-Guardians-Gauntlet</div>
+              <div style="display:flex;align-items:center;gap:5px;padding:1px 4px;color:rgba(196,216,232,.7);white-space:nowrap">
+                <span style="width:10px;text-align:center;color:rgba(95,198,180,.7)">▾</span>
+                <span style="width:12px;height:12px;color:#5fc6b4;display:inline-flex"><svg width="12" height="12" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M1.5 3.5a1 1 0 0 1 1-1h3.379a1 1 0 0 1 .707.293L7.914 4.12a1 1 0 0 0 .707.293H13.5a1 1 0 0 1 1 1v7.086a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V3.5Z" fill="currentColor"/></svg></span>js
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;padding:1px 4px 1px 18px;color:rgba(196,216,232,.7);white-space:nowrap">
+                <span style="width:10px;text-align:center;color:rgba(95,198,180,.7)">▾</span>
+                <span style="width:12px;height:12px;color:#5fc6b4;display:inline-flex"><svg width="12" height="12" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M1.5 3.5a1 1 0 0 1 1-1h3.379a1 1 0 0 1 .707.293L7.914 4.12a1 1 0 0 0 .707.293H13.5a1 1 0 0 1 1 1v7.086a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V3.5Z" fill="currentColor"/></svg></span>Game
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;padding:1px 4px 1px 32px;color:rgba(196,216,232,.7);white-space:nowrap">
+                <span style="width:10px;text-align:center;color:rgba(95,198,180,.7)">▾</span>
+                <span style="width:12px;height:12px;color:#5fc6b4;display:inline-flex"><svg width="12" height="12" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M1.5 3.5a1 1 0 0 1 1-1h3.379a1 1 0 0 1 .707.293L7.914 4.12a1 1 0 0 0 .707.293H13.5a1 1 0 0 1 1 1v7.086a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V3.5Z" fill="currentColor"/></svg></span>Behaviour
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;padding:1px 4px 1px 46px;color:rgba(196,216,232,.7);white-space:nowrap">
+                <span style="width:10px"></span>
+                <span style="width:12px;height:12px;display:inline-flex"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><path d="M3 3h18v18H3V3m4.73 15.04c.4.85 1.19 1.55 2.54 1.55 1.5 0 2.53-.8 2.53-2.55v-5.78h-1.7V17c0 .86-.35 1.08-.9 1.08-.58 0-.82-.4-1.09-.87l-1.38.83m5.98-.18c.5.98 1.51 1.73 3.09 1.73 1.6 0 2.8-.83 2.8-2.36 0-1.41-.81-2.04-2.25-2.66l-.42-.18c-.73-.31-1.04-.52-1.04-1.02 0-.41.31-.73.81-.73.48 0 .8.21 1.09.73l1.31-.87c-.55-.96-1.33-1.33-2.4-1.33-1.51 0-2.48.96-2.48 2.23 0 1.38.81 2.03 2.03 2.55l.42.18c.78.34 1.24.55 1.24 1.13 0 .48-.45.83-1.15.83-.83 0-1.31-.43-1.67-1.03l-1.38.8z" fill="#ffca28"/></svg></span>Character.js
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;padding:1px 4px 1px 46px;color:rgba(196,216,232,.7);white-space:nowrap">
+                <span style="width:10px"></span>
+                <span style="width:12px;height:12px;display:inline-flex"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><path d="M3 3h18v18H3V3m4.73 15.04c.4.85 1.19 1.55 2.54 1.55 1.5 0 2.53-.8 2.53-2.55v-5.78h-1.7V17c0 .86-.35 1.08-.9 1.08-.58 0-.82-.4-1.09-.87l-1.38.83m5.98-.18c.5.98 1.51 1.73 3.09 1.73 1.6 0 2.8-.83 2.8-2.36 0-1.41-.81-2.04-2.25-2.66l-.42-.18c-.73-.31-1.04-.52-1.04-1.02 0-.41.31-.73.81-.73.48 0 .8.21 1.09.73l1.31-.87c-.55-.96-1.33-1.33-2.4-1.33-1.51 0-2.48.96-2.48 2.23 0 1.38.81 2.03 2.03 2.55l.42.18c.78.34 1.24.55 1.24 1.13 0 .48-.45.83-1.15.83-.83 0-1.31-.43-1.67-1.03l-1.38.8z" fill="#ffca28"/></svg></span>Controller.js
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;padding:1px 4px 1px 46px;color:rgba(196,216,232,.7);white-space:nowrap">
+                <span style="width:10px"></span>
+                <span style="width:12px;height:12px;display:inline-flex"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><path d="M3 3h18v18H3V3m4.73 15.04c.4.85 1.19 1.55 2.54 1.55 1.5 0 2.53-.8 2.53-2.55v-5.78h-1.7V17c0 .86-.35 1.08-.9 1.08-.58 0-.82-.4-1.09-.87l-1.38.83m5.98-.18c.5.98 1.51 1.73 3.09 1.73 1.6 0 2.8-.83 2.8-2.36 0-1.41-.81-2.04-2.25-2.66l-.42-.18c-.73-.31-1.04-.52-1.04-1.02 0-.41.31-.73.81-.73.48 0 .8.21 1.09.73l1.31-.87c-.55-.96-1.33-1.33-2.4-1.33-1.51 0-2.48.96-2.48 2.23 0 1.38.81 2.03 2.03 2.55l.42.18c.78.34 1.24.55 1.24 1.13 0 .48-.45.83-1.15.83-.83 0-1.31-.43-1.67-1.03l-1.38.8z" fill="#ffca28"/></svg></span>Guardian.js
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;padding:1px 4px;color:rgba(196,216,232,.7);white-space:nowrap">
+                <span style="width:10px"></span>
+                <span style="width:12px;height:12px;display:inline-flex"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><path d="m12 17.56 4.07-1.13.55-6.1H9.38L9.2 8.3h7.6l.2-1.99H7l.56 6.01h6.89l-.23 2.58-2.22.6-2.22-.6-.14-1.66h-2l.29 3.19L12 17.56M4.07 3h15.86L18.5 19.2 12 21l-6.5-1.8L4.07 3z" fill="#e44d26"/></svg></span>index.html
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;padding:1px 4px;color:rgba(196,216,232,.7);white-space:nowrap">
+                <span style="width:10px"></span>
+                <span style="width:12px;height:12px;display:inline-flex"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:100%;height:100%"><path fill="#8bc34a" d="M12 1.85c-.27 0-.55.07-.78.2l-7.44 4.3c-.48.28-.78.8-.78 1.36v8.58c0 .56.3 1.08.78 1.36l1.95 1.12c.95.46 1.27.47 1.71.47 1.4 0 2.21-.85 2.21-2.33V8.44c0-.12-.1-.22-.22-.22H8.5c-.13 0-.23.1-.23.22v8.47c0 .66-.68 1.31-1.77.76L4.45 16.5a.26.26 0 0 1-.11-.21V7.71c0-.09.04-.17.11-.21l7.44-4.29c.06-.04.16-.04.22 0l7.44 4.29c.07.04.11.12.11.21v8.58c0 .08-.04.16-.11.21l-7.44 4.29c-.06.04-.16.04-.23 0L10 19.65c-.08-.03-.16-.04-.21-.01-.53.3-.63.36-1.12.51-.12.04-.31.11.07.32l2.48 1.47c.24.14.5.21.78.21s.54-.07.78-.21l7.44-4.29c.48-.28.78-.8.78-1.36V7.71c0-.56-.3-1.08-.78-1.36l-7.44-4.3c-.23-.13-.5-.2-.78-.2M14 8c-2.12 0-3.39.89-3.39 2.39 0 1.61 1.26 2.08 3.3 2.28 2.43.24 2.62.6 2.62 1.08 0 .83-.67 1.18-2.23 1.18-1.98 0-2.4-.49-2.55-1.47a.226.226 0 0 0-.22-.18h-.96c-.12 0-.21.09-.21.22 0 1.24.68 2.74 3.94 2.74 2.35 0 3.7-.93 3.7-2.55 0-1.61-1.08-2.03-3.37-2.34-2.31-.3-2.54-.46-2.54-1 0-.45.2-1.05 1.91-1.05 1.5 0 2.09.33 2.32 1.36.02.1.11.17.21.17h.97c.05 0 .11-.02.15-.07.04-.04.07-.1.05-.16C17.56 8.82 16.38 8 14 8z"/></svg></span>package.json
+              </div>
+              <div style="display:flex;align-items:center;gap:5px;padding:1px 4px;border-left:2px solid #4a9fe0;background:linear-gradient(90deg,rgba(74,159,224,.22),rgba(74,159,224,.03));color:#f4ece9;white-space:nowrap">
+                <span style="width:10px"></span>
+                <span style="width:12px;height:12px;display:inline-flex"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><path d="M13 9h-2V7h2m0 10h-2v-6h2m-1-9A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2z" fill="#42a5f5"/></svg></span>README.md
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:12px">
+
+          <!-- [0] Changes -->
+          <div style="position:relative;flex:1.95;min-height:0;border:1px solid rgba(224,69,60,.35);border-radius:4px;padding:18px 14px 9px;display:flex;flex-direction:column">
+            <div style="position:absolute;left:0;right:0;top:0;transform:translateY(-50%);display:flex;justify-content:center;pointer-events:none;z-index:4">
+              <span style="display:flex;align-items:center;gap:9px;border:1px solid rgba(74,159,224,.5);border-radius:3px;background:rgba(10,14,19,.96);box-shadow:0 0 20px rgba(224,69,60,.18),inset 0 0 14px rgba(74,159,224,.12);padding:2px 13px;font-size:11.5px;letter-spacing:.2em;color:#8fd0f5;white-space:nowrap">
+                <img src="assets/spider-glyph-red.svg" style="width:13px;height:13px;display:block;filter:drop-shadow(0 0 6px rgba(224,69,60,.6))">
+                3 · Content
+              </span>
+            </div>
+            <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:3px;line-height:1.62">
+              <div style="color:rgba(143,208,245,.6);font-size:11px;padding-bottom:6px;margin-bottom:4px;border-bottom:1px solid rgba(224,69,60,.14);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Legend-of-Arlo-Guardians-Gauntlet/README.md</div>
+              <div style="color:#e0453c;font-weight:700"># Legend of Arlo: The Guardian's Gauntlet</div>
+              <div style="height:6px"></div>
+              <div style="color:rgba(196,216,232,.72)">A Legend of Zelda-inspired browser game: Arlo must navigate the Gauntlet's</div>
+              <div style="color:rgba(196,216,232,.72)">puzzles and foes to reach the Master Sword, then plan an escape past</div>
+              <div style="color:rgba(196,216,232,.72)">enemies who detect him back to an end shrine.</div>
+              <div style="height:8px"></div>
+              <div style="color:#e0453c;font-weight:700">## Stack</div>
+              <div style="color:#5fc6b4">- JavaScript and Three.js</div>
+              <div style="color:#5fc6b4">- Vite dev server</div>
+              <div style="height:8px"></div>
+              <div style="color:#e0453c;font-weight:700">## Status</div>
+              <div style="color:rgba(217,176,74,.85)">playable · arrow keys to move, retrieve the sword, then escape the Gauntlet</div>
+            </div>
+            <div style="flex:none;display:flex;align-items:center;gap:10px;padding-top:8px;border-top:1px solid rgba(224,69,60,.16);font-size:11px;white-space:nowrap">
+              <span style="color:rgba(196,216,232,.4)">21 lines · md</span>
+              <span style="flex:1"></span>
+              <span style="color:rgba(196,216,232,.35)"><span style="color:rgba(95,198,180,.75)">o</span> open on github</span>
+            </div>
+          </div>
+
+          <!-- [4] Commits — node graph -->
+          <div style="position:relative;flex:0.95;min-height:0;border:1px solid rgba(224,69,60,.35);border-radius:4px;padding:18px 14px 9px;display:flex;flex-direction:column">
+            <div style="position:absolute;left:0;right:0;top:0;transform:translateY(-50%);display:flex;justify-content:center;pointer-events:none;z-index:4">
+              <span style="display:flex;align-items:center;gap:9px;border:1px solid rgba(74,159,224,.5);border-radius:3px;background:rgba(10,14,19,.96);box-shadow:0 0 20px rgba(224,69,60,.18),inset 0 0 14px rgba(74,159,224,.12);padding:2px 13px;font-size:11.5px;letter-spacing:.2em;color:#8fd0f5;white-space:nowrap">
+                <img src="assets/spider-glyph-red.svg" style="width:13px;height:13px;display:block;filter:drop-shadow(0 0 6px rgba(224,69,60,.6))">
+                4 · Commits
+              </span>
+            </div>
+            <div style="color:rgba(143,208,245,.6);font-size:11px;padding-bottom:6px;margin-bottom:2px;border-bottom:1px solid rgba(224,69,60,.14)">main · 81 commits</div>
+            <div style="position:relative;flex:1;min-height:0;overflow:hidden">
+              <svg width="48" height="154" viewBox="0 0 48 154" style="position:absolute;left:6px;top:0;overflow:visible" aria-hidden="true">
+                <path d="M12 11 V 143" stroke="#4a9fe0" stroke-width="2" fill="none"/>
+                <path d="M12 99 C 12 87, 30 89, 30 77 L 30 55 C 30 43, 12 45, 12 33" stroke="#e0453c" stroke-width="2" fill="none"/>
+                <circle cx="12" cy="11" r="5" fill="#0b0f14" stroke="#4a9fe0" stroke-width="2"/>
+                <circle cx="12" cy="33" r="4.5" fill="#4a9fe0"/>
+                <circle cx="30" cy="55" r="4.5" fill="#e0453c"/>
+                <circle cx="30" cy="77" r="4.5" fill="#e0453c"/>
+                <circle cx="12" cy="99" r="4.5" fill="#4a9fe0"/>
+                <circle cx="12" cy="121" r="4.5" fill="#4a9fe0"/>
+                <circle cx="12" cy="143" r="4.5" fill="#4a9fe0"/>
+              </svg>
+              <div style="position:relative;display:flex;flex-direction:column">
+                <div style="height:22px;display:flex;align-items:center;gap:10px;padding:0 6px 0 68px;background:linear-gradient(90deg,rgba(224,69,60,.26),rgba(224,69,60,.03));color:#f4ece9;white-space:nowrap">
+                  <span style="color:rgba(217,176,74,.9)">ef0fd3c6</span><span style="color:#9a7fd4">Sh</span><span style="overflow:hidden;text-overflow:ellipsis">Update README.md</span>
+                  <span style="flex:1"></span>
+                  <span style="border:1px solid rgba(224,69,60,.7);color:#ff6b6f;font-size:11px;padding:0 5px;border-radius:2px">HEAD main</span>
+                  <span style="color:rgba(196,216,232,.3);font-size:12px">2d</span>
+                </div>
+                <div style="height:22px;display:flex;align-items:center;gap:10px;padding:0 6px 0 68px;color:rgba(196,216,232,.7);white-space:nowrap">
+                  <span style="color:rgba(217,176,74,.9)">ee62af80</span><span style="color:#9a7fd4">Sh</span><span style="overflow:hidden;text-overflow:ellipsis">Merge branch 'main' of ShevinuM/Maze-of-Hyrule</span>
+                  <span style="flex:1"></span>
+                  <span style="color:rgba(196,216,232,.3);font-size:12px">2d</span>
+                </div>
+                <div style="height:22px;display:flex;align-items:center;gap:10px;padding:0 6px 0 68px;color:rgba(196,216,232,.7);white-space:nowrap">
+                  <span style="color:rgba(217,176,74,.9)">afa2193e</span><span style="color:#9a7fd4">Sh</span><span style="overflow:hidden;text-overflow:ellipsis">commit</span>
+                  <span style="flex:1"></span>
+                  <span style="color:rgba(196,216,232,.3);font-size:12px">3d</span>
+                </div>
+                <div style="height:22px;display:flex;align-items:center;gap:10px;padding:0 6px 0 68px;color:rgba(196,216,232,.7);white-space:nowrap">
+                  <span style="color:rgba(217,176,74,.9)">79d9e87e</span><span style="color:#9a7fd4">Sh</span><span style="overflow:hidden;text-overflow:ellipsis">added attributions</span>
+                  <span style="flex:1"></span>
+                  <span style="color:rgba(196,216,232,.3);font-size:12px">3d</span>
+                </div>
+                <div style="height:22px;display:flex;align-items:center;gap:10px;padding:0 6px 0 68px;color:rgba(196,216,232,.7);white-space:nowrap">
+                  <span style="color:rgba(217,176,74,.9)">629434bc</span><span style="color:#9a7fd4">Sh</span><span style="overflow:hidden;text-overflow:ellipsis">Update README.md</span>
+                  <span style="flex:1"></span>
+                  <span style="color:rgba(196,216,232,.3);font-size:12px">4d</span>
+                </div>
+                <div style="height:22px;display:flex;align-items:center;gap:10px;padding:0 6px 0 68px;color:rgba(196,216,232,.7);white-space:nowrap">
+                  <span style="color:rgba(217,176,74,.9)">06137382</span><span style="color:#9a7fd4">Sh</span><span style="overflow:hidden;text-overflow:ellipsis">Update README.md</span>
+                  <span style="flex:1"></span>
+                  <span style="color:rgba(196,216,232,.3);font-size:12px">1w</span>
+                </div>
+                <div style="height:22px;display:flex;align-items:center;gap:10px;padding:0 6px 0 68px;color:rgba(196,216,232,.7);white-space:nowrap">
+                  <span style="color:rgba(217,176,74,.9)">bf3bc558</span><span style="color:#9a7fd4">Sh</span><span style="overflow:hidden;text-overflow:ellipsis">Final Project</span>
+                  <span style="flex:1"></span>
+                  <span style="border:1px solid rgba(74,159,224,.6);color:#8fd0f5;font-size:11px;padding:0 5px;border-radius:2px">tag v1.0</span>
+                  <span style="color:rgba(196,216,232,.3);font-size:12px">1w</span>
+                </div>
+                              </div>
+            </div>
+          </div>
+
+          <!-- Command log -->
+          <div style="position:relative;flex:none;border:1px solid rgba(224,69,60,.28);border-radius:4px;padding:12px 14px 10px;display:flex;flex-direction:column;gap:5px">
+            <div style="position:absolute;left:0;right:0;top:0;transform:translateY(-50%);display:flex;justify-content:center;pointer-events:none;z-index:4">
+              <span style="display:flex;align-items:center;gap:9px;border:1px solid rgba(74,159,224,.5);border-radius:3px;background:rgba(10,14,19,.96);box-shadow:0 0 20px rgba(224,69,60,.18),inset 0 0 14px rgba(74,159,224,.12);padding:2px 13px;font-size:11.5px;letter-spacing:.2em;color:#8fd0f5;white-space:nowrap">
+                <img src="assets/spider-glyph-red.svg" style="width:13px;height:13px;display:block;filter:drop-shadow(0 0 6px rgba(224,69,60,.6))">
+                5 · Command Log
+              </span>
+            </div>
+            <div style="color:#5fc6b4">Select a repo in <span style="color:rgba(217,176,74,.9)">[3]</span> — enter loads its tree into <span style="color:rgba(217,176,74,.9)">[2]</span>, commits follow in <span style="color:rgba(217,176,74,.9)">[4]</span>.</div>
+            <div style="color:rgba(196,216,232,.55)">Source on <a href="https://github.com/shevinum">github.com/shevinum</a> · live build at <a href="https://shevinum.dev">shevinum.dev</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:30px;flex:none;display:flex;align-items:center;background:#0d2a2f;font-size:14px">
+      <div style="flex:none;padding:0 8px;color:#7fd8a8;letter-spacing:.02em;white-space:nowrap">Session: 10.42.7.13</div>
+      <div style="color:rgba(127,216,200,.45)">·</div>
+      <div style="display:flex;align-items:center;gap:8px;padding:0 8px;color:#5fc6b4;white-space:nowrap">
+        <span>0:dashboard</span>
+        <span style="background:#e0453c;color:#0b0f14;padding:0 6px">1:repos*</span>
+        <span>2:employment</span>
+        <span>3:retina-v</span>
+        <span>4:profile</span>
+        <span>5:help-</span>
+      </div>
+      <div style="flex:1"></div>
+      <div style="flex:none;display:flex;gap:12px;padding:0 14px;white-space:nowrap">
+        <span style="color:rgba(217,176,74,.8)">↻ reboot</span>
+        <span style="color:rgba(95,198,180,.75)">[/] grep</span>
+        <span style="color:#d7a3e0">12:54</span>
+        <span style="color:#c98fd0">19-Aug-26</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;scanlines&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;wallBlurPx&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2,&quot;min&quot;:0,&quot;max&quot;:8,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;scrimOpacity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.74,&quot;min&quot;:0.4,&quot;max&quot;:0.92,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;}}">
+const LEVELS = [
+  "rgba(196,216,232,.07)",
+  "rgba(224,69,60,.24)",
+  "rgba(224,69,60,.45)",
+  "rgba(224,69,60,.68)",
+  "#e0453c",
+];
+
+// A full year: 52 weeks × 7 days of contribution levels (0-4), oldest week
+// first. Deterministic (seeded) so the graph never flickers between renders,
+// with a busier tail so recent months read as the active ones.
+const WEEKS = (() => {
+  let seed = 20260819;
+  const rnd = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296);
+  return Array.from({ length: 52 }, (_, w) =>
+    Array.from({ length: 7 }, (_, d) => {
+      const recency = 0.28 + (w / 51) * 0.5;
+      const weekend = d === 0 || d === 6 ? 0.55 : 1;
+      const r = rnd();
+      if (r > recency * weekend) return 0;
+      return 1 + Math.floor(rnd() * (w > 38 ? 4 : 3));
+    }),
+  );
+})();
+
+class Component extends DCLogic {
+  renderVals() {
+    const blur = this.props.wallBlurPx ?? 2;
+    const scrim = this.props.scrimOpacity ?? 0.72;
+    return {
+      scanlines: this.props.scanlines ?? true,
+      wallFilter: `blur(${blur}px) brightness(.9)`,
+      scrim: `rgba(9,13,18,${scrim})`,
+      cells: WEEKS.flatMap((week, w) => week.map((lvl, d) => ({ id: `${w}-${d}`, c: LEVELS[lvl] }))),
+    };
+  }
+}
+</script>
+</body>
+</html>

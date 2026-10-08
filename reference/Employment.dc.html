@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- FONT PARITY PATCH (vendored design reference): the original google fonts
+     <link>s in the <helmet> below were replaced with the same self-hosted
+     @fontsource/jetbrains-mono files the built site imports (400/500/700,
+     multi-subset, font-family unchanged), so this page renders with no
+     network dependency. See README-PATCH.md in this folder. -->
+<!-- REACT VENDOR PATCH (vendored design reference): support.js's
+     loadReactUmd() short-circuits when window.React/window.ReactDOM already
+     exist, so preloading the exact pinned react@18.3.1 / react-dom@18.3.1 UMD
+     builds here removes the unpkg.com CDN dependency without touching any
+     other code path. See README-PATCH.md in this folder. -->
+<script src="./vendor/react.production.min.js"></script>
+<script src="./vendor/react-dom.production.min.js"></script>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="fonts/400.css" rel="stylesheet"><link href="fonts/500.css" rel="stylesheet"><link href="fonts/700.css" rel="stylesheet">
+<style>
+body{margin:0;background:#0b0f14;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace}
+a{color:#e0453c;text-decoration:none}
+a:hover{color:#f4a374}
+@keyframes pls{0%,100%{opacity:.4}50%{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes rspin{to{transform:rotate(-360deg)}}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes spark{0%{top:-6%;opacity:0}12%{opacity:1}88%{opacity:1}100%{top:102%;opacity:0}}
+@keyframes dash{to{background-position:24px 0}}
+@keyframes webglow{0%,100%{opacity:.34}50%{opacity:.6}}
+</style>
+</helmet>
+<div style="position:absolute;inset:0;background:#0b0f14;overflow:hidden;color:#f4ece9;font-family:'JetBrains Mono',ui-monospace,Menlo,monospace">
+  <div style="position:absolute;inset:0;opacity:.95;filter:{{ wallFilter }}">
+    <dc-import name="RadarWall" hint-size="100%,100%" style="position:absolute;inset:0"></dc-import>
+  </div>
+  <div style="position:absolute;inset:0;background:{{ scrim }}"></div>
+  <div style="position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 46%,rgba(0,0,0,0) 40%,rgba(0,0,0,.36) 100%);pointer-events:none"></div>
+  <sc-if value="{{ scanlines }}" hint-placeholder-val="{{ true }}">
+    <div style="position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;background:repeating-linear-gradient(180deg,rgba(0,0,0,.2) 0px,rgba(0,0,0,.2) 1px,rgba(0,0,0,0) 1px,rgba(0,0,0,0) 3px)"></div>
+    <div style="position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 140px rgba(224,69,60,.10),inset 0 0 40px rgba(74,159,224,.06)"></div>
+  </sc-if>
+
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column">
+    <div style="flex:1;min-height:0;padding:26px">
+
+      <!-- compact cluster: browser · timeline · preview -->
+      <div style="position:relative;width:100%;height:100%;display:flex;font-size:12.5px">
+
+        <sc-if value="{{ sigils }}" hint-placeholder-val="{{ true }}">
+          <div style="position:absolute;left:-10px;top:-10px;z-index:8;width:22px;height:22px;border:1px solid rgba(224,69,60,.6);border-radius:3px;background:rgba(10,14,19,.97);box-shadow:0 0 14px rgba(224,69,60,.25);display:flex;align-items:center;justify-content:center">
+            <img src="assets/spider-glyph-red.svg" style="width:13px;height:13px;display:block">
+          </div>
+          <div style="position:absolute;right:-10px;top:-10px;z-index:8;width:22px;height:22px;border:1px solid rgba(74,159,224,.55);border-radius:3px;background:rgba(10,14,19,.97);box-shadow:0 0 14px rgba(74,159,224,.2);display:flex;align-items:center;justify-content:center">
+            <img src="assets/spider-glyph-blue.svg" style="width:13px;height:13px;display:block">
+          </div>
+          <div style="position:absolute;left:-10px;bottom:-10px;z-index:8;width:22px;height:22px;border:1px solid rgba(95,198,180,.5);border-radius:3px;background:rgba(10,14,19,.97);display:flex;align-items:center;justify-content:center">
+            <img src="assets/spider-glyph-teal.svg" style="width:13px;height:13px;display:block;opacity:.9">
+          </div>
+          <div style="position:absolute;right:-10px;bottom:-10px;z-index:8;width:22px;height:22px;border:1px solid rgba(217,176,74,.5);border-radius:3px;background:rgba(10,14,19,.97);display:flex;align-items:center;justify-content:center">
+            <img src="assets/spider-glyph-gold.svg" style="width:13px;height:13px;display:block;opacity:.95">
+          </div>
+        </sc-if>
+
+        <!-- LEFT: file browser -->
+        <div style="position:relative;flex:1;min-width:0;display:flex;flex-direction:column;gap:12px">
+          <div style="position:relative;flex:1;min-height:0;overflow:hidden;border:1px solid #e0453c;border-radius:3px;box-shadow:0 0 30px rgba(224,69,60,.10);padding:16px 12px 18px;display:flex;flex-direction:column;justify-content:space-between;gap:18px">
+
+            <div style="display:flex;flex-direction:column;gap:6px;padding:0 4px;font-size:11px">
+              <div style="display:flex;align-items:center;gap:8px;color:rgba(224,69,60,.5);white-space:nowrap">── index <span style="flex:1;height:1px;background:rgba(224,69,60,.18)"></span></div>
+              <div style="display:flex;gap:6px;white-space:nowrap;min-width:0"><span style="color:rgba(196,216,232,.32);flex:1;overflow:hidden;text-overflow:ellipsis">orgs</span><span style="color:rgba(95,198,180,.72)">2</span></div>
+              <div style="display:flex;gap:6px;white-space:nowrap;min-width:0"><span style="color:rgba(196,216,232,.32);flex:1;overflow:hidden;text-overflow:ellipsis">longest</span><span style="color:rgba(95,198,180,.72)">36 mo</span></div>
+              <div style="display:flex;gap:6px;white-space:nowrap;min-width:0"><span style="color:rgba(196,216,232,.32);flex:1;overflow:hidden;text-overflow:ellipsis">years active</span><span style="color:rgba(217,176,74,.75)">2022 – 2026</span></div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:6px;padding:0 4px">
+              <div style="display:flex;align-items:center;gap:7px;white-space:nowrap;font-size:11.5px">
+                <span style="color:#5fc6b4">~/employment-records</span>
+                <span style="flex:1;height:1px;background:rgba(224,69,60,.14)"></span>
+              </div>
+              <div style="font-size:11px;color:rgba(196,216,232,.26);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">sort mtime desc · filter *.md · hidden 0</div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <sc-for list="{{ rows }}" as="row" hint-placeholder-count="6">
+                <div onClick="{{ row.pick }}" style="display:grid;grid-template-columns:12px 12px minmax(0,1fr) 30px 62px 32px;align-items:center;gap:7px;padding:3px 6px;white-space:nowrap;cursor:pointer;border-left:2px solid {{ row.edge }};background:{{ row.bg }};color:{{ row.fg }}" style-hover="background:rgba(224,69,60,.12)">
+                  <span style="color:{{ row.cursorColor }}">{{ row.cursor }}</span>
+                  <span style="width:12px;height:12px;display:inline-flex"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><path d="M13 9h-2V7h2m0 10h-2v-6h2m-1-9A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2z" fill="{{ row.icon }}"/></svg></span>
+                  <span style="overflow:hidden;text-overflow:ellipsis">{{ row.name }}</span>
+                  <span style="font-size:10.5px;color:{{ row.dimFg }}">{{ row.orgTag }}</span>
+                  <span style="color:{{ row.metaFg }}">.rw-r--r--</span>
+                  <span style="text-align:right;color:{{ row.metaFg }}">{{ row.size }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="position:absolute;left:0;right:0;top:0;transform:translateY(-50%);display:flex;justify-content:center;pointer-events:none;z-index:4">
+            <span style="display:flex;align-items:center;gap:9px;border:1px solid rgba(74,159,224,.5);border-radius:3px;background:rgba(10,14,19,.96);box-shadow:0 0 20px rgba(224,69,60,.18),inset 0 0 14px rgba(74,159,224,.12);padding:2px 13px;font-size:11.5px;letter-spacing:.2em;color:#8fd0f5">
+              Employment
+              <img src="assets/spider-glyph-red.svg" style="width:13px;height:13px;display:block;filter:drop-shadow(0 0 6px rgba(224,69,60,.6))">
+              Records
+            </span>
+          </div>
+
+        </div>
+
+        <!-- MIDDLE: neon service timeline, hanging off a web -->
+        <div style="position:relative;width:188px;flex:none;margin:0 10px">
+          <div style="position:absolute;left:50%;top:2px;transform:translateX(-50%);width:112px;height:54px;overflow:hidden;pointer-events:none">
+            <img src="assets/spider-web-red.svg" style="width:112px;height:108px;display:block;opacity:.55">
+          </div>
+
+          <div style="position:absolute;left:50%;top:56px;bottom:16px;width:1px;transform:translateX(-50%);background:rgba(224,69,60,.55)"></div>
+          <div style="position:absolute;left:50%;top:56px;bottom:16px;width:3px;transform:translateX(-50%);overflow:hidden">
+            <div style="position:absolute;left:0;right:0;height:34px;background:linear-gradient(180deg,rgba(140,220,255,0),rgba(140,220,255,.9),rgba(140,220,255,0));animation:spark 4.6s linear infinite"></div>
+          </div>
+
+          <div style="position:absolute;inset:56px 0 16px;pointer-events:none">
+            <div style="position:absolute;left:50%;top:{{ markerTop }};transform:translate(-50%,-50%);width:78px;height:78px;border-radius:50%;background:radial-gradient(circle,rgba(224,69,60,.2),rgba(224,69,60,0) 70%);transition:top .45s cubic-bezier(.2,.75,.2,1)"></div>
+            <div style="position:absolute;left:0;width:calc(50% - 32px);top:{{ markerTop }};height:1px;background:repeating-linear-gradient(90deg,rgba(224,69,60,.75) 0 8px,rgba(224,69,60,0) 8px 16px);background-size:24px 1px;animation:dash .9s linear infinite;transition:top .45s cubic-bezier(.2,.75,.2,1)"></div>
+            <div style="position:absolute;right:0;width:calc(50% - 32px);top:{{ markerTop }};height:1px;background:repeating-linear-gradient(90deg,rgba(224,69,60,.75) 0 8px,rgba(224,69,60,0) 8px 16px);background-size:24px 1px;animation:dash .9s linear infinite reverse;transition:top .45s cubic-bezier(.2,.75,.2,1)"></div>
+          </div>
+
+          <div style="position:absolute;inset:56px 0 16px;display:grid;grid-template-rows:repeat(6,1fr)">
+            <sc-for list="{{ nodes }}" as="node" hint-placeholder-count="6">
+              <div onClick="{{ node.pick }}" style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer">
+                <span style="position:absolute;right:calc(50% + 32px);text-align:right;white-space:nowrap;font-size:11px;letter-spacing:.04em;color:{{ node.yearFg }};transition:color .3s">{{ node.when }}</span>
+                <span style="position:absolute;left:calc(50% + 32px);display:flex;flex-direction:column;line-height:1.25;white-space:nowrap"><span style="font-size:11px;color:{{ node.durFg }};transition:color .3s">{{ node.dur }}</span><span style="font-size:9.5px;letter-spacing:.06em;color:{{ node.stateFg }}">{{ node.state }}</span></span>
+                <span style="position:absolute;width:{{ node.ringSize }};height:{{ node.ringSize }};border-radius:50%;border:1px dashed {{ node.ringColor }};animation:spin {{ node.spinDur }} linear infinite;transition:width .4s,height .4s"></span>
+                <span style="position:absolute;width:{{ node.ring2Size }};height:{{ node.ring2Size }};border-radius:50%;border:1px solid {{ node.ring2Color }};animation:rspin 14s linear infinite;transition:width .4s,height .4s"></span>
+                <span style="position:relative;width:{{ node.dotSize }};height:{{ node.dotSize }};border-radius:50%;background:{{ node.dotBg }};border:1px solid {{ node.dotBorder }};box-shadow:{{ node.dotGlow }};display:flex;align-items:center;justify-content:center;font-size:{{ node.numSize }};font-weight:700;color:{{ node.dotFg }};transition:width .4s,height .4s,background .3s,color .3s">{{ node.pos }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- RIGHT: file preview -->
+        <div style="position:relative;flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">
+          <div style="position:absolute;left:0;right:0;top:0;transform:translateY(-50%);display:flex;justify-content:center;pointer-events:none;z-index:4">
+            <span style="display:flex;align-items:center;gap:9px;border:1px solid rgba(74,159,224,.5);border-radius:3px;background:rgba(10,14,19,.96);box-shadow:0 0 20px rgba(224,69,60,.18),inset 0 0 14px rgba(74,159,224,.12);padding:2px 13px;font-size:11.5px;letter-spacing:.2em;color:#8fd0f5">
+              File
+              <img src="assets/spider-glyph-red.svg" style="width:13px;height:13px;display:block;filter:drop-shadow(0 0 6px rgba(224,69,60,.6))">
+              Preview
+            </span>
+          </div>
+
+          <div style="position:relative;flex:1;min-height:0;overflow:hidden;border:1px solid rgba(224,69,60,.4);border-radius:3px;padding:14px 12px 9px;display:flex;flex-direction:column">
+            <div style="flex:none;display:flex;align-items:center;gap:12px;font-size:11.5px;white-space:nowrap;overflow:hidden;padding-bottom:7px;margin-bottom:7px;border-bottom:1px solid rgba(224,69,60,.15)">
+              <span style="color:rgba(196,216,232,.5);flex:none">.rw-r--r--</span>
+              <span style="color:rgba(196,216,232,.35);flex:none">shev</span>
+              <span style="color:rgba(217,176,74,.85);flex:none">{{ fileSize }}</span>
+              <span style="color:rgba(196,216,232,.4);min-width:0;overflow:hidden;text-overflow:ellipsis;flex:1">{{ filePath }}</span>
+              <span style="color:rgba(95,198,180,.8);flex:none">{{ lineCount }}</span>
+            </div>
+            <div style="flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;line-height:1.5;font-size:11.5px">
+              <sc-for list="{{ lines }}" as="l" hint-placeholder-count="18">
+                <div style="display:flex;gap:11px">
+                  <span style="width:20px;text-align:right;flex:none;color:rgba(196,216,232,.24)">{{ l.n }}</span>
+                  <span style="min-width:0"><span style="color:{{ l.ac }};font-weight:{{ l.w }}">{{ l.a }}</span><span style="color:{{ l.bc }}">{{ l.b }}</span></span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div style="height:30px;flex:none;display:flex;align-items:center;background:#0d2a2f;font-size:14px">
+      <div style="flex:none;padding:0 8px;color:#7fd8a8;letter-spacing:.02em;white-space:nowrap">Session: 10.42.7.13</div>
+      <div style="color:rgba(127,216,200,.45)">·</div>
+      <div style="display:flex;align-items:center;gap:8px;padding:0 8px;color:#5fc6b4;white-space:nowrap">
+        <span>0:dashboard</span>
+        <span>1:repos</span>
+        <span style="background:#e0453c;color:#0b0f14;padding:0 6px">2:employment*</span>
+        <span>3:retina-v</span>
+        <span>4:profile</span>
+        <span>5:help-</span>
+      </div>
+      <div style="flex:1"></div>
+      <div style="flex:none;display:flex;gap:12px;padding:0 14px;white-space:nowrap">
+        <span style="color:rgba(217,176,74,.8)">↻ reboot</span>
+        <span style="color:rgba(95,198,180,.75)">[/] grep</span>
+        <span style="color:#d7a3e0">22:26</span>
+        <span style="color:#c98fd0">19-Aug-26</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;scanlines&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;cornerSigils&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;timelineAccent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#e0453c&quot;,&quot;options&quot;:[&quot;#e0453c&quot;,&quot;#4a9fe0&quot;,&quot;#5fc6b4&quot;],&quot;tsType&quot;:&quot;string&quot;},&quot;wallBlurPx&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:2,&quot;min&quot;:0,&quot;max&quot;:8,&quot;step&quot;:1,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;scrimOpacity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.76,&quot;min&quot;:0.4,&quot;max&quot;:0.92,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;}}">
+// Records newest-first: browser row i and timeline node i are the same role,
+// so the spine marker maps 1:1 to the cursor. Position numbers count from the
+// first job held (oldest = 1).
+const RECORDS = [
+  {
+    name: "software-developer.md", org2: "ena", size: 807, when: "May 2024", mo: "28mo", live: true,
+    role: "Software Developer", org: "Enaimco", loc: "St. John's, NL", dates: "May 2024 – Present",
+    tags: "`python` `typescript` `fastify` `azure` `mongodb` `terraform` `docker` `playwright` `new-relic`",
+    section: "## Summary",
+    bullets: [
+      "Cut deploy time from 15+ minutes to under 1 by rebuilding CI/CD around cached builds and containers.",
+      "Originated ~90% of CI/CD provisioning across 7 Azure environments, cutting new setup from days to minutes.",
+      "Co-architected the company's media processing pipeline, owning its design, deployment, and production upkeep.",
+      "Shipped core features as sole point of contact for partners and customers, prototyping and architecting to spec.",
+      "Built internal tooling for New Relic telemetry, process monitoring, and customer-data ELT jobs.",
+    ],
+  },
+  {
+    name: "computer-science-tutor.md", org2: "mun", size: 325, when: "Jan 2024", mo: "32mo", live: true,
+    role: "Computer Science Tutor", org: "Memorial University of Newfoundland", loc: "St. John's, NL", dates: "Jan 2024 – Present",
+    tags: "`python` `java` `c`",
+    section: "## Highlights",
+    bullets: ["Tutored students in writing algorithms, boolean logic, problem solving, and writing code."],
+  },
+  {
+    name: "research-assistant.md", org2: "mun", size: 291, when: "Oct 2023", mo: "35mo", live: true,
+    role: "Research Assistant", org: "Memorial University of Newfoundland", loc: "St. John's, NL", dates: "Oct 2023 – Present",
+    tags: "`excel` `sql`",
+    section: "## Highlights",
+    bullets: ["Maintained a database of projects carried out by leading researchers."],
+  },
+  {
+    name: "software-developer.md", org2: "mun", size: 624, when: "Sep 2023", mo: "36mo", live: true,
+    role: "Software Developer", org: "Diag Lab, Memorial University", loc: "Remote, Canada", dates: "Sep 2023 – Present",
+    tags: "`django` `python` `postgresql` `linux` `git` `gitlab`",
+    section: "## Highlights",
+    bullets: [
+      "Worked with 2 research teams across 2 major universities in Canada to support medical image analysis.",
+      "Developed and tested a series of RESTful APIs required for the functionality of the back-end.",
+      "Implemented features for this website, such as handling feedback forms and processing them.",
+      "Utilized a Linux environment for development, connected via an SSH server.",
+    ],
+  },
+  {
+    name: "design-and-development.md", org2: "mun", size: 418, when: "Oct 2022", mo: "7mo", live: false,
+    role: "Design and Development Assistant", org: "Memorial University of Newfoundland", loc: "St. John's, NL", dates: "Oct 2022 – Apr 2023",
+    tags: "`javascript` `html5` `css3`",
+    section: "## Highlights",
+    bullets: [
+      "Developed web pages for instructors to be used as instructional material.",
+      "Updated and maintained content on the Brightspace site for multiple courses.",
+    ],
+  },
+  {
+    name: "communications-assistant.md", org2: "mun", size: 473, when: "Oct 2022", mo: "3mo", live: false,
+    role: "Communications Assistant", org: "Sustainability and Climate Action, MUN", loc: "St. John's, NL", dates: "Oct 2022 – Dec 2022",
+    tags: "`html5` `seo`",
+    section: "## Highlights",
+    bullets: [
+      "Enhanced the office website's SEO, significantly boosting search engine rankings and incoming traffic.",
+      "Identified and resolved over 40 technical errors, optimizing website performance and reliability.",
+    ],
+  },
+];
+
+const RED = "#e0453c";
+const TEAL = "#5fc6b4";
+const GOLD = "rgba(217,176,74,.9)";
+const BODY = "rgba(196,216,232,.75)";
+const DIM = "rgba(196,216,232,.4)";
+
+class Component extends DCLogic {
+  state = { sel: 0 };
+
+  componentDidMount() {
+    this._key = (e) => {
+      const k = e.key;
+      if (k === "j" || k === "ArrowDown") { e.preventDefault(); this.move(1); }
+      else if (k === "k" || k === "ArrowUp") { e.preventDefault(); this.move(-1); }
+      else if (k === "g") this.setState({ sel: 0 });
+      else if (k === "G") this.setState({ sel: RECORDS.length - 1 });
+    };
+    window.addEventListener("keydown", this._key);
+  }
+  componentWillUnmount() { window.removeEventListener("keydown", this._key); }
+  move(d) {
+    this.setState((s) => ({ sel: (s.sel + d + RECORDS.length) % RECORDS.length }));
+  }
+
+  buildLines(r) {
+    const L = [];
+    const push = (a, ac, b, bc, w) => L.push({ id: L.length, n: String(L.length + 1), a, ac, b: b || "", bc: bc || DIM, w: w || "400" });
+    push("role: ", TEAL, `"${r.role}"`, GOLD);
+    push("dates: ", TEAL, `"${r.dates}"`, GOLD);
+    push("loc: ", TEAL, `"${r.loc}"`, GOLD);
+    push(`# ${r.role}`, RED, "", DIM, "700");
+    push(`${r.org} · ${r.loc} · ${r.dates}`, BODY);
+    push(r.tags, "rgba(140,200,240,.85)");
+    push(r.section, RED, "", DIM, "700");
+    r.bullets.slice(0, 3).forEach((b) => push("- ", TEAL, b, BODY));
+    if (r.bullets.length > 3) push(`… ${r.bullets.length - 3} more · o opens the file`, "rgba(196,216,232,.3)");
+    return L;
+  }
+
+  renderVals() {
+    const sel = this.state.sel;
+    const rec = RECORDS[sel];
+    const blur = this.props.wallBlurPx ?? 2;
+    const scrim = this.props.scrimOpacity ?? 0.76;
+    const accentActive = this.props.timelineAccent ?? "#e0453c";
+
+    const rows = RECORDS.map((r, i) => {
+      const on = i === sel;
+      return {
+        id: r.org2 + r.name,
+        pick: () => this.setState({ sel: i }),
+        cursor: on ? "›" : "",
+        cursorColor: on ? "#ff6b6f" : "transparent",
+        edge: on ? accentActive : "transparent",
+        bg: on ? "linear-gradient(90deg,rgba(224,69,60,.34),rgba(224,69,60,.04))" : "transparent",
+        fg: on ? "#f4ece9" : "rgba(196,216,232,.68)",
+        dimFg: on ? "rgba(244,236,233,.5)" : "rgba(196,216,232,.32)",
+        metaFg: on ? "rgba(244,236,233,.7)" : "rgba(196,216,232,.34)",
+        icon: on ? "#42a5f5" : "rgba(66,165,245,.6)",
+        orgTag: r.org2,
+        name: r.name,
+        size: String(r.size),
+      };
+    });
+
+    const nodes = RECORDS.map((r, i) => {
+      const on = i === sel;
+      return {
+        id: "n" + i,
+        pick: () => this.setState({ sel: i }),
+        pos: String(RECORDS.length - i),
+        when: r.when,
+        dur: r.mo,
+        state: r.live ? "active" : "ended",
+        stateFg: r.live ? "rgba(95,198,180,.6)" : "rgba(196,216,232,.2)",
+        yearFg: on ? "#ff8f93" : "rgba(196,216,232,.38)",
+        durFg: on ? "rgba(217,176,74,.95)" : "rgba(196,216,232,.28)",
+        ringSize: on ? "54px" : "30px",
+        ring2Size: on ? "40px" : "24px",
+        ringColor: on ? "rgba(224,69,60,.85)" : "rgba(140,200,240,.2)",
+        ring2Color: on ? "rgba(140,220,255,.6)" : "rgba(140,200,240,.12)",
+        spinDur: on ? "9s" : "24s",
+        dotSize: on ? "30px" : "19px",
+        dotBg: on ? "radial-gradient(circle at 35% 30%,#8fe3ff,#4a9fe0 55%,#e0453c)" : "rgba(11,15,20,.85)",
+        dotBorder: on ? "rgba(255,180,175,.7)" : "rgba(140,200,240,.3)",
+        dotGlow: on ? "0 0 18px rgba(224,69,60,.55),0 0 34px rgba(74,159,224,.28)" : "none",
+        dotFg: on ? "#0b0f14" : "rgba(196,216,232,.5)",
+        numSize: on ? "12.5px" : "10.5px",
+      };
+    });
+
+    return {
+      scanlines: this.props.scanlines ?? true,
+      sigils: this.props.cornerSigils ?? true,
+      wallFilter: `blur(${blur}px) brightness(.9)`,
+      scrim: `rgba(9,13,18,${scrim})`,
+      rows,
+      nodes,
+      markerTop: `${((sel + 0.5) / RECORDS.length) * 100}%`,
+      filePath: (rec.org2 === "ena" ? "enaimco/" : "memorial-university/") + rec.name,
+      fileSize: `${rec.size} B`,
+      lineCount: `${7 + Math.min(3, rec.bullets.length)} lines`,
+      lines: this.buildLines(rec),
+    };
+  }
+}
+
+</script>
+</body>
+</html>
