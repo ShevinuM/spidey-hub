@@ -127,26 +127,6 @@ const profile = defineCollection({
   }),
 });
 
-const help = defineCollection({
-  loader: glob({
-    pattern: "*.md",
-    base: "src/features/help/content",
-    generateId: ({ entry }) => entry.replace(/\.md$/, ""),
-  }),
-  schema: z.object({
-    label: z.string(),
-    hint: z.string(),
-    order: z.number(),
-    rows: z.array(
-      z.object({
-        name: z.string(),
-        desc: z.string(),
-        keys: z.array(z.string()),
-      }),
-    ),
-  }),
-});
-
 const notifications = defineCollection({
   loader: glob({
     pattern: "*.md",
@@ -182,7 +162,6 @@ export const collections = {
   repositories,
   personnel,
   profile,
-  help,
   notifications,
   boot,
 };

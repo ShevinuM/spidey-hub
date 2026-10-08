@@ -337,38 +337,6 @@ export interface PersonnelData {
   editor: EditorLabels;
 }
 
-// src/features/help/content/help.yaml + src/features/help/content/*.md
-
-/** One keymap row: a short `name`, a one-line `desc` that never wraps (see HelpView.svelte), and the key chip(s) that trigger it. */
-export interface HelpRow {
-  name: string;
-  desc: string;
-  keys: string[];
-}
-
-/** One sidebar scope: both a "SCOPES" tab and its content section; `hint` is the short label next to the section header. */
-export interface HelpScope {
-  id: string;
-  label: string;
-  hint: string;
-  rows: HelpRow[];
-}
-
-/** Page chrome only (title/filter/legend) — `scopes` is assembled from the
- * `help` content collection by `buildHelp` in
- * `src/features/help/lib/data.ts`. */
-export interface HelpChrome {
-  title: string;
-  filterPlaceholder: string;
-  allScopeLabel: string;
-  emptyStateText: string;
-  legend: string[];
-}
-
-export interface HelpData extends HelpChrome {
-  scopes: HelpScope[];
-}
-
 // boot.yaml (config) + src/features/boot/content/log.md (log text)
 
 export interface BootHandshakeData {
@@ -467,9 +435,6 @@ export interface CmdlineErrors {
 export interface CmdlineData {
   title: string;
   prompt: { glyph: string; cursorGlyph: string };
-  /** Appended after a command's name in the suggestion list when its
-   * `takesArgs` is true (e.g. "grep <…>"). */
-  argsPlaceholder: string;
   exCommands: CmdlineCommandDef[];
   commands: CmdlineCommandDef[];
   tmuxCommands: CmdlineCommandDef[];
@@ -477,17 +442,6 @@ export interface CmdlineData {
 }
 
 export const getCmdline = (): CmdlineData => parseYaml<CmdlineData>(cmdlineRaw, "cmdline.yaml");
-
-// helpsearch.yaml
-
-export interface HelpSearchData {
-  title: string;
-  prompt: { glyph: string; cursorGlyph: string };
-  emptyHint: string;
-  noResultsText: string;
-  keymapHint: string;
-  footer: { hint: string };
-}
 
 // shell.yaml
 
