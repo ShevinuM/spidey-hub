@@ -290,15 +290,13 @@ test.describe("live clock (bug fix 2)", () => {
     await page.clock.pauseAt(t0 + 5000);
     await expect(page.locator('[data-testid="dashboard-wordmark"]')).toBeVisible();
 
-    const before = await page.locator('[data-testid="status-bar-clock-time"]').innerText();
-    expect(before).toBe("23:34");
-    const beforeDate = await page.locator('[data-testid="status-bar-clock-date"]').innerText();
-    expect(beforeDate).toBe("15-Aug-26");
+    // The wordmark is SSR-visible before hydration, but StatusBar fills the clock in a post-hydration $effect, so these assertions must retry rather than read once.
+    await expect(page.locator('[data-testid="status-bar-clock-time"]')).toHaveText("23:34");
+    await expect(page.locator('[data-testid="status-bar-clock-date"]')).toHaveText("15-Aug-26");
 
     await page.clock.pauseAt(t0 + 5000 + 61_000);
 
-    const after = await page.locator('[data-testid="status-bar-clock-time"]').innerText();
-    expect(after).toBe("23:35");
+    await expect(page.locator('[data-testid="status-bar-clock-time"]')).toHaveText("23:35");
   });
 });
 
