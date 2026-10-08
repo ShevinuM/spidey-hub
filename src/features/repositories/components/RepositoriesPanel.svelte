@@ -1,5 +1,5 @@
 <script lang="ts">
-  // Shared bordered-box + top-straddling PanelBadge chrome for the five Repositories panels; `variant="repositories"` scopes the left-aligned, glyph-between-number-and-label rendering to this page only.
+  // The shared bordered box for the five Repositories panes, with a centred PanelBadge as its first child.
   import type { Snippet } from "svelte";
   import PanelBadge from "../../../common/components/PanelBadge.svelte";
 
@@ -11,9 +11,9 @@
     padding: string;
     columnBody?: boolean;
     border: string;
-    /** Badge panel number, e.g. `0` for "[0] Status". */
+    /** Badge index, e.g. `0`. */
     n: number;
-    /** Badge label, e.g. "Status". */
+    /** Badge label as written in the yaml, e.g. "STATUS". */
     label: string;
     children?: Snippet;
   }
@@ -41,6 +41,6 @@
     ? ';display:flex;flex-direction:column'
     : ''}"
 >
-  <PanelBadge {n} {label} variant="repositories" />
+  <PanelBadge {n} {label} />
   {#if children}{@render children()}{/if}
 </div>

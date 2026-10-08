@@ -19,15 +19,10 @@ index:
 fileOwner: "shev"
 filePerms: ".rw-r--r--"
 
-# Top-straddling PanelBadge split text (glyph renders between the two
-# words — see PanelBadge.svelte's `left`/`right` split-text mode, added for
-# this page since its badges aren't the `{n} · {label}` shape Repositories'
-# panels use).
+# Uppercase PanelBadge labels for the Records and Preview panes.
 badge:
-  recordsLeft: "Employment"
-  recordsRight: "Records"
-  previewLeft: "File"
-  previewRight: "Preview"
+  records: "EMPLOYMENT RECORDS"
+  preview: "FILE PREVIEW"
 
 previewLineCountTemplate: "{n} lines"
 

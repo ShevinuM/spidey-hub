@@ -106,5 +106,5 @@
     </div>
   </div>
 
-  <PanelBadge left={state.personnel.badge.recordsLeft} right={state.personnel.badge.recordsRight} />
+  <PanelBadge n={1} label={state.personnel.badge.records} />
 </div>

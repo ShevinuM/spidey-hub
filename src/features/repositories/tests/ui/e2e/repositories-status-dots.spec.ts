@@ -113,7 +113,7 @@ test.describe("Repositories: first row clears the badge", () => {
     expect(rowBox).toBeTruthy();
     if (badgeBox && rowBox) {
       const clearance = rowBox.y - (badgeBox.y + badgeBox.height);
-      // The badge straddles the border via `translateY(-50%)` on a ~21px pill, so P px of top padding nets ~(P-10.5)px clearance; 18px nets ~7.5px, and 6px is comfortably below that without over-pinning the exact figure.
+      // The badge straddles the border via `translateY(-50%)` on an ~18px frame, so P px of top padding nets ~(P-9)px clearance; 18px nets ~9px, and 6px is comfortably below that without over-pinning the exact figure.
       expect(clearance).toBeGreaterThanOrEqual(6);
     }
   });

@@ -1,15 +1,15 @@
-# Panel labels are bare (no bracket/dash) — PanelBadge.svelte composes the full "[{n}] {label}" text itself.
+# Panel labels are bare uppercase words, and PanelBadge.svelte draws the index block beside them.
 panels:
   status:
-    label: "Status"
+    label: "STATUS"
   files:
-    label: "Files"
+    label: "FILES"
     # {value} is "<repo>" (working tree) or "<repo> @<sha8>" (browsing a commit snapshot); only rendered once a repo has been opened.
     subtitleTemplate: "{value}"
   repos:
-    label: "Repositories"
+    label: "REPOSITORIES"
   commits:
-    label: "Commits"
+    label: "COMMITS"
     # "{branch} · {count} commits" — real data: branch comes from the
     # panel [1] selection's own RepoRow (all-projects' is "local"), count
     # from the actually-rendered commit list (0 for all-projects).
@@ -21,7 +21,7 @@ panels:
     # fetch commits for.
     localOnlyText: "local only — no remote to fetch commits from"
   changes:
-    label: "Content"
+    label: "CONTENT"
     # {value} = "<repo>/<path>" while previewing a file, or "<project-id>.md" before anything's been browsed.
     subtitleTemplate: "{value}"
 

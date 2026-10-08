@@ -1,79 +1,32 @@
 <script lang="ts">
-  // Shared top-straddling pill badge, rendered by every Repositories/
-  // Employment Records panel: a red-glow/blue-border pill with a red spider
-  // glyph.
-  //
-  // `variant="repositories"` is the one consumer whose wrapper is
-  // left-aligned, with the glyph BETWEEN the bracketed number and the
-  // label (`[N] <glyph> Label`); every other consumer keeps the centered
-  // wrapper.
-  //
-  // The wrapper straddles whatever ancestor panel has `position:relative`
-  // — it is not itself the panel's border/background, just the floating
-  // pill on top of it — and `pointer-events:none` keeps it from stealing
-  // clicks meant for the panel underneath.
+  // The one pane badge shape: a square pixel frame holding an index block and a label, centred on and straddling the top edge of its nearest positioned ancestor.
+  // Labels arrive already uppercase and are drawn exactly as given.
+  // The positioned ancestor must not clip (`overflow:hidden`), because the frame's outer step and glow extend past the badge box; a clipping pane renders the badge as a sibling outside its clipped box instead.
   interface Props {
-    /** Panel number shown before the label — `1` in "[1] Repositories"
-     * (repositories variant) or "1 · Status" (default).
-     *
-     * Omit with `label` when using split-text (`left`/`right`) mode
-     * instead. */
-    n?: number;
-    /** Panel label shown after the number. */
-    label?: string;
-    /** Split-text mode: renders `{left} <glyph> {right}` instead of
-     * `[{n}] {label}` (Employment Records' "Employment <glyph> Records" /
-     * "File <glyph> Preview" badges).
-     *
-     * Pass both or neither. */
-    left?: string;
-    right?: string;
-    /** "repositories": left-aligned wrapper, glyph between the bracketed
-     * number and the label (`[N] <glyph> Label`).
-     *
-     * "default": centered wrapper, glyph before the number (or between
-     * split words). */
-    variant?: "repositories" | "default";
+    /** Index shown in the solid red block, e.g. 1. */
+    n: number;
+    /** Label shown as written; callers pass uppercase (e.g. "EMPLOYMENT RECORDS"). */
+    label: string;
   }
 
-  const { n, label, left, right, variant = "default" }: Props = $props();
-  const isSplit = left !== undefined && right !== undefined;
-  const isRepositories = variant === "repositories";
-  const wrapperStyle = `position:absolute;left:0;right:0;top:0;transform:translateY(-50%);display:flex;justify-content:${
-    isRepositories ? "flex-start" : "center"
-  };${isRepositories ? "padding-left:12px;" : ""}pointer-events:none;z-index:4`;
+  const { n, label }: Props = $props();
 </script>
 
-<div data-testid="panel-badge" style={wrapperStyle}>
+<div
+  data-testid="panel-badge"
+  style="position:absolute;left:0;right:0;top:0;transform:translateY(-50%);display:flex;justify-content:center;pointer-events:none;z-index:4"
+>
   <span
-    style="display:flex;align-items:center;gap:9px;border:1px solid rgba(74,159,224,.5);border-radius:3px;background:rgba(10,14,19,.96);box-shadow:0 0 20px rgba(224,69,60,.18),inset 0 0 14px rgba(74,159,224,.12);padding:2px 13px;font-size:11.5px;letter-spacing:.2em;color:#8fd0f5;white-space:nowrap"
+    data-testid="panel-badge-frame"
+    style="display:flex;align-items:stretch;background:var(--color-deep-bg);box-shadow:inset 0 0 0 1px rgba(74,159,224,.4),0 0 0 3px var(--color-deep-bg),0 0 0 4px rgba(224,69,60,.22),0 0 14px rgba(224,69,60,.1);font-size:10.5px;line-height:normal;color:var(--color-friendly-blue);white-space:nowrap"
+    ><span
+      data-testid="panel-badge-index"
+      style="display:flex;align-items:center;background:var(--color-alert);color:var(--color-deep-bg);font-weight:700;padding:2px 6px;letter-spacing:.05em"
+      >{n}</span
+    ><span
+      data-testid="panel-badge-label"
+      style="display:flex;align-items:center;padding:2px 7px 2px 10px;letter-spacing:.26em"
+      >{label}</span
+    ></span
   >
-    {#if isSplit}
-      {left}
-      <img
-        src="/assets/spider-glyph-red.svg"
-        alt=""
-        aria-hidden="true"
-        style="width:13px;height:13px;display:block;filter:drop-shadow(0 0 6px rgba(224,69,60,.6))"
-      />
-      {right}
-    {:else if isRepositories}
-      [{n}]
-      <img
-        src="/assets/spider-glyph-red.svg"
-        alt=""
-        aria-hidden="true"
-        style="width:13px;height:13px;display:block;filter:drop-shadow(0 0 6px rgba(224,69,60,.6))"
-      />
-      {label}
-    {:else}
-      <img
-        src="/assets/spider-glyph-red.svg"
-        alt=""
-        aria-hidden="true"
-        style="width:13px;height:13px;display:block;filter:drop-shadow(0 0 6px rgba(224,69,60,.6))"
-      />
-      {n} · {label}
-    {/if}
-  </span>
 </div>

@@ -203,16 +203,16 @@ test.describe("Employment: index block, derived from real content", () => {
 });
 
 test.describe("Employment: badges", () => {
-  test("both panels show a top-straddling split-text PanelBadge, not the old bottom label", async ({
+  test("both panels show a top-straddling pixel-frame badge with index and uppercase label", async ({
     page,
   }) => {
     await openEmployment(page);
-    const badges = page.locator('[data-testid="panel-badge"]');
+    const badges = page.getByTestId("panel-badge");
     await expect(badges).toHaveCount(2);
-    await expect(badges.nth(0)).toContainText("Employment");
-    await expect(badges.nth(0)).toContainText("Records");
-    await expect(badges.nth(1)).toContainText("File");
-    await expect(badges.nth(1)).toContainText("Preview");
+    await expect(badges.nth(0).getByTestId("panel-badge-index")).toHaveText("1");
+    await expect(badges.nth(0).getByTestId("panel-badge-label")).toHaveText("EMPLOYMENT RECORDS");
+    await expect(badges.nth(1).getByTestId("panel-badge-index")).toHaveText("2");
+    await expect(badges.nth(1).getByTestId("panel-badge-label")).toHaveText("FILE PREVIEW");
     const box = await badges.first().boundingBox();
     const panelBox = await page
       .locator('[data-testid="employment-row"]')

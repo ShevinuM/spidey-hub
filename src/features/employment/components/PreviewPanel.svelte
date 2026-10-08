@@ -19,7 +19,7 @@
 </script>
 
 <div style="position:relative;flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">
-  <PanelBadge left={state.personnel.badge.previewLeft} right={state.personnel.badge.previewRight} />
+  <PanelBadge n={2} label={state.personnel.badge.preview} />
 
   <div
     style="position:relative;flex:1;min-height:0;overflow:hidden;border:1px solid rgba(224,69,60,.4);border-radius:3px;padding:14px 12px 9px;display:flex;flex-direction:column"

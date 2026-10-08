@@ -42,121 +42,142 @@ test.describe("Repositories: Command Log panel removed", () => {
   });
 });
 
-test.describe("PanelBadge: [N] Label composition", () => {
+const REPOSITORIES_BADGES: [number, string][] = [
+  [0, "STATUS"],
+  [1, "REPOSITORIES"],
+  [2, "FILES"],
+  [3, "CONTENT"],
+  [4, "COMMITS"],
+];
+
+const EMPLOYMENT_BADGES: [number, string][] = [
+  [1, "EMPLOYMENT RECORDS"],
+  [2, "FILE PREVIEW"],
+];
+
+/** Every badge on both pages, paired with the testid of an element whose
+ * horizontal centre equals its pane's centre.
+ *
+ * `badgeInsidePane` marks panes that contain their own badge, so its frame
+ * can be found under the pane instead of by DOM order. */
+const BADGE_PAGES: {
+  path: string;
+  count: number;
+  paneTestids: string[];
+  badgeInsidePane: boolean;
+}[] = [
+  {
+    path: "/repositories",
+    count: 5,
+    paneTestids: REPOSITORIES_BADGES.map(([n]) => `repositories-panel-${n}`),
+    badgeInsidePane: true,
+  },
+  {
+    path: "/employment",
+    count: 2,
+    paneTestids: ["employment-records-list", "employment-preview"],
+    badgeInsidePane: false,
+  },
+];
+
+test.describe("PanelBadge: pixel-frame index badge", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("Repositories panels [0]-[4] each read '[N] Label'", async ({ page }) => {
+  for (const { path, count } of BADGE_PAGES) {
+    test(`${path} renders exactly ${count} badges`, async ({ page }) => {
+      await gotoReady(page, path);
+      await expect(page.getByTestId("panel-badge")).toHaveCount(count);
+    });
+  }
+
+  test("Repositories panes 0-4 show their index and uppercase label", async ({ page }) => {
     await gotoReady(page, "/repositories");
-    const expected: [number, string][] = [
-      [0, "Status"],
-      [1, "Repositories"],
-      [2, "Files"],
-      [3, "Content"],
-      [4, "Commits"],
-    ];
-    for (const [n, label] of expected) {
-      const badge = page.locator(
-        `[data-testid="repositories-panel-${n}"] [data-testid="panel-badge"]`,
-      );
-      await expect(badge).toHaveText(`[${n}] ${label}`);
+    for (const [n, label] of REPOSITORIES_BADGES) {
+      const pane = page.getByTestId(`repositories-panel-${n}`);
+      await expect(pane.getByTestId("panel-badge-index")).toHaveText(String(n));
+      await expect(pane.getByTestId("panel-badge-label")).toHaveText(label);
     }
   });
-});
 
-// The spider glyph's position differs per view: Repositories places it between the bracketed number and the label, Employment between its two split words.
-test.describe("PanelBadge: spider glyph position (scoped, not removed)", () => {
-  test.beforeEach(async ({ context }) => {
-    await context.route("**/api.github.com/**", (route) => route.abort());
-  });
-
-  test("Repositories badges carry the red spider glyph BETWEEN the bracketed number and the label", async ({
-    page,
-  }) => {
-    await gotoReady(page, "/repositories");
-    const badges = page.locator('[data-testid="panel-badge"]');
-    await expect(badges).toHaveCount(5);
-    const expected = ["Status", "Repositories", "Files", "Content", "Commits"];
-    for (let i = 0; i < expected.length; i++) {
-      const pill = badges.nth(i).locator("span").first();
-      await expect(pill.locator('img[src="/assets/spider-glyph-red.svg"]')).toHaveCount(1);
-      const html = await pill.innerHTML();
-      const bracketIdx = html.indexOf(`[${i}]`);
-      const imgIdx = html.indexOf("<img");
-      const labelIdx = html.indexOf(expected[i]);
-      expect(bracketIdx).toBeGreaterThanOrEqual(0);
-      expect(imgIdx).toBeGreaterThan(bracketIdx);
-      expect(labelIdx).toBeGreaterThan(imgIdx);
+  test("Employment Records and Preview show their index and uppercase label", async ({ page }) => {
+    await gotoReady(page, "/employment");
+    for (const [i, [n, label]] of EMPLOYMENT_BADGES.entries()) {
+      const badge = page.getByTestId("panel-badge").nth(i);
+      await expect(badge.getByTestId("panel-badge-index")).toHaveText(String(n));
+      await expect(badge.getByTestId("panel-badge-label")).toHaveText(label);
     }
   });
 
-  test("Employment Records badges keep the red spider glyph BETWEEN the two split words (pre-f1cb7ee look)", async ({
-    page,
-  }) => {
-    await gotoReady(page, "/employment");
-    const badges = page.locator('[data-testid="panel-badge"]');
-    await expect(badges).toHaveCount(2);
+  for (const { path, count, paneTestids, badgeInsidePane } of BADGE_PAGES) {
+    test(`${path} badges carry no image`, async ({ page }) => {
+      await gotoReady(page, path);
+      const badges = page.getByTestId("panel-badge");
+      await expect(badges).toHaveCount(count);
+      for (let i = 0; i < count; i++) {
+        expect(await badges.nth(i).evaluate((el) => el.querySelectorAll("img").length)).toBe(0);
+      }
+    });
 
-    const recordsPill = badges.nth(0).locator("span").first();
-    await expect(recordsPill.locator('img[src="/assets/spider-glyph-red.svg"]')).toHaveCount(1);
-    const recordsHtml = await recordsPill.innerHTML();
-    expect(recordsHtml.indexOf("Employment")).toBeGreaterThanOrEqual(0);
-    expect(recordsHtml.indexOf("Employment")).toBeLessThan(recordsHtml.indexOf("<img"));
-    expect(recordsHtml.indexOf("<img")).toBeLessThan(recordsHtml.indexOf("Records"));
+    test(`${path} badge frames are centred on their panes`, async ({ page }) => {
+      await gotoReady(page, path);
+      const frames = page.getByTestId("panel-badge-frame");
+      await expect(frames).toHaveCount(count);
+      for (let i = 0; i < count; i++) {
+        const paneEl = page.getByTestId(paneTestids[i]);
+        const frameEl = badgeInsidePane ? paneEl.getByTestId("panel-badge-frame") : frames.nth(i);
+        const frame = await frameEl.boundingBox();
+        const pane = await paneEl.boundingBox();
+        expect(frame).toBeTruthy();
+        expect(pane).toBeTruthy();
+        if (frame && pane) {
+          expectNear(frame.x + frame.width / 2, pane.x + pane.width / 2, 2);
+        }
+      }
+    });
 
-    const previewPill = badges.nth(1).locator("span").first();
-    await expect(previewPill.locator('img[src="/assets/spider-glyph-red.svg"]')).toHaveCount(1);
-    const previewHtml = await previewPill.innerHTML();
-    expect(previewHtml.indexOf("File")).toBeGreaterThanOrEqual(0);
-    expect(previewHtml.indexOf("File")).toBeLessThan(previewHtml.indexOf("<img"));
-    expect(previewHtml.indexOf("<img")).toBeLessThan(previewHtml.indexOf("Preview"));
-  });
-});
+    test(`${path} badge frames are square, shadowed and pinned to a normal line-height`, async ({
+      page,
+    }) => {
+      await gotoReady(page, path);
+      const frames = page.getByTestId("panel-badge-frame");
+      await expect(frames).toHaveCount(count);
+      for (let i = 0; i < count; i++) {
+        const frame = frames.nth(i);
+        await expect(frame).toHaveCSS("border-radius", "0px");
+        await expect(frame).toHaveCSS("line-height", "normal");
+        const shadow = await frame.evaluate((el) => getComputedStyle(el).boxShadow);
+        expect(shadow).toContain("rgba(74, 159, 224, 0.4) 0px 0px 0px 1px inset");
+        expect(shadow).toContain("rgb(10, 14, 19) 0px 0px 0px 3px");
+      }
+    });
 
-// Only Repositories's variant="repositories" wrapper is left-aligned; Employment Records's wrapper is centered.
-test.describe("PanelBadge: Repositories left-aligned, Employment Records centered (restored)", () => {
-  test.beforeEach(async ({ context }) => {
-    await context.route("**/api.github.com/**", (route) => route.abort());
-  });
+    test(`${path} unfocused badge indexes are a red block with dark text`, async ({ page }) => {
+      await gotoReady(page, path);
+      const badges = page.getByTestId("panel-badge");
+      await expect(badges).toHaveCount(count);
+      for (let i = 0; i < count; i++) {
+        const badge = badges.nth(i);
+        if ((await badge.getAttribute("data-focused")) !== null) continue;
+        const index = badge.getByTestId("panel-badge-index");
+        await expect(index).toHaveCSS("background-color", "rgb(224, 69, 60)");
+        await expect(index).toHaveCSS("color", "rgb(10, 14, 19)");
+      }
+    });
 
-  test("Repositories badge pill sits near its wrapper's left edge", async ({ page }) => {
-    await gotoReady(page, "/repositories");
-    const wrapper = await box(page, "panel-badge", 0);
-    const pillBox = await page
-      .locator('[data-testid="panel-badge"]')
-      .nth(0)
-      .locator("span")
-      .first()
-      .boundingBox();
-    expect(pillBox).toBeTruthy();
-    if (!pillBox) return;
-    const leftInset = pillBox.x - wrapper.x;
-    const wouldBeCenteredInset = (wrapper.width - pillBox.width) / 2;
-    // Left-aligned: inset is small (well under half the wrapper width) and
-    // nowhere near where centering would place it.
-    expect(leftInset).toBeGreaterThanOrEqual(0);
-    expect(leftInset).toBeLessThan(wrapper.width / 4);
-    expect(Math.abs(leftInset - wouldBeCenteredInset)).toBeGreaterThan(20);
-  });
-
-  test("Employment Records badge pill is centered, not left-aligned (pre-f1cb7ee look restored)", async ({
-    page,
-  }) => {
-    await gotoReady(page, "/employment");
-    const wrapper = await box(page, "panel-badge", 0);
-    const pillBox = await page
-      .locator('[data-testid="panel-badge"]')
-      .nth(0)
-      .locator("span")
-      .first()
-      .boundingBox();
-    expect(pillBox).toBeTruthy();
-    if (!pillBox) return;
-    const leftInset = pillBox.x - wrapper.x;
-    const centeredInset = (wrapper.width - pillBox.width) / 2;
-    expect(Math.abs(leftInset - centeredInset)).toBeLessThan(2);
-  });
+    test(`${path} badge labels use the 10.5px tracked blue type`, async ({ page }) => {
+      await gotoReady(page, path);
+      const labels = page.getByTestId("panel-badge-label");
+      await expect(labels).toHaveCount(count);
+      for (let i = 0; i < count; i++) {
+        const label = labels.nth(i);
+        await expect(label).toHaveCSS("font-size", "10.5px");
+        await expect(label).toHaveCSS("letter-spacing", "2.73px");
+        await expect(label).toHaveCSS("color", "rgb(143, 208, 245)");
+      }
+    });
+  }
 });
 
 // Measures real `getBoundingClientRect()` deltas between adjacent panels, never CSS text, so this catches a regression even if a future refactor moves the values into a different stylesheet layer.
