@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { RepositoriesData } from "../../../common/lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
-  import RepositoriesPanel from "./RepositoriesPanel.svelte";
+  import PaneFrame from "../../../common/components/PaneFrame.svelte";
 
   interface Props {
     repositories: RepositoriesData;
@@ -12,16 +12,15 @@
   const { repositories, state, isFocused }: Props = $props();
 </script>
 
-<RepositoriesPanel
-  testid="repositories-panel-4"
-  copySource={isFocused && state.focusedPanel === 4}
-  flex="0.95"
-  minHeight
-  padding="18px 14px 9px"
-  columnBody
-  border={state.panelBorder(4)}
+<PaneFrame
+  data-testid="repositories-panel-4"
+  data-copy-source={isFocused && state.focusedPanel === 4 ? "" : undefined}
+  focused={isFocused && state.focusedPanel === 4}
   n={4}
   label={repositories.panels.commits.label}
+  layout="flex:0.95;min-height:0"
+  padding="19px 14px 9px"
+  body="display:flex;flex-direction:column"
 >
   {#snippet children()}
     {#if !state.selectedRepo?.isAllProjects}
@@ -32,7 +31,10 @@
         {state.commitsSubtitle}
       </div>
     {/if}
-    <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden">
+    <div
+      data-testid="repositories-commits-list"
+      style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden"
+    >
       {#if state.selectedRepo?.isAllProjects}
         <div style="color:rgba(196,216,232,.5)">{repositories.panels.commits.localOnlyText}</div>
         <div style="color:rgba(196,216,232,.35)">{repositories.allProjects.description}</div>
@@ -86,7 +88,7 @@
       {/if}
     </div>
   {/snippet}
-</RepositoriesPanel>
+</PaneFrame>
 
 <style>
   .repositories-row {

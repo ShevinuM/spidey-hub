@@ -23,22 +23,17 @@ test.describe("Repositories: Command Log panel removed", () => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("no panel [5] / Command Log exists on /repositories", async ({ page }) => {
+  test("no pane 5 / Command Log exists on /repositories", async ({ page }) => {
     await gotoReady(page, "/repositories");
     await expect(page.locator('[data-testid="repositories-panel-5"]')).toHaveCount(0);
     await expect(page.getByText("Command Log")).toHaveCount(0);
-    // Pressing "5" must be a no-op — no panel exists to focus, and it must not throw/break other panels.
+    // Pressing "5" must be a no-op — no pane exists to focus, and it must not throw/break other panes.
     await page.keyboard.press("0");
-    await expect(page.locator('[data-testid="repositories-panel-0"]')).toHaveAttribute(
-      "style",
-      /border: 1px solid rgb\(224, 69, 60\)/,
-    );
+    const statusBadge = page.getByTestId("repositories-panel-0").getByTestId("panel-badge");
+    await expect(statusBadge).toHaveAttribute("data-focused", "");
     await page.keyboard.press("5");
-    // Panel 0 stays focused — "5" doesn't move focus.
-    await expect(page.locator('[data-testid="repositories-panel-0"]')).toHaveAttribute(
-      "style",
-      /border: 1px solid rgb\(224, 69, 60\)/,
-    );
+    // Pane 0 stays focused — "5" doesn't move focus.
+    await expect(statusBadge).toHaveAttribute("data-focused", "");
   });
 });
 
@@ -178,6 +173,43 @@ test.describe("PanelBadge: pixel-frame index badge", () => {
       }
     });
   }
+});
+
+test.describe("PanelBadge: focus cue", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  /** Asserts pane `n` holds the page's only focused badge, drawn with the bright index, and every other index stays the resting red. */
+  async function expectFocusedPane(page: Page, n: number) {
+    const focusedBadge = page.getByTestId(`repositories-panel-${n}`).getByTestId("panel-badge");
+    await expect(focusedBadge).toHaveAttribute("data-focused", "");
+    const focusedBadges = page.getByTestId("panel-badge").and(page.locator("[data-focused]"));
+    await expect(focusedBadges).toHaveCount(1);
+    await expect(focusedBadge.getByTestId("panel-badge-index")).toHaveCSS(
+      "background-color",
+      "rgb(255, 107, 111)",
+    );
+    for (const [other] of REPOSITORIES_BADGES) {
+      if (other === n) continue;
+      await expect(
+        page.getByTestId(`repositories-panel-${other}`).getByTestId("panel-badge-index"),
+      ).toHaveCSS("background-color", "rgb(224, 69, 60)");
+    }
+  }
+
+  test("pane 2 holds the only focused badge on load", async ({ page }) => {
+    await gotoReady(page, "/repositories");
+    await expectFocusedPane(page, 2);
+  });
+
+  test("number keys move the focused badge to their pane", async ({ page }) => {
+    await gotoReady(page, "/repositories");
+    for (const n of [0, 1, 3, 4]) {
+      await page.keyboard.press(String(n));
+      await expectFocusedPane(page, n);
+    }
+  });
 });
 
 // Measures real `getBoundingClientRect()` deltas between adjacent panels, never CSS text, so this catches a regression even if a future refactor moves the values into a different stylesheet layer.

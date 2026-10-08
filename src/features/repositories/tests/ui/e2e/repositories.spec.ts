@@ -64,6 +64,17 @@ function treeRow(page: Page, name: string, depth?: number) {
   );
 }
 
+/** The badge drawn on Repositories pane `n`. */
+function paneBadge(page: Page, n: number) {
+  return page.getByTestId(`repositories-panel-${n}`).getByTestId("panel-badge");
+}
+
+async function ctrlB(page: Page) {
+  await page.keyboard.down("Control");
+  await page.keyboard.press("b");
+  await page.keyboard.up("Control");
+}
+
 /** Clicking a row leaves real DOM focus on it, so a later keyboard-driven selection change without a blur would hit that row's own stale Enter handler before Terminal's global listener sees it. */
 async function blurActive(page: Page) {
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
@@ -173,10 +184,7 @@ test.describe("Repositories: panel [1] repo list — all-projects pinned first +
 
     await blurActive(page); // see helper doc — avoids a stale-focus double-fire on Enter below
     await page.keyboard.press("1");
-    await expect(page.locator('[data-testid="repositories-panel-1"]')).toHaveAttribute(
-      "style",
-      /border: 1px solid rgb\(224, 69, 60\)/,
-    );
+    await expect(paneBadge(page, 1)).toHaveAttribute("data-focused", "");
     await page.keyboard.press("ArrowUp"); // wrap from transcript-tts (idx 2) back to all-projects (idx 0)
     await page.keyboard.press("ArrowUp");
     await page.keyboard.press("Enter");
@@ -520,10 +528,7 @@ test.describe("Repositories: commit click loads a tree (no popup); 'o' opens Git
     await openRepoTree(page, "daily-tech-digest");
 
     await page.keyboard.press("4");
-    await expect(page.locator('[data-testid="repositories-panel-4"]')).toHaveAttribute(
-      "style",
-      /border: 1px solid rgb\(224, 69, 60\)/,
-    );
+    await expect(paneBadge(page, 4)).toHaveAttribute("data-focused", "");
     const expectedHref = await page
       .locator('[data-testid="repositories-commit-row"]')
       .first()
@@ -750,47 +755,86 @@ test.describe("Repositories: t is not bound", () => {
   });
 });
 
-test.describe("Repositories: panel focus border (panels 0, 3, and 4)", () => {
+test.describe("Repositories: pane frame and focus", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("0 focuses the Status panel (border); 3 focuses the Content panel (border); 4 focuses the Commits panel (border)", async ({
-    page,
-  }) => {
+  const PANES = [0, 1, 2, 3, 4];
+
+  test("clicking a repo row focuses pane 1", async ({ page }) => {
     await gotoReady(page, "/repositories");
-    const FOCUSED = /border: 1px solid rgb\(224, 69, 60\)/;
-    const UNFOCUSED = /border: 1px solid rgba\(224, 69, 60, 0\.35\)/;
+    await expect(paneBadge(page, 1)).not.toHaveAttribute("data-focused");
+    await page.getByTestId("repositories-repo-row").first().click();
+    await expect(paneBadge(page, 1)).toHaveAttribute("data-focused", "");
+    await expect(paneBadge(page, 2)).not.toHaveAttribute("data-focused");
+  });
 
-    // The style attribute only shows the normalized rgba() text once its value has genuinely changed from the SSR default — panel [2] (the default-focused one) is the only panel guaranteed to flip and prove that, so this asserts against it rather than panel [3].
-    await page.keyboard.press("0");
-    await expect(page.locator('[data-testid="repositories-panel-0"]')).toHaveAttribute(
-      "style",
-      FOCUSED,
-    );
-    await expect(page.locator('[data-testid="repositories-panel-2"]')).toHaveAttribute(
-      "style",
-      UNFOCUSED,
-    );
+  test("activating a commit focuses pane 4", async ({ page }) => {
+    await gotoReady(page, "/repositories");
+    await openRepoTree(page, "daily-tech-digest");
+    await blurActive(page);
+    await page.keyboard.press("1");
+    await expect(paneBadge(page, 4)).not.toHaveAttribute("data-focused");
+    await page.getByTestId("repositories-commit-row").first().click();
+    await expect(paneBadge(page, 4)).toHaveAttribute("data-focused", "");
+    await expect(paneBadge(page, 1)).not.toHaveAttribute("data-focused");
+  });
 
-    await page.keyboard.press("3");
-    await expect(page.locator('[data-testid="repositories-panel-3"]')).toHaveAttribute(
-      "style",
-      FOCUSED,
-    );
-    await expect(page.locator('[data-testid="repositories-panel-0"]')).toHaveAttribute(
-      "style",
-      UNFOCUSED,
-    );
+  test("every pane keeps the same hairline whichever pane is focused", async ({ page }) => {
+    await gotoReady(page, "/repositories");
+    for (const key of ["0", "4"]) {
+      await page.keyboard.press(key);
+      await expect(paneBadge(page, Number(key))).toHaveAttribute("data-focused", "");
+      for (const n of PANES) {
+        const pane = page.getByTestId(`repositories-panel-${n}`);
+        await expect(pane).toHaveCSS("border", "1px solid rgba(224, 69, 60, 0.3)");
+        await expect(pane).toHaveCSS("border-radius", "4px");
+      }
+    }
+  });
 
-    await page.keyboard.press("4");
-    await expect(page.locator('[data-testid="repositories-panel-4"]')).toHaveAttribute(
-      "style",
-      FOCUSED,
-    );
-    await expect(page.locator('[data-testid="repositories-panel-3"]')).toHaveAttribute(
-      "style",
-      UNFOCUSED,
+  test("no pane draws a shadow", async ({ page }) => {
+    await gotoReady(page, "/repositories");
+    for (const n of PANES) {
+      await expect(page.getByTestId(`repositories-panel-${n}`)).toHaveCSS("box-shadow", "none");
+    }
+  });
+
+  test("panes under a full badge pad 19px on top; the status pane pads 10px", async ({ page }) => {
+    await gotoReady(page, "/repositories");
+    await expect(page.getByTestId("repositories-panel-0")).toHaveCSS("padding-top", "10px");
+    for (const n of [1, 2, 3, 4]) {
+      await expect(page.getByTestId(`repositories-panel-${n}`)).toHaveCSS("padding-top", "19px");
+    }
+  });
+
+  test("pane 2 stays inside its column and scrolls its file list", async ({ page }) => {
+    await gotoReady(page, "/repositories");
+    await openRepoTree(page, "Data-Structures-And-Algorithms");
+    const list = page.getByTestId("repositories-files-list");
+    await expect(list).toHaveCSS("overflow-y", "auto");
+    // The deep tree must genuinely overflow, or containment would hold even without the pane's min-height:0.
+    expect(await list.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+    const pane = await page.getByTestId("repositories-panel-2").boundingBox();
+    const column = await page.getByTestId("repositories-panel-2").locator("xpath=..").boundingBox();
+    expect(pane).toBeTruthy();
+    expect(column).toBeTruthy();
+    if (pane && column) {
+      expect(pane.y + pane.height).toBeLessThanOrEqual(column.y + column.height);
+    }
+  });
+
+  test("no badge is focused while a split shell pane holds focus", async ({ page }) => {
+    await gotoReady(page, "/repositories");
+    await ctrlB(page);
+    await page.keyboard.press("|");
+    await expect(page.getByTestId("pane-leaf")).toHaveCount(2);
+    await expect(
+      page.getByTestId("pane-leaf").and(page.locator('[data-pane-focused="true"]')),
+    ).toHaveCount(1);
+    await expect(page.getByTestId("panel-badge").and(page.locator("[data-focused]"))).toHaveCount(
+      0,
     );
   });
 });

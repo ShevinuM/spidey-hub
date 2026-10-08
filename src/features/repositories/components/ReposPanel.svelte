@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { RepositoriesData } from "../../../common/lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
-  import RepositoriesPanel from "./RepositoriesPanel.svelte";
+  import PaneFrame from "../../../common/components/PaneFrame.svelte";
 
   interface Props {
     repositories: RepositoriesData;
@@ -12,19 +12,19 @@
   const { repositories, state, isFocused }: Props = $props();
 </script>
 
-<RepositoriesPanel
-  testid="repositories-panel-1"
-  copySource={isFocused && state.focusedPanel === 1}
-  flex="1.1"
-  minHeight
-  padding="18px 10px 8px"
-  columnBody
-  border={state.panelBorder(1)}
+<PaneFrame
+  data-testid="repositories-panel-1"
+  data-copy-source={isFocused && state.focusedPanel === 1 ? "" : undefined}
+  focused={isFocused && state.focusedPanel === 1}
   n={1}
   label={repositories.panels.repos.label}
+  layout="flex:1.1;min-height:0"
+  padding="19px 10px 8px"
+  body="display:flex;flex-direction:column"
 >
   {#snippet children()}
     <div
+      data-testid="repositories-repos-list"
       style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px"
     >
       {#each state.flatRepos as repo, i (repo.key)}
@@ -86,7 +86,7 @@
       {/each}
     </div>
   {/snippet}
-</RepositoriesPanel>
+</PaneFrame>
 
 <style>
   .repositories-row {

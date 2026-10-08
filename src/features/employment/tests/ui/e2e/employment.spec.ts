@@ -225,6 +225,96 @@ test.describe("Employment: badges", () => {
   });
 });
 
+test.describe("Employment: pane frames and focus", () => {
+  test("the Records badge is focused with a bright index; the Preview badge rests", async ({
+    page,
+  }) => {
+    await openEmployment(page);
+    const badges = page.getByTestId("panel-badge");
+    const records = badges.nth(0);
+    const preview = badges.nth(1);
+    await expect(records).toHaveAttribute("data-focused", "");
+    await expect(records.getByTestId("panel-badge-index")).toHaveText("1");
+    await expect(records.getByTestId("panel-badge-index")).toHaveCSS(
+      "background-color",
+      "rgb(255, 107, 111)",
+    );
+    await expect(preview).not.toHaveAttribute("data-focused");
+    await expect(preview.getByTestId("panel-badge-index")).toHaveText("2");
+    await expect(preview.getByTestId("panel-badge-index")).toHaveCSS(
+      "background-color",
+      "rgb(224, 69, 60)",
+    );
+  });
+
+  const FRAMES = [
+    {
+      testid: "employment-records-panel",
+      badge: 0,
+      border: "1px solid rgba(224, 69, 60, 0.3)",
+      padding: "16px 12px 18px",
+    },
+    {
+      testid: "employment-preview-panel",
+      badge: 1,
+      border: "1px solid rgba(224, 69, 60, 0.4)",
+      padding: "14px 12px 9px",
+    },
+  ];
+
+  for (const frame of FRAMES) {
+    test(`${frame.testid} draws a plain hairline box`, async ({ page }) => {
+      await openEmployment(page);
+      const box = page.getByTestId(frame.testid);
+      await expect(box).toHaveCSS("border", frame.border);
+      await expect(box).toHaveCSS("border-radius", "3px");
+      await expect(box).toHaveCSS("padding", frame.padding);
+      await expect(box).toHaveCSS("box-shadow", "none");
+    });
+
+    test(`${frame.testid} keeps its badge outside the clipped box`, async ({ page }) => {
+      await openEmployment(page);
+      const box = page.getByTestId(frame.testid);
+      const badge = page.getByTestId("panel-badge").nth(frame.badge);
+      await expect(box.getByTestId("panel-badge")).toHaveCount(0);
+      await expect(badge).toHaveCount(1);
+      const unclipped = await box.evaluate((boxEl) => {
+        const wrapper = boxEl.parentElement;
+        const frameEl = wrapper?.querySelector(
+          ':scope > [data-testid="panel-badge"] [data-testid="panel-badge-frame"]',
+        );
+        if (!wrapper || !frameEl) return false;
+        for (let node: Element | null = frameEl; node; node = node.parentElement) {
+          if (getComputedStyle(node).overflow !== "visible") return false;
+          if (node === wrapper) return true;
+        }
+        return false;
+      });
+      expect(unclipped).toBe(true);
+    });
+  }
+
+  test("the Records badge rests while a split shell pane holds focus", async ({ page }) => {
+    await openEmployment(page);
+    const records = page.getByTestId("panel-badge").nth(0);
+    await expect(records).toHaveAttribute("data-focused", "");
+    await page.keyboard.down("Control");
+    await page.keyboard.press("b");
+    await page.keyboard.up("Control");
+    await page.keyboard.press("|");
+    await expect(page.getByTestId("pane-leaf")).toHaveCount(2);
+    await expect(records).not.toHaveAttribute("data-focused");
+  });
+
+  test("the records list is a direct child of the Records box", async ({ page }) => {
+    await openEmployment(page);
+    await expect(page.getByTestId("employment-records-list").locator("xpath=..")).toHaveAttribute(
+      "data-testid",
+      "employment-records-panel",
+    );
+  });
+});
+
 test.describe("Employment: selection — j/k/arrows sync preview and timeline live", () => {
   test("j/ArrowDown moves the cursor, wraps at the end; k/ArrowUp moves back, wraps at the start", async ({
     page,

@@ -2,7 +2,7 @@
   import type { RepositoriesData } from "../../../common/lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
   import { iconSvgForPath } from "../../../common/lib/file-icons";
-  import RepositoriesPanel from "./RepositoriesPanel.svelte";
+  import PaneFrame from "../../../common/components/PaneFrame.svelte";
 
   interface Props {
     repositories: RepositoriesData;
@@ -13,16 +13,15 @@
   const { repositories, state, isFocused }: Props = $props();
 </script>
 
-<RepositoriesPanel
-  testid="repositories-panel-2"
-  copySource={isFocused && state.focusedPanel === 2}
-  flex="1.5"
-  minHeight
-  padding="18px 10px 8px"
-  columnBody
-  border={state.panelBorder(2)}
+<PaneFrame
+  data-testid="repositories-panel-2"
+  data-copy-source={isFocused && state.focusedPanel === 2 ? "" : undefined}
+  focused={isFocused && state.focusedPanel === 2}
   n={2}
   label={repositories.panels.files.label}
+  layout="flex:1.5;min-height:0"
+  padding="19px 10px 8px"
+  body="display:flex;flex-direction:column"
 >
   {#snippet children()}
     {#if state.repoTree}
@@ -34,6 +33,7 @@
       </div>
     {/if}
     <div
+      data-testid="repositories-files-list"
       style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px"
     >
       {#if !state.repoTree}
@@ -104,7 +104,7 @@
       {/if}
     </div>
   {/snippet}
-</RepositoriesPanel>
+</PaneFrame>
 
 <style>
   .repositories-row {
