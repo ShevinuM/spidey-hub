@@ -43,9 +43,13 @@ export default {
       name: "no-circular",
       severity: "error",
       comment:
-        "A dependency cycle is a design defect the per-file text scanner cannot see, because no single file is wrong.",
-      from: {},
-      to: { circular: true },
+        "A dependency cycle is a design defect the per-file text scanner cannot see, because no single file is wrong. " +
+        "Self-imports are exempted: a self-import is Svelte 5's sanctioned replacement for the deprecated " +
+        "`<svelte:self>`, and a component that renders itself is a legitimate recursive pattern, not a design defect. " +
+        "The exemption covers self-imports only — broadening it (for example exempting all `.svelte` files) would " +
+        "blind the rule to genuine A -> B -> A cycles between components, which is exactly what it exists to catch.",
+      from: { path: "^(.+)$" },
+      to: { circular: true, pathNot: "^$1$" },
     },
     {
       // `reachable: true` is the "A reaches B directly OR through anything"

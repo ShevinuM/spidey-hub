@@ -1,0 +1,32 @@
+{
+  "$schema": "https://unpkg.com/knip@6.35.1/schema-jsonc.json",
+  "ignore": [
+    "reference/**", // vendored reference material: fonts, a support script and minified React. Not built, not imported, not ours to change.
+    ".remember/**", // agent scratch tree, not source and not built.
+    "scripts/capture-screenshots.mjs", // developer script run by hand; it writes docs/screenshots/*.png and no package.json script invokes it. Deleting it is out of scope for this phase.
+  ],
+  "ignoreDependencies": [
+    "@shikijs/langs", // shiki loads grammars by the dynamic specifier `./${name}`, which no static analyser can follow. Removing it breaks syntax highlighting at build time; a live Vite warning during `pnpm test:unit` shows the dynamic resolve.
+  ],
+  // knip 6.35.1 has no per-export ignore, so each entry below suppresses one issue type for
+  // one file. That is coarser than the finding: a NEW unused export in one of these files
+  // would also go unreported. Each comment therefore names the symbols accepted today, and
+  // the entry is revisited when any of them is deleted.
+  "ignoreIssues": {
+    "src/common/lib/commits.ts": ["exports"], // commitsDir: a descriptive label used for diagnostics, no importer. Deleting it is issue #1's decision, not this phase's. Phase 03 moves this module, and this entry's path moves with it.
+    "src/common/lib/clock.ts": ["exports"], // CLOCK_EPOCH_STORAGE_KEY, parseClockEpoch: no importer today. Removal is a source change and this phase changes source only in PR 4.7.
+    "src/common/lib/highlight.ts": ["exports"], // LANG_FOR_EXT: no importer today. Recorded for a later phase, not deleted here.
+    "src/common/lib/paste-buffer.ts": ["exports"], // clearPasteBuffer: no importer today. Recorded for a later phase, not deleted here.
+    "src/features/notifications/lib/notification-store.ts": ["exports"], // NOTIFICATIONS_INJECT_PER_VISIT, serializeState: no importer today. Recorded for a later phase, not deleted here.
+    "src/features/repositories/lib/github-trees.ts": ["exports"], // getCachedContent, setCachedContent: no importer today. Recorded for a later phase, not deleted here.
+    "src/features/shell-fs/lib/shell-index.ts": ["exports", "types"], // loadRepoFiles, RepoFile: no importer today. Recorded for a later phase, not deleted here.
+    "src/common/tests/ui/support/pipeline.mjs": ["exports"], // NET_READOUT_SELECTOR, METER_BARS_SELECTOR, SIGNAL_ROW_SELECTOR: shared test vocabulary that no spec imports today. A README mentions them; a mention is not an import.
+    "src/common/tests/ui/support/recipes.ts": ["types"], // RecipeAction, RecipeCheck: shared test vocabulary that no spec imports today. Same terms as pipeline.mjs above.
+    "src/common/components/editor/editorState.svelte.ts": ["types"], // LineDecoration: no importer today. Recorded for a later phase.
+    "src/common/engines/tmux/tmux.ts": ["types"], // PaneLeaf, SplitNode: no importer today. Recorded for a later phase.
+    "src/common/lib/repo-tree.ts": ["types"], // TreeEntryType: no importer today. Recorded for a later phase.
+    "src/common/lib/shell.ts": ["types"], // SessionSummary: no importer today. Recorded for a later phase.
+    "src/features/help/lib/help-search.ts": ["types"], // HelpRowSource, MatchTier: no importer today. Recorded for a later phase.
+    "src/common/lib/data.ts": ["types"], // 27 content-schema interfaces. Each is used inside this file to shape SiteData; every consumer imports the getX() accessor and never the type name. Exporting them is deliberate schema documentation, so no external importer is expected.
+  },
+}

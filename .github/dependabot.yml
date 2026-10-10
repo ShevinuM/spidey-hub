@@ -1,0 +1,23 @@
+# Takes effect only once this file is on the default branch — Dependabot reads its
+# config from `main`, not from the pull request that adds it.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    ignore:
+      # docs/rules/general/toolchain.md R002 pins @playwright/test exactly because the
+      # 42 visual goldens are captured against that exact Chromium build. An auto-bump PR
+      # would fail all 42 at once. Bump Playwright only by hand, with a re-baseline in the
+      # same PR — never let Dependabot open this one.
+      - dependency-name: "@playwright/test"
+
+  # This repo pins every third-party GitHub Action to a full commit SHA (R28 of
+  # phase 01's PLAN[A].md), so a pinned action never updates on its own. Dependabot's
+  # github-actions ecosystem is what keeps those SHAs current — without it, pinning for
+  # security freezes every action at today's commit forever.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
