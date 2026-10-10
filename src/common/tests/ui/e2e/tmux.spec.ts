@@ -1,9 +1,19 @@
+import type { Locator } from "@playwright/test";
 import { expect, test, type Page } from "../support/fixtures";
 // This spec's `context` fixture (from ../support/fixtures.ts) pre-seeds the boot-seen flag so BootSequence's ~4.6s sequence never runs for these tests.
 
 async function gotoReady(page: Page, path: string) {
   await page.goto(path);
   await page.locator('[data-terminal-ready="true"]').waitFor({ state: "attached" });
+}
+
+/** Asserts a repo row is drawn selected: `data-selected`, the solid list fill, no gradient, and a transparent 2px left gutter. */
+async function expectSelectedRepoRow(row: Locator) {
+  await expect(row).toHaveAttribute("data-selected", "");
+  await expect(row).toHaveCSS("background-color", "rgba(224, 69, 60, 0.22)");
+  await expect(row).toHaveCSS("background-image", "none");
+  await expect(row).toHaveCSS("border-left-color", "rgba(0, 0, 0, 0)");
+  await expect(row).toHaveCSS("border-left-width", "2px");
 }
 
 const STATUS_BAR = '[data-testid="status-bar-windows"]';
@@ -241,27 +251,20 @@ test.describe("tmux prefix (Ctrl-b)", () => {
   }) => {
     await gotoReady(page, "/repositories");
     await page.keyboard.press("1"); // focus panel [1], Repositories
-    const firstRow = page.locator('[data-testid="repositories-repo-row"]').first();
-    // Selection is a red 2px left accent bar + gradient, not a flat fill —
-    // assert the computed border color (raw style text is either the
-    // SSR-literal or browser-normalized spelling depending on whether this
-    // attribute has been client-mutated since load).
-    await expect(firstRow).toHaveCSS("border-left-color", "rgb(224, 69, 60)");
+    const firstRow = page.getByTestId("repositories-repo-row").first();
+    await expectSelectedRepoRow(firstRow);
 
     await ctrlB(page);
     await page.keyboard.press("ArrowDown");
     // Still on the first repo — the prefixed ArrowDown was consumed by the
     // tmux prefix system (directional pane nav, a no-op with one pane),
     // never reached Repositories.svelte's own arrow-key handler.
-    await expect(firstRow).toHaveCSS("border-left-color", "rgb(224, 69, 60)");
+    await expectSelectedRepoRow(firstRow);
     await expect(page).toHaveURL(/\/repositories$/);
 
     // An un-prefixed ArrowDown right after still works normally.
     await page.keyboard.press("ArrowDown");
-    await expect(page.locator('[data-testid="repositories-repo-row"]').nth(1)).toHaveCSS(
-      "border-left-color",
-      "rgb(224, 69, 60)",
-    );
+    await expectSelectedRepoRow(page.getByTestId("repositories-repo-row").nth(1));
   });
 
   test("a held-modifier chord immediately after Ctrl-b still falls through untouched", async ({
@@ -370,16 +373,14 @@ test.describe("Ctrl-b , rename-window", () => {
   }) => {
     await gotoReady(page, "/repositories");
     await page.keyboard.press("1");
-    const firstRow = page.locator('[data-testid="repositories-repo-row"]').first();
-    // See the sibling test above — selection is a border-left color now,
-    // not a flat background fill.
-    await expect(firstRow).toHaveCSS("border-left-color", "rgb(224, 69, 60)");
+    const firstRow = page.getByTestId("repositories-repo-row").first();
+    await expectSelectedRepoRow(firstRow);
 
     await ctrlB(page);
     await page.keyboard.press(",");
     await page.keyboard.press("j");
     await expect(page.locator('[data-testid="status-prompt"]')).toContainText("reposj");
-    await expect(firstRow).toHaveCSS("border-left-color", "rgb(224, 69, 60)");
+    await expectSelectedRepoRow(firstRow);
 
     await page.keyboard.press("Escape");
   });

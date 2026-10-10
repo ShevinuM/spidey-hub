@@ -327,12 +327,7 @@ export interface PersonnelData {
   };
   fileOwner: string;
   filePerms: string;
-  badge: {
-    recordsLeft: string;
-    recordsRight: string;
-    previewLeft: string;
-    previewRight: string;
-  };
+  badge: { records: string; preview: string };
   previewLineCountTemplate: string;
   editor: EditorLabels;
 }

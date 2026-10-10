@@ -203,16 +203,16 @@ test.describe("Employment: index block, derived from real content", () => {
 });
 
 test.describe("Employment: badges", () => {
-  test("both panels show a top-straddling split-text PanelBadge, not the old bottom label", async ({
+  test("both panels show a top-straddling pixel-frame badge with index and uppercase label", async ({
     page,
   }) => {
     await openEmployment(page);
-    const badges = page.locator('[data-testid="panel-badge"]');
+    const badges = page.getByTestId("panel-badge");
     await expect(badges).toHaveCount(2);
-    await expect(badges.nth(0)).toContainText("Employment");
-    await expect(badges.nth(0)).toContainText("Records");
-    await expect(badges.nth(1)).toContainText("File");
-    await expect(badges.nth(1)).toContainText("Preview");
+    await expect(badges.nth(0).getByTestId("panel-badge-index")).toHaveText("1");
+    await expect(badges.nth(0).getByTestId("panel-badge-label")).toHaveText("EMPLOYMENT RECORDS");
+    await expect(badges.nth(1).getByTestId("panel-badge-index")).toHaveText("2");
+    await expect(badges.nth(1).getByTestId("panel-badge-label")).toHaveText("FILE PREVIEW");
     const box = await badges.first().boundingBox();
     const panelBox = await page
       .locator('[data-testid="employment-row"]')
@@ -222,6 +222,105 @@ test.describe("Employment: badges", () => {
     expect(box).toBeTruthy();
     expect(panelBox).toBeTruthy();
     if (box && panelBox) expect(box.y).toBeLessThan(panelBox.y + panelBox.height / 2);
+  });
+});
+
+test.describe("Employment: pane frames and focus", () => {
+  test("the Records badge is focused with a bright index; the Preview badge rests", async ({
+    page,
+  }) => {
+    await openEmployment(page);
+    const badges = page.getByTestId("panel-badge");
+    const records = badges.nth(0);
+    const preview = badges.nth(1);
+    await expect(records).toHaveAttribute("data-focused", "");
+    await expect(records.getByTestId("panel-badge-index")).toHaveText("1");
+    await expect(records.getByTestId("panel-badge-index")).toHaveCSS(
+      "background-color",
+      "rgb(255, 107, 111)",
+    );
+    await expect(preview).not.toHaveAttribute("data-focused");
+    await expect(preview.getByTestId("panel-badge-index")).toHaveText("2");
+    await expect(preview.getByTestId("panel-badge-index")).toHaveCSS(
+      "background-color",
+      "rgb(224, 69, 60)",
+    );
+  });
+
+  const FRAMES = [
+    {
+      testid: "employment-records-panel",
+      badge: 0,
+      border: "1px solid rgba(224, 69, 60, 0.3)",
+      padding: "16px 12px 18px",
+    },
+    {
+      testid: "employment-preview-panel",
+      badge: 1,
+      border: "1px solid rgba(224, 69, 60, 0.4)",
+      padding: "14px 12px 9px",
+    },
+  ];
+
+  for (const frame of FRAMES) {
+    test(`${frame.testid} draws a plain hairline box`, async ({ page }) => {
+      await openEmployment(page);
+      const box = page.getByTestId(frame.testid);
+      await expect(box).toHaveCSS("border", frame.border);
+      await expect(box).toHaveCSS("border-radius", "3px");
+      await expect(box).toHaveCSS("padding", frame.padding);
+      await expect(box).toHaveCSS("box-shadow", "none");
+    });
+
+    test(`${frame.testid} keeps its badge outside the clipped box`, async ({ page }) => {
+      await openEmployment(page);
+      const box = page.getByTestId(frame.testid);
+      const badge = page.getByTestId("panel-badge").nth(frame.badge);
+      await expect(box.getByTestId("panel-badge")).toHaveCount(0);
+      await expect(badge).toHaveCount(1);
+      const unclipped = await box.evaluate((boxEl) => {
+        const wrapper = boxEl.parentElement;
+        const frameEl = wrapper?.querySelector(
+          ':scope > [data-testid="panel-badge"] [data-testid="panel-badge-frame"]',
+        );
+        if (!wrapper || !frameEl) return false;
+        for (let node: Element | null = frameEl; node; node = node.parentElement) {
+          if (getComputedStyle(node).overflow !== "visible") return false;
+          if (node === wrapper) return true;
+        }
+        return false;
+      });
+      expect(unclipped).toBe(true);
+    });
+  }
+
+  test("the Records badge rests while a split shell pane holds focus", async ({ page }) => {
+    await openEmployment(page);
+    const records = page.getByTestId("panel-badge").nth(0);
+    await expect(records).toHaveAttribute("data-focused", "");
+    await page.keyboard.down("Control");
+    await page.keyboard.press("b");
+    await page.keyboard.up("Control");
+    await page.keyboard.press("|");
+    await expect(page.getByTestId("pane-leaf")).toHaveCount(2);
+    await expect(records).not.toHaveAttribute("data-focused");
+  });
+
+  test("the records list is a direct child of the Records box", async ({ page }) => {
+    await openEmployment(page);
+    await expect(page.getByTestId("employment-records-list").locator("xpath=..")).toHaveAttribute(
+      "data-testid",
+      "employment-records-panel",
+    );
+  });
+});
+
+test.describe("Employment: lists have no fade mask", () => {
+  // Regression guard: neither employment list is masked.
+  test("the records list and the preview compute no mask", async ({ page }) => {
+    await openEmployment(page);
+    await expect(page.getByTestId("employment-records-list")).toHaveCSS("mask-image", "none");
+    await expect(page.getByTestId("employment-preview")).toHaveCSS("mask-image", "none");
   });
 });
 
@@ -245,6 +344,35 @@ test.describe("Employment: selection — j/k/arrows sync preview and timeline li
 
     await page.keyboard.press("ArrowDown");
     await expect(rows(page).first()).toContainText("›");
+  });
+
+  test("the selected row has a solid fill and a transparent 2px gutter", async ({ page }) => {
+    await openEmployment(page);
+    const first = rows(page).first();
+    await expect(first).toHaveAttribute("data-selected", "");
+    await expect(first).toHaveCSS("background-color", "rgba(224, 69, 60, 0.26)");
+    await expect(first).toHaveCSS("background-image", "none");
+    await expect(first).toHaveCSS("border-left-color", "rgba(0, 0, 0, 0)");
+    await expect(first).toHaveCSS("border-left-width", "2px");
+
+    await page.keyboard.press("j");
+    await expect(rows(page).nth(1)).toHaveAttribute("data-selected", "");
+    await expect(rows(page).nth(1)).toHaveCSS("background-color", "rgba(224, 69, 60, 0.26)");
+    await expect(first).not.toHaveAttribute("data-selected");
+    await expect(first).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  });
+
+  // Regression guard: every row keeps a transparent 2px gutter, so selecting a row must never move its text.
+  test("selecting a row never shifts its name", async ({ page }) => {
+    await openEmployment(page);
+    const row = rows(page).nth(1);
+    const name = row.getByText((await row.getAttribute("data-row-name")) ?? "", { exact: true });
+    await expect(row).not.toHaveAttribute("data-selected");
+    const before = await name.evaluate((el) => el.getBoundingClientRect().left);
+
+    await page.keyboard.press("j");
+    await expect(row).toHaveAttribute("data-selected", "");
+    expect(await name.evaluate((el) => el.getBoundingClientRect().left)).toBe(before);
   });
 
   test("selecting a row updates the preview panel's path/size live", async ({ page }) => {

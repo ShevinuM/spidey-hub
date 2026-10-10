@@ -645,12 +645,4 @@ export class RepositoriesState {
   // Rekeyed to the panel [1] selection; skipped for the virtual all-projects entry since it isn't a real GitHub repo and would just fail, wasting one of the 60 unauthenticated requests/hour.
 
   liveCommits = $state<Record<string, Commit[]>>({});
-
-  // ---------------------------------------------------------------------
-  // Focus styling helpers
-  // ---------------------------------------------------------------------
-
-  panelBorder(n: 0 | 1 | 2 | 3 | 4): string {
-    return this.focusedPanel === n ? "#e0453c" : "rgba(224,69,60,.35)";
-  }
 }

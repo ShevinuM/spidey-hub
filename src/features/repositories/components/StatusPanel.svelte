@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { RepositoriesData } from "../../../common/lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
-  import RepositoriesPanel from "./RepositoriesPanel.svelte";
+  import PaneFrame from "../../../common/components/PaneFrame.svelte";
 
   interface Props {
     repositories: RepositoriesData;
@@ -22,14 +22,14 @@
   ];
 </script>
 
-<RepositoriesPanel
-  testid="repositories-panel-0"
-  copySource={isFocused && state.focusedPanel === 0}
-  flex="none"
-  padding="10px 12px 9px"
-  border={state.panelBorder(0)}
+<PaneFrame
+  data-testid="repositories-panel-0"
+  data-copy-source={isFocused && state.focusedPanel === 0 ? "" : undefined}
+  focused={isFocused && state.focusedPanel === 0}
   n={0}
   label={repositories.panels.status.label}
+  layout="flex:none"
+  padding="10px 12px 9px"
 >
   {#snippet children()}
     <div style="display:flex;align-items:center;gap:22px">
@@ -65,4 +65,4 @@
       </div>
     </div>
   {/snippet}
-</RepositoriesPanel>
+</PaneFrame>

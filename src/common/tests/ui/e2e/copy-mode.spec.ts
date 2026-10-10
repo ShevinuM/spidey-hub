@@ -34,12 +34,19 @@ async function openLongPane(page: Page) {
   await page
     .locator('[data-testid="repositories-tree-row"][data-entry-name="word_search_ii.java"]')
     .click();
-  await page.keyboard.press("3"); // focus panel [3] Content
+  await page.keyboard.press("3"); // focus pane 3 (CONTENT)
 }
 
 const overlay = (page: Page) => page.locator('[data-testid="copy-mode-overlay"]');
 const linesEl = (page: Page) => page.locator('[data-testid="copy-mode-lines"]');
 const cursor = (page: Page) => page.locator('[data-testid="copy-mode-cursor"]').first();
+
+/** Moves the copy-mode cursor past a pane badge's index and label lines onto
+ * the pane's first content line, which is long enough for h/l/v motions. */
+async function stepPastBadge(page: Page) {
+  await page.keyboard.press("j");
+  await page.keyboard.press("j");
+}
 
 async function cursorLine(page: Page): Promise<string | null> {
   return cursor(page).evaluate(
@@ -55,7 +62,12 @@ test.describe("Copy mode (Ctrl-b [)", () => {
   // Copy-mode must be enterable from at least 3 different views — every
   // `data-copy-source` pane gets its own entry point here, each asserted
   // against its own live-read source text.
-  const entryPoints: { name: string; open: (page: Page) => Promise<void> }[] = [
+  const entryPoints: {
+    name: string;
+    open: (page: Page) => Promise<void>;
+    /** A line the source must contain, used when its first line is too generic to identify the pane. */
+    expectedLine?: string;
+  }[] = [
     {
       name: "dashboard menu",
       async open(page) {
@@ -78,8 +90,9 @@ test.describe("Copy mode (Ctrl-b [)", () => {
       name: "Repositories focused panel",
       async open(page) {
         await gotoReady(page, "/repositories");
-        await page.keyboard.press("1"); // focus panel [1] Repositories
+        await page.keyboard.press("1"); // focus pane 1 (REPOSITORIES)
       },
+      expectedLine: "REPOSITORIES",
     },
     {
       name: "tracker HUD",
@@ -94,11 +107,18 @@ test.describe("Copy mode (Ctrl-b [)", () => {
       await entry.open(page);
       const sourceText = (await page.locator("[data-copy-source]").innerText()).trim();
       expect(sourceText.length).toBeGreaterThan(0);
-      const firstLine = sourceText.split("\n")[0];
+      const lines = sourceText.split("\n");
+      const { expectedLine } = entry;
+      if (expectedLine) {
+        expect(
+          lines.some((l) => l.includes(expectedLine)),
+          `source lacks "${expectedLine}"`,
+        ).toBe(true);
+      }
 
       await openCopyMode(page);
       await expect(overlay(page)).toBeVisible();
-      await expect(linesEl(page)).toContainText(firstLine);
+      await expect(linesEl(page)).toContainText(expectedLine ?? lines[0]);
     });
   }
 
@@ -195,10 +215,11 @@ test.describe("Copy mode (Ctrl-b [)", () => {
   test("h/l move the cursor within a line", async ({ page }) => {
     await openLongPane(page);
     await openCopyMode(page);
+    await stepPastBadge(page);
     await page.keyboard.press("l");
     await page.keyboard.press("l");
-    // Still on line 1 — h/l only move the column, never the line.
-    expect(await cursorLine(page)).toBe("1");
+    // Still on line 3 — h/l only move the column, never the line.
+    expect(await cursorLine(page)).toBe("3");
   });
 
   test("Ctrl-d/Ctrl-u page the cursor down/up", async ({ page }) => {
@@ -223,6 +244,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
   test("v starts a charwise selection that highlights as motions extend it", async ({ page }) => {
     await openLongPane(page);
     await openCopyMode(page);
+    await stepPastBadge(page);
     await page.keyboard.press("v");
     await page.keyboard.press("l");
     await page.keyboard.press("l");
@@ -236,6 +258,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await openLongPane(page);
     await openCopyMode(page);
+    await stepPastBadge(page);
     await page.keyboard.press("v");
     await page.keyboard.press("l");
     await page.keyboard.press("l");
@@ -286,6 +309,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await openLongPane(page);
     await openCopyMode(page);
+    await stepPastBadge(page);
     await page.keyboard.press("v");
     await page.keyboard.press("l");
     await page.keyboard.press("l");
@@ -317,6 +341,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await gotoReady(page, "/repositories");
     await openCopyMode(page);
+    await stepPastBadge(page);
     await page.keyboard.press("v");
     await page.keyboard.press("l");
     await page.keyboard.press("l");

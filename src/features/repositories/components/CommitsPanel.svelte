@@ -1,7 +1,8 @@
 <script lang="ts">
   import type { RepositoriesData } from "../../../common/lib/data";
+  import { FADE_BOTTOM_STYLE } from "../../../common/lib/fade-mask";
   import type { RepositoriesState } from "./repositoriesState.svelte";
-  import RepositoriesPanel from "./RepositoriesPanel.svelte";
+  import PaneFrame from "../../../common/components/PaneFrame.svelte";
 
   interface Props {
     repositories: RepositoriesData;
@@ -12,16 +13,15 @@
   const { repositories, state, isFocused }: Props = $props();
 </script>
 
-<RepositoriesPanel
-  testid="repositories-panel-4"
-  copySource={isFocused && state.focusedPanel === 4}
-  flex="0.95"
-  minHeight
-  padding="18px 14px 9px"
-  columnBody
-  border={state.panelBorder(4)}
+<PaneFrame
+  data-testid="repositories-panel-4"
+  data-copy-source={isFocused && state.focusedPanel === 4 ? "" : undefined}
+  focused={isFocused && state.focusedPanel === 4}
   n={4}
   label={repositories.panels.commits.label}
+  layout="flex:0.95;min-height:0"
+  padding="19px 14px 9px"
+  body="display:flex;flex-direction:column"
 >
   {#snippet children()}
     {#if !state.selectedRepo?.isAllProjects}
@@ -32,7 +32,10 @@
         {state.commitsSubtitle}
       </div>
     {/if}
-    <div style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden">
+    <div
+      data-testid="repositories-commits-list"
+      style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;{FADE_BOTTOM_STYLE}"
+    >
       {#if state.selectedRepo?.isAllProjects}
         <div style="color:rgba(196,216,232,.5)">{repositories.panels.commits.localOnlyText}</div>
         <div style="color:rgba(196,216,232,.35)">{repositories.allProjects.description}</div>
@@ -60,6 +63,7 @@
             </svg>
           {/if}
           {#each state.commits as c, i (c.sha8)}
+            {@const selected = state.focusedPanel === 4 && i === state.clampedCommitIdx}
             <div
               role="button"
               tabindex="0"
@@ -68,13 +72,13 @@
               data-sha8={c.sha8}
               data-sha={c.sha ?? ""}
               data-html-url={c.html_url}
+              data-selected={selected ? "" : undefined}
               onclick={() => void state.activateCommit(i)}
               onkeydown={(e) => {
                 if (e.key === "Enter" || e.key === " ") void state.activateCommit(i);
               }}
-              style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:34px;{state.focusedPanel ===
-                4 && i === state.clampedCommitIdx
-                ? 'background:linear-gradient(90deg,rgba(224,69,60,.26),rgba(224,69,60,.03))'
+              style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:34px;{selected
+                ? 'background:var(--color-selection-commit)'
                 : ''}"
             >
               <span style="color:rgba(217,176,74,.85)">{c.sha8}</span>
@@ -86,7 +90,7 @@
       {/if}
     </div>
   {/snippet}
-</RepositoriesPanel>
+</PaneFrame>
 
 <style>
   .repositories-row {

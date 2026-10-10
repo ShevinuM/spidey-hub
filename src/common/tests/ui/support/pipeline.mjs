@@ -8,7 +8,7 @@
 //
 // Order of operations (see README-PIPELINE.md for the full rationale):
 // install the fake clock before navigating, wait for the dashboard mount
-// marker, replay the recipe's actions, then `clock.runFor(RUN_FOR_MS)` twice
+// marker (and, on the real implementation, the terminal's key-ready flag), replay the recipe's actions, then `clock.runFor(RUN_FOR_MS)` twice
 // — once before the wait, to flush the first render, and once after, to
 // flush whatever the recipe's actions started — before screenshotting.
 import { BOOT_HARD_STOP_MS, CLOCK_TIME, RUN_FOR_MS, TOAST_SEED } from "./recipes.ts";
@@ -76,6 +76,13 @@ export async function captureState(page, url, recipe) {
     .getByText("SHEVINUM.DEV")
     .or(page.locator('[data-testid="dashboard-wordmark"]'));
   await dashboardMountMarker.first().waitFor({ state: "visible", timeout: 15000 });
+
+  // The real implementation's SSR markup paints before its key listeners attach, so it also waits for Terminal.svelte's ready flag; the vendored prototype has no such flag.
+  if ((await page.getByTestId("dashboard-wordmark").count()) > 0) {
+    await page
+      .locator('[data-terminal-ready="true"]')
+      .waitFor({ state: "attached", timeout: 15000 });
+  }
 
   for (const action of recipe.actions) {
     if ("key" in action) {

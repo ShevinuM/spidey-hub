@@ -1,8 +1,9 @@
 <script lang="ts">
   import type { RepositoriesData } from "../../../common/lib/data";
+  import { FADE_BOTTOM_STYLE } from "../../../common/lib/fade-mask";
   import type { RepositoriesState } from "./repositoriesState.svelte";
   import { iconSvgForPath } from "../../../common/lib/file-icons";
-  import RepositoriesPanel from "./RepositoriesPanel.svelte";
+  import PaneFrame from "../../../common/components/PaneFrame.svelte";
 
   interface Props {
     repositories: RepositoriesData;
@@ -13,16 +14,15 @@
   const { repositories, state, isFocused }: Props = $props();
 </script>
 
-<RepositoriesPanel
-  testid="repositories-panel-2"
-  copySource={isFocused && state.focusedPanel === 2}
-  flex="1.5"
-  minHeight
-  padding="18px 10px 8px"
-  columnBody
-  border={state.panelBorder(2)}
+<PaneFrame
+  data-testid="repositories-panel-2"
+  data-copy-source={isFocused && state.focusedPanel === 2 ? "" : undefined}
+  focused={isFocused && state.focusedPanel === 2}
   n={2}
   label={repositories.panels.files.label}
+  layout="flex:1.5;min-height:0"
+  padding="19px 10px 8px"
+  body="display:flex;flex-direction:column"
 >
   {#snippet children()}
     {#if state.repoTree}
@@ -34,7 +34,8 @@
       </div>
     {/if}
     <div
-      style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px"
+      data-testid="repositories-files-list"
+      style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px;{FADE_BOTTOM_STYLE}"
     >
       {#if !state.repoTree}
         <div style="color:rgba(196,216,232,.5)">{repositories.repoBrowser.emptyText}</div>
@@ -44,6 +45,7 @@
         <div style="color:#e0453c">{repositories.repoBrowser.errorText}</div>
       {:else}
         {#each state.currentRows as entry, i (entry.type + ":" + entry.path)}
+          {@const selected = i === state.repoTree?.selectedIdx}
           <div
             role="button"
             tabindex="0"
@@ -53,6 +55,7 @@
             data-entry-name={entry.name}
             data-depth={entry.depth}
             data-expanded={entry.type === "dir" ? String(entry.expanded) : undefined}
+            data-selected={selected ? "" : undefined}
             onclick={() => {
               if (!state.repoTree) return;
               state.repoTree = { ...state.repoTree, selectedIdx: i };
@@ -63,11 +66,8 @@
                 state.activateEntry(entry, { openEditor: true });
             }}
             style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 4px 1px {4 +
-              entry.depth * 14}px;border-radius:2px;border-left:2px solid {i ===
-            state.repoTree.selectedIdx
-              ? '#4a9fe0'
-              : 'transparent'};{i === state.repoTree.selectedIdx
-              ? 'background:linear-gradient(90deg,rgba(74,159,224,.22),rgba(74,159,224,.03));color:#f4ece9'
+              entry.depth * 14}px;border-radius:2px;border-left:2px solid transparent;{selected
+              ? 'background:var(--color-selection-tree);color:#f4ece9'
               : 'color:rgba(196,216,232,.7)'}"
           >
             {#if entry.type === "dir"}
@@ -104,7 +104,7 @@
       {/if}
     </div>
   {/snippet}
-</RepositoriesPanel>
+</PaneFrame>
 
 <style>
   .repositories-row {

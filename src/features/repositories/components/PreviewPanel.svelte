@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { RepositoriesData } from "../../../common/lib/data";
   import type { RepositoriesState } from "./repositoriesState.svelte";
-  import RepositoriesPanel from "./RepositoriesPanel.svelte";
+  import PaneFrame from "../../../common/components/PaneFrame.svelte";
 
   interface Props {
     repositories: RepositoriesData;
@@ -12,16 +12,15 @@
   const { repositories, state, isFocused }: Props = $props();
 </script>
 
-<RepositoriesPanel
-  testid="repositories-panel-3"
-  copySource={isFocused && state.focusedPanel === 3}
-  flex="1.95"
-  minHeight
-  padding="18px 14px 9px"
-  columnBody
-  border={state.panelBorder(3)}
+<PaneFrame
+  data-testid="repositories-panel-3"
+  data-copy-source={isFocused && state.focusedPanel === 3 ? "" : undefined}
+  focused={isFocused && state.focusedPanel === 3}
   n={3}
   label={repositories.panels.changes.label}
+  layout="flex:1.95;min-height:0"
+  padding="19px 14px 9px"
+  body="display:flex;flex-direction:column"
 >
   {#snippet children()}
     <div
@@ -77,4 +76,4 @@
       {/if}
     </div>
   {/snippet}
-</RepositoriesPanel>
+</PaneFrame>
