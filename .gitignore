@@ -15,3 +15,6 @@ Instructions/
 Tasks/
 # vitest --coverage report — regenerated, not source.
 coverage/
+# Gitleaks SARIF report, written into the workspace root by the gate before
+# pnpm format runs. Never committed.
+results.sarif
