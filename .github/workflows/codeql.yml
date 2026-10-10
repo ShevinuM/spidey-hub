@@ -1,0 +1,58 @@
+name: CodeQL
+
+# No `paths:`/`paths-ignore:`/`branches:` filter on the pull_request trigger (R2b):
+# a workflow that does not fire reports nothing, and a required context that never
+# reports blocks merges forever. Every PR here targets main, so a branches filter
+# would be a no-op today and a landmine later.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: codeql-${{ github.head_ref || github.sha }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+  # Required for the `actions` language, which reads workflow run metadata.
+  actions: read
+
+jobs:
+  # Job name is deliberately just "CodeQL": branch protection matches a check run by
+  # this exact string, and GitHub appends each matrix value in parentheses on top of
+  # it, producing two independent check-run names — "CodeQL (javascript-typescript)"
+  # and "CodeQL (actions)". Both are recorded in this PR's description for the
+  # required-checks list on merge day.
+  analyze:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The site's TypeScript/JavaScript surface (Svelte and Astro compile to JS
+          # before CodeQL sees them, so their template/frontmatter logic is invisible
+          # here too — see the .svelte gap note in ci.yml).
+          - language: javascript-typescript
+            build-mode: none
+          # Scans this repo's own workflow files under .github/workflows/ for Actions
+          # vulnerabilities (e.g. script injection via untrusted event input,
+          # dangerous permissions). This is the free capability Codacy's Opengrep
+          # scanning does not have.
+          - language: actions
+            build-mode: none
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@faaca9a8f6edddba5725ffe5adefdab6669a2eca # v3.38.0
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@faaca9a8f6edddba5725ffe5adefdab6669a2eca # v3.38.0
+        with:
+          category: "/language:${{ matrix.language }}"

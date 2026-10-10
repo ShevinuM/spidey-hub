@@ -48,4 +48,4 @@ Never rebaseline to make a refactor's diff pass — a diff on a change advertise
 
 ## CI does not run this suite
 
-`.github/workflows/deploy.yml` skips `pnpm test:visual`, for the reason `../README.md` records. A green CI run is therefore no evidence that the goldens still match — only a local run is.
+Neither `.github/workflows/ci.yml` nor `.github/workflows/deploy.yml` runs `pnpm test:visual`, for the reason `../README.md` records. A green CI run is therefore no evidence that the goldens still match — only a local run is.
