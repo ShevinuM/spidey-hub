@@ -337,6 +337,35 @@ test.describe("Employment: selection — j/k/arrows sync preview and timeline li
     await expect(rows(page).first()).toContainText("›");
   });
 
+  test("the selected row has a solid fill and a transparent 2px gutter", async ({ page }) => {
+    await openEmployment(page);
+    const first = rows(page).first();
+    await expect(first).toHaveAttribute("data-selected", "");
+    await expect(first).toHaveCSS("background-color", "rgba(224, 69, 60, 0.26)");
+    await expect(first).toHaveCSS("background-image", "none");
+    await expect(first).toHaveCSS("border-left-color", "rgba(0, 0, 0, 0)");
+    await expect(first).toHaveCSS("border-left-width", "2px");
+
+    await page.keyboard.press("j");
+    await expect(rows(page).nth(1)).toHaveAttribute("data-selected", "");
+    await expect(rows(page).nth(1)).toHaveCSS("background-color", "rgba(224, 69, 60, 0.26)");
+    await expect(first).not.toHaveAttribute("data-selected");
+    await expect(first).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  });
+
+  // Regression guard: every row keeps a transparent 2px gutter, so selecting a row must never move its text.
+  test("selecting a row never shifts its name", async ({ page }) => {
+    await openEmployment(page);
+    const row = rows(page).nth(1);
+    const name = row.getByText((await row.getAttribute("data-row-name")) ?? "", { exact: true });
+    await expect(row).not.toHaveAttribute("data-selected");
+    const before = await name.evaluate((el) => el.getBoundingClientRect().left);
+
+    await page.keyboard.press("j");
+    await expect(row).toHaveAttribute("data-selected", "");
+    expect(await name.evaluate((el) => el.getBoundingClientRect().left)).toBe(before);
+  });
+
   test("selecting a row updates the preview panel's path/size live", async ({ page }) => {
     await openEmployment(page);
     const path0 = await page.locator('[data-testid="employment-preview-path"]').textContent();

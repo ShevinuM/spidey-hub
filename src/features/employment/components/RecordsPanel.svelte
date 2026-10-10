@@ -83,10 +83,8 @@
         onkeydown={(ev) => {
           if (ev.key === "Enter" || ev.key === " ") state.select(i);
         }}
-        style="display:grid;grid-template-columns:12px 12px minmax(0,1fr) 30px 62px 32px;align-items:center;gap:7px;padding:3px 6px;white-space:nowrap;cursor:pointer;border-left:2px solid {on
-          ? '#e0453c'
-          : 'transparent'};background:{on
-          ? 'linear-gradient(90deg,rgba(224,69,60,.34),rgba(224,69,60,.04))'
+        style="display:grid;grid-template-columns:12px 12px minmax(0,1fr) 30px 62px 32px;align-items:center;gap:7px;padding:3px 6px;white-space:nowrap;cursor:pointer;border-left:2px solid transparent;background:{on
+          ? 'var(--color-selection-record)'
           : 'transparent'};color:{on ? '#f4ece9' : 'rgba(196,216,232,.68)'}"
       >
         <span style="color:{on ? '#ff6b6f' : 'transparent'}">{on ? "›" : ""}</span>

@@ -48,6 +48,9 @@
   --color-status-bar-text: #5fc6b4;
   --color-status-bar-session: #7fd8a8;
   --color-selection: rgba(224, 69, 60, 0.22); /* list highlight */
+  --color-selection-tree: rgba(74, 159, 224, 0.16); /* file tree highlight */
+  --color-selection-commit: rgba(224, 69, 60, 0.2); /* commit list highlight */
+  --color-selection-record: rgba(224, 69, 60, 0.26); /* employment records highlight */
   --color-pane-hairline: rgba(224, 69, 60, 0.3); /* pane borders */
 
   /* Spacing scale used across panes/panels */

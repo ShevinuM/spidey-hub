@@ -62,6 +62,7 @@
             </svg>
           {/if}
           {#each state.commits as c, i (c.sha8)}
+            {@const selected = state.focusedPanel === 4 && i === state.clampedCommitIdx}
             <div
               role="button"
               tabindex="0"
@@ -70,13 +71,13 @@
               data-sha8={c.sha8}
               data-sha={c.sha ?? ""}
               data-html-url={c.html_url}
+              data-selected={selected ? "" : undefined}
               onclick={() => void state.activateCommit(i)}
               onkeydown={(e) => {
                 if (e.key === "Enter" || e.key === " ") void state.activateCommit(i);
               }}
-              style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:34px;{state.focusedPanel ===
-                4 && i === state.clampedCommitIdx
-                ? 'background:linear-gradient(90deg,rgba(224,69,60,.26),rgba(224,69,60,.03))'
+              style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:34px;{selected
+                ? 'background:var(--color-selection-commit)'
                 : ''}"
             >
               <span style="color:rgba(217,176,74,.85)">{c.sha8}</span>

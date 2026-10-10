@@ -28,6 +28,7 @@
       style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px"
     >
       {#each state.flatRepos as repo, i (repo.key)}
+        {@const selected = i === state.selectedRepoIdx}
         <div
           role="button"
           tabindex="0"
@@ -35,6 +36,7 @@
           data-testid="repositories-repo-row"
           data-repo-name={repo.key}
           data-all-projects={repo.isAllProjects ? "true" : "false"}
+          data-selected={selected ? "" : undefined}
           onclick={() => {
             state.focusedPanel = 1;
             state.activateRepo(i);
@@ -42,17 +44,14 @@
           onkeydown={(e) => {
             if (e.key === "Enter" || e.key === " ") state.activateRepo(i);
           }}
-          style="cursor:pointer;display:flex;align-items:center;gap:6px;border-left:2px solid {i ===
-          state.selectedRepoIdx
-            ? '#e0453c'
-            : 'transparent'};{i === state.selectedRepoIdx
-            ? 'background:linear-gradient(90deg,rgba(224,69,60,.30),rgba(224,69,60,.04));color:#f4ece9'
+          style="cursor:pointer;display:flex;align-items:center;gap:6px;border-left:2px solid transparent;{selected
+            ? 'background:var(--color-selection);color:#f4ece9'
             : 'color:rgba(196,216,232,.75)'}"
         >
           <span
             style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
           >
-            <span style="color:#5fc6b4">{repo.mark}</span>
+            <span data-testid="repositories-repo-mark" style="color:#5fc6b4">{repo.mark}</span>
             {repo.key}
             <span style="color:rgba(217,176,74,.75)">{repo.branch}</span>
           </span>

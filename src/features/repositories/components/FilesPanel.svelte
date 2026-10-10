@@ -44,6 +44,7 @@
         <div style="color:#e0453c">{repositories.repoBrowser.errorText}</div>
       {:else}
         {#each state.currentRows as entry, i (entry.type + ":" + entry.path)}
+          {@const selected = i === state.repoTree?.selectedIdx}
           <div
             role="button"
             tabindex="0"
@@ -53,6 +54,7 @@
             data-entry-name={entry.name}
             data-depth={entry.depth}
             data-expanded={entry.type === "dir" ? String(entry.expanded) : undefined}
+            data-selected={selected ? "" : undefined}
             onclick={() => {
               if (!state.repoTree) return;
               state.repoTree = { ...state.repoTree, selectedIdx: i };
@@ -63,11 +65,8 @@
                 state.activateEntry(entry, { openEditor: true });
             }}
             style="cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 4px 1px {4 +
-              entry.depth * 14}px;border-radius:2px;border-left:2px solid {i ===
-            state.repoTree.selectedIdx
-              ? '#4a9fe0'
-              : 'transparent'};{i === state.repoTree.selectedIdx
-              ? 'background:linear-gradient(90deg,rgba(74,159,224,.22),rgba(74,159,224,.03));color:#f4ece9'
+              entry.depth * 14}px;border-radius:2px;border-left:2px solid transparent;{selected
+              ? 'background:var(--color-selection-tree);color:#f4ece9'
               : 'color:rgba(196,216,232,.7)'}"
           >
             {#if entry.type === "dir"}

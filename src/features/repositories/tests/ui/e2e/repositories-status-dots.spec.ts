@@ -77,22 +77,12 @@ test.describe("Repositories: selection highlight matches actual selection on loa
   }) => {
     await gotoReady(page, "/repositories");
 
-    const rows = page.locator('[data-testid="repositories-repo-row"]');
-    const rowCount = await rows.count();
-    const highlighted: string[] = [];
-    for (let i = 0; i < rowCount; i++) {
-      const row = rows.nth(i);
-      const style = await row.getAttribute("style");
-      // Selection is a red 2px left accent bar + gradient, not a flat
-      // fill — this row's style attribute is still the raw SSR
-      // literal here (no keyboard/click interaction precedes this check),
-      // so a raw-text substring check on the border-left declaration is
-      // correct, not merely tolerated.
-      if (style && /border-left:2px solid #e0453c/.test(style)) {
-        highlighted.push((await row.getAttribute("data-repo-name")) ?? "");
-      }
-    }
-    expect(highlighted).toEqual(["all-projects"]);
+    // No keyboard or click interaction precedes this check, so `data-selected` reflects the initial selection.
+    const highlighted = page
+      .getByTestId("repositories-repo-row")
+      .and(page.locator("[data-selected]"));
+    await expect(highlighted).toHaveCount(1);
+    await expect(highlighted).toHaveAttribute("data-repo-name", "all-projects");
   });
 });
 
