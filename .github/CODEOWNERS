@@ -1,0 +1,4 @@
+# Solo repo: one catch-all rule routes review requests to the owner. Code-owner
+# review is deliberately NOT required by branch protection (docs/ci/branch-protection.md) —
+# GitHub cannot let an owner approve their own PR, so this file is routing, not gating.
+* @ShevinuM
