@@ -397,9 +397,9 @@ test.describe("reboot factory-resets the tmux client AND every pane's shell stat
     await page.clock.runFor(HARD_STOP_MS + OUT_MS + 100);
     await expect(page.locator('[data-testid="boot-sequence"]')).toHaveCount(0);
 
-    // Factory state: 6 windows, back to their canonical names, dashboard
+    // Factory state: 5 windows, back to their canonical names, dashboard
     // active — same shape createFactoryClient() seeds on first page load.
-    await expect(page.locator('[data-testid="status-bar-window"]')).toHaveCount(6);
+    await expect(page.locator('[data-testid="status-bar-window"]')).toHaveCount(5);
     await expect(statusWindow(page, "dashboard")).toHaveText("0:dashboard*");
     await expect(page.locator('[data-testid="dashboard-wordmark"]')).toBeVisible();
 

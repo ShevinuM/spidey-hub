@@ -115,12 +115,6 @@ interface CmdlineRef {
   handleKey: (e: KeyboardEvent) => boolean;
   close: () => void;
 }
-interface HelpSearchRef {
-  isOpen: () => boolean;
-  openPalette: () => void;
-  close: () => void;
-  handleKey: (e: KeyboardEvent) => boolean;
-}
 interface ChooseTreeRef {
   isOpen: () => boolean;
   openOverlay: () => void;
@@ -162,7 +156,6 @@ export class TerminalState {
     private readonly getCopyModeRef: () => CopyModeRef | null,
     private readonly getBootRef: () => BootRef | null,
     private readonly getCmdlineRef: () => CmdlineRef | null,
-    private readonly getHelpSearchRef: () => HelpSearchRef | null,
     private readonly getChooseTreeRef: () => ChooseTreeRef | null,
     private readonly getNotificationsRef: () => NotificationsRef | null,
     private readonly getFocusedRef: () => ProgramRef | undefined,
@@ -349,14 +342,13 @@ export class TerminalState {
   // -----------------------------------------------------------------------
 
   /** Window-chrome contract ("close BEFORE the same-view early return") —
-   * closes grep/cmdline/help-palette/choose-tree unconditionally at the top
+   * closes grep/cmdline/choose-tree unconditionally at the top
    * of every window-switch/kill path below, so an open overlay never
    * survives even a no-op switch (e.g. selecting the already-active
    * window). */
   closeWindowChrome(): void {
     this.getGrepRef()?.close?.();
     this.getCmdlineRef()?.close?.();
-    this.getHelpSearchRef()?.close?.();
     this.getChooseTreeRef()?.close?.();
   }
 
@@ -407,13 +399,13 @@ export class TerminalState {
     this.switchActiveWindow((session) => session.windows.findIndex((w) => w.id === id));
   };
 
-  /** Every one of the six windows' own id equals its canonical program name
+  /** Every one of the five windows' own id equals its canonical program name
    * in the default session (see tmux.ts's `FactorySeed` comment) — so
    * "switch to the window that runs program X" is just
    * `switchToWindowById(program)`.
    *
    * Used by the dashboard menu, EmploymentRecords's
-   * "onDashboard", GrepOverlay's Enter-routing, and Cmdline/HelpSearch's
+   * "onDashboard", GrepOverlay's Enter-routing, and Cmdline's
    * `view:*` actions — every one of them a WINDOW switch, never a program
    * launch into the current pane. */
   switchToProgram = (program: ProgramName): void => {
@@ -433,7 +425,7 @@ export class TerminalState {
   }
 
   /** Status-bar ↻ reboot control — closes every overlay ref (status-bar
-   * prompt, copy-mode, cmdline, help-search, choose-tree, grep,
+   * prompt, copy-mode, cmdline, choose-tree, grep,
    * notifications) individually, then replaces `client` wholesale with a
    * fresh `createFactoryClient()` seeded to the dashboard window, resetting
    * every window/pane/program/shell buffer, not just the active one; the
@@ -442,7 +434,6 @@ export class TerminalState {
     this.getStatusBarRef()?.cancelPrompt?.();
     this.getCopyModeRef()?.close?.();
     this.getCmdlineRef()?.close?.();
-    this.getHelpSearchRef()?.close?.();
     this.getChooseTreeRef()?.close?.();
     this.getGrepRef()?.close?.();
     this.getNotificationsRef()?.close?.();
@@ -1016,18 +1007,5 @@ export class TerminalState {
     }
 
     return this.executeSiteOrUnknown(trimmed);
-  };
-
-  /** HelpSearch.svelte's `onExecute` prop — Enter on a command row there
-   * runs through the exact same
-   * executeSiteAction switch every `:` command already does, with no typed
-   * args (the palette's own typed text is a search query, never passed
-   * through as a command argument).
-   *
-   * HelpSearch.svelte closes itself right
-   * after calling this — this function only ever performs the action's own
-   * side effect, same "dumb about presentation" split as onCmdlineSubmit. */
-  onHelpSearchExecute = (action: string | undefined): void => {
-    this.executeSiteAction(action, "");
   };
 }

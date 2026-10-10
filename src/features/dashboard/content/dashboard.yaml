@@ -21,9 +21,6 @@ menu:
   - id: tracker
     icon: "spider-mask"
     label: "Retina-V"
-  - id: help
-    icon: "?"
-    label: "Help"
 
 footer:
   # "{n}" appears twice, both replaced with the SAME live pane count

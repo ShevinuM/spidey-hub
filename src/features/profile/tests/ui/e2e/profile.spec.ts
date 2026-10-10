@@ -16,7 +16,7 @@ async function statusBarText(page: Page) {
   return (await page.locator(STATUS_BAR).innerText()).replace(/\s+/g, " ").trim();
 }
 
-const WINDOWS = ["dashboard", "repositories", "employment", "retina-v", "profile", "help"];
+const WINDOWS = ["dashboard", "repositories", "employment", "retina-v", "profile"];
 /** Display NAME per window id — every id equals its own name except
  * "repositories", whose site.yaml name is the shorter "repos" (status bar
  * real estate). */
@@ -26,7 +26,6 @@ const WINDOW_NAMES: Record<string, string> = {
   employment: "employment",
   "retina-v": "retina-v",
   profile: "profile",
-  help: "help",
 };
 /** `lastId` (real tmux fidelity) is the real tmux `-` flag on the
  * session's PREVIOUSLY active window —
@@ -234,7 +233,7 @@ test.describe("Profile: q/Esc never navigate, no close pill", () => {
     await expect(page).toHaveURL(/\/$/);
   });
 
-  test("status bar shows windows 0-5 in numeric order with profile active", async ({ page }) => {
+  test("status bar shows windows 0-4 in numeric order with profile active", async ({ page }) => {
     await openProfile(page);
     expect(await statusBarText(page)).toBe(winText("profile", "dashboard"));
   });

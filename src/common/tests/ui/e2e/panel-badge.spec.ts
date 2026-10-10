@@ -65,7 +65,7 @@ test.describe("PanelBadge: [N] Label composition", () => {
   });
 });
 
-// The spider glyph's position differs per view: Repositories places it between the bracketed number and the label, Employment between its two split words, and Help before the section-header label.
+// The spider glyph's position differs per view: Repositories places it between the bracketed number and the label, Employment between its two split words.
 test.describe("PanelBadge: spider glyph position (scoped, not removed)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
@@ -75,7 +75,7 @@ test.describe("PanelBadge: spider glyph position (scoped, not removed)", () => {
     page,
   }) => {
     await gotoReady(page, "/repositories");
-    const badges = page.locator('[data-testid="panel-badge"][data-accent="blue"]');
+    const badges = page.locator('[data-testid="panel-badge"]');
     await expect(badges).toHaveCount(5);
     const expected = ["Status", "Repositories", "Files", "Content", "Commits"];
     for (let i = 0; i < expected.length; i++) {
@@ -95,7 +95,7 @@ test.describe("PanelBadge: spider glyph position (scoped, not removed)", () => {
     page,
   }) => {
     await gotoReady(page, "/employment");
-    const badges = page.locator('[data-testid="panel-badge"][data-accent="blue"]');
+    const badges = page.locator('[data-testid="panel-badge"]');
     await expect(badges).toHaveCount(2);
 
     const recordsPill = badges.nth(0).locator("span").first();
@@ -112,24 +112,9 @@ test.describe("PanelBadge: spider glyph position (scoped, not removed)", () => {
     expect(previewHtml.indexOf("File")).toBeLessThan(previewHtml.indexOf("<img"));
     expect(previewHtml.indexOf("<img")).toBeLessThan(previewHtml.indexOf("Preview"));
   });
-
-  test("Help badges keep the teal spiderman glyph, across every section header (pre-f1cb7ee look)", async ({
-    page,
-  }) => {
-    await gotoReady(page, "/help");
-    const badges = page.locator('[data-testid="panel-badge"][data-accent="teal"]');
-    const count = await badges.count();
-    // Asserts a floor, not the exact count, since that's Help's own content, not this spec's concern.
-    expect(count).toBeGreaterThanOrEqual(10);
-    await expect(
-      page.locator(
-        '[data-testid="panel-badge"][data-accent="teal"] img[src="/assets/spiderman-teal.svg"]',
-      ),
-    ).toHaveCount(count);
-  });
 });
 
-// Only Repositories's variant="repositories" wrapper is left-aligned; Employment Records's wrapper is centered, and Help's inline pill was never centered/left-aligned to begin with.
+// Only Repositories's variant="repositories" wrapper is left-aligned; Employment Records's wrapper is centered.
 test.describe("PanelBadge: Repositories left-aligned, Employment Records centered (restored)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
@@ -171,23 +156,6 @@ test.describe("PanelBadge: Repositories left-aligned, Employment Records centere
     const leftInset = pillBox.x - wrapper.x;
     const centeredInset = (wrapper.width - pillBox.width) / 2;
     expect(Math.abs(leftInset - centeredInset)).toBeLessThan(2);
-  });
-
-  test("Help's inline section-header badge still sits at the start of its row (unaffected by the left-align change)", async ({
-    page,
-  }) => {
-    await gotoReady(page, "/help");
-    const badge = page.locator('[data-testid="panel-badge"][data-accent="teal"]').first();
-    const badgeBox = await badge.boundingBox();
-    // The inline wrapper's row: badge is the first flex child, followed by
-    // a dotted rule — its own box should be no wider than its pill content
-    // (inline mode never had a centering wrapper to begin with).
-    const pillBox = await badge.locator("span").first().boundingBox();
-    expect(badgeBox).toBeTruthy();
-    expect(pillBox).toBeTruthy();
-    if (badgeBox && pillBox) {
-      expect(Math.abs(badgeBox.width - pillBox.width)).toBeLessThan(2);
-    }
   });
 });
 

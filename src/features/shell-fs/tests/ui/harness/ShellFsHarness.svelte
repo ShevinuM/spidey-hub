@@ -42,7 +42,7 @@
   {shell}
   {pane}
   mode="pane"
-  viewNames={["dashboard", "repositories", "employment", "retina-v", "profile", "help"]}
+  viewNames={["dashboard", "repositories", "employment", "retina-v", "profile"]}
   session={{ name: "10.42.7.13", windowCount: 1, createdAt: 0, attached: true }}
   sessions={[]}
   defaultSessionName="10.42.7.13"

@@ -20,7 +20,6 @@
     employment: 2,
     "retina-v": 3,
     profile: 4,
-    help: 5,
   };
 
   /** True only once hydration has actually run; `onMount` fires client-side after mount, so a spec can wait on this rather than pass on pre-hydration SSR markup alone. */

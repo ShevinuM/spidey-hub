@@ -138,18 +138,12 @@ test.describe("Ctrl-b d detaches to the host shell", () => {
     await expect(statusBarWindows(page)).not.toBeVisible();
   });
 
-  // "?" opens the HelpSearch palette EXCEPT while a shell pane is focused
-  // (types "?" instead) —
-  // the host shell is exactly such a pane (Shell.svelte's own handleKey
-  // claims every printable character before the bare-"?" fallback opener
-  // ever runs), so the palette must never appear over the host shell.
-  test("? types a literal ? into the host shell input and does NOT open the HelpSearch palette", async ({
-    page,
-  }) => {
+  // Shell.svelte's own handleKey claims every printable character, so "?"
+  // reaches the host shell's input rather than any site-wide fallback.
+  test("? types a literal ? into the host shell input", async ({ page }) => {
     await gotoReady(page, "/");
     await detach(page);
     await page.keyboard.press("?");
-    await expect(page.locator('[data-testid="help-search-overlay"]')).not.toBeVisible();
     await expect(shellInput(page)).toHaveText("?");
   });
 });
@@ -170,7 +164,7 @@ test.describe("tmux ls (real tmux fidelity)", () => {
 
     const expectedRow = shellYaml.tmux.lsRowTemplate
       .replace("{name}", DEFAULT_SESSION_NAME)
-      .replace("{n}", "6")
+      .replace("{n}", "5")
       .replace("{ctime}", formatCtime(new Date(Date.parse(CLOCK_TIME))));
     await expect(page.locator('[data-testid="shell-line"]').last()).toHaveText(expectedRow);
   });
@@ -189,7 +183,7 @@ test.describe("tmux ls (real tmux fidelity)", () => {
     const expectedRow =
       shellYaml.tmux.lsRowTemplate
         .replace("{name}", DEFAULT_SESSION_NAME)
-        .replace("{n}", "6")
+        .replace("{n}", "5")
         .replace("{ctime}", formatCtime(new Date(Date.parse(CLOCK_TIME)))) +
       shellYaml.tmux.lsAttachedSuffix;
     await expect(page.locator('[data-testid="shell-line"]').last()).toHaveText(expectedRow);
@@ -213,7 +207,7 @@ test.describe("tmux ls (real tmux fidelity)", () => {
     expect(rows).toEqual([
       shellYaml.tmux.lsRowTemplate
         .replace("{name}", DEFAULT_SESSION_NAME)
-        .replace("{n}", "6")
+        .replace("{n}", "5")
         .replace("{ctime}", ctime),
       shellYaml.tmux.lsRowTemplate
         .replace("{name}", "test")
@@ -336,7 +330,7 @@ test.describe("tmux a / attach (host mode)", () => {
 
   test("bare tmux a with no sessions at all errors — exact fidelity string", async ({ page }) => {
     await gotoReady(page, "/");
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       await ctrlB(page);
       await page.keyboard.press("&");
       await page.keyboard.press("y");
@@ -363,7 +357,7 @@ test.describe("kill cascades: destroyed session vs. switch-to-remaining", () => 
     page,
   }) => {
     await gotoReady(page, "/");
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       await ctrlB(page);
       await page.keyboard.press("&");
       await page.keyboard.press("y");
@@ -505,7 +499,7 @@ test.describe("host exit / reboot", () => {
     await expect(page.locator('[data-testid="boot-sequence"]')).toHaveCount(0);
 
     await expect(statusBarWindows(page)).toBeVisible();
-    await expect(page.locator('[data-testid="status-bar-window"]')).toHaveCount(6);
+    await expect(page.locator('[data-testid="status-bar-window"]')).toHaveCount(5);
     await expect(sessionLabel(page)).toHaveText(`Session: ${DEFAULT_SESSION_NAME}`);
   });
 });

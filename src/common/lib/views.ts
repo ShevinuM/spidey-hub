@@ -1,7 +1,7 @@
 // View-id plumbing shared by the router pages and Terminal.svelte; these are internal identifiers, never rendered as text directly.
 import type { ProgramName } from "../engines/tmux/tmux";
 
-export type ViewId = "home" | "repositories" | "employment" | "retina-v" | "profile" | "help";
+export type ViewId = "home" | "repositories" | "employment" | "retina-v" | "profile";
 
 /** Route path for each view id — used for pushState + popstate parsing. */
 export const VIEW_ROUTES: Record<ViewId, string> = {
@@ -10,7 +10,6 @@ export const VIEW_ROUTES: Record<ViewId, string> = {
   employment: "/employment",
   "retina-v": "/retina-v",
   profile: "/profile",
-  help: "/help",
 };
 
 /** dashboard.yaml's menu ids (projects/xp/info/tracker) and the plainer route ids used everywhere else meet here — the one place the two vocabularies translate. */
@@ -19,7 +18,6 @@ const MENU_ID_TO_VIEW: Record<string, ViewId> = {
   xp: "employment",
   info: "profile",
   tracker: "retina-v",
-  help: "help",
 };
 
 export function menuIdToView(menuId: string): ViewId | undefined {

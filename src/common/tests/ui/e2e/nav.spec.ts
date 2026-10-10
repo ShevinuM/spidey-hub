@@ -14,7 +14,7 @@ async function statusBarText(page: Page) {
  * the expected string instead of hand-writing it at each call site (a
  * future renumbering/extension of the window list would otherwise touch
  * ~20 literals). */
-const WINDOWS = ["dashboard", "repositories", "employment", "retina-v", "profile", "help"];
+const WINDOWS = ["dashboard", "repositories", "employment", "retina-v", "profile"];
 /** Display NAME per window id — every id equals its own name except
  * "repositories", whose site.yaml name is the shorter "repos" (status bar
  * real estate). */
@@ -24,7 +24,6 @@ const WINDOW_NAMES: Record<string, string> = {
   employment: "employment",
   "retina-v": "retina-v",
   profile: "profile",
-  help: "help",
 };
 /** `lastId` (real tmux fidelity) is the real tmux `-` flag on the
  * session's PREVIOUSLY active window —
@@ -93,22 +92,6 @@ test.describe("view switching + status bar (bug fix 1: numeric order)", () => {
     await expect(page).toHaveURL(/\/retina-v$/);
     expect(await statusBarText(page)).toBe(winText("retina-v", "dashboard"));
   });
-
-  test("Ctrl-b 5 switches to help", async ({ page }) => {
-    await gotoReady(page, "/");
-    await prefixDigit(page, "5");
-    await expect(page).toHaveURL(/\/help$/);
-    expect(await statusBarText(page)).toBe(winText("help", "dashboard"));
-  });
-
-  test("? no longer switches to help from the dashboard — it opens the HelpSearch palette instead", async ({
-    page,
-  }) => {
-    await gotoReady(page, "/");
-    await page.keyboard.press("?");
-    await expect(page).toHaveURL(/\/$/);
-    await expect(page.locator('[data-testid="help-search-overlay"]')).toBeVisible();
-  });
 });
 
 test.describe("q / Esc never switch views", () => {
@@ -117,12 +100,10 @@ test.describe("q / Esc never switch views", () => {
     ["q", "2"],
     ["q", "4"],
     ["q", "3"],
-    ["q", "5"],
     ["Escape", "1"],
     ["Escape", "2"],
     ["Escape", "4"],
     ["Escape", "3"],
-    ["Escape", "5"],
   ] as const) {
     test(`Ctrl-b ${digit} then ${key} does NOT return to the dashboard`, async ({ page }) => {
       await gotoReady(page, "/");
@@ -154,7 +135,6 @@ test.describe("status bar navigation (mouse)", () => {
       ["employment", "/employment"],
       ["retina-v", "/retina-v"],
       ["profile", "/profile"],
-      ["help", "/help"],
       ["dashboard", "/"],
     ] as const) {
       await page.locator(`[data-testid="status-bar-window"][data-window-id="${id}"]`).click();
@@ -167,7 +147,7 @@ test.describe("status bar navigation (mouse)", () => {
   test("every status-bar window has a pointer cursor", async ({ page }) => {
     await gotoReady(page, "/");
     const windows = page.locator('[data-testid="status-bar-window"]');
-    await expect(windows).toHaveCount(6);
+    await expect(windows).toHaveCount(5);
     const cursors = await windows.evaluateAll((els) =>
       els.map((el) => getComputedStyle(el).cursor),
     );
@@ -236,17 +216,17 @@ test.describe("dashboard rename + live footer pane count", () => {
   }) => {
     await gotoReady(page, "/");
     const footer = page.getByText(/⚡ synced \d+\/\d+ panes in 48\.23ms/);
-    await expect(footer).toHaveText("⚡ synced 6/6 panes in 48.23ms");
+    await expect(footer).toHaveText("⚡ synced 5/5 panes in 48.23ms");
 
     // Split the dashboard's own pane, then come back to it — the count
     // reads the live tmux model (session-wide, not per-window), so it must
-    // grow from 6 to 7.
+    // grow from 5 to 6.
     await page.keyboard.down("Control");
     await page.keyboard.press("b");
     await page.keyboard.up("Control");
     await page.keyboard.press("%");
     await expect(page.locator('[data-testid="pane-leaf"]')).toHaveCount(2);
-    await expect(footer).toHaveText("⚡ synced 7/7 panes in 48.23ms");
+    await expect(footer).toHaveText("⚡ synced 6/6 panes in 48.23ms");
   });
 });
 
@@ -310,15 +290,13 @@ test.describe("live clock (bug fix 2)", () => {
     await page.clock.pauseAt(t0 + 5000);
     await expect(page.locator('[data-testid="dashboard-wordmark"]')).toBeVisible();
 
-    const before = await page.locator('[data-testid="status-bar-clock-time"]').innerText();
-    expect(before).toBe("23:34");
-    const beforeDate = await page.locator('[data-testid="status-bar-clock-date"]').innerText();
-    expect(beforeDate).toBe("15-Aug-26");
+    // The wordmark is SSR-visible before hydration, but StatusBar fills the clock in a post-hydration $effect, so these assertions must retry rather than read once.
+    await expect(page.locator('[data-testid="status-bar-clock-time"]')).toHaveText("23:34");
+    await expect(page.locator('[data-testid="status-bar-clock-date"]')).toHaveText("15-Aug-26");
 
     await page.clock.pauseAt(t0 + 5000 + 61_000);
 
-    const after = await page.locator('[data-testid="status-bar-clock-time"]').innerText();
-    expect(after).toBe("23:35");
+    await expect(page.locator('[data-testid="status-bar-clock-time"]')).toHaveText("23:35");
   });
 });
 

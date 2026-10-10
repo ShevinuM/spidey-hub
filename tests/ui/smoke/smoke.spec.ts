@@ -15,7 +15,7 @@
 import { test, expect } from "@playwright/test";
 import { TerminalPage } from "../../../src/common/tests/ui/pages/TerminalPage";
 
-const ROUTES = ["/", "/repositories", "/employment", "/retina-v", "/profile", "/help"];
+const ROUTES = ["/", "/repositories", "/employment", "/retina-v", "/profile"];
 
 for (const route of ROUTES) {
   test(`${route || "/"} loads, boots with no console error`, async ({ page }) => {

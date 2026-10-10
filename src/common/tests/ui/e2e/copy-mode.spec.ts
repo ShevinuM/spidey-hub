@@ -18,6 +18,25 @@ async function openCopyMode(page: Page) {
   await page.keyboard.press("[");
 }
 
+/** Focuses Repositories' Content panel on a 113-line source file — the
+ * longest pane this app renders, so the cursor-movement tests below have
+ * enough lines for `gg`/`G` and a full Ctrl-d/Ctrl-u page move. Real
+ * (non-fixture) content: `pnpm generate` fetches repo tarballs regardless of
+ * PORTFOLIO_FIXTURES. */
+async function openLongPane(page: Page) {
+  await gotoReady(page, "/repositories");
+  await page
+    .locator(
+      '[data-testid="repositories-repo-row"][data-repo-name="Data-Structures-And-Algorithms"]',
+    )
+    .click();
+  await expect(page.locator('[data-testid="repositories-tree-row"]').first()).toBeVisible();
+  await page
+    .locator('[data-testid="repositories-tree-row"][data-entry-name="word_search_ii.java"]')
+    .click();
+  await page.keyboard.press("3"); // focus panel [3] Content
+}
+
 const overlay = (page: Page) => page.locator('[data-testid="copy-mode-overlay"]');
 const linesEl = (page: Page) => page.locator('[data-testid="copy-mode-lines"]');
 const cursor = (page: Page) => page.locator('[data-testid="copy-mode-cursor"]').first();
@@ -60,12 +79,6 @@ test.describe("Copy mode (Ctrl-b [)", () => {
       async open(page) {
         await gotoReady(page, "/repositories");
         await page.keyboard.press("1"); // focus panel [1] Repositories
-      },
-    },
-    {
-      name: "help content",
-      async open(page) {
-        await gotoReady(page, "/help");
       },
     },
     {
@@ -153,7 +166,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
   });
 
   test("j/k/gg/G move the cursor across the captured lines", async ({ page }) => {
-    await gotoReady(page, "/help");
+    await openLongPane(page);
     await openCopyMode(page);
     await expect(overlay(page)).toBeVisible();
     expect(await cursorLine(page)).toBe("1");
@@ -180,7 +193,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
   });
 
   test("h/l move the cursor within a line", async ({ page }) => {
-    await gotoReady(page, "/help");
+    await openLongPane(page);
     await openCopyMode(page);
     await page.keyboard.press("l");
     await page.keyboard.press("l");
@@ -189,7 +202,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
   });
 
   test("Ctrl-d/Ctrl-u page the cursor down/up", async ({ page }) => {
-    await gotoReady(page, "/help");
+    await openLongPane(page);
     await openCopyMode(page);
     const totalLines = await page.locator("[data-copy-mode-line]").count();
     test.skip(totalLines < 15, "captured pane too short for a page move to be meaningful");
@@ -208,7 +221,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
   });
 
   test("v starts a charwise selection that highlights as motions extend it", async ({ page }) => {
-    await gotoReady(page, "/help");
+    await openLongPane(page);
     await openCopyMode(page);
     await page.keyboard.press("v");
     await page.keyboard.press("l");
@@ -221,7 +234,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     context,
   }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await gotoReady(page, "/help");
+    await openLongPane(page);
     await openCopyMode(page);
     await page.keyboard.press("v");
     await page.keyboard.press("l");
@@ -252,7 +265,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
   });
 
   test("q exits copy-mode without yanking (the one place bare q is allowed)", async ({ page }) => {
-    await gotoReady(page, "/help");
+    await openLongPane(page);
     await openCopyMode(page);
     await expect(overlay(page)).toBeVisible();
     await page.keyboard.press("q");
@@ -260,7 +273,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
   });
 
   test("Esc exits copy-mode without yanking", async ({ page }) => {
-    await gotoReady(page, "/help");
+    await openLongPane(page);
     await openCopyMode(page);
     await page.keyboard.press("Escape");
     await expect(overlay(page)).not.toBeVisible();
@@ -271,7 +284,7 @@ test.describe("Copy mode (Ctrl-b [)", () => {
     context,
   }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await gotoReady(page, "/help");
+    await openLongPane(page);
     await openCopyMode(page);
     await page.keyboard.press("v");
     await page.keyboard.press("l");

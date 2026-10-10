@@ -11,7 +11,7 @@ async function statusBarText(page: Page) {
   return (await page.locator(STATUS_BAR).innerText()).replace(/\s+/g, " ").trim();
 }
 
-const WINDOWS = ["dashboard", "repositories", "employment", "retina-v", "profile", "help"];
+const WINDOWS = ["dashboard", "repositories", "employment", "retina-v", "profile"];
 /** Display NAME per window id — every id equals its own name except
  * "repositories", whose site.yaml name is the shorter "repos" (status bar
  * real estate). */
@@ -21,7 +21,6 @@ const WINDOW_NAMES: Record<string, string> = {
   employment: "employment",
   "retina-v": "retina-v",
   profile: "profile",
-  help: "help",
 };
 /** `lastId` (real tmux fidelity) is the real tmux `-` flag on the
  * session's PREVIOUSLY active window —
@@ -66,23 +65,7 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await expect(page).toHaveURL(/\/repositories$/);
   });
 
-  test("Ctrl-b 5 switches to help", async ({ page }) => {
-    await gotoReady(page, "/");
-    await ctrlB(page);
-    await page.keyboard.press("5");
-    await expect(page).toHaveURL(/\/help$/);
-    expect(await statusBarText(page)).toBe(winText("help", "dashboard"));
-  });
-
-  test("Ctrl-b ? switches to help (tmux list-keys style)", async ({ page }) => {
-    await gotoReady(page, "/");
-    await ctrlB(page);
-    await page.keyboard.press("?");
-    await expect(page).toHaveURL(/\/help$/);
-    expect(await statusBarText(page)).toBe(winText("help", "dashboard"));
-  });
-
-  test("Ctrl-b n cycles dashboard -> repositories -> employment -> retina-v -> profile -> help -> dashboard", async ({
+  test("Ctrl-b n cycles dashboard -> repositories -> employment -> retina-v -> profile -> dashboard", async ({
     page,
   }) => {
     await gotoReady(page, "/repositories");
@@ -102,10 +85,6 @@ test.describe("tmux prefix (Ctrl-b)", () => {
 
     await ctrlB(page);
     await page.keyboard.press("n");
-    await expect(page).toHaveURL(/\/help$/);
-
-    await ctrlB(page);
-    await page.keyboard.press("n");
     await expect(page).toHaveURL(/\/$/);
 
     await ctrlB(page);
@@ -119,10 +98,6 @@ test.describe("tmux prefix (Ctrl-b)", () => {
     await ctrlB(page);
     await page.keyboard.press("p");
     await expect(page).toHaveURL(/\/$/);
-
-    await ctrlB(page);
-    await page.keyboard.press("p");
-    await expect(page).toHaveURL(/\/help$/);
 
     await ctrlB(page);
     await page.keyboard.press("p");
@@ -476,7 +451,7 @@ test.describe("Ctrl-b & kill-window", () => {
     page,
   }) => {
     await gotoReady(page, "/");
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 4; i++) {
       await ctrlB(page);
       await page.keyboard.press("&");
       await page.keyboard.press("y");
@@ -495,15 +470,15 @@ test.describe("Ctrl-b & kill-window", () => {
 });
 
 // `Ctrl-b c` is tmux new-window — creates a window running the in-window
-// shell program, switches to it immediately, and it coexists with the six
-// fixed digit targets (0:dashboard..5:help) rather than colliding with any
+// shell program, switches to it immediately, and it coexists with the five
+// fixed digit targets (0:dashboard..4:profile) rather than colliding with any
 // of them.
 test.describe("Ctrl-b c new-window", () => {
   test.beforeEach(async ({ context }) => {
     await context.route("**/api.github.com/**", (route) => route.abort());
   });
 
-  test("creates a new window running the shell, switches to it, and it shows up in the status bar as window 6", async ({
+  test("creates a new window running the shell, switches to it, and it shows up in the status bar as window 5", async ({
     page,
   }) => {
     await gotoReady(page, "/");
@@ -512,7 +487,7 @@ test.describe("Ctrl-b c new-window", () => {
 
     await expect(page.locator('[data-testid="shell-prompt"]')).toBeVisible();
     expect(await statusBarText(page)).toBe(
-      "0:dashboard- 1:repos 2:employment 3:retina-v 4:profile 5:help 6:zsh*",
+      "0:dashboard- 1:repos 2:employment 3:retina-v 4:profile 5:zsh*",
     );
     // A pane program switch never navigates — the URL freezes wherever it
     // was, exactly like `:q`'s own exitActiveProgram (same `programToViewId
@@ -520,7 +495,7 @@ test.describe("Ctrl-b c new-window", () => {
     await expect(page).toHaveURL(/\/$/);
   });
 
-  test("the new window's own prefix digit (6) reaches it, coexisting with the fixed 0-5 targets", async ({
+  test("the new window's own prefix digit (5) reaches it, coexisting with the fixed 0-4 targets", async ({
     page,
   }) => {
     await gotoReady(page, "/");
@@ -532,9 +507,9 @@ test.describe("Ctrl-b c new-window", () => {
     await expect(page).toHaveURL(/\/repositories$/);
 
     await ctrlB(page);
-    await page.keyboard.press("6");
+    await page.keyboard.press("5");
     await expect(page.locator('[data-testid="shell-prompt"]')).toBeVisible();
-    expect(await statusBarText(page)).toContain("6:zsh*");
+    expect(await statusBarText(page)).toContain("5:zsh*");
   });
 
   test("is reachable via choose-tree (Ctrl-b w)", async ({ page }) => {
@@ -546,7 +521,7 @@ test.describe("Ctrl-b c new-window", () => {
     await page.keyboard.press("w");
     await expect(page.locator('[data-testid="choose-tree-overlay"]')).toBeVisible();
     await expect(
-      page.locator('[data-testid="choose-tree-window-row"]', { hasText: "6: zsh" }),
+      page.locator('[data-testid="choose-tree-window-row"]', { hasText: "5: zsh" }),
     ).toBeVisible();
   });
 

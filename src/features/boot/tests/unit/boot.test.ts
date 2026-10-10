@@ -104,7 +104,7 @@ test("handshakeText: dot count cycles 1/2/3 every 220ms of elapsed time", () => 
 const LOG: BootLogEntry[] = [
   { threshold: 0.02, tag: "ok", label: "mounting shell", val: "Shell.astro" },
   { threshold: 0.1, tag: "ok", label: "hydrating island", val: "Terminal.svelte" },
-  { threshold: 0.18, tag: "ok", label: "tmux session", val: "6 windows" },
+  { threshold: 0.18, tag: "ok", label: "tmux session", val: "5 windows" },
   { threshold: 0.27, tag: "ok", label: "grep index", val: "22 files" },
   { threshold: 0.36, tag: "ok", label: "repo trees", val: "3 submodules" },
   { threshold: 0.45, tag: "ok", label: "commit snapshots", val: "15 x 3" },

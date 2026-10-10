@@ -18,15 +18,6 @@ prompt:
   glyph: ">"
   cursorGlyph: "▌"
 
-# The "takes an argument" notation (e.g. "grep <…>") is data-driven rather
-# than a string literal baked into a component. Cmdline.svelte itself does
-# not render a command list (the suggestions UI is gone); this string is
-# consumed instead by HelpSearch.svelte's own command-row rendering
-# (src/features/help/components/HelpSearch.svelte), the browsable command list. Appended
-# verbatim (with its own leading space) after a command's name when
-# `takesArgs` is true; empty otherwise.
-argsPlaceholder: " <…>"
-
 # Ex-mode-only display entries (context (a) — see file header). Real
 # execution is parseExCommand/Editor.svelte's own logic; these
 # exist only so the box's suggestion list has a name+description to show,
@@ -61,9 +52,6 @@ commands:
   - name: "retina-v"
     description: "jump to Retina-V"
     action: "view:retina-v"
-  - name: "help"
-    description: "jump to Help"
-    action: "view:help"
   - name: "grep"
     description: "open the grep overlay, pre-filled and searching <query>"
     action: "grep"

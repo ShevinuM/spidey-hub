@@ -15,8 +15,7 @@
   //
   // This component does no execution itself: `onSubmit` is the only side
   // effect, and completion is silent zsh-style Tab-cycling (`cmdline.ts`'s
-  // `cycleComplete`) with no visible suggestion list — the `?` help
-  // palette is the browsable surface instead.
+  // `cycleComplete`) with no visible suggestion list.
   import type { CmdlineData } from "../lib/data";
   import {
     cycleComplete,

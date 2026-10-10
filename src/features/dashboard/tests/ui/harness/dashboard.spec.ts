@@ -13,7 +13,6 @@ const MENU = [
   { id: "xp", icon: "◆", label: "Employment Records", binding: "C-b 2" },
   { id: "info", icon: "◉", label: "Profile", binding: "C-b 4" },
   { id: "tracker", icon: "spider-mask", label: "Retina-V", binding: "C-b 3" },
-  { id: "help", icon: "?", label: "Help", binding: "C-b 5" },
 ] as const;
 
 test.describe("Dashboard harness: mounts standalone with seeded fixture props", () => {
