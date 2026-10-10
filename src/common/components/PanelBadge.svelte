@@ -56,13 +56,20 @@
     inline = false,
     variant = "default",
   }: Props = $props();
-  const isSplit = left !== undefined && right !== undefined;
-  const isRepositories = variant === "repositories";
-  const wrapperStyle = inline
-    ? "display:flex;flex:none"
-    : `position:absolute;left:0;right:0;top:0;transform:translateY(-50%);display:flex;justify-content:${
-        isRepositories ? "flex-start" : "center"
-      };${isRepositories ? "padding-left:12px;" : ""}pointer-events:none;z-index:4`;
+  // $derived, not plain const: a plain const over $props() destructures
+  // would capture only the initial left/right/variant/inline values, so a
+  // parent re-rendering this badge with different props would never
+  // update it (svelte-check's state_referenced_locally warning was a real
+  // latent bug here, not noise — see PR 4.7's per-site analysis).
+  const isSplit = $derived(left !== undefined && right !== undefined);
+  const isRepositories = $derived(variant === "repositories");
+  const wrapperStyle = $derived(
+    inline
+      ? "display:flex;flex:none"
+      : `position:absolute;left:0;right:0;top:0;transform:translateY(-50%);display:flex;justify-content:${
+          isRepositories ? "flex-start" : "center"
+        };${isRepositories ? "padding-left:12px;" : ""}pointer-events:none;z-index:4`,
+  );
 </script>
 
 <div data-testid="panel-badge" data-accent={accent} style={wrapperStyle}>
