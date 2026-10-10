@@ -315,6 +315,15 @@ test.describe("Employment: pane frames and focus", () => {
   });
 });
 
+test.describe("Employment: lists have no fade mask", () => {
+  // Regression guard: neither employment list is masked.
+  test("the records list and the preview compute no mask", async ({ page }) => {
+    await openEmployment(page);
+    await expect(page.getByTestId("employment-records-list")).toHaveCSS("mask-image", "none");
+    await expect(page.getByTestId("employment-preview")).toHaveCSS("mask-image", "none");
+  });
+});
+
 test.describe("Employment: selection — j/k/arrows sync preview and timeline live", () => {
   test("j/ArrowDown moves the cursor, wraps at the end; k/ArrowUp moves back, wraps at the start", async ({
     page,

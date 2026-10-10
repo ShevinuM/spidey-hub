@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { RepositoriesData } from "../../../common/lib/data";
+  import { FADE_BOTTOM_STYLE } from "../../../common/lib/fade-mask";
   import type { RepositoriesState } from "./repositoriesState.svelte";
   import { iconSvgForPath } from "../../../common/lib/file-icons";
   import PaneFrame from "../../../common/components/PaneFrame.svelte";
@@ -34,7 +35,7 @@
     {/if}
     <div
       data-testid="repositories-files-list"
-      style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px"
+      style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px;{FADE_BOTTOM_STYLE}"
     >
       {#if !state.repoTree}
         <div style="color:rgba(196,216,232,.5)">{repositories.repoBrowser.emptyText}</div>

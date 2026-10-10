@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { RepositoriesData } from "../../../common/lib/data";
+  import { FADE_BOTTOM_STYLE } from "../../../common/lib/fade-mask";
   import type { RepositoriesState } from "./repositoriesState.svelte";
   import PaneFrame from "../../../common/components/PaneFrame.svelte";
 
@@ -25,7 +26,7 @@
   {#snippet children()}
     <div
       data-testid="repositories-repos-list"
-      style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px"
+      style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px;{FADE_BOTTOM_STYLE}"
     >
       {#each state.flatRepos as repo, i (repo.key)}
         {@const selected = i === state.selectedRepoIdx}

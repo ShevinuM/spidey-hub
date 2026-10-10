@@ -915,6 +915,60 @@ test.describe("Repositories: selecting a row never shifts its text", () => {
   });
 });
 
+test.describe("Repositories: list scrollers fade their bottom edge", () => {
+  test.beforeEach(async ({ context }) => {
+    await context.route("**/api.github.com/**", (route) => route.abort());
+  });
+
+  const SCROLLERS = [
+    "repositories-repos-list",
+    "repositories-files-list",
+    "repositories-commits-list",
+  ];
+
+  test("the repos, files and commits lists mask their bottom 16px", async ({ page }) => {
+    await gotoReady(page, "/repositories");
+    for (const id of SCROLLERS) {
+      await expect(page.getByTestId(id)).toHaveCSS(
+        "mask-image",
+        /linear-gradient.*calc\(100% - 16px\)/,
+      );
+    }
+  });
+
+  // Regression guard: the masked lists stay vertical scrollers.
+  test("the masked lists still scroll vertically", async ({ page }) => {
+    await gotoReady(page, "/repositories");
+    for (const id of SCROLLERS) {
+      await expect(page.getByTestId(id)).toHaveCSS("overflow-y", "auto");
+    }
+  });
+
+  // Regression guard: the mask does not swallow wheel scrolling.
+  test("the files list still wheel-scrolls under the fade", async ({ page }) => {
+    await gotoReady(page, "/repositories");
+    await openRepoTree(page, "Data-Structures-And-Algorithms");
+    const list = page.getByTestId("repositories-files-list");
+    await expect.poll(() => list.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+    const before = await list.evaluate((el) => el.scrollTop);
+
+    await list.hover();
+    await page.mouse.wheel(0, 400);
+    await expect.poll(() => list.evaluate((el) => el.scrollTop)).toBeGreaterThan(before);
+  });
+
+  // Regression guard: only the list scrollers are masked.
+  test("the content body, pane boxes and rows have no mask", async ({ page }) => {
+    await gotoReady(page, "/repositories");
+    await expect(page.getByTestId("repositories-changes-body")).toHaveCSS("mask-image", "none");
+    for (const n of [1, 2, 4]) {
+      await expect(page.getByTestId(`repositories-panel-${n}`)).toHaveCSS("mask-image", "none");
+    }
+    await expect(page.getByTestId("repositories-repo-row").first()).toHaveCSS("mask-image", "none");
+    await expect(page.getByTestId("repositories-tree-row").first()).toHaveCSS("mask-image", "none");
+  });
+});
+
 test.describe("Repositories: client-side commit refresh (panel [1] selection only)", () => {
   // daily-tech-digest isn't the default selection, so every test here explicitly selects it to match its committed snapshot head, loaded (not hardcoded) from `dailyTechDigestHead`.
   test("route-fulfill with a fake commit replaces the snapshot list for the selected repo", async ({

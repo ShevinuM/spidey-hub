@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { RepositoriesData } from "../../../common/lib/data";
+  import { FADE_BOTTOM_STYLE } from "../../../common/lib/fade-mask";
   import type { RepositoriesState } from "./repositoriesState.svelte";
   import PaneFrame from "../../../common/components/PaneFrame.svelte";
 
@@ -33,7 +34,7 @@
     {/if}
     <div
       data-testid="repositories-commits-list"
-      style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden"
+      style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;{FADE_BOTTOM_STYLE}"
     >
       {#if state.selectedRepo?.isAllProjects}
         <div style="color:rgba(196,216,232,.5)">{repositories.panels.commits.localOnlyText}</div>
